@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+addopts = "-v"
+[tool.ruff]
+line-length = 100
+lint.ignore = ["BLE001"]

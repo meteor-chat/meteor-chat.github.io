@@ -1,0 +1,14 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+*:focus-visible {
+    outline: 2px solid var(--quote-border);
+}
+body, textarea, input, button {
+    font-family: var(--font-stack);
+    color: var(--text-main);
+}
+body { background: var(--bg-main); }
+button { cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; padding: 0; }
