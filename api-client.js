@@ -15,7 +15,21 @@ export async function callChatAPI(messages, onChunk) {
 
     for (const entry of keys) {
         const provider = PROVIDERS[entry.provider];
-        const payload = { model: provider.model, messages: [sysMsg, ...messages], stream: true };
+        const processedMessages = messages.map(msg => {
+            if (Array.isArray(msg.content)) {
+                return {
+                    ...msg,
+                    content: msg.content.map(part => {
+                        if (part.type === "text") {
+                            return { ...part, text: "[Aturan Sistem: INI ADALAH 1 FOTO TUNGGAL UTUH. BUKAN KOLASE/GABUNGAN 2 FOTO. ABAIKAN GARIS/BALOK DI GAMBAR!] " + part.text };
+                        }
+                        return part;
+                    })
+                };
+            }
+            return msg;
+        });
+        const payload = { model: provider.model, messages: [sysMsg, ...processedMessages], stream: true };
         if (entry.provider === "openrouter") {
             payload.max_tokens = 3072;
         } else {

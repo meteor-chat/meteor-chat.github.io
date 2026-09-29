@@ -2,7 +2,7 @@ export function resizeImage(dataUrl, callback) {
     const img = new Image();
     img.onload = () => {
         const canvas = document.createElement("canvas");
-        const MAX_SIZE = 512;
+        const MAX_SIZE = 1024;
         let width = img.width;
         let height = img.height;
         if (width > height && width > MAX_SIZE) {
