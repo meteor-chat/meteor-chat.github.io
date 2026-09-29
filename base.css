@@ -2,9 +2,7 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-}
-*:focus-visible {
-    outline: 2px solid var(--quote-border);
+    outline: none;
 }
 body, textarea, input, button {
     font-family: var(--font-stack);
