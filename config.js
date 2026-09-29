@@ -13,11 +13,11 @@ export const CONFIG_API_KEYS = [
 export const PROVIDERS = {
     openrouter: {
         url: "https://openrouter.ai/api/v1/chat/completions",
-        model: "google/gemini-2.0-flash-lite-preview-02-05:free"
+        model: "google/gemma-4-31b-it:free"
     },
     groq: {
         url: "https://api.groq.com/openai/v1/chat/completions",
-        model: "llama-3.2-11b-vision-preview"
+        model: "qwen/qwen3.8-27b"
     }
 };
 
