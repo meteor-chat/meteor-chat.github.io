@@ -1,5 +1,4 @@
 import { state } from "./app-state.js";
-import { fetchConfig } from "./api-client.js";
 import { setupInputs } from "./input-controls.js";
 import { setupImageUpload } from "./image-upload.js";
 import { setupMarkdown } from "./markdown-setup.js";
@@ -15,9 +14,16 @@ async function loadTemplates() {
     }
 }
 
+async function loadJadwal() {
+    try {
+        const res = await fetch("jadwal-kuliah.json");
+        if (res.ok) state.jadwalKuliah = await res.text();
+    } catch(e) {}
+}
+
 async function init() {
-    await fetchConfig();
     await loadTemplates();
+    await loadJadwal();
     setupInputs();
     setupImageUpload();
     setupMarkdown();

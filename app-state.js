@@ -5,8 +5,9 @@ export const state = {
     currentView: "landing",
     currentImageBase64: null,
     templates: {},
+    abortController: null,
     config: {
-        max_message: 4000,
-        max_history: 20
-    }
+        max_message: 4000
+    },
+    jadwalKuliah: ""
 };

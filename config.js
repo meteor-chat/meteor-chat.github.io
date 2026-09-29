@@ -1,5 +1,5 @@
-const _dk = (s) => [...s].map(c => String.fromCharCode(c.charCodeAt(0) ^ 1)).join('');
-const CONFIG_API_KEYS = [
+export const _dk = (s) => [...s].map(c => String.fromCharCode(c.charCodeAt(0) ^ 1)).join('');
+export const CONFIG_API_KEYS = [
     { key: "sk-or-v1-" + "d410a579ad4b7f5b6f94ec66ddf2036e7621c4f5ab8adf9007260ff927d59957", provider: "openrouter" },
     { key: "gsk_" + "E6ATcsedFbtBv56PVl4hWGdyb3FYawxNyKlXMcCSDoyuKgDFzzU1", provider: "groq" },
     { key: "sk-or-v1-" + "55e51ff9c817b1811c311bae281fdef697bcfd5d1c757d1719269023b5959139", provider: "openrouter" },
@@ -10,3 +10,18 @@ const CONFIG_API_KEYS = [
     { key: _dk("frj^Hy2vs1GsywCtCPix@UV8VFexc2GXVen@kXd2GL3rt3N`of`QmJvf"), provider: "groq" },
     { key: "sk-or-v1-" + "352e3c8d5769e9a1d095cc529232475427a2cb9d7615330ad2bc6aeab4df7a51", provider: "openrouter" },
 ];
+export const PROVIDERS = {
+    openrouter: {
+        url: "https://openrouter.ai/api/v1/chat/completions",
+        model: "google/gemini-2.5-flash"
+    },
+    groq: {
+        url: "https://api.groq.com/openai/v1/chat/completions",
+        model: "llama-3.3-70b-versatile"
+    }
+};
+export const SYSTEM_MESSAGE = "Kamu adalah senior software engineer yang sedang pair programming dengan user. Kamu sangat jago dan tajam dalam berbagai macam bahasa pemrograman.
+
+Aturan:
+1. Harus menjawab menggunakan bahasa Indonesia yang santai.
+2. Jika kamu menulis kode, kamu harus memecah file menjadi modular. 1 file maksimal berisi 80 baris. Semua harus di letakkan pada root folder, tidak ada sub folder sama sekali.";

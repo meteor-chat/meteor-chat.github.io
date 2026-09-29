@@ -1,6 +1,6 @@
 import { state } from "./app-state.js";
 import { refs, getActiveSendBtn } from "./dom-refs.js";
-import { streamChat } from "./sse-parser.js";
+import { callChatAPI } from "./api-client.js";
 import { renderChat, showTypingIndicator, removeTypingIndicator, updateStreamingMessage } from "./chat-render.js";
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
@@ -22,41 +22,34 @@ export async function sendMessage(text) {
 
     let content = text;
     if (state.currentImageBase64) {
-        content = [
-            { type: "text", text: text || " " },
-            { type: "image_url", image_url: { url: state.currentImageBase64 } }
-        ];
+        content = [{ type: "text", text: text || " " }, { type: "image_url", image_url: { url: state.currentImageBase64 } }];
     }
     state.messages.push({ role: "user", content });
     clearImagePreview();
-    
     renderChat();
     showTypingIndicator();
     refs.msgChat.readOnly = true;
 
     try {
         state.messages.push({ role: "assistant", content: "" });
-        let fullText = "";
         removeTypingIndicator();
         renderChat();
         
-        await streamChat(state.messages.slice(0, -1), (chunk) => {
-            fullText += chunk;
-            state.messages[state.messages.length - 1].content = fullText;
-            updateStreamingMessage(fullText);
+        const fullText = await callChatAPI(state.messages.slice(0, -1), (currentText) => {
+            state.messages[state.messages.length - 1].content = currentText;
+            updateStreamingMessage(currentText);
         });
+        state.messages[state.messages.length - 1].content = fullText;
+        renderChat();
     } catch (err) {
-        showError(err.message);
+        if (err.name !== "AbortError") showError(err.message);
         refs.msgChat.value = text;
-        if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") {
-            state.messages.pop();
-        }
-        if (state.messages.length && state.messages[state.messages.length - 1].role === "user") {
-            state.messages.pop();
-        }
+        if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
+        if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
         renderChat();
     } finally {
         state.isLoading = false;
+        state.abortController = null;
         refs.sendChat.disabled = false;
         refs.sendLanding.disabled = false;
         refs.msgChat.readOnly = false;
