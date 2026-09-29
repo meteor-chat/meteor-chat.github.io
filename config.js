@@ -1,5 +1,8 @@
 export const _dk = (s) => [...s].map(c => String.fromCharCode(c.charCodeAt(0) ^ 1)).join('');
 export const CONFIG_API_KEYS = [
+    { key: "sk-or-v1-" + "db37d1111053ac611e067ce19b281b25a73928586ceb1374ddf9b0e0cba5934d", provider: "openrouter" },
+    { key: "sk-or-v1-" + "f9060ae3ff2e648e6f53d8a97a182489ee7b722ea19e8d17137fc2d41591ff0b", provider: "openrouter" },
+    { key: "sk-or-v1-" + "90d934ae89cf0d56130f8141ae9f3a414f660e8af642888aa6e29b9cdccd3e56", provider: "openrouter" },
     { key: "sk-or-v1-" + "d410a579ad4b7f5b6f94ec66ddf2036e7621c4f5ab8adf9007260ff927d59957", provider: "openrouter" },
     { key: "gsk_" + "E6ATcsedFbtBv56PVl4hWGdyb3FYawxNyKlXMcCSDoyuKgDFzzU1", provider: "groq" },
     { key: "sk-or-v1-" + "55e51ff9c817b1811c311bae281fdef697bcfd5d1c757d1719269023b5959139", provider: "openrouter" },
