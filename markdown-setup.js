@@ -3,7 +3,7 @@ import { setupMath } from "./math-plugin.js";
 
 export function setupMarkdown() {
     setupMath();
-    marked.setOptions({
+    marked.use({
         breaks: true,
         gfm: true,
     });

@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 </head>
 <body>
+<div id="error-box" style="display:none; color: red; text-align: center; margin-bottom: 10px;"></div>
 <div id="landing" class="landing">
     <img src="./banner.png" class="banner" alt="Banner">
     <div class="tagline"><h1>Minimalist. No Login. Meteor</h1></div>
@@ -39,7 +40,6 @@
     <div class="input-wrap">
         <div id="edit-notice" style="display:none;">Editing message</div>
         <button id="cancel-btn" style="display:none;">Cancel</button>
-        <div id="error-box" style="display:none;"></div>
         <input type="file" class="file-input" accept="image/jpeg, image/png, image/webp" style="display:none;">
         <button class="upload-btn" aria-label="Upload"><img src="add.svg" alt="Upload"></button>
         <div class="image-preview-container" style="display:none;">

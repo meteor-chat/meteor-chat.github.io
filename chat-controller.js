@@ -43,9 +43,14 @@ export async function sendMessage(text) {
         renderChat();
     } catch (err) {
         if (err.name !== "AbortError") showError(err.message);
-        refs.msgChat.value = text;
         if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
         if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
+        
+        if (state.messages.length === 0) {
+            refs.msgLanding.value = text;
+        } else {
+            refs.msgChat.value = text;
+        }
         renderChat();
     } finally {
         state.isLoading = false;
