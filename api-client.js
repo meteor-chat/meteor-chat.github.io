@@ -20,8 +20,7 @@ export async function callChatAPI(messages, onChunk) {
             payload.max_tokens = 3072;
             payload.provider = { max_price: { prompt: 0, completion: 0, request: 0 } };
         } else {
-            payload.max_completion_tokens = 4096;
-            payload.reasoning_effort = "medium";
+            payload.max_tokens = 4096;
         }
         
         try {
