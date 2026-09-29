@@ -18,7 +18,6 @@ export async function callChatAPI(messages, onChunk) {
         const payload = { model: provider.model, messages: [sysMsg, ...messages], stream: true };
         if (entry.provider === "openrouter") {
             payload.max_tokens = 3072;
-            payload.provider = { max_price: { prompt: 0, completion: 0, request: 0 } };
         } else {
             payload.max_tokens = 4096;
         }

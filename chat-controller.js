@@ -51,6 +51,7 @@ export async function sendMessage(text) {
         } else {
             refs.msgChat.value = text;
         }
+        state.currentImageBase64 = null;
         renderChat();
     } finally {
         state.isLoading = false;
