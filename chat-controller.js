@@ -40,6 +40,7 @@ export async function sendMessage(text) {
             updateStreamingMessage(currentText);
         });
         state.messages[state.messages.length - 1].content = fullText;
+        state.isLoading = false;
         renderChat();
     } catch (err) {
         if (err.name !== "AbortError") showError(err.message);

@@ -41,7 +41,11 @@ export function buildAssistantMsg(msg, index, isLast) {
     const content = el.querySelector(".msg-assistant-content");
     if (isLast) content.id = "streaming-target";
     content.innerHTML = formatContent(msg.content, true);
-    el.querySelector(".btn-copy").addEventListener("click", () => copyMessage(index));
+    const btn = el.querySelector(".btn-copy");
+    if (isLast && state.isLoading) {
+        btn.style.display = "none";
+    }
+    btn.addEventListener("click", () => copyMessage(index));
     return el;
 }
 
