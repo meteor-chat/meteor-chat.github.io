@@ -22,7 +22,8 @@ export function setupInputs() {
             if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
                 e.preventDefault();
                 if (!state.isLoading) {
-                    const text = input.value.trim();
+                    let text = input.value.trim();
+                    if (text.length > 999) text = text.substring(0, 999);
                     if (text || state.currentImageBase64) {
                         input.value = "";
                         updateBtn(input, input === refs.msgLanding ? refs.sendLanding : refs.sendChat);
@@ -36,7 +37,8 @@ export function setupInputs() {
 
     refs.sendLanding.addEventListener("click", () => {
         if (state.isLoading) return;
-        const text = refs.msgLanding.value.trim();
+        let text = refs.msgLanding.value.trim();
+        if (text.length > 999) text = text.substring(0, 999);
         if (text || state.currentImageBase64) {
             refs.msgLanding.value = "";
             sendMessage(text);
@@ -45,7 +47,8 @@ export function setupInputs() {
 
     refs.sendChat.addEventListener("click", () => {
         if (state.isLoading) return;
-        const text = refs.msgChat.value.trim();
+        let text = refs.msgChat.value.trim();
+        if (text.length > 999) text = text.substring(0, 999);
         if (text || state.currentImageBase64) {
             refs.msgChat.value = "";
             sendMessage(text);

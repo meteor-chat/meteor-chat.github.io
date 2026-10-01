@@ -31,7 +31,7 @@ function getTextContent(msg) {
     return msg.content || "";
 }
 
-// === Assistant message compression ===
+
 function compressAssistantMessage(text) {
     if (!text) return "";
     let compressed = text.replace(/```[\s\S]*?```/g, "[kode]");
@@ -42,13 +42,13 @@ function compressAssistantMessage(text) {
     return compressed;
 }
 
-// === Token-based history trimming ===
+
 function trimMessages(messages) {
     if (messages.length === 0) return [];
 
     let msgs = [...messages];
 
-    // Ensure starts with user message (fix slice-alignment bug)
+    
     while (msgs.length > 0 && msgs[0].role !== "user") {
         msgs.shift();
     }
@@ -164,7 +164,7 @@ export function stripThinkTags(text) {
     return cleaned.trim();
 }
 
-// === Dynamic max_tokens ===
+
 function getMaxTokens(text, provider) {
     const lower = (text || "").toLowerCase();
     const longKeywords = [
