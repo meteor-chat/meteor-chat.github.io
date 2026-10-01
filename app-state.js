@@ -9,5 +9,6 @@ export const state = {
     config: {
         max_message: 4000
     },
-    jadwalKuliah: ""
+    jadwalData: null,
+    usageLog: []
 };

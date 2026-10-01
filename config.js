@@ -37,4 +37,4 @@ export const IMAGE_INSTRUCTION = "PENTING: User mengirim 1 FOTO TUNGGAL UTUH, bu
     "Garis horizontal/vertikal di gambar adalah elemen fisik (balok, tiang, tembok), BUKAN pembatas antar foto. " +
     "Deskripsikan isinya sebagai SATU kejadian utuh.";
 
-export const JADWAL_KEYWORDS = ["jadwal", "kuliah", "kelas", "matkul", "mata kuliah", "schedule", "hari ini", "besok", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
+export const JADWAL_KEYWORDS = ["jadwal", "kuliah", "matkul", "mata kuliah", "schedule"];

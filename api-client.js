@@ -1,30 +1,195 @@
 import { PROVIDERS, SYSTEM_MESSAGE, IMAGE_INSTRUCTION, JADWAL_KEYWORDS } from "./config.js";
-import { getAllKeys } from "./api-keys.js";
+import { getOrderedKeys } from "./api-keys.js";
 import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
 
-const MAX_HISTORY_PAIRS = 10;
-const KEY_COOLDOWN_MS = 60000;
+// === Token budget constants ===
+const HISTORY_TOKEN_BUDGET = 4000;
+const RECENT_TURNS = 2;
+const COMPRESS_MAX_CHARS = 300;
+
+// === Key health / cooldown ===
+const KEY_COOLDOWN = {
+    rate_limit: 60000,
+    auth_error: 3600000,
+    not_found: 3600000,
+    server_error: 30000,
+    default: 60000
+};
 const keyHealth = new Map();
 
+// === Token estimation ===
+function estimateTokens(text) {
+    if (!text) return 0;
+    return Math.ceil(text.length / 3);
+}
+
+function getTextContent(msg) {
+    if (Array.isArray(msg.content)) {
+        return msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
+    }
+    return msg.content || "";
+}
+
+// === Assistant message compression ===
+function compressAssistantMessage(text) {
+    if (!text) return "";
+    let compressed = text.replace(/```[\s\S]*?```/g, "[kode]");
+    compressed = compressed.replace(/\$\$[\s\S]*?\$\$/g, "[rumus]");
+    if (compressed.length > COMPRESS_MAX_CHARS) {
+        compressed = compressed.substring(0, COMPRESS_MAX_CHARS) + "…";
+    }
+    return compressed;
+}
+
+// === Token-based history trimming ===
 function trimMessages(messages) {
-    const maxMessages = MAX_HISTORY_PAIRS * 2;
-    let trimmed = messages.length > maxMessages
-        ? messages.slice(-maxMessages)
-        : [...messages];
+    if (messages.length === 0) return [];
 
-    return trimmed.map((msg, i) => {
-        if (i >= trimmed.length - 2) return msg;
+    let msgs = [...messages];
 
+    // Ensure starts with user message (fix slice-alignment bug)
+    while (msgs.length > 0 && msgs[0].role !== "user") {
+        msgs.shift();
+    }
+
+    const recentCount = RECENT_TURNS * 2;
+    const recentStart = Math.max(0, msgs.length - recentCount);
+
+    const olderMessages = msgs.slice(0, recentStart);
+    const recentMessages = msgs.slice(recentStart);
+
+    // Compress older messages
+    const processed = olderMessages.map(msg => {
+        if (msg.role === "assistant") {
+            return { ...msg, content: compressAssistantMessage(msg.content || "") };
+        }
         if (Array.isArray(msg.content)) {
-            const textParts = msg.content.filter(p => p.type === "text");
-            const text = textParts.map(p => p.text).join(" ").trim();
-            return { ...msg, content: text || " " };
+            const text = msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
+            return { ...msg, content: text || "[gambar]" };
         }
         return msg;
     });
+
+    // Flatten images in recent except last pair
+    const processedRecent = recentMessages.map((msg, i) => {
+        if (i >= recentMessages.length - 2) return msg;
+        if (Array.isArray(msg.content)) {
+            const text = msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
+            return { ...msg, content: text || "[gambar]" };
+        }
+        return msg;
+    });
+
+    let all = [...processed, ...processedRecent];
+
+    // Trim oldest pairs until within token budget
+    let totalTokens = all.reduce((sum, msg) => sum + estimateTokens(getTextContent(msg)), 0);
+
+    while (totalTokens > HISTORY_TOKEN_BUDGET && all.length > recentCount) {
+        const removed = all.shift();
+        totalTokens -= estimateTokens(getTextContent(removed));
+        if (removed.role === "user" && all.length > recentCount && all[0]?.role === "assistant") {
+            const removedAssist = all.shift();
+            totalTokens -= estimateTokens(getTextContent(removedAssist));
+        }
+    }
+
+    // Final safety: ensure starts with user message
+    while (all.length > 0 && all[0].role !== "user") {
+        all.shift();
+    }
+
+    return all;
 }
 
+// === Schedule optimization ===
+const HARI = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
+
+function formatScheduleCompact(jadwalData, days) {
+    const lines = [];
+    const daysToInclude = days || Object.keys(jadwalData);
+
+    for (const day of daysToInclude) {
+        const entries = jadwalData[day];
+        if (!entries || entries.length === 0) continue;
+        for (const entry of entries) {
+            const jam = entry.jam.replace(/:00/g, "").replace(" - ", "-");
+            lines.push(
+                `${day.charAt(0).toUpperCase() + day.slice(1)} ${jam} ${entry.nama_mata_kuliah} ${entry.lokasi}`
+            );
+        }
+    }
+    return lines.length > 0 ? lines.join("\n") : null;
+}
+
+function getScheduleContext(text, jadwalData) {
+    if (!jadwalData) return null;
+
+    const lower = text.toLowerCase();
+
+    const hasStrong = JADWAL_KEYWORDS.some(kw => {
+        const regex = new RegExp(`\\b${kw.replace(/ /g, "\\s+")}\\b`, "i");
+        return regex.test(lower);
+    });
+
+    if (!hasStrong) return null;
+
+    // Determine target days
+    const today = new Date();
+    const todayName = HARI[today.getDay()];
+    const tomorrowName = HARI[(today.getDay() + 1) % 7];
+
+    const targetDays = new Set();
+    if (/\bhari\s+ini\b/.test(lower)) targetDays.add(todayName);
+    if (/\bbesok\b/.test(lower)) targetDays.add(tomorrowName);
+    for (const h of HARI) {
+        if (h === "minggu") continue;
+        const regex = new RegExp(`\\b${h}\\b`, "i");
+        if (regex.test(lower)) targetDays.add(h);
+    }
+
+    const days = targetDays.size > 0 ? [...targetDays] : null;
+    return formatScheduleCompact(jadwalData, days);
+}
+
+// === Think tag stripping ===
+export function stripThinkTags(text) {
+    if (!text) return text;
+    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, "");
+    const openIdx = cleaned.lastIndexOf("<think>");
+    if (openIdx !== -1 && cleaned.indexOf("</think>", openIdx) === -1) {
+        cleaned = cleaned.substring(0, openIdx);
+    }
+    return cleaned.trim();
+}
+
+// === Dynamic max_tokens ===
+function getMaxTokens(text, provider) {
+    const lower = (text || "").toLowerCase();
+    const longKeywords = [
+        "kode", "code", "program", "script", "jelaskan", "explain",
+        "langkah", "steps", "tulis", "write", "buatkan", "implementasi"
+    ];
+    const isLong = longKeywords.some(kw => lower.includes(kw));
+    if (isLong) return provider === "groq" ? 4096 : 3072;
+    return provider === "groq" ? 2048 : 1536;
+}
+
+// === Error classification ===
+function getErrorCooldown(status, retryAfter) {
+    if (retryAfter) {
+        const seconds = parseInt(retryAfter);
+        if (!isNaN(seconds)) return seconds * 1000;
+    }
+    if (status === 429) return KEY_COOLDOWN.rate_limit;
+    if (status >= 401 && status <= 403) return KEY_COOLDOWN.auth_error;
+    if (status === 404) return KEY_COOLDOWN.not_found;
+    if (status >= 500) return KEY_COOLDOWN.server_error;
+    return KEY_COOLDOWN.default;
+}
+
+// === Helpers ===
 function getLastUserText(messages) {
     for (let i = messages.length - 1; i >= 0; i--) {
         if (messages[i].role === "user") {
@@ -44,69 +209,141 @@ function lastMessageHasImage(messages) {
         last.content.some(p => p.type === "image_url");
 }
 
+// === Main API call ===
 export async function callChatAPI(messages, onChunk) {
-    const keys = getAllKeys();
+    const keys = getOrderedKeys();
     if (!keys.length) throw new Error("Belum ada API key aktif.");
 
-    let sysContent = SYSTEM_MESSAGE + "\n\nWaktu: " + new Date().toLocaleString("id-ID");
+    // Static system prompt (time/schedule moved to user message for caching)
+    let sysContent = SYSTEM_MESSAGE;
 
-    if (state.jadwalKuliah) {
-        const lastText = getLastUserText(messages).toLowerCase();
-        if (JADWAL_KEYWORDS.some(kw => lastText.includes(kw))) {
-            sysContent += "\n\nJadwal Kuliah:\n" + state.jadwalKuliah;
-        }
-    }
-
-    if (lastMessageHasImage(messages)) {
+    const hasImage = lastMessageHasImage(messages);
+    if (hasImage) {
         sysContent += "\n\n" + IMAGE_INSTRUCTION;
     }
 
     const sysMsg = { role: "system", content: sysContent };
 
+    // Token-based trimming
     const trimmed = trimMessages(messages);
+
+    // Build context to append to last user message
+    const lastText = getLastUserText(messages);
+    const now = new Date();
+    const timeStr = now.toLocaleString("id-ID", {
+        weekday: "long", year: "numeric", month: "long", day: "numeric",
+        hour: "2-digit", minute: "2-digit"
+    });
+
+    let contextSuffix = `\n\n[Waktu: ${timeStr}]`;
+
+    let hasSchedule = false;
+    const scheduleText = getScheduleContext(lastText, state.jadwalData);
+    if (scheduleText) {
+        contextSuffix += `\n[Jadwal Kuliah:\n${scheduleText}]`;
+        hasSchedule = true;
+    }
+
+    // Append context to last user message
+    const apiMessages = trimmed.map((msg, i) => {
+        if (i === trimmed.length - 1 && msg.role === "user") {
+            if (Array.isArray(msg.content)) {
+                const newContent = msg.content.map(p => {
+                    if (p.type === "text") return { ...p, text: p.text + contextSuffix };
+                    return p;
+                });
+                return { ...msg, content: newContent };
+            }
+            return { ...msg, content: msg.content + contextSuffix };
+        }
+        return msg;
+    });
 
     state.abortController = new AbortController();
 
     for (const entry of keys) {
         const health = keyHealth.get(entry.key);
-        if (health && Date.now() - health.failedAt < KEY_COOLDOWN_MS) continue;
+        if (health && Date.now() - health.failedAt < health.cooldown) continue;
+
+        // Skip text-only Groq models for image requests
+        if (hasImage && entry.provider === "groq") continue;
 
         const provider = PROVIDERS[entry.provider];
-        const payload = { model: provider.model, messages: [sysMsg, ...trimmed], stream: true };
-        if (entry.provider === "openrouter") {
-            payload.max_tokens = 3072;
-        } else {
-            payload.max_tokens = 4096;
+        const maxTokens = getMaxTokens(lastText, entry.provider);
+        const payload = {
+            model: provider.model,
+            messages: [sysMsg, ...apiMessages],
+            stream: true,
+            max_tokens: maxTokens,
+            stream_options: { include_usage: true }
+        };
+
+        // Suppress reasoning tokens for Groq Qwen models
+        if (entry.provider === "groq" && provider.model.toLowerCase().includes("qwen")) {
+            payload.reasoning_format = "hidden";
         }
 
+        let receivedChunks = false;
+        let fullText = "";
+
         try {
-            const headers = { "Content-Type": "application/json", "Authorization": `Bearer ${entry.key}` };
+            const headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${entry.key}`
+            };
             if (entry.provider === "openrouter") {
                 headers["HTTP-Referer"] = "https://meteor-chat.github.io/";
                 headers["X-Title"] = "Meteor";
             }
+
             const res = await fetch(provider.url, {
-                method: "POST", headers, body: JSON.stringify(payload), signal: state.abortController.signal
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload),
+                signal: state.abortController.signal
             });
+
             if (!res.ok) {
-                if (res.status === 429) {
-                    keyHealth.set(entry.key, { failedAt: Date.now() });
-                }
+                const retryAfter = res.headers.get("Retry-After");
+                const cooldown = getErrorCooldown(res.status, retryAfter);
+                keyHealth.set(entry.key, { failedAt: Date.now(), cooldown });
                 continue;
             }
             keyHealth.delete(entry.key);
 
-            let fullText = "";
-            await parseStream(res.body, (chunk) => {
+            const { usage, finishReason } = await parseStream(res.body, (chunk) => {
+                receivedChunks = true;
                 fullText += chunk;
-                onChunk(fullText);
+                const visibleText = stripThinkTags(fullText);
+                onChunk(visibleText);
             });
-            return fullText;
+
+            const cleanText = stripThinkTags(fullText);
+
+            // Log usage
+            if (usage) {
+                const logEntry = {
+                    timestamp: Date.now(),
+                    prompt_tokens: usage.prompt_tokens,
+                    completion_tokens: usage.completion_tokens,
+                    total_tokens: usage.total_tokens,
+                    hasSchedule,
+                    hasImage,
+                    provider: entry.provider
+                };
+                state.usageLog.push(logEntry);
+                console.log("[Meteor Usage]", logEntry);
+            }
+
+            return { text: cleanText, usage, finishReason };
         } catch (e) {
             if (e.name === "AbortError") throw e;
+            // Don't retry if we already received chunks (avoid doubling input cost)
+            if (receivedChunks && fullText) {
+                return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
+            }
             continue;
         }
     }
     throw new Error("Kapasitas server Meteor sedang mencapai batas maksimum. Silakan coba beberapa saat lagi.");
 }
-

@@ -5,6 +5,7 @@ import { setupMarkdown } from "./markdown-setup.js";
 import { refs } from "./dom-refs.js";
 import { cancelEdit } from "./edit-mode.js";
 import { copyCode } from "./message-actions.js";
+import { stopGeneration } from "./chat-controller.js";
 
 async function loadTemplates() {
     const tpls = ["tpl-user-msg.html", "tpl-user-bubble.html", "tpl-img-wrap.html", "tpl-user-actions.html", "tpl-assistant-msg.html", "tpl-typing.html", "tpl-thinking.html", "tpl-code-block.html"];
@@ -17,7 +18,7 @@ async function loadTemplates() {
 async function loadJadwal() {
     try {
         const res = await fetch("jadwal-kuliah.json");
-        if (res.ok) state.jadwalKuliah = await res.text();
+        if (res.ok) state.jadwalData = await res.json();
     } catch(e) {}
 }
 
@@ -28,6 +29,9 @@ async function init() {
     setupImageUpload();
     setupMarkdown();
     refs.cancelBtn.addEventListener("click", cancelEdit);
+    if (refs.stopBtn) {
+        refs.stopBtn.addEventListener("click", stopGeneration);
+    }
     document.addEventListener("click", (e) => {
         const btn = e.target.closest(".copy-btn");
         if (btn) copyCode(btn);

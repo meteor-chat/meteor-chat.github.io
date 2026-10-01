@@ -11,7 +11,8 @@ export const refs = {
     editNotice: $("edit-notice"),
     errorBox: $("error-box"),
     conversationEl: $("conversation"),
-    chatMessagesEl: $("chat-messages")
+    chatMessagesEl: $("chat-messages"),
+    stopBtn: $("stop-chat")
 };
 export const getActiveInput = () => state.currentView === "landing" ? refs.msgLanding : refs.msgChat;
 export const getActiveSendBtn = () => state.currentView === "landing" ? refs.sendLanding : refs.sendChat;

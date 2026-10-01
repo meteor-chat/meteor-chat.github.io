@@ -12,3 +12,14 @@ export function getNextKey() {
 export function getAllKeys() {
     return CONFIG_API_KEYS;
 }
+
+export function getOrderedKeys() {
+    const keys = CONFIG_API_KEYS;
+    if (keys.length === 0) return [];
+    const ordered = [];
+    for (let i = 0; i < keys.length; i++) {
+        ordered.push(keys[(activeIndex + i) % keys.length]);
+    }
+    activeIndex = (activeIndex + 1) % keys.length;
+    return ordered;
+}
