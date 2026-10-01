@@ -35,13 +35,13 @@ export async function sendMessage(text) {
     state.isLoading = true;
     getActiveSendBtn().disabled = true;
 
-    // Show stop button, hide send button
+    
     if (refs.stopBtn) {
         refs.stopBtn.style.display = "";
         refs.sendChat.style.display = "none";
     }
 
-    // Remove any previous continue button
+    
     const prevContinue = document.getElementById("continue-btn");
     if (prevContinue) prevContinue.remove();
 
@@ -86,21 +86,21 @@ export async function sendMessage(text) {
         state.isLoading = false;
         renderChat();
 
-        // Offer continue if response was truncated
+        
         if (result.finishReason === "length") {
             showContinueButton();
         }
     } catch (err) {
         removeThinking();
         if (err.name === "AbortError") {
-            // Stop button pressed — keep partial response
+            
             const lastMsg = state.messages[state.messages.length - 1];
             if (lastMsg?.role === "assistant" && lastMsg.content) {
                 lastMsg.content = stripThinkTags(lastMsg.content);
                 state.isLoading = false;
                 renderChat();
             } else {
-                // No content yet — clean up
+                
                 if (lastMsg?.role === "assistant") state.messages.pop();
                 if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
                 state.isLoading = false;
@@ -125,7 +125,7 @@ export async function sendMessage(text) {
         refs.sendChat.disabled = false;
         refs.sendLanding.disabled = false;
         refs.msgChat.readOnly = false;
-        // Restore stop/send button visibility
+        
         if (refs.stopBtn) {
             refs.stopBtn.style.display = "none";
             refs.sendChat.style.display = "";

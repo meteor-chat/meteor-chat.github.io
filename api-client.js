@@ -3,12 +3,12 @@ import { getOrderedKeys } from "./api-keys.js";
 import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
 
-// === Token budget constants ===
+
 const HISTORY_TOKEN_BUDGET = 4000;
 const RECENT_TURNS = 2;
 const COMPRESS_MAX_CHARS = 300;
 
-// === Key health / cooldown ===
+
 const KEY_COOLDOWN = {
     rate_limit: 60000,
     auth_error: 3600000,
@@ -18,7 +18,7 @@ const KEY_COOLDOWN = {
 };
 const keyHealth = new Map();
 
-// === Token estimation ===
+
 function estimateTokens(text) {
     if (!text) return 0;
     return Math.ceil(text.length / 3);
@@ -59,7 +59,7 @@ function trimMessages(messages) {
     const olderMessages = msgs.slice(0, recentStart);
     const recentMessages = msgs.slice(recentStart);
 
-    // Compress older messages
+    
     const processed = olderMessages.map(msg => {
         if (msg.role === "assistant") {
             return { ...msg, content: compressAssistantMessage(msg.content || "") };
@@ -71,7 +71,7 @@ function trimMessages(messages) {
         return msg;
     });
 
-    // Flatten images in recent except last pair
+    
     const processedRecent = recentMessages.map((msg, i) => {
         if (i >= recentMessages.length - 2) return msg;
         if (Array.isArray(msg.content)) {
@@ -83,7 +83,7 @@ function trimMessages(messages) {
 
     let all = [...processed, ...processedRecent];
 
-    // Trim oldest pairs until within token budget
+    
     let totalTokens = all.reduce((sum, msg) => sum + estimateTokens(getTextContent(msg)), 0);
 
     while (totalTokens > HISTORY_TOKEN_BUDGET && all.length > recentCount) {
@@ -95,7 +95,7 @@ function trimMessages(messages) {
         }
     }
 
-    // Final safety: ensure starts with user message
+    
     while (all.length > 0 && all[0].role !== "user") {
         all.shift();
     }
@@ -103,7 +103,7 @@ function trimMessages(messages) {
     return all;
 }
 
-// === Schedule optimization ===
+
 const HARI = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
 
 function formatScheduleCompact(jadwalData, days) {
@@ -135,7 +135,7 @@ function getScheduleContext(text, jadwalData) {
 
     if (!hasStrong) return null;
 
-    // Determine target days
+    
     const today = new Date();
     const todayName = HARI[today.getDay()];
     const tomorrowName = HARI[(today.getDay() + 1) % 7];
@@ -153,7 +153,7 @@ function getScheduleContext(text, jadwalData) {
     return formatScheduleCompact(jadwalData, days);
 }
 
-// === Think tag stripping ===
+
 export function stripThinkTags(text) {
     if (!text) return text;
     let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, "");
@@ -176,7 +176,7 @@ function getMaxTokens(text, provider) {
     return provider === "groq" ? 2048 : 1536;
 }
 
-// === Error classification ===
+
 function getErrorCooldown(status, retryAfter) {
     if (retryAfter) {
         const seconds = parseInt(retryAfter);
@@ -189,7 +189,7 @@ function getErrorCooldown(status, retryAfter) {
     return KEY_COOLDOWN.default;
 }
 
-// === Helpers ===
+
 function getLastUserText(messages) {
     for (let i = messages.length - 1; i >= 0; i--) {
         if (messages[i].role === "user") {
@@ -209,12 +209,12 @@ function lastMessageHasImage(messages) {
         last.content.some(p => p.type === "image_url");
 }
 
-// === Main API call ===
+
 export async function callChatAPI(messages, onChunk) {
     const keys = getOrderedKeys();
     if (!keys.length) throw new Error("Belum ada API key aktif.");
 
-    // Static system prompt (time/schedule moved to user message for caching)
+    
     let sysContent = SYSTEM_MESSAGE;
 
     const hasImage = lastMessageHasImage(messages);
@@ -224,10 +224,10 @@ export async function callChatAPI(messages, onChunk) {
 
     const sysMsg = { role: "system", content: sysContent };
 
-    // Token-based trimming
+    
     const trimmed = trimMessages(messages);
 
-    // Build context to append to last user message
+    
     const lastText = getLastUserText(messages);
     const now = new Date();
     const timeStr = now.toLocaleString("id-ID", {
@@ -244,7 +244,7 @@ export async function callChatAPI(messages, onChunk) {
         hasSchedule = true;
     }
 
-    // Append context to last user message
+    
     const apiMessages = trimmed.map((msg, i) => {
         if (i === trimmed.length - 1 && msg.role === "user") {
             if (Array.isArray(msg.content)) {
@@ -265,7 +265,7 @@ export async function callChatAPI(messages, onChunk) {
         const health = keyHealth.get(entry.key);
         if (health && Date.now() - health.failedAt < health.cooldown) continue;
 
-        // Skip text-only Groq models for image requests
+        
         if (hasImage && entry.provider === "groq") continue;
 
         const provider = PROVIDERS[entry.provider];
@@ -278,7 +278,7 @@ export async function callChatAPI(messages, onChunk) {
             stream_options: { include_usage: true }
         };
 
-        // Suppress reasoning tokens for Groq Qwen models
+        
         if (entry.provider === "groq" && provider.model.toLowerCase().includes("qwen")) {
             payload.reasoning_format = "hidden";
         }
@@ -320,7 +320,7 @@ export async function callChatAPI(messages, onChunk) {
 
             const cleanText = stripThinkTags(fullText);
 
-            // Log usage
+            
             if (usage) {
                 const logEntry = {
                     timestamp: Date.now(),
@@ -338,7 +338,7 @@ export async function callChatAPI(messages, onChunk) {
             return { text: cleanText, usage, finishReason };
         } catch (e) {
             if (e.name === "AbortError") throw e;
-            // Don't retry if we already received chunks (avoid doubling input cost)
+            
             if (receivedChunks && fullText) {
                 return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
             }
