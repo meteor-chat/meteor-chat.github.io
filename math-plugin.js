@@ -29,10 +29,23 @@ export function setupMath() {
     const inlineMath = {
         name: "inlineMath",
         level: "inline",
-        start(src) { return src.indexOf("$"); },
+        start(src) {
+            let idx = 0;
+            while (idx < src.length) {
+                idx = src.indexOf("$", idx);
+                if (idx === -1) return -1;
+                if (src[idx + 1] === "$") { idx += 2; continue; }
+                return idx;
+            }
+            return -1;
+        },
         tokenizer(src) {
-            const match = /^\$([^$\n]+?)\$/.exec(src);
-            if (match && !/^\d/.test(match[1])) return { type: "inlineMath", raw: match[0], text: match[1].trim() };
+            const match = /^\$([^\s$](?:[^$\n]*[^\s$])?)\$(?!\d)/.exec(src);
+            if (!match) return;
+            const content = match[1];
+            if (/^[\d,.]+$/.test(content)) return;
+            if (!/[\\^_{}=+\-*/()[\]|<>!]|\\[a-zA-Z]/.test(content) && content.length > 30) return;
+            return { type: "inlineMath", raw: match[0], text: content.trim() };
         },
         renderer(token) {
             try { return katex.renderToString(token.text, { displayMode: false, throwOnError: false }); }
