@@ -7,3 +7,4 @@
 .img-wrap img { max-width: min(100%, 400px); max-height: 400px; border-radius: var(--radius-lg); object-fit: cover; }
 .thinking-indicator { color: var(--text-muted); padding: var(--space-sm) 0; animation: thinking-pulse 1.5s ease-in-out infinite; }
 @keyframes thinking-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.blocked-image { display: inline-block; padding: 4px 8px; background: rgba(255,255,255,0.08); border-radius: var(--radius-sm); color: var(--text-muted); font-size: 13px; font-style: italic; }

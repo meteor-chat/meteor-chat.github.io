@@ -1,6 +1,17 @@
 import { state } from "./app-state.js";
 import { setupMath } from "./math-plugin.js";
 
+function isAllowedImageSrc(src) {
+    if (!src) return false;
+    if (src.startsWith("data:image/")) return true;
+    try {
+        const url = new URL(src, window.location.origin);
+        return url.origin === window.location.origin;
+    } catch (e) {
+        return false;
+    }
+}
+
 export function setupMarkdown() {
     setupMath();
     marked.use({
@@ -19,7 +30,7 @@ export function setupMarkdown() {
             try { highlighted = hljs.highlightAuto(code).value; }
             catch { highlighted = escapeHTML(code); }
         }
-        
+
         const div = document.createElement("div");
         div.innerHTML = state.templates["tpl-code-block"];
         const tpl = div.firstElementChild;
@@ -28,6 +39,35 @@ export function setupMarkdown() {
         codeEl.className = lang ? `hljs language-${lang}` : "hljs";
         codeEl.innerHTML = highlighted;
         return tpl.outerHTML;
+    };
+    renderer.image = function(obj) {
+        const src = obj.href || obj.src || "";
+        const alt = escapeHTML(obj.text || obj.title || "image");
+        if (!isAllowedImageSrc(src)) {
+            const span = document.createElement("span");
+            span.className = "blocked-image";
+            span.textContent = "[gambar eksternal diblokir]";
+            return span.outerHTML;
+        }
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = alt;
+        return img.outerHTML;
+    };
+    renderer.link = function(obj) {
+        const href = obj.href || "";
+        const text = obj.text || href;
+        if (href.startsWith("javascript:") || href.startsWith("data:") || href.startsWith("vbscript:")) {
+            const span = document.createElement("span");
+            span.textContent = text;
+            return span.outerHTML;
+        }
+        const a = document.createElement("a");
+        a.href = href;
+        a.textContent = text;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        return a.outerHTML;
     };
     marked.use({ renderer });
 }

@@ -1,6 +1,7 @@
 export function sanitize(html) {
     return DOMPurify.sanitize(html, {
-        ADD_TAGS: ["iframe"],
-        ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling"]
+        FORBID_TAGS: ["iframe", "object", "embed", "form", "input", "select", "textarea", "button", "style"],
+        FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur", "onsubmit", "formaction"],
+        ALLOW_DATA_ATTR: false
     });
 }
