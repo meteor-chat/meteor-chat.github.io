@@ -4,6 +4,12 @@ export const CONFIG_API_KEYS = [
     { key: "sk-or-v1-" + "b9fb398351db4d6b1ccf240155c2e3f79b91cbdec21bc2b250642dd67f338809", provider: "openrouter" },
     { key: "sk-or-v1-" + "52f9eca206c2b8e2a4eaaf0651616c9e774fb0b4fa91fea208f2850de9ce114e", provider: "openrouter" },
     { key: "sk-or-v1-" + "58dff47ac72cb7223e91859c6bbda3c695c57d819e4135ae41d3ef683c133b8b", provider: "openrouter" },
+    { key: "gsk_" + "XNH0XI5U0cX4ja3VEgoXWGdyb3FY8sXOVLQgTVWIU89kS8MkVBbD", provider: "groq" },
+    { key: "gsk_" + "Egz7fASWQ89TGbDOAjC9WGdyb3FY6PFS05wpECi15k6QpCSGTRa6", provider: "groq" },
+    { key: "gsk_" + "6mmgWYwKkwf7RRhPvJsUWGdyb3FYkvOLc3IpqWZZybdLRd8moY12", provider: "groq" },
+    { key: "gsk_" + "jkltzNX6tTZaCZ0xJP2NWGdyb3FYLvx26Pz9hu1h0t651yxLK7UZ", provider: "groq" },
+    { key: "gsk_" + "YHT7r73CB9bUVcxDqFRZWGdyb3FY2Xp6DEoog2xQ5eB78qQE8QdX", provider: "groq" },
+    { key: "gsk_" + "7Zjz7Z09QRSJMvsAWjWoWGdyb3FYR3w2zYUWcFEa650xiwWIA8sR", provider: "groq" },
 ];
 export const PROVIDERS = {
     openrouter: {
