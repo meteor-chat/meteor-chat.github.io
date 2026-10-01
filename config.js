@@ -16,7 +16,7 @@ export const CONFIG_API_KEYS = [
 export const PROVIDERS = {
     openrouter: {
         url: "https://openrouter.ai/api/v1/chat/completions",
-        model: "google/gemma-4-31b-it:free"
+        model: "qwen/qwen3.8-27b:free"
     },
     groq: {
         url: "https://api.groq.com/openai/v1/chat/completions",
