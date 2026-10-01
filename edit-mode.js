@@ -9,7 +9,7 @@ export function startEdit(index) {
     const item = state.messages[index].content;
     let text = "";
     let imgUrl = null;
-    
+
     if (Array.isArray(item)) {
         text = item.find(p => p.type === "text")?.text || "";
         const imgPart = item.find(p => p.type === "image_url");
@@ -17,18 +17,18 @@ export function startEdit(index) {
     } else {
         text = item;
     }
-    
+
     refs.msgChat.value = text;
-    refs.cancelBtn.style.display = "";
-    refs.editNotice.style.display = "";
+    refs.cancelBtn.classList.remove("hidden");
+    refs.editNotice.classList.remove("hidden");
     if (window.innerWidth > 768) refs.msgChat.focus();
     hideError();
-    
+
     if (imgUrl) {
         state.currentImageBase64 = imgUrl;
         const wrap = refs.chatViewEl.querySelector(".input-wrap");
         wrap.querySelector(".image-preview").src = imgUrl;
-        wrap.querySelector(".image-preview-container").style.display = "flex";
+        wrap.querySelector(".image-preview-container").classList.remove("hidden");
     } else {
         clearImagePreview();
     }
@@ -43,6 +43,6 @@ export function cancelEdit() {
 
 export function exitEditMode() {
     state.editIndex = null;
-    refs.cancelBtn.style.display = "none";
-    refs.editNotice.style.display = "none";
+    refs.cancelBtn.classList.add("hidden");
+    refs.editNotice.classList.add("hidden");
 }

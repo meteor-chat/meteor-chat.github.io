@@ -43,7 +43,7 @@ export function buildAssistantMsg(msg, index, isLast) {
     content.innerHTML = formatContent(msg.content, true);
     const btn = el.querySelector(".btn-copy");
     if (isLast && state.isLoading) {
-        btn.style.display = "none";
+        btn.classList.add("hidden");
     }
     btn.addEventListener("click", () => copyMessage(index));
     return el;

@@ -18,7 +18,7 @@ export function setupImageUpload() {
         });
         removeBtn.addEventListener("click", () => {
             state.currentImageBase64 = null;
-            previewContainer.style.display = "none";
+            previewContainer.classList.add("hidden");
             fileInput.value = "";
         });
     });
@@ -40,14 +40,14 @@ export function setupImageUpload() {
 
 function processFile(file, container, imgEl) {
     if (!file.type.startsWith("image/")) return;
-    if (file.size > 10 * 1024 * 1024) return; 
+    if (file.size > 10 * 1024 * 1024) return;
     const reader = new FileReader();
     reader.onload = (e) => {
         resizeImage(e.target.result, (base64) => {
             state.currentImageBase64 = base64;
             if (imgEl && container) {
                 imgEl.src = base64;
-                container.style.display = "flex";
+                container.classList.remove("hidden");
             }
         });
     };
@@ -57,6 +57,6 @@ function processFile(file, container, imgEl) {
 
 export function clearImagePreview() {
     state.currentImageBase64 = null;
-    document.querySelectorAll(".image-preview-container").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".image-preview-container").forEach(el => el.classList.add("hidden"));
     document.querySelectorAll(".file-input").forEach(el => el.value = "");
 }

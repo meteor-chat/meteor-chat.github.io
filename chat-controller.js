@@ -35,13 +35,11 @@ export async function sendMessage(text) {
     state.isLoading = true;
     getActiveSendBtn().disabled = true;
 
-    
     if (refs.stopBtn) {
-        refs.stopBtn.style.display = "";
-        refs.sendChat.style.display = "none";
+        refs.stopBtn.classList.remove("hidden");
+        refs.sendChat.classList.add("hidden");
     }
 
-    
     const prevContinue = document.getElementById("continue-btn");
     if (prevContinue) prevContinue.remove();
 
@@ -86,21 +84,18 @@ export async function sendMessage(text) {
         state.isLoading = false;
         renderChat();
 
-        
         if (result.finishReason === "length") {
             showContinueButton();
         }
     } catch (err) {
         removeThinking();
         if (err.name === "AbortError") {
-            
             const lastMsg = state.messages[state.messages.length - 1];
             if (lastMsg?.role === "assistant" && lastMsg.content) {
                 lastMsg.content = stripThinkTags(lastMsg.content);
                 state.isLoading = false;
                 renderChat();
             } else {
-                
                 if (lastMsg?.role === "assistant") state.messages.pop();
                 if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
                 state.isLoading = false;
@@ -125,10 +120,10 @@ export async function sendMessage(text) {
         refs.sendChat.disabled = false;
         refs.sendLanding.disabled = false;
         refs.msgChat.readOnly = false;
-        
+
         if (refs.stopBtn) {
-            refs.stopBtn.style.display = "none";
-            refs.sendChat.style.display = "";
+            refs.stopBtn.classList.add("hidden");
+            refs.sendChat.classList.remove("hidden");
         }
         if (window.innerWidth > 768) refs.msgChat.focus();
     }
