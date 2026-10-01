@@ -1,7 +1,7 @@
 import { state } from "./app-state.js";
 import { refs, getActiveSendBtn } from "./dom-refs.js";
 import { callChatAPI } from "./api-client.js";
-import { renderChat, showTypingIndicator, removeTypingIndicator, updateStreamingMessage } from "./chat-render.js";
+import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage } from "./chat-render.js";
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
 import { clearImagePreview } from "./image-upload.js";
@@ -31,18 +31,30 @@ export async function sendMessage(text) {
     refs.msgChat.readOnly = true;
 
     try {
-        state.messages.push({ role: "assistant", content: "" });
+        let firstChunk = true;
         removeTypingIndicator();
-        renderChat();
-        
-        const fullText = await callChatAPI(state.messages.slice(0, -1), (currentText) => {
+        showThinking();
+
+        const fullText = await callChatAPI(state.messages, (currentText) => {
+            if (firstChunk) {
+                firstChunk = false;
+                removeThinking();
+                state.messages.push({ role: "assistant", content: "" });
+                renderChat();
+            }
             state.messages[state.messages.length - 1].content = currentText;
             updateStreamingMessage(currentText);
         });
-        state.messages[state.messages.length - 1].content = fullText;
+        if (firstChunk) {
+            removeThinking();
+            state.messages.push({ role: "assistant", content: fullText });
+        } else {
+            state.messages[state.messages.length - 1].content = fullText;
+        }
         state.isLoading = false;
         renderChat();
     } catch (err) {
+        removeThinking();
         if (err.name !== "AbortError") showError(err.message);
         if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
         if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();

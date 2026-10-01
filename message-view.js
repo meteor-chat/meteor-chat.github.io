@@ -52,3 +52,7 @@ export function buildAssistantMsg(msg, index, isLast) {
 export function buildTyping() {
     return parseTemplate("tpl-typing");
 }
+
+export function buildThinking() {
+    return parseTemplate("tpl-thinking");
+}

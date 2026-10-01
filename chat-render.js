@@ -1,6 +1,6 @@
 import { state } from "./app-state.js";
 import { refs } from "./dom-refs.js";
-import { buildUserMsg, buildAssistantMsg, buildTyping } from "./message-view.js";
+import { buildUserMsg, buildAssistantMsg, buildTyping, buildThinking } from "./message-view.js";
 import { formatContent } from "./markdown-render.js";
 import { showChatView, showLanding } from "./view-switch.js";
 
@@ -41,6 +41,16 @@ export function showTypingIndicator() {
 
 export function removeTypingIndicator() {
     const el = document.getElementById("typing-indicator");
+    if (el) el.remove();
+}
+
+export function showThinking() {
+    refs.conversationEl.appendChild(buildThinking());
+    scrollToBottom();
+}
+
+export function removeThinking() {
+    const el = document.getElementById("thinking-indicator");
     if (el) el.remove();
 }
 

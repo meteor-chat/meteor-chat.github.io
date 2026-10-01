@@ -7,7 +7,7 @@ import { cancelEdit } from "./edit-mode.js";
 import { copyCode } from "./message-actions.js";
 
 async function loadTemplates() {
-    const tpls = ["tpl-user-msg.html", "tpl-user-bubble.html", "tpl-img-wrap.html", "tpl-user-actions.html", "tpl-assistant-msg.html", "tpl-typing.html", "tpl-code-block.html"];
+    const tpls = ["tpl-user-msg.html", "tpl-user-bubble.html", "tpl-img-wrap.html", "tpl-user-actions.html", "tpl-assistant-msg.html", "tpl-typing.html", "tpl-thinking.html", "tpl-code-block.html"];
     for (const file of tpls) {
         const res = await fetch(file);
         state.templates[file.replace(".html", "")] = await res.text();
