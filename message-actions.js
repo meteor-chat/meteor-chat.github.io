@@ -13,7 +13,13 @@ export function copyCode(btn) {
     if (code) {
         writeText(code.textContent).then(() => {
             btn.textContent = "Copied!";
-            setTimeout(() => { btn.innerHTML = '<img src="copy.svg" alt="Copy">'; }, 1500);
+            setTimeout(() => {
+                btn.textContent = "";
+                const img = document.createElement("img");
+                img.src = "copy.svg";
+                img.alt = "Copy";
+                btn.appendChild(img);
+            }, 1500);
         });
     }
 }

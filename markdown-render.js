@@ -1,5 +1,6 @@
 import { normalizeMath } from "./math-plugin.js";
 import { sanitize } from "./sanitize.js";
+import { state } from "./app-state.js";
 
 function escapeTextAndNewlines(text) {
     const div = document.createElement("div");
@@ -16,7 +17,11 @@ export function formatContent(contentObj, isMarkdown = false) {
         let out = "";
         for (const part of contentObj) {
             if (part.type === "text") out += escapeTextAndNewlines(part.text);
-            else if (part.type === "image_url") out += `<div class="img-wrap"><img src="${sanitize(part.image_url.url)}" alt="img"></div>`;
+            else if (part.type === "image_url") {
+                let imgWrap = state.templates["tpl-img-wrap"];
+                imgWrap = imgWrap.replace('src=""', `src="${sanitize(part.image_url.url)}"`);
+                out += imgWrap;
+            }
         }
         return out;
     }

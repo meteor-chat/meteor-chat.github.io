@@ -22,4 +22,3 @@ export function resizeImage(dataUrl, callback) {
     };
     img.src = dataUrl;
 }
-
