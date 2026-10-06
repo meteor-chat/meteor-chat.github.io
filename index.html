@@ -22,18 +22,10 @@
     <img src="./banner.png" class="banner" alt="Banner">
     <div class="tagline"><h1>Minimalist. No Login. Meteor</h1></div>
     <div class="input-wrap">
-        <input type="file" class="file-input hidden" accept="image/jpeg, image/png, image/webp">
-        <!-- sengaja dinonaktifkan agar tidak makan banyak token -->
-        <!-- <button class="upload-btn" aria-label="Upload"><img src="add.svg" alt="Upload"></button> -->
-        <div class="image-preview-container hidden">
-            <img class="image-preview" src="" alt="Preview">
-            <button class="remove-image-btn" aria-label="Remove"><img src="remove.svg" alt="Remove"></button>
-        </div>
         <textarea id="message-landing" placeholder="Ask Meteor" rows="1" maxlength="999"></textarea>
         <button id="send-landing" class="send-landing" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
     </div>
 </div>
-
 <div id="chat-view" class="hidden">
     <div id="chat-messages" aria-live="polite">
         <div id="conversation"></div>
@@ -41,19 +33,11 @@
     <div class="input-wrap">
         <div id="edit-notice" class="hidden">Editing message</div>
         <button id="cancel-btn" class="hidden">Cancel</button>
-        <input type="file" class="file-input hidden" accept="image/jpeg, image/png, image/webp">
-        <!-- sengaja dinonaktifkan agar tidak makan banyak token -->
-        <!-- <button class="upload-btn" aria-label="Upload"><img src="add.svg" alt="Upload"></button> -->
-        <div class="image-preview-container hidden">
-            <img class="image-preview" src="" alt="Preview">
-            <button class="remove-image-btn" aria-label="Remove"><img src="remove.svg" alt="Remove"></button>
-        </div>
         <textarea id="message-chat" placeholder="Ask Meteor" rows="1" maxlength="999"></textarea>
         <button id="send-chat" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
         <button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="stop.svg" alt="Stop"></button>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>

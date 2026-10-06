@@ -3,7 +3,6 @@ export const state = {
     editIndex: null,
     isLoading: false,
     currentView: "landing",
-    currentImageBase64: null,
     templates: {},
     abortController: null,
     config: {

@@ -1,4 +1,4 @@
-import { PROVIDERS, SYSTEM_MESSAGE, IMAGE_INSTRUCTION, JADWAL_KEYWORDS } from "./config.js";
+import { PROVIDERS, SYSTEM_MESSAGE, JADWAL_KEYWORDS } from "./config.js";
 import { getOrderedKeys } from "./api-keys.js";
 import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
@@ -22,9 +22,6 @@ function estimateTokens(text) {
 }
 
 function getTextContent(msg) {
-    if (Array.isArray(msg.content)) {
-        return msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
-    }
     return msg.content || "";
 }
 
@@ -57,19 +54,11 @@ function trimMessages(messages) {
         if (msg.role === "assistant") {
             return { ...msg, content: compressAssistantMessage(msg.content || "") };
         }
-        if (Array.isArray(msg.content)) {
-            const text = msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
-            return { ...msg, content: text || "[gambar]" };
-        }
         return msg;
     });
 
     const processedRecent = recentMessages.map((msg, i) => {
         if (i >= recentMessages.length - 2) return msg;
-        if (Array.isArray(msg.content)) {
-            const text = msg.content.filter(p => p.type === "text").map(p => p.text).join(" ").trim();
-            return { ...msg, content: text || "[gambar]" };
-        }
         return msg;
     });
 
@@ -176,31 +165,16 @@ function getErrorCooldown(status, retryAfter) {
 function getLastUserText(messages) {
     for (let i = messages.length - 1; i >= 0; i--) {
         if (messages[i].role === "user") {
-            const c = messages[i].content;
-            return Array.isArray(c)
-                ? (c.find(p => p.type === "text")?.text || "")
-                : (c || "");
+            return messages[i].content || "";
         }
     }
     return "";
-}
-
-function lastMessageHasImage(messages) {
-    if (!messages.length) return false;
-    const last = messages[messages.length - 1];
-    return Array.isArray(last.content) &&
-        last.content.some(p => p.type === "image_url");
 }
 
 export async function callChatAPI(messages, onChunk) {
     if (!getOrderedKeys().length) throw new Error("Belum ada API key aktif.");
 
     let sysContent = SYSTEM_MESSAGE;
-
-    const hasImage = lastMessageHasImage(messages);
-    if (hasImage) {
-        sysContent += "\n\n" + IMAGE_INSTRUCTION;
-    }
 
     const sysMsg = { role: "system", content: sysContent };
 
@@ -224,13 +198,6 @@ export async function callChatAPI(messages, onChunk) {
 
     const apiMessages = trimmed.map((msg, i) => {
         if (i === trimmed.length - 1 && msg.role === "user") {
-            if (Array.isArray(msg.content)) {
-                const newContent = msg.content.map(p => {
-                    if (p.type === "text") return { ...p, text: p.text + contextSuffix };
-                    return p;
-                });
-                return { ...msg, content: newContent };
-            }
             return { ...msg, content: msg.content + contextSuffix };
         }
         return msg;
@@ -239,7 +206,7 @@ export async function callChatAPI(messages, onChunk) {
     state.abortController = new AbortController();
 
     const provider = PROVIDERS.openrouter;
-    const modelList = hasImage ? provider.vision_models : provider.models;
+    const modelList = provider.models;
     const keys = getOrderedKeys();
 
     for (const entry of keys) {
@@ -297,7 +264,6 @@ export async function callChatAPI(messages, onChunk) {
                         completion_tokens: usage.completion_tokens,
                         total_tokens: usage.total_tokens,
                         hasSchedule,
-                        hasImage,
                         provider: entry.provider
                     };
                     state.usageLog.push(logEntry);

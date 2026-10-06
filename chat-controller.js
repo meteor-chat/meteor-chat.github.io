@@ -4,7 +4,6 @@ import { callChatAPI } from "./api-client.js";
 import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage, scrollToBottom } from "./chat-render.js";
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
-import { clearImagePreview } from "./image-upload.js";
 import { stripThinkTags } from "./api-client.js";
 
 export function stopGeneration() {
@@ -49,11 +48,7 @@ export async function sendMessage(text) {
     }
 
     let content = text;
-    if (state.currentImageBase64) {
-        content = [{ type: "text", text: text || " " }, { type: "image_url", image_url: { url: state.currentImageBase64 } }];
-    }
     state.messages.push({ role: "user", content });
-    clearImagePreview();
     renderChat();
     showTypingIndicator();
     refs.msgChat.readOnly = true;
@@ -111,7 +106,6 @@ export async function sendMessage(text) {
             } else {
                 refs.msgChat.value = text;
             }
-            state.currentImageBase64 = null;
             renderChat();
         }
     } finally {

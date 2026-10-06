@@ -24,7 +24,7 @@ export function setupInputs() {
                 if (!state.isLoading) {
                     let text = input.value.trim();
                     if (text.length > 999) text = text.substring(0, 999);
-                    if (text || state.currentImageBase64) {
+                    if (text) {
                         input.value = "";
                         updateBtn(input, input === refs.msgLanding ? refs.sendLanding : refs.sendChat);
                         autoResize(input);
@@ -39,7 +39,7 @@ export function setupInputs() {
         if (state.isLoading) return;
         let text = refs.msgLanding.value.trim();
         if (text.length > 999) text = text.substring(0, 999);
-        if (text || state.currentImageBase64) {
+        if (text) {
             refs.msgLanding.value = "";
             sendMessage(text);
         }
@@ -49,7 +49,7 @@ export function setupInputs() {
         if (state.isLoading) return;
         let text = refs.msgChat.value.trim();
         if (text.length > 999) text = text.substring(0, 999);
-        if (text || state.currentImageBase64) {
+        if (text) {
             refs.msgChat.value = "";
             sendMessage(text);
         }

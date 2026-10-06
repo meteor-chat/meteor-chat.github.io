@@ -13,18 +13,7 @@ function escapeTextAndNewlines(text) {
 }
 
 export function formatContent(contentObj, isMarkdown = false) {
-    if (Array.isArray(contentObj)) {
-        let out = "";
-        for (const part of contentObj) {
-            if (part.type === "text") out += escapeTextAndNewlines(part.text);
-            else if (part.type === "image_url") {
-                let imgWrap = state.templates["tpl-img-wrap"];
-                imgWrap = imgWrap.replace('src=""', `src="${sanitize(part.image_url.url)}"`);
-                out += imgWrap;
-            }
-        }
-        return out;
-    }
+
     const text = String(contentObj);
     if (isMarkdown) {
         const normalized = normalizeMath(text);

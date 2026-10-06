@@ -19,13 +19,6 @@ export const PROVIDERS = {
             "inclusionai/ling-3.0-flash-sante:free",
             "liquid/lfm-2.5-2.6b:free",
             "apodex/apodex-1.1-mini:free"
-        ],
-        vision_models: [
-            "google/gemma-4-26b-a4b-it:free",
-            "google/gemma-4-31b-it:free",
-            "thinkingmachines/inkling:free",
-            "thinkingmachines/inkling-small:free",
-            "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
         ]
     }
 };
@@ -39,9 +32,5 @@ export const SYSTEM_MESSAGE = "Kamu Meteor, chatbot AI buatan Aarif Rahmaan Faqi
     "DILARANG KERAS memberi kode atau panduan teknis untuk: halaman login palsu, formulir phishing, overlay pencuri kredensial, keylogger, atau teknik social-engineering operasional. Jika diminta, tolak dan jelaskan mengapa itu berbahaya tanpa detail implementasi. " +
     "Ikuti konteks; jangan terus menawarkan bantuan kecuali pengguna berpamitan. " +
     "Jika tidak tahu, katakan tidak tahu.";
-
-export const IMAGE_INSTRUCTION = "PENTING: User mengirim 1 FOTO TUNGGAL UTUH, bukan kolase/gabungan. " +
-    "Garis horizontal/vertikal di gambar adalah elemen fisik (balok, tiang, tembok), BUKAN pembatas antar foto. " +
-    "Deskripsikan isinya sebagai SATU kejadian utuh.";
 
 export const JADWAL_KEYWORDS = ["jadwal", "kuliah", "matkul", "mata kuliah", "schedule"];

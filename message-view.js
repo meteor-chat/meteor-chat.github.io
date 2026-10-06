@@ -11,24 +11,9 @@ function parseTemplate(name) {
 
 export function buildUserMsg(msg, index) {
     const el = parseTemplate("tpl-user-msg");
-    if (Array.isArray(msg.content)) {
-        const imgPart = msg.content.find(p => p.type === "image_url");
-        if (imgPart) {
-            const wrap = parseTemplate("tpl-img-wrap");
-            wrap.querySelector("img").src = imgPart.image_url.url;
-            el.appendChild(wrap);
-        }
-        const textPart = msg.content.find(p => p.type === "text");
-        if (textPart && textPart.text.trim()) {
-            const bubble = parseTemplate("tpl-user-bubble");
-            bubble.innerHTML = formatContent(textPart.text, false);
-            el.appendChild(bubble);
-        }
-    } else {
-        const bubble = parseTemplate("tpl-user-bubble");
-        bubble.innerHTML = formatContent(msg.content, false);
-        el.appendChild(bubble);
-    }
+    const bubble = parseTemplate("tpl-user-bubble");
+    bubble.innerHTML = formatContent(msg.content, false);
+    el.appendChild(bubble);
     const actions = parseTemplate("tpl-user-actions");
     actions.querySelector(".btn-copy").addEventListener("click", () => copyMessage(index));
     actions.querySelector(".btn-edit").addEventListener("click", () => startEdit(index));
