@@ -8,11 +8,11 @@ const RECENT_TURNS = 2;
 const COMPRESS_MAX_CHARS = 300;
 
 const KEY_COOLDOWN = {
-    rate_limit: 60000,
+    rate_limit: 10000,
     auth_error: 3600000,
     not_found: 3600000,
     server_error: 30000,
-    default: 60000
+    default: 10000
 };
 const keyHealth = new Map();
 
