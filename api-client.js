@@ -193,8 +193,7 @@ function lastMessageHasImage(messages) {
 }
 
 export async function callChatAPI(messages, onChunk) {
-    const keys = getOrderedKeys();
-    if (!keys.length) throw new Error("Belum ada API key aktif.");
+    if (!getOrderedKeys().length) throw new Error("Belum ada API key aktif.");
 
     let sysContent = SYSTEM_MESSAGE;
 
@@ -239,79 +238,82 @@ export async function callChatAPI(messages, onChunk) {
 
     state.abortController = new AbortController();
 
-    for (const entry of keys) {
-        const health = keyHealth.get(entry.key);
-        if (health && Date.now() - health.failedAt < health.cooldown) continue;
+    const provider = PROVIDERS.openrouter;
+    const modelList = hasImage ? provider.vision_models : provider.models;
+    const keys = getOrderedKeys();
 
-        const provider = PROVIDERS[entry.provider];
-        const modelName = hasImage && provider.vision_model ? provider.vision_model : provider.model;
-        const maxTokens = getMaxTokens(lastText);
-        const payload = {
-            model: modelName,
-            messages: [sysMsg, ...apiMessages],
-            stream: true,
-            max_tokens: maxTokens,
-            stream_options: { include_usage: true }
-        };
+    for (const modelName of modelList) {
+        for (const entry of keys) {
+            const cooldownKey = `${entry.key}::${modelName}`;
+            const health = keyHealth.get(cooldownKey);
+            if (health && Date.now() - health.failedAt < health.cooldown) continue;
 
-        let receivedChunks = false;
-        let fullText = "";
-
-        try {
-            const headers = {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${entry.key}`
+            const maxTokens = getMaxTokens(lastText);
+            const payload = {
+                model: modelName,
+                messages: [sysMsg, ...apiMessages],
+                stream: true,
+                max_tokens: maxTokens,
+                stream_options: { include_usage: true }
             };
-            if (entry.provider === "openrouter") {
-                headers["HTTP-Referer"] = "https://meteor-chat.github.io/";
-                headers["X-Title"] = "Meteor";
-            }
 
-            const res = await fetch(provider.url, {
-                method: "POST",
-                headers,
-                body: JSON.stringify(payload),
-                signal: state.abortController.signal
-            });
+            let receivedChunks = false;
+            let fullText = "";
 
-            if (!res.ok) {
-                const retryAfter = res.headers.get("Retry-After");
-                const cooldown = getErrorCooldown(res.status, retryAfter);
-                keyHealth.set(entry.key, { failedAt: Date.now(), cooldown });
+            try {
+                const headers = {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${entry.key}`,
+                    "HTTP-Referer": "https://meteor-chat.github.io/",
+                    "X-Title": "Meteor"
+                };
+
+                const res = await fetch(provider.url, {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify(payload),
+                    signal: state.abortController.signal
+                });
+
+                if (!res.ok) {
+                    const retryAfter = res.headers.get("Retry-After");
+                    const cooldown = getErrorCooldown(res.status, retryAfter);
+                    keyHealth.set(cooldownKey, { failedAt: Date.now(), cooldown });
+                    continue;
+                }
+                keyHealth.delete(cooldownKey);
+
+                const { usage, finishReason } = await parseStream(res.body, (chunk) => {
+                    receivedChunks = true;
+                    fullText += chunk;
+                    const visibleText = stripThinkTags(fullText);
+                    onChunk(visibleText);
+                });
+
+                const cleanText = stripThinkTags(fullText);
+
+                if (usage) {
+                    const logEntry = {
+                        timestamp: Date.now(),
+                        prompt_tokens: usage.prompt_tokens,
+                        completion_tokens: usage.completion_tokens,
+                        total_tokens: usage.total_tokens,
+                        hasSchedule,
+                        hasImage,
+                        model: modelName
+                    };
+                    state.usageLog.push(logEntry);
+                    console.log("[Meteor Usage]", logEntry);
+                }
+
+                return { text: cleanText, usage, finishReason };
+            } catch (e) {
+                if (e.name === "AbortError") throw e;
+                if (receivedChunks && fullText) {
+                    return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
+                }
                 continue;
             }
-            keyHealth.delete(entry.key);
-
-            const { usage, finishReason } = await parseStream(res.body, (chunk) => {
-                receivedChunks = true;
-                fullText += chunk;
-                const visibleText = stripThinkTags(fullText);
-                onChunk(visibleText);
-            });
-
-            const cleanText = stripThinkTags(fullText);
-
-            if (usage) {
-                const logEntry = {
-                    timestamp: Date.now(),
-                    prompt_tokens: usage.prompt_tokens,
-                    completion_tokens: usage.completion_tokens,
-                    total_tokens: usage.total_tokens,
-                    hasSchedule,
-                    hasImage,
-                    provider: entry.provider
-                };
-                state.usageLog.push(logEntry);
-                console.log("[Meteor Usage]", logEntry);
-            }
-
-            return { text: cleanText, usage, finishReason };
-        } catch (e) {
-            if (e.name === "AbortError") throw e;
-            if (receivedChunks && fullText) {
-                return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
-            }
-            continue;
         }
     }
     throw new Error("Kapasitas server Meteor sedang mencapai batas maksimum. Silakan coba beberapa saat lagi.");

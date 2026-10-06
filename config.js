@@ -8,8 +8,16 @@ export const CONFIG_API_KEYS = [
 export const PROVIDERS = {
     openrouter: {
         url: "https://openrouter.ai/api/v1/chat/completions",
-        model: "google/gemma-4-26b-a4b-it:free",
-        vision_model: "google/gemma-4-26b-a4b-it:free"
+        models: [
+            "google/gemma-4-26b-a4b-it:free",
+            "google/gemma-4-31b-it:free",
+            "nvidia/nemotron-3-ultra-550b-a55b:free",
+            "nvidia/nemotron-3-super-120b-a12b:free"
+        ],
+        vision_models: [
+            "google/gemma-4-26b-a4b-it:free",
+            "google/gemma-4-31b-it:free"
+        ]
     }
 };
 
