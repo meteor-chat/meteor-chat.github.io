@@ -244,8 +244,7 @@ export async function callChatAPI(messages, onChunk) {
 
     for (const modelName of modelList) {
         for (const entry of keys) {
-            const cooldownKey = `${entry.key}::${modelName}`;
-            const health = keyHealth.get(cooldownKey);
+            const health = keyHealth.get(entry.key);
             if (health && Date.now() - health.failedAt < health.cooldown) continue;
 
             const maxTokens = getMaxTokens(lastText);
@@ -278,10 +277,10 @@ export async function callChatAPI(messages, onChunk) {
                 if (!res.ok) {
                     const retryAfter = res.headers.get("Retry-After");
                     const cooldown = getErrorCooldown(res.status, retryAfter);
-                    keyHealth.set(cooldownKey, { failedAt: Date.now(), cooldown });
+                    keyHealth.set(entry.key, { failedAt: Date.now(), cooldown });
                     continue;
                 }
-                keyHealth.delete(cooldownKey);
+                keyHealth.delete(entry.key);
 
                 const { usage, finishReason } = await parseStream(res.body, (chunk) => {
                     receivedChunks = true;
