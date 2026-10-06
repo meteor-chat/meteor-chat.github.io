@@ -242,19 +242,18 @@ export async function callChatAPI(messages, onChunk) {
     const modelList = hasImage ? provider.vision_models : provider.models;
     const keys = getOrderedKeys();
 
-    for (const modelName of modelList) {
-        for (const entry of keys) {
-            const health = keyHealth.get(entry.key);
-            if (health && Date.now() - health.failedAt < health.cooldown) continue;
+    for (const entry of keys) {
+        const health = keyHealth.get(entry.key);
+        if (health && Date.now() - health.failedAt < health.cooldown) continue;
 
-            const maxTokens = getMaxTokens(lastText);
-            const payload = {
-                model: modelName,
-                messages: [sysMsg, ...apiMessages],
-                stream: true,
-                max_tokens: maxTokens,
-                stream_options: { include_usage: true }
-            };
+        const maxTokens = getMaxTokens(lastText);
+        const payload = {
+            models: modelList,
+            messages: [sysMsg, ...apiMessages],
+            stream: true,
+            max_tokens: maxTokens,
+            stream_options: { include_usage: true }
+        };
 
             let receivedChunks = false;
             let fullText = "";
@@ -299,7 +298,7 @@ export async function callChatAPI(messages, onChunk) {
                         total_tokens: usage.total_tokens,
                         hasSchedule,
                         hasImage,
-                        model: modelName
+                        provider: entry.provider
                     };
                     state.usageLog.push(logEntry);
                     console.log("[Meteor Usage]", logEntry);
@@ -314,6 +313,5 @@ export async function callChatAPI(messages, onChunk) {
                 continue;
             }
         }
-    }
     throw new Error("Kapasitas server Meteor sedang mencapai batas maksimum. Silakan coba beberapa saat lagi.");
 }
