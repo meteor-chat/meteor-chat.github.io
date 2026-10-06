@@ -151,15 +151,14 @@ export function stripThinkTags(text) {
     return cleaned.trim();
 }
 
-function getMaxTokens(text, provider) {
+function getMaxTokens(text) {
     const lower = (text || "").toLowerCase();
     const longKeywords = [
         "kode", "code", "program", "script", "jelaskan", "explain",
         "langkah", "steps", "tulis", "write", "buatkan", "implementasi"
     ];
     const isLong = longKeywords.some(kw => lower.includes(kw));
-    if (isLong) return provider === "groq" ? 4096 : 3072;
-    return provider === "groq" ? 2048 : 1536;
+    return isLong ? 3072 : 1536;
 }
 
 function getErrorCooldown(status, retryAfter) {
@@ -244,21 +243,16 @@ export async function callChatAPI(messages, onChunk) {
         const health = keyHealth.get(entry.key);
         if (health && Date.now() - health.failedAt < health.cooldown) continue;
 
-        if (hasImage && entry.provider === "groq") continue;
-
         const provider = PROVIDERS[entry.provider];
-        const maxTokens = getMaxTokens(lastText, entry.provider);
+        const modelName = hasImage && provider.vision_model ? provider.vision_model : provider.model;
+        const maxTokens = getMaxTokens(lastText);
         const payload = {
-            model: provider.model,
+            model: modelName,
             messages: [sysMsg, ...apiMessages],
             stream: true,
             max_tokens: maxTokens,
             stream_options: { include_usage: true }
         };
-
-        if (entry.provider === "groq" && provider.model.toLowerCase().includes("qwen")) {
-            payload.reasoning_format = "hidden";
-        }
 
         let receivedChunks = false;
         let fullText = "";
