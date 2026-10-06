@@ -8,8 +8,8 @@ export const CONFIG_API_KEYS = [
 export const PROVIDERS = {
     openrouter: {
         url: "https://openrouter.ai/api/v1/chat/completions",
-        model: "qwen/qwen3.8-27b:free",
-        vision_model: "qwen/qwen2.5-vl-72b-instruct:free"
+        model: "nvidia/nemotron-3-ultra-550b-a55b:free",
+        vision_model: "google/gemma-4-31b-it:free"
     }
 };
 
