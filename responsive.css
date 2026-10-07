@@ -1,7 +1,1 @@
-@media (max-width: 768px) {
-    .tagline h1 { font-size: 24px; text-align: center; padding: 0 var(--space-md); }
-    #chat-messages { padding: var(--space-md) var(--space-md) 0 var(--space-md); }
-    .user-bubble { padding: var(--space-sm) var(--space-md); }
-    .msg-assistant-content pre { padding: var(--space-sm); font-size: 14px; }
-    .input-wrap { width: calc(100% - var(--space-xl)); }
-}
+@media (max-width: 768px) {    .tagline h1 { font-size: 24px; text-align: center; padding: 0 var(--space-md); }    #chat-messages { padding: var(--space-md) var(--space-md) 0 var(--space-md); }    .user-bubble { padding: var(--space-sm) var(--space-md); }    .msg-assistant-content pre { padding: var(--space-sm); font-size: 14px; }    .input-wrap { width: calc(100% - var(--space-xl)); }}

@@ -1,3 +1,1 @@
-.katex-display { overflow-x: auto; overflow-y: hidden; padding: var(--space-sm) 0; margin: var(--space-md) 0; }
-.katex { font-size: 1.1em; }
-.katex-error { color: red; font-weight: bold; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: var(--space-sm) 0; margin: var(--space-md) 0; }.katex { font-size: 1.1em; }.katex-error { color: red; font-weight: bold; }

@@ -1,7 +1,6 @@
 import { state } from "./app-state.js";
 import { setupMath } from "./math-plugin.js";
 import { escapeHTML } from "./text-utils.js";
-
 export function setupMarkdown() {
     setupMath();
     marked.use({
@@ -9,7 +8,6 @@ export function setupMarkdown() {
         gfm: true,
     });
     const renderer = new marked.Renderer();
-    
     renderer.code = function(obj) {
         const code = obj.text ?? "";
         const lang = obj.lang || "";
@@ -25,7 +23,6 @@ export function setupMarkdown() {
                 catch { highlighted = escapeHTML(code); }
             }
         }
-
         const div = document.createElement("div");
         div.innerHTML = state.templates["tpl-code-block"];
         const tpl = div.firstElementChild;
@@ -35,27 +32,22 @@ export function setupMarkdown() {
         codeEl.innerHTML = highlighted;
         return tpl.outerHTML;
     };
-    
     renderer.image = function(obj) {
         const src = obj.href || obj.src || "";
-        const alt = obj.text || obj.title || "image"; // Don't double escape, DOM string assignment is safe or marked handles it
+        const alt = obj.text || obj.title || "image"; 
         const img = document.createElement("img");
         img.src = src;
-        img.alt = alt; // Setting attribute directly is safe from XSS
+        img.alt = alt; 
         return img.outerHTML;
     };
-    
     renderer.link = function(obj) {
         const href = obj.href || "";
         const text = this.parser.parseInline(obj.tokens || []);
-        
         const a = document.createElement("a");
         a.href = href;
-        a.innerHTML = text || href; // innerHTML because parseInline returns HTML
+        a.innerHTML = text || href; 
         if (obj.title) a.title = obj.title;
-        // Target blank and rel noopener is now handled by DOMPurify hook
         return a.outerHTML;
     };
-    
     marked.use({ renderer });
 }

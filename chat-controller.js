@@ -5,13 +5,11 @@ import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, r
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
 import { stripThinkTags } from "./text-utils.js";
-
 export function stopGeneration() {
     if (state.abortController) {
         state.abortController.abort();
     }
 }
-
 function showContinueButton(label = "▶ Lanjutkan") {
     const btn = document.createElement("button");
     btn.className = "continue-btn";
@@ -24,7 +22,6 @@ function showContinueButton(label = "▶ Lanjutkan") {
     refs.conversationEl.appendChild(btn);
     scrollToBottom();
 }
-
 export async function sendMessage(text) {
     if ([...text].length > state.config.max_message) {
         showError(`Pesan maksimal ${state.config.max_message} karakter.`);
@@ -33,15 +30,12 @@ export async function sendMessage(text) {
     hideError();
     state.isLoading = true;
     getActiveSendBtn().disabled = true;
-
     if (refs.stopBtn) {
         refs.stopBtn.classList.remove("hidden");
         refs.sendChat.classList.add("hidden");
     }
-
     const prevContinue = document.getElementById("continue-btn");
     if (prevContinue) prevContinue.remove();
-
     const originalEditIndex = state.editIndex;
     let backupMessages = null;
     if (originalEditIndex !== null) {
@@ -49,18 +43,15 @@ export async function sendMessage(text) {
         state.messages = state.messages.slice(0, originalEditIndex);
         exitEditMode();
     }
-
     let content = text;
     state.messages.push({ role: "user", content });
     renderChat();
     showTypingIndicator();
     refs.msgChat.readOnly = true;
-
     try {
         let firstChunk = true;
         removeTypingIndicator();
         showThinking();
-
         const result = await callChatAPI(state.messages, (currentText) => {
             if (firstChunk && currentText) {
                 firstChunk = false;
@@ -82,7 +73,6 @@ export async function sendMessage(text) {
         }
         state.isLoading = false;
         renderChat();
-
         if (result.finishReason !== "stop") {
             const isLength = result.finishReason === "length";
             showContinueButton(isLength ? "▶ Lanjutkan (Batas tercapai)" : "▶ Coba Lanjutkan (Terputus)");
@@ -106,7 +96,6 @@ export async function sendMessage(text) {
                 }
             }
         };
-
         if (err.name === "AbortError") {
             const lastMsg = state.messages[state.messages.length - 1];
             if (lastMsg?.role === "assistant" && lastMsg.content) {
@@ -129,7 +118,6 @@ export async function sendMessage(text) {
         refs.sendChat.disabled = false;
         refs.sendLanding.disabled = false;
         refs.msgChat.readOnly = false;
-
         if (refs.stopBtn) {
             refs.stopBtn.classList.add("hidden");
             refs.sendChat.classList.remove("hidden");

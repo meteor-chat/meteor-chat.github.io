@@ -1,8 +1,6 @@
 let hookAdded = false;
-
 export function sanitize(html) {
     if (typeof DOMPurify === 'undefined') return html;
-
     if (!hookAdded) {
         DOMPurify.addHook('afterSanitizeAttributes', function(node) {
             if (node.tagName === 'A') {
@@ -15,7 +13,6 @@ export function sanitize(html) {
         });
         hookAdded = true;
     }
-
     return DOMPurify.sanitize(html, {
         FORBID_TAGS: ["iframe", "object", "embed", "form", "select", "textarea", "style"],
         FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onfocus", "onblur", "onsubmit", "formaction"],

@@ -4,14 +4,12 @@ function createErrorNode(text, isBlock) {
     el.textContent = text;
     return el.outerHTML;
 }
-
 export function normalizeMath(text) {
     if (!text) return "";
     let result = "";
     let inBlockCode = false;
     let inInlineCode = false;
     let buffer = "";
-
     const flushBuffer = (isCode) => {
         if (!buffer) return;
         if (isCode) {
@@ -23,7 +21,6 @@ export function normalizeMath(text) {
         }
         buffer = "";
     };
-
     for (let i = 0; i < text.length; i++) {
         if (!inBlockCode && !inInlineCode && text.startsWith("```", i)) {
             flushBuffer(false);
@@ -50,7 +47,6 @@ export function normalizeMath(text) {
     flushBuffer(inBlockCode || inInlineCode);
     return result;
 }
-
 export function setupMath() {
     const displayMath = {
         name: "displayMath",
