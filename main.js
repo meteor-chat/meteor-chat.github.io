@@ -62,7 +62,7 @@ async function init() {
     } catch (e) {
         showError(`Inisialisasi aplikasi gagal: ${e.message}`);
         const landing = document.getElementById("landing");
-        landing.textContent = ""; // clear content safely without innerHTML
+        landing.textContent = ""; 
         const errDiv = document.createElement("div");
         errDiv.className = "error-box";
         errDiv.style.display = "block";

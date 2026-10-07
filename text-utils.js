@@ -22,7 +22,6 @@ export function stripThinkTags(text) {
     if (openIdx !== -1 && cleaned.indexOf("</think>", openIdx) === -1) {
         cleaned = cleaned.substring(0, openIdx);
     }
-    // Also remove partial unclosed <think at the very end during streaming
     const lastOpenAngle = cleaned.lastIndexOf("<");
     if (lastOpenAngle !== -1) {
         const partial = cleaned.substring(lastOpenAngle);
@@ -30,7 +29,6 @@ export function stripThinkTags(text) {
             cleaned = cleaned.substring(0, lastOpenAngle);
         }
     }
-    // Also handle </think> without opening <think>
     const closeIdx = cleaned.indexOf("</think>");
     if (closeIdx !== -1 && cleaned.indexOf("<think>") === -1) {
         cleaned = cleaned.substring(closeIdx + 8);
