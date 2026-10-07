@@ -6,6 +6,7 @@ import { cancelEdit } from "./edit-mode.js";
 import { copyCode } from "./message-actions.js";
 import { stopGeneration } from "./chat-controller.js";
 import { showError } from "./error-view.js";
+import { initMath } from "./math-controller.js";
 async function loadTemplates() {
     const tpls = ["tpl-user-msg.html", "tpl-user-bubble.html", "tpl-user-actions.html", "tpl-assistant-msg.html", "tpl-typing.html", "tpl-thinking.html", "tpl-code-block.html"];
     const promises = tpls.map(async (file) => {
@@ -51,6 +52,7 @@ async function init() {
         await Promise.all([loadTemplates(), loadJadwal()]);
         setupInputs();
         setupMarkdown();
+        initMath();
         refs.cancelBtn.addEventListener("click", cancelEdit);
         if (refs.stopBtn) {
             refs.stopBtn.addEventListener("click", stopGeneration);

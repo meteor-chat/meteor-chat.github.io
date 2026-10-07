@@ -25,6 +25,7 @@
         <textarea id="message-landing" placeholder="Ask Meteor" rows="1"></textarea>
         <button id="send-landing" class="send-landing" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
     </div>
+    <button id="btn-math-eor" class="btn-math-eor">Math eor</button>
 </div>
 <div id="chat-view" class="hidden">
     <div id="chat-messages" aria-live="polite">
@@ -36,6 +37,51 @@
         <textarea id="message-chat" placeholder="Ask Meteor" rows="1"></textarea>
         <button id="send-chat" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
         <button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="stop.svg" alt="Stop"></button>
+    </div>
+</div>
+<div id="math-menu-view" class="hidden">
+    <h2 class="math-title">Pilihan Rumus</h2>
+    <div class="math-grid">
+        <button class="math-card active" data-formula="1" id="math-card-1"></button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>
+    </div>
+    <button id="btn-math-menu-back" class="btn-math-back">Kembali</button>
+</div>
+<div id="math-calc-view" class="hidden">
+    <h2 class="math-title">Pilihan Rumus</h2>
+    <div class="math-calc-container">
+        <div class="math-calc-left">
+            <div id="math-calc-formula-display" class="math-formula-box"></div>
+            <button id="btn-math-calc-back" class="btn-math-back" style="margin-top:40px;">Kembali</button>
+        </div>
+        <div class="math-calc-right">
+            <div class="math-inputs">
+                <div class="math-input-group">
+                    <label>kromosom (user input) (misalnya 1011)</label>
+                    <input type="text" id="math-in-kromosom" placeholder="1011">
+                </div>
+                <div class="math-input-group">
+                    <label>x min (user input) (misalnya -2)</label>
+                    <input type="number" id="math-in-xmin" placeholder="-2" step="any">
+                </div>
+                <div class="math-input-group">
+                    <label>x max (user input) (misalnya 3)</label>
+                    <input type="number" id="math-in-xmax" placeholder="3" step="any">
+                </div>
+                <div class="math-input-group">
+                    <label>n (auto terisi berdasarkan kromosom)</label>
+                    <input type="number" id="math-in-n" disabled>
+                </div>
+            </div>
+            <div class="math-steps" id="math-steps-container"></div>
+        </div>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
