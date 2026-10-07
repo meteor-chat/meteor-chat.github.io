@@ -43,7 +43,7 @@
     <h2 class="math-title">Pilihan Rumus</h2>
     <div class="math-grid">
         <button class="math-card active" data-formula="1" id="math-card-1"></button>
-        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card active" data-formula="2" id="math-card-2"></button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
@@ -56,7 +56,7 @@
 </div>
 <div id="math-calc-view" class="hidden">
     <h2 class="math-title">Pilihan Rumus</h2>
-    <div class="math-calc-container">
+    <div id="math-calc-form-1" class="math-calc-container hidden">
         <div class="math-calc-left">
             <div id="math-calc-formula-display" class="math-formula-box"></div>
             <button id="btn-math-calc-back" class="btn-math-back" style="margin-top:40px;">Kembali</button>
@@ -81,6 +81,55 @@
                 </div>
             </div>
             <div class="math-steps" id="math-steps-container"></div>
+        </div>
+    </div>
+    
+    <div id="math-calc-form-2" class="math-calc-container hidden">
+        <div class="math-calc-left" style="min-width: 350px;">
+            <div id="math-calc-formula-display-2" class="math-formula-box" style="display:flex;flex-direction:column;gap:20px;"></div>
+            <button id="btn-math-calc-back-2" class="btn-math-back" style="margin-top:40px;">Kembali</button>
+        </div>
+        <div class="math-calc-right" style="flex:2;">
+            <div class="math-inputs" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                <div class="math-input-group">
+                    <label>r min</label>
+                    <input type="number" id="math2-in-rmin" value="-2" step="any">
+                </div>
+                <div class="math-input-group">
+                    <label>r max</label>
+                    <input type="number" id="math2-in-rmax" value="3" step="any">
+                </div>
+                <div class="math-input-group" style="grid-column: span 2;">
+                    <label>Objective Function h(x1, x2) (JS Expression)</label>
+                    <input type="text" id="math2-in-func" value="Math.pow(x1, 3) + (1/3)*Math.pow(x2, 2)">
+                </div>
+                <div class="math-input-group">
+                    <label>Objective Mode</label>
+                    <select id="math2-in-mode" style="background:transparent; color:var(--text-main); border:none; border-bottom:1px solid #333; padding:4px 0; outline:none; font-family:inherit;">
+                        <option value="min" style="color:#000;">Minimizing</option>
+                        <option value="max" style="color:#000;">Maximizing</option>
+                    </select>
+                </div>
+                <div class="math-input-group">
+                    <label>Parameter 'a'</label>
+                    <input type="number" id="math2-in-a" value="0.10" step="any">
+                </div>
+                <div class="math-input-group" style="grid-column: span 2;">
+                    <label>Populasi (Kromosom per baris)</label>
+                    <textarea id="math2-in-pop" rows="8" style="background:transparent; border:1px solid #333; border-radius:8px; color:var(--text-main); padding:8px; font-family:monospace; resize:vertical; outline:none;">
+000010
+001011
+010110
+011111
+100000
+101001
+110100
+111101</textarea>
+                </div>
+            </div>
+            <div class="math-steps" style="align-items: flex-start; overflow-x: auto; width: 100%; margin-top: 20px;">
+                <div id="math2-table-container"></div>
+            </div>
         </div>
     </div>
 </div>
