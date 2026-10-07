@@ -4,34 +4,76 @@ import { buildUserMsg, buildAssistantMsg, buildTyping, buildThinking } from "./m
 import { formatContent } from "./markdown-render.js";
 import { showChatView, showLanding } from "./view-switch.js";
 
+function isAtBottom() {
+    if (state.currentView !== "chat") return false;
+    const { scrollTop, scrollHeight, clientHeight } = refs.chatMessagesEl;
+    return scrollHeight - scrollTop - clientHeight < 50; // 50px tolerance
+}
+
+let lastRenderedCount = 0;
+
 export function renderChat() {
     if (state.messages.length === 0) {
         showLanding();
         refs.conversationEl.innerHTML = '';
+        lastRenderedCount = 0;
         return;
     }
     showChatView();
-    refs.conversationEl.innerHTML = '';
-    state.messages.forEach((msg, i) => {
+    const atBottom = isAtBottom();
+    
+    // Fallback if messages were removed (like during abort/error rollback)
+    if (state.messages.length < lastRenderedCount) {
+        refs.conversationEl.innerHTML = '';
+        lastRenderedCount = 0;
+    }
+
+    // Incremental render
+    const wasNewMessageAdded = state.messages.length > lastRenderedCount;
+    for (let i = lastRenderedCount; i < state.messages.length; i++) {
+        const msg = state.messages[i];
         if (msg.role === "user") {
             refs.conversationEl.appendChild(buildUserMsg(msg, i));
         } else {
             refs.conversationEl.appendChild(buildAssistantMsg(msg, i, i === state.messages.length - 1));
         }
-    });
-    scrollToBottom();
+    }
+    lastRenderedCount = state.messages.length;
+    
+    // Auto-scroll if we were at bottom or it's a completely new message (e.g., user just sent it)
+    if (atBottom || wasNewMessageAdded) {
+        scrollToBottom();
+    }
 }
 
-let renderFrame;
+let lastUpdateTime = 0;
+let renderTimer = null;
+
 export function updateStreamingMessage(text) {
-    if (renderFrame) cancelAnimationFrame(renderFrame);
-    renderFrame = requestAnimationFrame(() => {
+    state.isStreamingChunk = true;
+    
+    const now = Date.now();
+    const timeSinceLast = now - lastUpdateTime;
+    const throttleMs = 150;
+    
+    const doUpdate = () => {
+        lastUpdateTime = Date.now();
         const target = document.getElementById("streaming-target");
         if (target) {
+            const atBottom = isAtBottom();
             target.innerHTML = formatContent(text, true);
-            scrollToBottom();
+            if (atBottom) scrollToBottom();
         }
-    });
+        state.isStreamingChunk = false;
+    };
+    
+    if (timeSinceLast >= throttleMs) {
+        if (renderTimer) clearTimeout(renderTimer);
+        doUpdate();
+    } else {
+        if (renderTimer) clearTimeout(renderTimer);
+        renderTimer = setTimeout(doUpdate, throttleMs - timeSinceLast);
+    }
 }
 
 export function showTypingIndicator() {

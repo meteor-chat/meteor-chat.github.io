@@ -1,16 +1,6 @@
 import { state } from "./app-state.js";
 import { setupMath } from "./math-plugin.js";
-
-function isAllowedImageSrc(src) {
-    if (!src) return false;
-    if (src.startsWith("data:image/")) return true;
-    try {
-        const url = new URL(src, window.location.origin);
-        return url.origin === window.location.origin;
-    } catch (e) {
-        return false;
-    }
-}
+import { escapeHTML } from "./text-utils.js";
 
 export function setupMarkdown() {
     setupMath();
@@ -19,16 +9,21 @@ export function setupMarkdown() {
         gfm: true,
     });
     const renderer = new marked.Renderer();
+    
     renderer.code = function(obj) {
-        const code = obj.text || obj;
+        const code = obj.text ?? "";
         const lang = obj.lang || "";
         let highlighted;
-        if (lang && hljs.getLanguage(lang)) {
-            try { highlighted = hljs.highlight(code, { language: lang }).value; }
-            catch { highlighted = escapeHTML(code); }
+        if (state.isStreamingChunk) {
+            highlighted = escapeHTML(code);
         } else {
-            try { highlighted = hljs.highlightAuto(code).value; }
-            catch { highlighted = escapeHTML(code); }
+            if (lang && hljs.getLanguage(lang)) {
+                try { highlighted = hljs.highlight(code, { language: lang }).value; }
+                catch { highlighted = escapeHTML(code); }
+            } else {
+                try { highlighted = hljs.highlightAuto(code).value; }
+                catch { highlighted = escapeHTML(code); }
+            }
         }
 
         const div = document.createElement("div");
@@ -40,40 +35,27 @@ export function setupMarkdown() {
         codeEl.innerHTML = highlighted;
         return tpl.outerHTML;
     };
+    
     renderer.image = function(obj) {
         const src = obj.href || obj.src || "";
-        const alt = escapeHTML(obj.text || obj.title || "image");
-        if (!isAllowedImageSrc(src)) {
-            const span = document.createElement("span");
-            span.className = "blocked-image";
-            span.textContent = "[gambar eksternal diblokir]";
-            return span.outerHTML;
-        }
+        const alt = obj.text || obj.title || "image"; // Don't double escape, DOM string assignment is safe or marked handles it
         const img = document.createElement("img");
         img.src = src;
-        img.alt = alt;
+        img.alt = alt; // Setting attribute directly is safe from XSS
         return img.outerHTML;
     };
+    
     renderer.link = function(obj) {
         const href = obj.href || "";
-        const text = obj.text || href;
-        if (href.startsWith("javascript:") || href.startsWith("data:") || href.startsWith("vbscript:")) {
-            const span = document.createElement("span");
-            span.textContent = text;
-            return span.outerHTML;
-        }
+        const text = this.parser.parseInline(obj.tokens || []);
+        
         const a = document.createElement("a");
         a.href = href;
-        a.textContent = text;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
+        a.innerHTML = text || href; // innerHTML because parseInline returns HTML
+        if (obj.title) a.title = obj.title;
+        // Target blank and rel noopener is now handled by DOMPurify hook
         return a.outerHTML;
     };
+    
     marked.use({ renderer });
-}
-
-function escapeHTML(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
 }

@@ -1,57 +1,45 @@
 import { state } from "./app-state.js";
 import { refs } from "./dom-refs.js";
 import { sendMessage } from "./chat-controller.js";
+import { showError, hideError } from "./error-view.js";
+
+export function syncInputUI(input) {
+    const btn = input === refs.msgLanding ? refs.sendLanding : refs.sendChat;
+    const img = btn.querySelector("img");
+    if (img) img.src = input.value.trim() ? "send-active.svg" : "send-inactive.svg";
+    
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 120) + "px";
+}
+
+function submit(input) {
+    if (state.isLoading) return;
+    let text = input.value.trim();
+    if (!text) return;
+    
+    const maxLen = state.config.max_message || 4000;
+    if ([...text].length > maxLen) {
+        showError(`Pesan maksimal ${maxLen} karakter.`);
+        return;
+    }
+    
+    hideError();
+    input.value = "";
+    syncInputUI(input);
+    sendMessage(text);
+}
 
 export function setupInputs() {
-    const updateBtn = (input, btn) => {
-        const img = btn.querySelector("img");
-        if (img) img.src = input.value.trim() ? "send-active.svg" : "send-inactive.svg";
-    };
-    
-    const autoResize = (input) => {
-        input.style.height = "auto";
-        input.style.height = Math.min(input.scrollHeight, 120) + "px";
-    };
-
     [refs.msgLanding, refs.msgChat].forEach(input => {
-        input.addEventListener("input", () => {
-            updateBtn(input, input === refs.msgLanding ? refs.sendLanding : refs.sendChat);
-            autoResize(input);
-        });
+        input.addEventListener("input", () => syncInputUI(input));
         input.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
                 e.preventDefault();
-                if (!state.isLoading) {
-                    let text = input.value.trim();
-                    if (text.length > 999) text = text.substring(0, 999);
-                    if (text) {
-                        input.value = "";
-                        updateBtn(input, input === refs.msgLanding ? refs.sendLanding : refs.sendChat);
-                        autoResize(input);
-                        sendMessage(text);
-                    }
-                }
+                submit(input);
             }
         });
     });
 
-    refs.sendLanding.addEventListener("click", () => {
-        if (state.isLoading) return;
-        let text = refs.msgLanding.value.trim();
-        if (text.length > 999) text = text.substring(0, 999);
-        if (text) {
-            refs.msgLanding.value = "";
-            sendMessage(text);
-        }
-    });
-
-    refs.sendChat.addEventListener("click", () => {
-        if (state.isLoading) return;
-        let text = refs.msgChat.value.trim();
-        if (text.length > 999) text = text.substring(0, 999);
-        if (text) {
-            refs.msgChat.value = "";
-            sendMessage(text);
-        }
-    });
+    refs.sendLanding.addEventListener("click", () => submit(refs.msgLanding));
+    refs.sendChat.addEventListener("click", () => submit(refs.msgChat));
 }

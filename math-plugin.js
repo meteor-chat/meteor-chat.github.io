@@ -7,9 +7,48 @@ function createErrorNode(text, isBlock) {
 
 export function normalizeMath(text) {
     if (!text) return "";
-    text = text.replace(/\\\[([\s\S]*?)\\\]/g, (m, eq) => `\n\n$$\n${eq.trim()}\n$$\n\n`);
-    text = text.replace(/\\\(([\s\S]*?)\\\)/g, (m, eq) => `$${eq.trim()}$`);
-    return text;
+    let result = "";
+    let inBlockCode = false;
+    let inInlineCode = false;
+    let buffer = "";
+
+    const flushBuffer = (isCode) => {
+        if (!buffer) return;
+        if (isCode) {
+            result += buffer;
+        } else {
+            let processed = buffer.replace(/\\\[([\s\S]*?)\\\]/g, (m, eq) => `\n\n$$\n${eq.trim()}\n$$\n\n`);
+            processed = processed.replace(/\\\(([\s\S]*?)\\\)/g, (m, eq) => `$${eq.trim()}$`);
+            result += processed;
+        }
+        buffer = "";
+    };
+
+    for (let i = 0; i < text.length; i++) {
+        if (!inBlockCode && !inInlineCode && text.startsWith("```", i)) {
+            flushBuffer(false);
+            buffer += "```";
+            inBlockCode = true;
+            i += 2;
+        } else if (inBlockCode && text.startsWith("```", i)) {
+            buffer += "```";
+            inBlockCode = false;
+            flushBuffer(true);
+            i += 2;
+        } else if (!inBlockCode && !inInlineCode && text[i] === "`") {
+            flushBuffer(false);
+            buffer += "`";
+            inInlineCode = true;
+        } else if (!inBlockCode && inInlineCode && text[i] === "`") {
+            buffer += "`";
+            inInlineCode = false;
+            flushBuffer(true);
+        } else {
+            buffer += text[i];
+        }
+    }
+    flushBuffer(inBlockCode || inInlineCode);
+    return result;
 }
 
 export function setupMath() {

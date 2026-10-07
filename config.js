@@ -11,14 +11,7 @@ export const PROVIDERS = {
         models: [
             "google/gemma-4-26b-a4b-it:free",
             "google/gemma-4-31b-it:free",
-            "nvidia/nemotron-3-ultra-550b-a55b:free",
-            "nvidia/nemotron-3-super-120b-a12b:free",
-            "nvidia/nemotron-3.5-lightning:free",
-            "poolside/laguna-s-2.1:free",
-            "poolside/laguna-xs-2.1:free",
-            "inclusionai/ling-3.0-flash-sante:free",
-            "liquid/lfm-2.5-2.6b:free",
-            "apodex/apodex-1.1-mini:free"
+            "nvidia/nemotron-3-ultra-550b-a55b:free"
         ]
     }
 };

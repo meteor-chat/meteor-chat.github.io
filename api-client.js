@@ -1,11 +1,42 @@
-import { PROVIDERS, SYSTEM_MESSAGE, JADWAL_KEYWORDS } from "./config.js";
+import { PROVIDERS, SYSTEM_MESSAGE, CONFIG_API_KEYS } from "./config.js";
 import { getOrderedKeys } from "./api-keys.js";
 import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
+import { stripThinkTags, getMaxTokens } from "./text-utils.js";
+import { trimMessages, getScheduleContext, getLastUserText } from "./history.js";
 
-const HISTORY_TOKEN_BUDGET = 4000;
-const RECENT_TURNS = 2;
-const COMPRESS_MAX_CHARS = 300;
+export class ApiError extends Error {
+    constructor(message, status, type, cooldown = 0) {
+        super(message);
+        this.name = "ApiError";
+        this.status = status;
+        this.type = type; // 'FATAL', 'AUTH', 'RATE_LIMIT', 'SERVER'
+        this.cooldown = cooldown;
+    }
+}
+
+export function classifyError(status, retryAfterHeader) {
+    if (status === 401 || status === 402) {
+        return new ApiError("Akses ditolak atau kredit habis (401/402).", status, "AUTH", KEY_COOLDOWN.auth_error);
+    }
+    if (status === 429) {
+        let cd = KEY_COOLDOWN.rate_limit;
+        if (retryAfterHeader) {
+            const parsed = parseInt(retryAfterHeader, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                cd = Math.min(parsed * 1000, 60000); // max 60s
+            }
+        }
+        return new ApiError("Terlalu banyak request (429).", status, "RATE_LIMIT", cd);
+    }
+    if (status >= 500) {
+        return new ApiError(`Gangguan server dari provider (${status}).`, status, "SERVER", KEY_COOLDOWN.server_error);
+    }
+    // 400, 403, 404, etc.
+    return new ApiError(`Permintaan ditolak oleh server (${status}).`, status, "FATAL", 0);
+}
+
+
 
 const KEY_COOLDOWN = {
     rate_limit: 10000,
@@ -16,163 +47,44 @@ const KEY_COOLDOWN = {
 };
 const keyHealth = new Map();
 
-function estimateTokens(text) {
-    if (!text) return 0;
-    return Math.ceil(text.length / 3);
-}
+function createTimeoutSignal(timeoutMs, parentSignal) {
+    const controller = new AbortController();
+    let timeoutId;
 
-function getTextContent(msg) {
-    return msg.content || "";
-}
+    const resetTimeout = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            controller.abort(new Error("Timeout"));
+        }, timeoutMs);
+    };
 
-function compressAssistantMessage(text) {
-    if (!text) return "";
-    let compressed = text.replace(/```[\s\S]*?```/g, "[kode]");
-    compressed = compressed.replace(/\$\$[\s\S]*?\$\$/g, "[rumus]");
-    if (compressed.length > COMPRESS_MAX_CHARS) {
-        compressed = compressed.substring(0, COMPRESS_MAX_CHARS) + "\u2026";
-    }
-    return compressed;
-}
+    resetTimeout();
 
-function trimMessages(messages) {
-    if (messages.length === 0) return [];
+    const onParentAbort = () => {
+        clearTimeout(timeoutId);
+        controller.abort(parentSignal.reason);
+    };
 
-    let msgs = [...messages];
-
-    while (msgs.length > 0 && msgs[0].role !== "user") {
-        msgs.shift();
-    }
-
-    const recentCount = RECENT_TURNS * 2;
-    const recentStart = Math.max(0, msgs.length - recentCount);
-
-    const olderMessages = msgs.slice(0, recentStart);
-    const recentMessages = msgs.slice(recentStart);
-
-    const processed = olderMessages.map(msg => {
-        if (msg.role === "assistant") {
-            return { ...msg, content: compressAssistantMessage(msg.content || "") };
-        }
-        return msg;
-    });
-
-    const processedRecent = recentMessages.map((msg, i) => {
-        if (i >= recentMessages.length - 2) return msg;
-        return msg;
-    });
-
-    let all = [...processed, ...processedRecent];
-
-    let totalTokens = all.reduce((sum, msg) => sum + estimateTokens(getTextContent(msg)), 0);
-
-    while (totalTokens > HISTORY_TOKEN_BUDGET && all.length > recentCount) {
-        const removed = all.shift();
-        totalTokens -= estimateTokens(getTextContent(removed));
-        if (removed.role === "user" && all.length > recentCount && all[0]?.role === "assistant") {
-            const removedAssist = all.shift();
-            totalTokens -= estimateTokens(getTextContent(removedAssist));
+    if (parentSignal) {
+        if (parentSignal.aborted) {
+            onParentAbort();
+        } else {
+            parentSignal.addEventListener("abort", onParentAbort);
         }
     }
 
-    while (all.length > 0 && all[0].role !== "user") {
-        all.shift();
-    }
-
-    return all;
-}
-
-const HARI = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
-
-function formatScheduleCompact(jadwalData, days) {
-    const lines = [];
-    const daysToInclude = days || Object.keys(jadwalData);
-
-    for (const day of daysToInclude) {
-        const entries = jadwalData[day];
-        if (!entries || entries.length === 0) continue;
-        for (const entry of entries) {
-            const jam = entry.jam.replace(/:00/g, "").replace(" - ", "-");
-            lines.push(
-                `${day.charAt(0).toUpperCase() + day.slice(1)} ${jam} ${entry.nama_mata_kuliah} ${entry.lokasi}`
-            );
+    return { 
+        signal: controller.signal, 
+        resetTimeout, 
+        clear: () => {
+            clearTimeout(timeoutId);
+            if (parentSignal) parentSignal.removeEventListener("abort", onParentAbort);
         }
-    }
-    return lines.length > 0 ? lines.join("\n") : null;
-}
-
-function getScheduleContext(text, jadwalData) {
-    if (!jadwalData) return null;
-
-    const lower = text.toLowerCase();
-
-    const hasStrong = JADWAL_KEYWORDS.some(kw => {
-        const regex = new RegExp(`\\b${kw.replace(/ /g, "\\s+")}\\b`, "i");
-        return regex.test(lower);
-    });
-
-    if (!hasStrong) return null;
-
-    const today = new Date();
-    const todayName = HARI[today.getDay()];
-    const tomorrowName = HARI[(today.getDay() + 1) % 7];
-
-    const targetDays = new Set();
-    if (/\bhari\s+ini\b/.test(lower)) targetDays.add(todayName);
-    if (/\bbesok\b/.test(lower)) targetDays.add(tomorrowName);
-    for (const h of HARI) {
-        if (h === "minggu") continue;
-        const regex = new RegExp(`\\b${h}\\b`, "i");
-        if (regex.test(lower)) targetDays.add(h);
-    }
-
-    const days = targetDays.size > 0 ? [...targetDays] : null;
-    return formatScheduleCompact(jadwalData, days);
-}
-
-export function stripThinkTags(text) {
-    if (!text) return text;
-    let cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, "");
-    const openIdx = cleaned.lastIndexOf("<think>");
-    if (openIdx !== -1 && cleaned.indexOf("</think>", openIdx) === -1) {
-        cleaned = cleaned.substring(0, openIdx);
-    }
-    return cleaned.trim();
-}
-
-function getMaxTokens(text) {
-    const lower = (text || "").toLowerCase();
-    const longKeywords = [
-        "kode", "code", "program", "script", "jelaskan", "explain",
-        "langkah", "steps", "tulis", "write", "buatkan", "implementasi"
-    ];
-    const isLong = longKeywords.some(kw => lower.includes(kw));
-    return isLong ? 3072 : 1536;
-}
-
-function getErrorCooldown(status, retryAfter) {
-    if (retryAfter) {
-        const seconds = parseInt(retryAfter);
-        if (!isNaN(seconds)) return seconds * 1000;
-    }
-    if (status === 429) return KEY_COOLDOWN.rate_limit;
-    if (status >= 401 && status <= 403) return KEY_COOLDOWN.auth_error;
-    if (status === 404) return KEY_COOLDOWN.not_found;
-    if (status >= 500) return KEY_COOLDOWN.server_error;
-    return KEY_COOLDOWN.default;
-}
-
-function getLastUserText(messages) {
-    for (let i = messages.length - 1; i >= 0; i--) {
-        if (messages[i].role === "user") {
-            return messages[i].content || "";
-        }
-    }
-    return "";
+    };
 }
 
 export async function callChatAPI(messages, onChunk) {
-    if (!getOrderedKeys().length) throw new Error("Belum ada API key aktif.");
+    if (CONFIG_API_KEYS.length === 0) throw new Error("Belum ada API key yang dikonfigurasi.");
 
     let sysContent = SYSTEM_MESSAGE;
 
@@ -208,10 +120,18 @@ export async function callChatAPI(messages, onChunk) {
     const provider = PROVIDERS.openrouter;
     const modelList = provider.models;
     const keys = getOrderedKeys();
+    const MAX_RETRIES = 3;
+    let attempts = 0;
+    let lastError = null;
 
     for (const entry of keys) {
+        if (attempts >= MAX_RETRIES) break;
+
         const health = keyHealth.get(entry.key);
-        if (health && Date.now() - health.failedAt < health.cooldown) continue;
+        if (health) {
+            const waitTime = health.failedAt + health.cooldown - Date.now();
+            if (waitTime > 0) continue;
+        }
 
         const maxTokens = getMaxTokens(lastText);
         const payload = {
@@ -222,62 +142,116 @@ export async function callChatAPI(messages, onChunk) {
             stream_options: { include_usage: true }
         };
 
-            let receivedChunks = false;
-            let fullText = "";
+        let receivedChunks = false;
+        let fullText = "";
 
-            try {
-                const headers = {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${entry.key}`,
-                    "HTTP-Referer": "https://meteor-chat.github.io/",
-                    "X-Title": "Meteor"
-                };
+        const { signal, resetTimeout, clear } = createTimeoutSignal(30000, state.abortController.signal);
 
-                const res = await fetch(provider.url, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify(payload),
-                    signal: state.abortController.signal
-                });
+        try {
+            attempts++;
+            const headers = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${entry.key}`,
+                "HTTP-Referer": "https://meteor-chat.github.io/",
+                "X-Title": "Meteor"
+            };
 
-                if (!res.ok) {
-                    const retryAfter = res.headers.get("Retry-After");
-                    const cooldown = getErrorCooldown(res.status, retryAfter);
-                    keyHealth.set(entry.key, { failedAt: Date.now(), cooldown });
-                    continue;
-                }
-                keyHealth.delete(entry.key);
+            const res = await fetch(provider.url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload),
+                signal: signal
+            });
 
-                const { usage, finishReason } = await parseStream(res.body, (chunk) => {
-                    receivedChunks = true;
-                    fullText += chunk;
-                    const visibleText = stripThinkTags(fullText);
-                    onChunk(visibleText);
-                });
+            if (!res.ok) {
+                clear();
+                const retryAfter = res.headers.get("Retry-After");
+                const apiErr = classifyError(res.status, retryAfter);
+                lastError = apiErr;
 
-                const cleanText = stripThinkTags(fullText);
-
-                if (usage) {
-                    const logEntry = {
-                        timestamp: Date.now(),
-                        prompt_tokens: usage.prompt_tokens,
-                        completion_tokens: usage.completion_tokens,
-                        total_tokens: usage.total_tokens,
-                        hasSchedule,
-                        provider: entry.provider
-                    };
-                    state.usageLog.push(logEntry);
-                    console.log("[Meteor Usage]", logEntry);
+                if (apiErr.type === "FATAL") {
+                    throw apiErr; // Langsung lemparkan ke UI
                 }
 
-                return { text: cleanText, usage, finishReason };
-            } catch (e) {
-                if (e.name === "AbortError") throw e;
-                if (receivedChunks && fullText) {
-                    return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
+                if (apiErr.type === "AUTH" || apiErr.type === "RATE_LIMIT") {
+                    keyHealth.set(entry.key, { failedAt: Date.now(), cooldown: apiErr.cooldown });
                 }
-                continue;
+                
+                if (apiErr.type === "SERVER") {
+                    // Backoff ringan tanpa menghukum key terlalu keras
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+                
+                continue; // Coba key berikutnya
             }
+            
+            keyHealth.delete(entry.key);
+
+            const { usage, finishReason } = await parseStream(res.body, (chunk) => {
+                receivedChunks = true;
+                fullText += chunk;
+                const visibleText = stripThinkTags(fullText);
+                onChunk(visibleText);
+            }, () => {
+                resetTimeout();
+            });
+            
+            clear();
+
+            const cleanText = stripThinkTags(fullText);
+
+            if (usage) {
+                const logEntry = {
+                    timestamp: Date.now(),
+                    prompt_tokens: usage.prompt_tokens,
+                    completion_tokens: usage.completion_tokens,
+                    total_tokens: usage.total_tokens,
+                    hasSchedule,
+                    provider: entry.provider
+                };
+                state.usageLog.push(logEntry);
+            }
+
+            return { text: cleanText, usage, finishReason };
+        } catch (e) {
+            clear();
+            if (state.abortController.signal.aborted) {
+                throw new Error("AbortError");
+            }
+            if (e.message === "Timeout" || e.name === "TimeoutError") {
+                lastError = new ApiError("Koneksi timeout (tidak ada respon terlalu lama).", 408, "SERVER", KEY_COOLDOWN.server_error);
+                continue; // retry
+            }
+            if (e instanceof ApiError) throw e;
+            
+            if (receivedChunks && fullText) {
+                return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
+            }
+            
+            // Network error
+            lastError = e;
+            await new Promise(r => setTimeout(r, 1000));
+            continue;
         }
-    throw new Error("Kapasitas server Meteor sedang mencapai batas maksimum. Silakan coba beberapa saat lagi.");
+    }
+
+    if (lastError instanceof ApiError) {
+        throw new Error(lastError.message);
+    }
+    
+    // Check if all keys are on cooldown
+    let minWait = Infinity;
+    for (const entry of keys) {
+        const health = keyHealth.get(entry.key);
+        if (health) {
+            const waitTime = health.failedAt + health.cooldown - Date.now();
+            if (waitTime > 0 && waitTime < minWait) minWait = waitTime;
+        }
+    }
+    
+    if (minWait !== Infinity && minWait > 0) {
+        throw new Error(`Semua kunci API sedang sibuk. Coba lagi dalam ${Math.ceil(minWait / 1000)} detik.`);
+    }
+
+    throw new Error(lastError ? lastError.message : "Gagal menghubungi server Meteor setelah beberapa percobaan.");
 }

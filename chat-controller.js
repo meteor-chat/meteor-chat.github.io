@@ -4,7 +4,7 @@ import { callChatAPI } from "./api-client.js";
 import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage, scrollToBottom } from "./chat-render.js";
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
-import { stripThinkTags } from "./api-client.js";
+import { stripThinkTags } from "./text-utils.js";
 
 export function stopGeneration() {
     if (state.abortController) {
@@ -12,11 +12,11 @@ export function stopGeneration() {
     }
 }
 
-function showContinueButton() {
+function showContinueButton(label = "▶ Lanjutkan") {
     const btn = document.createElement("button");
     btn.className = "continue-btn";
     btn.id = "continue-btn";
-    btn.textContent = "▶ Lanjutkan";
+    btn.textContent = label;
     btn.addEventListener("click", () => {
         btn.remove();
         sendMessage("Lanjutkan dari titik terakhir.");
@@ -42,8 +42,11 @@ export async function sendMessage(text) {
     const prevContinue = document.getElementById("continue-btn");
     if (prevContinue) prevContinue.remove();
 
-    if (state.editIndex !== null) {
-        state.messages = state.messages.slice(0, state.editIndex);
+    const originalEditIndex = state.editIndex;
+    let backupMessages = null;
+    if (originalEditIndex !== null) {
+        backupMessages = [...state.messages];
+        state.messages = state.messages.slice(0, originalEditIndex);
         exitEditMode();
     }
 
@@ -72,6 +75,7 @@ export async function sendMessage(text) {
         });
         if (firstChunk) {
             removeThinking();
+            if (!result.text) throw new Error("Pesan kosong dari provider.");
             state.messages.push({ role: "assistant", content: result.text });
         } else {
             state.messages[state.messages.length - 1].content = result.text;
@@ -79,35 +83,46 @@ export async function sendMessage(text) {
         state.isLoading = false;
         renderChat();
 
-        if (result.finishReason === "length") {
-            showContinueButton();
+        if (result.finishReason !== "stop") {
+            const isLength = result.finishReason === "length";
+            showContinueButton(isLength ? "▶ Lanjutkan (Batas tercapai)" : "▶ Coba Lanjutkan (Terputus)");
         }
     } catch (err) {
         removeThinking();
+        const restoreState = () => {
+            if (backupMessages) {
+                state.messages = backupMessages;
+                state.editIndex = originalEditIndex;
+                refs.cancelBtn.classList.remove("hidden");
+                refs.editNotice.classList.remove("hidden");
+                refs.msgChat.value = text;
+            } else {
+                if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
+                if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
+                if (state.messages.length === 0) {
+                    refs.msgLanding.value = text;
+                } else {
+                    refs.msgChat.value = text;
+                }
+            }
+        };
+
         if (err.name === "AbortError") {
             const lastMsg = state.messages[state.messages.length - 1];
             if (lastMsg?.role === "assistant" && lastMsg.content) {
                 lastMsg.content = stripThinkTags(lastMsg.content);
-                state.isLoading = false;
-                renderChat();
+                if (!lastMsg.content) {
+                    restoreState();
+                }
             } else {
-                if (lastMsg?.role === "assistant") state.messages.pop();
-                if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
-                state.isLoading = false;
-                renderChat();
+                restoreState();
             }
         } else {
             showError(err.message);
-            if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
-            if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
-
-            if (state.messages.length === 0) {
-                refs.msgLanding.value = text;
-            } else {
-                refs.msgChat.value = text;
-            }
-            renderChat();
+            restoreState();
         }
+        state.isLoading = false;
+        renderChat();
     } finally {
         state.isLoading = false;
         state.abortController = null;
