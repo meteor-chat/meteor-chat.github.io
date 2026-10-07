@@ -110,7 +110,7 @@ export async function callChatAPI(messages, onChunk) {
         }
         const maxTokens = getMaxTokens(lastText);
         const payload = {
-            models: modelList.slice(0, 3),
+            model: modelList[0],
             messages: [sysMsg, ...apiMessages],
             stream: true,
             max_tokens: maxTokens,
