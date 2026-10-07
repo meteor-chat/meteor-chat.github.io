@@ -110,7 +110,7 @@ export async function callChatAPI(messages, onChunk) {
         }
         const maxTokens = getMaxTokens(lastText);
         const payload = {
-            model: modelList[0],
+            models: modelList.slice(0, 3),
             messages: [sysMsg, ...apiMessages],
             stream: true,
             max_tokens: maxTokens,
@@ -143,6 +143,7 @@ export async function callChatAPI(messages, onChunk) {
                 }
                 if (apiErr.type === "AUTH" || apiErr.type === "RATE_LIMIT") {
                     keyHealth.set(entry.key, { failedAt: Date.now(), cooldown: apiErr.cooldown });
+                    await new Promise(r => setTimeout(r, 1500));
                 }
                 if (apiErr.type === "SERVER") {
                     await new Promise(r => setTimeout(r, 1000));
