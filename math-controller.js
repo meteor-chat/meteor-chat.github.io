@@ -51,6 +51,7 @@ export function initMath() {
     refs.m4DynamicInputs = document.getElementById("math4-dynamic-inputs");
     refs.m4Steps = document.getElementById("math4-steps-container");
     refs.m5InR = document.getElementById("math5-in-r");
+    refs.m5DynamicInputs = document.getElementById("math5-dynamic-inputs");
     refs.m5Steps = document.getElementById("math5-steps-container");
     refs.m6DynamicInputs = document.getElementById("math6-dynamic-inputs");
     refs.m6Steps = document.getElementById("math6-steps-container");
@@ -120,7 +121,10 @@ export function initMath() {
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay5) {
                 katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: false });
             }
-            if(refs.m5InR) calculateMath5();
+            if (refs.m5DynamicInputs && refs.m5DynamicInputs.children.length === 0) {
+                addM5Input();
+            }
+            calculateMath5();
         } else if (formNum === 6) {
             if(refs.form6) refs.form6.classList.remove("hidden");
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay6) {
@@ -194,6 +198,34 @@ function addM4Input() {
     div.appendChild(label);
     div.appendChild(input);
     refs.m4DynamicInputs.appendChild(div);
+}
+
+function addM5Input() {
+    if (!refs.m5DynamicInputs) return;
+    const index = refs.m5DynamicInputs.children.length + 1;
+    const div = document.createElement('div');
+    div.className = 'math-input-group';
+    const label = document.createElement('label');
+    label.textContent = `Probabilitas (Pi) ${index}`;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.className = 'm5-prob-input';
+    input.id = `m5-prob-${index}`;
+    input.placeholder = '0';
+
+        input.addEventListener("input", () => {
+        const inputs = document.querySelectorAll('.m5-prob-input');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput.value.trim() !== '') {
+            addM5Input();
+        }
+        calculateMath5();
+    });
+
+    div.appendChild(label);
+    div.appendChild(input);
+    refs.m5DynamicInputs.appendChild(div);
 }
 
 function addM6Input() {
@@ -430,23 +462,22 @@ function calculateMath4() {
     });
     table.appendChild(tbody);
     refs.m4Steps.appendChild(table);
-
-    localStorage.setItem('ga_probabilities', JSON.stringify(probabilities));
 }
 
 function calculateMath5() {
     if (!refs.m5Steps) return;
+    const inputs = document.querySelectorAll('.m5-prob-input');
     refs.m5Steps.textContent = '';
-    const pStr = localStorage.getItem('ga_probabilities');
-    if (!pStr) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'math-step-box math-step-error';
-        errDiv.textContent = 'Data probabilitas tidak ditemukan. Silakan isi Modul 4 terlebih dahulu.';
-        refs.m5Steps.appendChild(errDiv);
-        return;
-    }
 
-    const probabilities = JSON.parse(pStr);
+        const probabilities = [];
+    inputs.forEach(input => {
+        if (input.value.trim() !== '') {
+            probabilities.push(parseFloat(input.value) || 0);
+        }
+    });
+
+    if (probabilities.length === 0) return;
+
     const rInput = refs.m5InR.value;
     const r = rInput !== "" ? parseFloat(rInput) : null;
 
@@ -476,7 +507,7 @@ function calculateMath5() {
         : 'math-step-box math-step-invalid';
     validBanner.textContent = finalCumulative >= 0.999 && finalCumulative <= 1.001
         ? '\u2705 Kumulatif valid (berakhir di 1.000)'
-        : '\u274C Error: Kumulatif tidak berakhir di 1.000. Cek kembali input di Modul 4.';
+        : '\u274C Error: Kumulatif tidak berakhir di 1.000. Cek kembali input nilai probabilitas.';
     refs.m5Steps.appendChild(validBanner);
 
     const table = document.createElement('table');
