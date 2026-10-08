@@ -48,7 +48,7 @@
         <button class="math-card active" data-formula="4" id="math-card-4"></button>
         <button class="math-card active" data-formula="5" id="math-card-5"></button>
         <button class="math-card active" data-formula="6" id="math-card-6"></button>
-        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card active" data-formula="7" id="math-card-7"></button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
     </div>
     <button id="btn-math-menu-back" class="btn-math-back">Kembali</button>
@@ -163,6 +163,30 @@
                 <div id="math6-dynamic-inputs" class="math-dynamic-inputs"></div>
             </div>
             <div class="math-steps" id="math6-steps-container"></div>
+        </div>
+    </div>
+
+    <div id="math-calc-form-7" class="math-calc-container hidden">
+        <div class="math-calc-left">
+            <div id="math-calc-formula-display-7" class="math-formula-box"></div>
+            <button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">Kembali</button>
+        </div>
+        <div class="math-calc-right">
+            <div class="math-inputs">
+                <div class="math-input-group">
+                    <label>Kromosom Parent 1 (P1)</label>
+                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">
+                </div>
+                <div class="math-input-group">
+                    <label>Kromosom Parent 2 (P2)</label>
+                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">
+                </div>
+                <div class="math-input-group">
+                    <label>Titik Potong (k)</label>
+                    <input type="number" id="math7-in-k" placeholder="misal: 4" step="1">
+                </div>
+            </div>
+            <div class="math-steps" id="math7-steps-container"></div>
         </div>
     </div>
 </div>

@@ -7,6 +7,7 @@ const FORMULA3 = "Fitness = \\frac{1}{h+a}";
 const FORMULA4 = "P_i = \\frac{F_i}{\\sum F}";
 const FORMULA5 = "C_i = C_{i-1} + P_i";
 const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
+const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
 
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
@@ -18,12 +19,14 @@ export function initMath() {
     refs.mathCard4 = document.getElementById("math-card-4");
     refs.mathCard5 = document.getElementById("math-card-5");
     refs.mathCard6 = document.getElementById("math-card-6");
+    refs.mathCard7 = document.getElementById("math-card-7");
     refs.form1 = document.getElementById("math-calc-form-1");
     refs.form2 = document.getElementById("math-calc-form-2");
     refs.form3 = document.getElementById("math-calc-form-3");
     refs.form4 = document.getElementById("math-calc-form-4");
     refs.form5 = document.getElementById("math-calc-form-5");
     refs.form6 = document.getElementById("math-calc-form-6");
+    refs.form7 = document.getElementById("math-calc-form-7");
     refs.btnMathMenuBack = document.getElementById("btn-math-menu-back");
     refs.btnMathCalcBack1 = document.getElementById("btn-math-calc-back");
     refs.btnMathCalcBack2 = document.getElementById("btn-math-calc-back-2");
@@ -36,7 +39,9 @@ export function initMath() {
     refs.mathFormulaDisplay4 = document.getElementById("math-calc-formula-display-4");
     refs.mathFormulaDisplay5 = document.getElementById("math-calc-formula-display-5");
     refs.mathFormulaDisplay6 = document.getElementById("math-calc-formula-display-6");
+    refs.mathFormulaDisplay7 = document.getElementById("math-calc-formula-display-7");
     refs.btnMathCalcBack6 = document.getElementById("btn-math-calc-back-6");
+    refs.btnMathCalcBack7 = document.getElementById("btn-math-calc-back-7");
     refs.inKromosom = document.getElementById("math-in-kromosom");
     refs.inXmin = document.getElementById("math-in-xmin");
     refs.inXmax = document.getElementById("math-in-xmax");
@@ -55,6 +60,10 @@ export function initMath() {
     refs.m5Steps = document.getElementById("math5-steps-container");
     refs.m6DynamicInputs = document.getElementById("math6-dynamic-inputs");
     refs.m6Steps = document.getElementById("math6-steps-container");
+    refs.m7InP1 = document.getElementById("math7-in-p1");
+    refs.m7InP2 = document.getElementById("math7-in-p2");
+    refs.m7InK = document.getElementById("math7-in-k");
+    refs.m7Steps = document.getElementById("math7-steps-container");
 
     if (typeof katex !== 'undefined') {
         katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
@@ -63,6 +72,7 @@ export function initMath() {
         if (refs.mathCard4) katex.render(FORMULA4, refs.mathCard4, { throwOnError: false, displayMode: false });
         if (refs.mathCard5) katex.render(FORMULA5, refs.mathCard5, { throwOnError: false, displayMode: false });
         if (refs.mathCard6) katex.render(FORMULA6, refs.mathCard6, { throwOnError: false, displayMode: false });
+        if (refs.mathCard7) katex.render(FORMULA7, refs.mathCard7, { throwOnError: false, displayMode: false });
     }
 
     refs.btnMathEor.addEventListener("click", () => {
@@ -86,6 +96,7 @@ export function initMath() {
         if(refs.form4) refs.form4.classList.add("hidden");
         if(refs.form5) refs.form5.classList.add("hidden");
         if(refs.form6) refs.form6.classList.add("hidden");
+        if(refs.form7) refs.form7.classList.add("hidden");
 
                 state.currentView = "math-calc";
 
@@ -134,6 +145,12 @@ export function initMath() {
                 addM6Input();
             }
             calculateMath6();
+        } else if (formNum === 7) {
+            if(refs.form7) refs.form7.classList.remove("hidden");
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay7) {
+                katex.render(FORMULA7, refs.mathFormulaDisplay7, { throwOnError: false, displayMode: false });
+            }
+            calculateMath7();
         }
     };
 
@@ -143,6 +160,7 @@ export function initMath() {
     if(refs.mathCard4) refs.mathCard4.addEventListener("click", () => openForm(4));
     if(refs.mathCard5) refs.mathCard5.addEventListener("click", () => openForm(5));
     if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
+    if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
 
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
@@ -156,6 +174,7 @@ export function initMath() {
     if(refs.btnMathCalcBack4) refs.btnMathCalcBack4.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack5) refs.btnMathCalcBack5.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
+    if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
 
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
@@ -170,6 +189,10 @@ export function initMath() {
     });
 
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+
+    [refs.m7InP1, refs.m7InP2, refs.m7InK].forEach(el => {
+        if(el) el.addEventListener("input", calculateMath7);
+    });
 }
 
 function addM4Input() {
@@ -597,4 +620,58 @@ function calculateMath6() {
         katex.render(`\\sum F = ${Math.round(totalFitness * 1000) / 1000}`, totalDiv, { throwOnError: false, displayMode: true });
     }
     refs.m6Steps.appendChild(totalDiv);
+}
+
+function calculateMath7() {
+    if (!refs.m7Steps) return;
+    refs.m7Steps.textContent = '';
+    const p1 = refs.m7InP1 ? refs.m7InP1.value.trim() : '';
+    const p2 = refs.m7InP2 ? refs.m7InP2.value.trim() : '';
+    const kStr = refs.m7InK ? refs.m7InK.value : '';
+
+        if (!p1 || !p2 || kStr === '') return;
+
+        const k = parseInt(kStr);
+
+        if (p1.length !== p2.length) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'math-step-box math-step-error';
+        errDiv.textContent = '\u274C Error: Panjang kromosom Parent 1 dan Parent 2 harus sama!';
+        refs.m7Steps.appendChild(errDiv);
+        return;
+    }
+
+    if (k < 1 || k >= p1.length) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'math-step-box math-step-error';
+        errDiv.textContent = `\u274C Error: Titik potong (k) harus antara 1 dan ${p1.length - 1}.`;
+        refs.m7Steps.appendChild(errDiv);
+        return;
+    }
+
+    const p1Left = p1.substring(0, k);
+    const p1Right = p1.substring(k);
+    const p2Left = p2.substring(0, k);
+    const p2Right = p2.substring(k);
+
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'math-step-box';
+    stepDiv.innerHTML = `
+        <h3 style="margin-bottom: 8px;">\u2702\uFE0F 1. Pemotongan pada k = ${k}</h3>
+        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
+            <strong>P1:</strong> <span style="color: #60a5fa;">${p1Left}</span> | <span style="color: #60a5fa;">${p1Right}</span>
+        </p>
+        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px; margin-bottom: 15px;">
+            <strong>P2:</strong> <span style="color: #34d399;">${p2Left}</span> | <span style="color: #34d399;">${p2Right}</span>
+        </p>
+        
+        <h3 style="margin-bottom: 8px;">\uD83D\uDD00 2. Hasil Persilangan (Offspring)</h3>
+        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
+            <strong>O1 (P1 Kiri + P2 Kanan):</strong> <span style="color: #60a5fa;">${p1Left}</span><span style="color: #34d399;">${p2Right}</span>
+        </p>
+        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
+            <strong>O2 (P2 Kiri + P1 Kanan):</strong> <span style="color: #34d399;">${p2Left}</span><span style="color: #60a5fa;">${p1Right}</span>
+        </p>
+    `;
+    refs.m7Steps.appendChild(stepDiv);
 }
