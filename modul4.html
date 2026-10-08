@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul 4: Probabilitas</title>
+    <link rel="stylesheet" href="ga-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Modul 4: Probabilitas (P<sub>i</sub>)</h1>
+        
+        <div class="input-section">
+            <label for="population">Jumlah Populasi (N):</label>
+            <input type="number" id="population" min="1" value="4">
+            <button id="btn-generate">Buat Baris</button>
+        </div>
+
+        <div id="fitness-inputs" class="input-section hidden">
+            <h3>Masukkan Nilai Fitness:</h3>
+            <div id="fitness-rows"></div>
+            <button id="btn-calculate">Hitung Probabilitas</button>
+        </div>
+
+        <div id="result-section" class="result-section hidden">
+            <h3 id="total-fitness-display"></h3>
+            <table id="result-table">
+                <thead>
+                    <tr>
+                        <th>Individu</th>
+                        <th>Fitness (F<sub>i</sub>)</th>
+                        <th>Substitusi</th>
+                        <th>Probabilitas (P<sub>i</sub>)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <button id="btn-next">Lanjut ke Kumulatif</button>
+        </div>
+    </div>
+    <script src="modul4.js"></script>
+</body>
+</html>

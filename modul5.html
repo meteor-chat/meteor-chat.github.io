@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modul 5: Probabilitas Kumulatif</title>
+    <link rel="stylesheet" href="ga-styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Modul 5: Probabilitas Kumulatif (C<sub>i</sub>)</h1>
+        
+        <div class="input-section">
+            <label for="random-r">Nilai Acak (r) (Opsional):</label>
+            <input type="number" step="any" id="random-r" placeholder="Contoh: 0.45">
+            <button id="btn-calculate">Hitung Kumulatif</button>
+        </div>
+
+        <div id="result-section" class="result-section hidden">
+            <div id="validation-message"></div>
+            <table id="result-table">
+                <thead>
+                    <tr>
+                        <th>Individu</th>
+                        <th>Probabilitas (P<sub>i</sub>)</th>
+                        <th>Cara Hitung Kumulatif</th>
+                        <th>Kumulatif (C<sub>i</sub>)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div id="selection-result" class="selection-box hidden"></div>
+            <button id="btn-back">Kembali ke Modul 4</button>
+        </div>
+    </div>
+    <script src="modul5.js"></script>
+</body>
+</html>
