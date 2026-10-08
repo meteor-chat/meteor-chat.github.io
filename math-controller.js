@@ -48,7 +48,6 @@ export function initMath() {
     refs.m3InH = document.getElementById("math3-in-h");
     refs.m3InA = document.getElementById("math3-in-a");
     refs.m3Steps = document.getElementById("math3-steps-container");
-    refs.m4InN = document.getElementById("math4-in-n");
     refs.m4DynamicInputs = document.getElementById("math4-dynamic-inputs");
     refs.m4Steps = document.getElementById("math4-steps-container");
     refs.m5InR = document.getElementById("math5-in-r");
@@ -112,7 +111,10 @@ export function initMath() {
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay4) {
                 katex.render(FORMULA4, refs.mathFormulaDisplay4, { throwOnError: false, displayMode: false });
             }
-            if(refs.m4InN) calculateMath4();
+            if (refs.m4DynamicInputs && refs.m4DynamicInputs.children.length === 0) {
+                addM4Input();
+            }
+            calculateMath4();
         } else if (formNum === 5) {
             if(refs.form5) refs.form5.classList.remove("hidden");
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay5) {
@@ -163,37 +165,35 @@ export function initMath() {
         if(el) el.addEventListener("input", calculateMath3);
     });
 
-    if (refs.m4InN) {
-        refs.m4InN.addEventListener("input", () => {
-            const n = parseInt(refs.m4InN.value) || 0;
-            refs.m4DynamicInputs.textContent = '';
-            for (let i = 1; i <= n; i++) {
-                const div = document.createElement('div');
-                div.className = 'math-input-group';
-
-                                const label = document.createElement('label');
-                label.textContent = `Fitness Individu ${i}`;
-
-                                const input = document.createElement('input');
-                input.type = 'number';
-                input.step = 'any';
-                input.className = 'm4-fitness-input';
-                input.id = `m4-fit-${i}`;
-                input.placeholder = '0';
-
-                                div.appendChild(label);
-                div.appendChild(input);
-                refs.m4DynamicInputs.appendChild(div);
-            }
-            const inputs = document.querySelectorAll('.m4-fitness-input');
-            inputs.forEach(inp => inp.addEventListener("input", calculateMath4));
-            calculateMath4();
-        });
-    }
-
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+}
 
-    if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+function addM4Input() {
+    if (!refs.m4DynamicInputs) return;
+    const index = refs.m4DynamicInputs.children.length + 1;
+    const div = document.createElement('div');
+    div.className = 'math-input-group';
+    const label = document.createElement('label');
+    label.textContent = `Fitness Individu ${index}`;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.className = 'm4-fitness-input';
+    input.id = `m4-fit-${index}`;
+    input.placeholder = '0';
+
+        input.addEventListener("input", () => {
+        const inputs = document.querySelectorAll('.m4-fitness-input');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput.value.trim() !== '') {
+            addM4Input();
+        }
+        calculateMath4();
+    });
+
+    div.appendChild(label);
+    div.appendChild(input);
+    refs.m4DynamicInputs.appendChild(div);
 }
 
 function addM6Input() {
@@ -376,20 +376,24 @@ function calculateMath4() {
     if (!refs.m4Steps) return;
     const inputs = document.querySelectorAll('.m4-fitness-input');
     refs.m4Steps.textContent = '';
-    if (inputs.length === 0) return;
 
-    const fitnessValues = [];
+        const fitnessValues = [];
     let totalFitness = 0;
-    inputs.forEach(input => {
-        const val = parseFloat(input.value) || 0;
-        fitnessValues.push(val);
-        totalFitness += val;
+
+        inputs.forEach(input => {
+        if (input.value.trim() !== '') {
+            const val = parseFloat(input.value) || 0;
+            fitnessValues.push(val);
+            totalFitness += val;
+        }
     });
+
+    if (fitnessValues.length === 0) return;
 
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step math-step-total';
     const strong = document.createElement('strong');
-    strong.textContent = `Total Fitness (\u03A3F) = ${totalFitness}`;
+    strong.textContent = `Total Fitness (\u03A3F) = ${Math.round(totalFitness * 1000) / 1000}`;
     totalDiv.appendChild(strong);
     refs.m4Steps.appendChild(totalDiv);
 
