@@ -6,6 +6,7 @@ const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
 const FORMULA4 = "P_i = \\frac{F_i}{\\sum F}";
 const FORMULA5 = "C_i = C_{i-1} + P_i";
+const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
 
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
@@ -16,11 +17,13 @@ export function initMath() {
     refs.mathCard3 = document.getElementById("math-card-3");
     refs.mathCard4 = document.getElementById("math-card-4");
     refs.mathCard5 = document.getElementById("math-card-5");
+    refs.mathCard6 = document.getElementById("math-card-6");
     refs.form1 = document.getElementById("math-calc-form-1");
     refs.form2 = document.getElementById("math-calc-form-2");
     refs.form3 = document.getElementById("math-calc-form-3");
     refs.form4 = document.getElementById("math-calc-form-4");
     refs.form5 = document.getElementById("math-calc-form-5");
+    refs.form6 = document.getElementById("math-calc-form-6");
     refs.btnMathMenuBack = document.getElementById("btn-math-menu-back");
     refs.btnMathCalcBack1 = document.getElementById("btn-math-calc-back");
     refs.btnMathCalcBack2 = document.getElementById("btn-math-calc-back-2");
@@ -32,6 +35,8 @@ export function initMath() {
     refs.mathFormulaDisplay3 = document.getElementById("math-calc-formula-display-3");
     refs.mathFormulaDisplay4 = document.getElementById("math-calc-formula-display-4");
     refs.mathFormulaDisplay5 = document.getElementById("math-calc-formula-display-5");
+    refs.mathFormulaDisplay6 = document.getElementById("math-calc-formula-display-6");
+    refs.btnMathCalcBack6 = document.getElementById("btn-math-calc-back-6");
     refs.inKromosom = document.getElementById("math-in-kromosom");
     refs.inXmin = document.getElementById("math-in-xmin");
     refs.inXmax = document.getElementById("math-in-xmax");
@@ -48,6 +53,9 @@ export function initMath() {
     refs.m4Steps = document.getElementById("math4-steps-container");
     refs.m5InR = document.getElementById("math5-in-r");
     refs.m5Steps = document.getElementById("math5-steps-container");
+    refs.m6InN = document.getElementById("math6-in-n");
+    refs.m6DynamicInputs = document.getElementById("math6-dynamic-inputs");
+    refs.m6Steps = document.getElementById("math6-steps-container");
 
     if (typeof katex !== 'undefined') {
         katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
@@ -55,6 +63,7 @@ export function initMath() {
         if (refs.mathCard3) katex.render(FORMULA3, refs.mathCard3, { throwOnError: false, displayMode: false });
         if (refs.mathCard4) katex.render(FORMULA4, refs.mathCard4, { throwOnError: false, displayMode: false });
         if (refs.mathCard5) katex.render(FORMULA5, refs.mathCard5, { throwOnError: false, displayMode: false });
+        if (refs.mathCard6) katex.render(FORMULA6, refs.mathCard6, { throwOnError: false, displayMode: false });
     }
 
     refs.btnMathEor.addEventListener("click", () => {
@@ -77,6 +86,7 @@ export function initMath() {
         if(refs.form3) refs.form3.classList.add("hidden");
         if(refs.form4) refs.form4.classList.add("hidden");
         if(refs.form5) refs.form5.classList.add("hidden");
+        if(refs.form6) refs.form6.classList.add("hidden");
 
                 state.currentView = "math-calc";
 
@@ -110,6 +120,12 @@ export function initMath() {
                 katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: false });
             }
             if(refs.m5InR) calculateMath5();
+        } else if (formNum === 6) {
+            if(refs.form6) refs.form6.classList.remove("hidden");
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay6) {
+                katex.render(FORMULA6, refs.mathFormulaDisplay6, { throwOnError: false, displayMode: false });
+            }
+            if(refs.m6InN) calculateMath6();
         }
     };
 
@@ -118,6 +134,7 @@ export function initMath() {
     if(refs.mathCard3) refs.mathCard3.addEventListener("click", () => openForm(3));
     if(refs.mathCard4) refs.mathCard4.addEventListener("click", () => openForm(4));
     if(refs.mathCard5) refs.mathCard5.addEventListener("click", () => openForm(5));
+    if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
 
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
@@ -130,6 +147,7 @@ export function initMath() {
     if(refs.btnMathCalcBack3) refs.btnMathCalcBack3.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack4) refs.btnMathCalcBack4.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack5) refs.btnMathCalcBack5.addEventListener("click", closeForm);
+    if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
 
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
@@ -172,6 +190,31 @@ export function initMath() {
     }
 
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+
+    if (refs.m6InN) {
+        refs.m6InN.addEventListener("input", () => {
+            const n = parseInt(refs.m6InN.value) || 0;
+            refs.m6DynamicInputs.textContent = '';
+            for (let i = 1; i <= n; i++) {
+                const div = document.createElement('div');
+                div.className = 'math-input-group';
+                const label = document.createElement('label');
+                label.textContent = `Nilai F${i}`;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any';
+                input.className = 'm6-fitness-input';
+                input.id = `m6-fit-${i}`;
+                input.placeholder = '0';
+                div.appendChild(label);
+                div.appendChild(input);
+                refs.m6DynamicInputs.appendChild(div);
+            }
+            const inputs = document.querySelectorAll('.m6-fitness-input');
+            inputs.forEach(inp => inp.addEventListener("input", calculateMath6));
+            calculateMath6();
+        });
+    }
 }
 
 function gcd(a, b) {
@@ -476,4 +519,36 @@ function calculateMath5() {
         }
         refs.m5Steps.appendChild(resultDiv);
     }
+}
+
+function calculateMath6() {
+    if (!refs.m6Steps) return;
+    const inputs = document.querySelectorAll('.m6-fitness-input');
+    refs.m6Steps.textContent = '';
+    if (inputs.length === 0) return;
+
+    const fitnessValues = [];
+    let totalFitness = 0;
+    inputs.forEach(input => {
+        const val = parseFloat(input.value) || 0;
+        fitnessValues.push(val);
+        totalFitness += val;
+    });
+
+    const joinedValues = fitnessValues.join(" + ");
+    const expression = "\\sum F = " + (joinedValues || "0");
+
+        const divStep = document.createElement('div');
+    divStep.className = 'math-step';
+    if (typeof katex !== 'undefined') {
+        katex.render(expression, divStep, { throwOnError: false, displayMode: true });
+    }
+    refs.m6Steps.appendChild(divStep);
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'math-step-box math-step-total';
+    if (typeof katex !== 'undefined') {
+        katex.render(`\\sum F = ${Math.round(totalFitness * 1000) / 1000}`, totalDiv, { throwOnError: false, displayMode: true });
+    }
+    refs.m6Steps.appendChild(totalDiv);
 }
