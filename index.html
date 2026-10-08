@@ -44,7 +44,7 @@
     <div class="math-grid">
         <button class="math-card active" data-formula="1" id="math-card-1"></button>
         <button class="math-card active" data-formula="2" id="math-card-2"></button>
-        <button class="math-card disabled">rumus lain<br>coming soon</button>
+        <button class="math-card active" data-formula="3" id="math-card-3"></button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
         <button class="math-card disabled">rumus lain<br>coming soon</button>
@@ -101,6 +101,26 @@
                 </div>
             </div>
             <div class="math-steps" id="math2-table-container"></div>
+        </div>
+    </div>
+
+    <div id="math-calc-form-3" class="math-calc-container hidden">
+        <div class="math-calc-left">
+            <div id="math-calc-formula-display-3" class="math-formula-box"></div>
+            <button id="btn-math-calc-back-3" class="btn-math-back" style="margin-top:40px;">Kembali</button>
+        </div>
+        <div class="math-calc-right">
+            <div class="math-inputs">
+                <div class="math-input-group">
+                    <label>h (user input)</label>
+                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="any">
+                </div>
+                <div class="math-input-group">
+                    <label>a (user input)</label>
+                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="any">
+                </div>
+            </div>
+            <div class="math-steps" id="math3-steps-container"></div>
         </div>
     </div>
 </div>
