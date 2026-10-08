@@ -50,11 +50,11 @@ export function initMath() {
     refs.m5Steps = document.getElementById("math5-steps-container");
 
     if (typeof katex !== 'undefined') {
-        katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: true });
-        if (refs.mathCard2) katex.render(FORMULA2, refs.mathCard2, { throwOnError: false, displayMode: true });
-        if (refs.mathCard3) katex.render(FORMULA3, refs.mathCard3, { throwOnError: false, displayMode: true });
-        if (refs.mathCard4) katex.render(FORMULA4, refs.mathCard4, { throwOnError: false, displayMode: true });
-        if (refs.mathCard5) katex.render(FORMULA5, refs.mathCard5, { throwOnError: false, displayMode: true });
+        katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
+        if (refs.mathCard2) katex.render(FORMULA2, refs.mathCard2, { throwOnError: false, displayMode: false });
+        if (refs.mathCard3) katex.render(FORMULA3, refs.mathCard3, { throwOnError: false, displayMode: false });
+        if (refs.mathCard4) katex.render(FORMULA4, refs.mathCard4, { throwOnError: false, displayMode: false });
+        if (refs.mathCard5) katex.render(FORMULA5, refs.mathCard5, { throwOnError: false, displayMode: false });
     }
 
     refs.btnMathEor.addEventListener("click", () => {

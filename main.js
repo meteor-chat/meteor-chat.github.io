@@ -25,7 +25,7 @@ async function loadJadwal() {
             const validData = {};
             for (const day in data) {
                 if (Array.isArray(data[day])) {
-                    validData[day] = data[day].filter(item => 
+                    validData[day] = data[day].filter(item =>
                         item && typeof item.jam === 'string' && typeof item.nama_mata_kuliah === 'string' && typeof item.lokasi === 'string'
                     );
                 }
@@ -64,11 +64,9 @@ async function init() {
     } catch (e) {
         showError(`Inisialisasi aplikasi gagal: ${e.message}`);
         const landing = document.getElementById("landing");
-        landing.textContent = ""; 
+        landing.textContent = "";
         const errDiv = document.createElement("div");
-        errDiv.className = "error-box";
-        errDiv.style.display = "block";
-        errDiv.style.margin = "2rem";
+        errDiv.className = "error-box error-box-fallback";
         errDiv.textContent = e.message + " - Silakan muat ulang halaman.";
         landing.appendChild(errDiv);
     }
