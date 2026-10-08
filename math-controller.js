@@ -53,7 +53,6 @@ export function initMath() {
     refs.m4Steps = document.getElementById("math4-steps-container");
     refs.m5InR = document.getElementById("math5-in-r");
     refs.m5Steps = document.getElementById("math5-steps-container");
-    refs.m6InN = document.getElementById("math6-in-n");
     refs.m6DynamicInputs = document.getElementById("math6-dynamic-inputs");
     refs.m6Steps = document.getElementById("math6-steps-container");
 
@@ -125,7 +124,10 @@ export function initMath() {
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay6) {
                 katex.render(FORMULA6, refs.mathFormulaDisplay6, { throwOnError: false, displayMode: false });
             }
-            if(refs.m6InN) calculateMath6();
+            if (refs.m6DynamicInputs && refs.m6DynamicInputs.children.length === 0) {
+                addM6Input();
+            }
+            calculateMath6();
         }
     };
 
@@ -191,30 +193,35 @@ export function initMath() {
 
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
 
-    if (refs.m6InN) {
-        refs.m6InN.addEventListener("input", () => {
-            const n = parseInt(refs.m6InN.value) || 0;
-            refs.m6DynamicInputs.textContent = '';
-            for (let i = 1; i <= n; i++) {
-                const div = document.createElement('div');
-                div.className = 'math-input-group';
-                const label = document.createElement('label');
-                label.textContent = `Nilai F${i}`;
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.step = 'any';
-                input.className = 'm6-fitness-input';
-                input.id = `m6-fit-${i}`;
-                input.placeholder = '0';
-                div.appendChild(label);
-                div.appendChild(input);
-                refs.m6DynamicInputs.appendChild(div);
-            }
-            const inputs = document.querySelectorAll('.m6-fitness-input');
-            inputs.forEach(inp => inp.addEventListener("input", calculateMath6));
-            calculateMath6();
-        });
-    }
+    if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+}
+
+function addM6Input() {
+    if (!refs.m6DynamicInputs) return;
+    const index = refs.m6DynamicInputs.children.length + 1;
+    const div = document.createElement('div');
+    div.className = 'math-input-group';
+    const label = document.createElement('label');
+    label.textContent = `Nilai F${index}`;
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = 'any';
+    input.className = 'm6-fitness-input';
+    input.id = `m6-fit-${index}`;
+    input.placeholder = '0';
+
+        input.addEventListener("input", () => {
+        const inputs = document.querySelectorAll('.m6-fitness-input');
+        const lastInput = inputs[inputs.length - 1];
+        if (lastInput.value.trim() !== '') {
+            addM6Input();
+        }
+        calculateMath6();
+    });
+
+    div.appendChild(label);
+    div.appendChild(input);
+    refs.m6DynamicInputs.appendChild(div);
 }
 
 function gcd(a, b) {
@@ -525,20 +532,24 @@ function calculateMath6() {
     if (!refs.m6Steps) return;
     const inputs = document.querySelectorAll('.m6-fitness-input');
     refs.m6Steps.textContent = '';
-    if (inputs.length === 0) return;
 
-    const fitnessValues = [];
+        const fitnessValues = [];
     let totalFitness = 0;
-    inputs.forEach(input => {
-        const val = parseFloat(input.value) || 0;
-        fitnessValues.push(val);
-        totalFitness += val;
+
+        inputs.forEach(input => {
+        if (input.value.trim() !== '') {
+            const val = parseFloat(input.value) || 0;
+            fitnessValues.push(val);
+            totalFitness += val;
+        }
     });
+
+    if (fitnessValues.length === 0) return;
 
     const joinedValues = fitnessValues.join(" + ");
     const expression = "\\sum F = " + (joinedValues || "0");
 
-        const divStep = document.createElement('div');
+    const divStep = document.createElement('div');
     divStep.className = 'math-step';
     if (typeof katex !== 'undefined') {
         katex.render(expression, divStep, { throwOnError: false, displayMode: true });
