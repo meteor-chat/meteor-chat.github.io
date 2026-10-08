@@ -181,7 +181,7 @@ function addM4Input() {
     label.textContent = `Fitness Individu ${index}`;
     const input = document.createElement('input');
     input.type = 'number';
-    input.step = 'any';
+    input.step = '0.1';
     input.className = 'm4-fitness-input';
     input.id = `m4-fit-${index}`;
     input.placeholder = '0';
@@ -209,7 +209,7 @@ function addM5Input() {
     label.textContent = `Probabilitas (Pi) ${index}`;
     const input = document.createElement('input');
     input.type = 'number';
-    input.step = 'any';
+    input.step = '0.1';
     input.className = 'm5-prob-input';
     input.id = `m5-prob-${index}`;
     input.placeholder = '0';
@@ -237,7 +237,7 @@ function addM6Input() {
     label.textContent = `Nilai F${index}`;
     const input = document.createElement('input');
     input.type = 'number';
-    input.step = 'any';
+    input.step = '0.1';
     input.className = 'm6-fitness-input';
     input.id = `m6-fit-${index}`;
     input.placeholder = '0';
