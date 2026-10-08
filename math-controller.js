@@ -77,10 +77,10 @@ export function initMath() {
         if(refs.form3) refs.form3.classList.add("hidden");
         if(refs.form4) refs.form4.classList.add("hidden");
         if(refs.form5) refs.form5.classList.add("hidden");
-        
-        state.currentView = "math-calc";
-        
-        if (formNum === 1) {
+
+                state.currentView = "math-calc";
+
+                if (formNum === 1) {
             refs.form1.classList.remove("hidden");
             if (typeof katex !== 'undefined') {
                 katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: true });
@@ -146,11 +146,23 @@ export function initMath() {
     if (refs.m4InN) {
         refs.m4InN.addEventListener("input", () => {
             const n = parseInt(refs.m4InN.value) || 0;
-            refs.m4DynamicInputs.innerHTML = '';
+            refs.m4DynamicInputs.textContent = '';
             for (let i = 1; i <= n; i++) {
                 const div = document.createElement('div');
                 div.className = 'math-input-group';
-                div.innerHTML = `<label>Fitness Individu ${i}</label><input type="number" step="any" class="m4-fitness-input" id="m4-fit-${i}" placeholder="0">`;
+
+                                const label = document.createElement('label');
+                label.textContent = `Fitness Individu ${i}`;
+
+                                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any';
+                input.className = 'm4-fitness-input';
+                input.id = `m4-fit-${i}`;
+                input.placeholder = '0';
+
+                                div.appendChild(label);
+                div.appendChild(input);
                 refs.m4DynamicInputs.appendChild(div);
             }
             const inputs = document.querySelectorAll('.m4-fitness-input');
@@ -174,8 +186,13 @@ function calculateMath() {
     const xMin = parseFloat(xMinStr);
     const xMax = parseFloat(xMaxStr);
 
+        refs.mathSteps.textContent = '';
+
     if (!/^[01]+$/.test(kromosom)) {
-        refs.mathSteps.innerHTML = "<div class='katex-error'>Kromosom harus biner (0/1)</div>";
+        const err = document.createElement('div');
+        err.className = 'katex-error';
+        err.textContent = 'Kromosom harus biner (0/1)';
+        refs.mathSteps.appendChild(err);
         if(refs.inN) refs.inN.value = "";
         return;
     }
@@ -184,7 +201,6 @@ function calculateMath() {
     if(refs.inN) refs.inN.value = n;
 
     if (isNaN(xMin) || isNaN(xMax)) {
-        refs.mathSteps.innerHTML = "";
         return;
     }
 
@@ -195,13 +211,15 @@ function calculateMath() {
     const xMinFmt = xMin < 0 ? `(${xMin})` : xMin;
     const step2 = `x = ${xMin} + \\frac{${xMax} - ${xMinFmt}}{2^{${n}} - 1} \\cdot ${d}`;
 
-    let stepsHtml = "";
-    stepsHtml += `<div class="math-step">`;
-    stepsHtml += katex.renderToString(step1, { throwOnError: false, displayMode: true });
-    stepsHtml += `</div>`;
-    stepsHtml += `<div class="math-step">`;
-    stepsHtml += katex.renderToString(step2, { throwOnError: false, displayMode: true });
-    stepsHtml += `</div>`;
+    const addStep = (tex, boxClass = 'math-step') => {
+        const div = document.createElement('div');
+        div.className = boxClass;
+        katex.render(tex, div, { throwOnError: false, displayMode: true });
+        refs.mathSteps.appendChild(div);
+    };
+
+    addStep(step1);
+    addStep(step2);
 
     if (den !== 0) {
         const val = xMin + (num / den) * d;
@@ -214,27 +232,18 @@ function calculateMath() {
             const bottomSimp = bottom / Math.abs(divisor);
 
             if (bottomSimp === 1) {
-                const step3 = `x = ${topSimp}`;
-                stepsHtml += `<div class="math-step">`;
-                stepsHtml += katex.renderToString(step3, { throwOnError: false, displayMode: true });
-                stepsHtml += `</div>`;
+                addStep(`x = ${topSimp}`);
             } else {
                 const fracPrefix = (topSimp < 0 && bottomSimp > 0) || (topSimp > 0 && bottomSimp < 0) ? "-" : "";
-                const step3 = `x = ${fracPrefix}\\frac{${Math.abs(topSimp)}}{${Math.abs(bottomSimp)}}`;
-                stepsHtml += `<div class="math-step">`;
-                stepsHtml += katex.renderToString(step3, { throwOnError: false, displayMode: true });
-                stepsHtml += `</div>`;
+                addStep(`x = ${fracPrefix}\\frac{${Math.abs(topSimp)}}{${Math.abs(bottomSimp)}}`);
             }
         }
         const rounded = Math.round(val * 100) / 100;
         const step4 = `x \\approx ${rounded}`;
         if (!isInt || (num/den)*d % 1 !== 0) {
-            stepsHtml += `<div class="math-step-box">`;
-            stepsHtml += katex.renderToString(step4, { throwOnError: false, displayMode: true });
-            stepsHtml += `</div>`;
+            addStep(step4, 'math-step-box');
         }
     }
-    refs.mathSteps.innerHTML = stepsHtml;
 }
 
 function calculateMath2() {
@@ -244,8 +253,8 @@ function calculateMath2() {
     const x1 = parseFloat(x1Str);
     const x2 = parseFloat(x2Str);
 
+    refs.m2Table.textContent = "";
     if (isNaN(x1) || isNaN(x2)) {
-        refs.m2Table.innerHTML = "";
         return;
     }
 
@@ -254,7 +263,7 @@ function calculateMath2() {
     const step1 = `h = ${x1Fmt}^3 + \\frac{1}{3}${x2Fmt}^2`;
     const x1Cubed = Math.pow(x1, 3);
     const x2Sq = Math.pow(x2, 2);
-    
+
     let step2 = "";
     if (Number.isInteger(x2Sq) && x2Sq !== 0) {
         step2 = `h = ${x1Cubed} + \\frac{${x2Sq}}{3}`;
@@ -267,12 +276,16 @@ function calculateMath2() {
     const finalVal = x1Cubed + (x2Sq / 3);
     const step3 = `h \\approx ${Math.round(finalVal * 100) / 100}`;
 
-    let html = "";
-    html += `<div class="math-step">${katex.renderToString(step1, { throwOnError: false, displayMode: true })}</div>`;
-    html += `<div class="math-step">${katex.renderToString(step2, { throwOnError: false, displayMode: true })}</div>`;
-    html += `<div class="math-step-box">${katex.renderToString(step3, { throwOnError: false, displayMode: true })}</div>`;
+    const addStep = (tex, boxClass = 'math-step') => {
+        const div = document.createElement('div');
+        div.className = boxClass;
+        katex.render(tex, div, { throwOnError: false, displayMode: true });
+        refs.m2Table.appendChild(div);
+    };
 
-    refs.m2Table.innerHTML = html;
+    addStep(step1);
+    addStep(step2);
+    addStep(step3, 'math-step-box');
 }
 
 function calculateMath3() {
@@ -282,8 +295,8 @@ function calculateMath3() {
     const h = parseFloat(hStr);
     const a = parseFloat(aStr);
 
+    refs.m3Steps.textContent = "";
     if (isNaN(h) || isNaN(a)) {
-        refs.m3Steps.innerHTML = "";
         return;
     }
 
@@ -295,23 +308,26 @@ function calculateMath3() {
     const finalVal = 1 / sum;
     const step3 = `Fitness \\approx ${Math.round(finalVal * 100) / 100}`;
 
-    let html = "";
-    html += `<div class="math-step">${katex.renderToString(step1, { throwOnError: false, displayMode: true })}</div>`;
-    if (sum !== h && sum !== a) {
-        html += `<div class="math-step">${katex.renderToString(step2, { throwOnError: false, displayMode: true })}</div>`;
-    }
-    html += `<div class="math-step-box">${katex.renderToString(step3, { throwOnError: false, displayMode: true })}</div>`;
+    const addStep = (tex, boxClass = 'math-step') => {
+        const div = document.createElement('div');
+        div.className = boxClass;
+        katex.render(tex, div, { throwOnError: false, displayMode: true });
+        refs.m3Steps.appendChild(div);
+    };
 
-    refs.m3Steps.innerHTML = html;
+    addStep(step1);
+    if (sum !== h && sum !== a) {
+        addStep(step2);
+    }
+    addStep(step3, 'math-step-box');
 }
 
 function calculateMath4() {
     if (!refs.m4Steps) return;
     const inputs = document.querySelectorAll('.m4-fitness-input');
-    if (inputs.length === 0) {
-        refs.m4Steps.innerHTML = '';
-        return;
-    }
+    refs.m4Steps.textContent = '';
+    if (inputs.length === 0) return;
+
     const fitnessValues = [];
     let totalFitness = 0;
     inputs.forEach(input => {
@@ -320,33 +336,59 @@ function calculateMath4() {
         totalFitness += val;
     });
 
-    let html = `<div class="math-step" style="text-align: center; margin-bottom: 20px;"><strong>Total Fitness (&Sigma;F) = ${totalFitness}</strong></div>`;
-    html += `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: var(--text-color, inherit);">`;
-    html += `<thead><tr style="border-bottom: 1px solid var(--border-color, #444);"><th style="padding: 8px; text-align: left;">Individu</th><th style="padding: 8px; text-align: left;">Fitness (F<sub>i</sub>)</th><th style="padding: 8px; text-align: left;">Substitusi</th><th style="padding: 8px; text-align: left;">Probabilitas (P<sub>i</sub>)</th></tr></thead>`;
-    html += `<tbody>`;
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'math-step math-step-total';
+    const strong = document.createElement('strong');
+    strong.textContent = `Total Fitness (\u03A3F) = ${totalFitness}`;
+    totalDiv.appendChild(strong);
+    refs.m4Steps.appendChild(totalDiv);
 
+    const table = document.createElement('table');
+    table.className = 'math-table';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Individu', 'Fitness (Fi)', 'Substitusi', 'Probabilitas (Pi)'].forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
     const probabilities = [];
     fitnessValues.forEach((f, index) => {
         const p = totalFitness === 0 ? 0 : f / totalFitness;
         probabilities.push(p);
-        html += `<tr style="border-bottom: 1px solid var(--border-color, #222);">`;
-        html += `<td style="padding: 8px;">${index + 1}</td>`;
-        html += `<td style="padding: 8px;">${f}</td>`;
-        html += `<td style="padding: 8px;">${f} / ${totalFitness}</td>`;
-        html += `<td style="padding: 8px;"><strong>${p.toFixed(4)}</strong></td>`;
-        html += `</tr>`;
+        const tr = document.createElement('tr');
+        [index + 1, f, `${f} / ${totalFitness}`].forEach(val => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            tr.appendChild(td);
+        });
+        const tdP = document.createElement('td');
+        const strongP = document.createElement('strong');
+        strongP.textContent = p.toFixed(4);
+        tdP.appendChild(strongP);
+        tr.appendChild(tdP);
+        tbody.appendChild(tr);
     });
-    html += `</tbody></table>`;
+    table.appendChild(tbody);
+    refs.m4Steps.appendChild(table);
 
     localStorage.setItem('ga_probabilities', JSON.stringify(probabilities));
-    refs.m4Steps.innerHTML = html;
 }
 
 function calculateMath5() {
     if (!refs.m5Steps) return;
+    refs.m5Steps.textContent = '';
     const pStr = localStorage.getItem('ga_probabilities');
     if (!pStr) {
-        refs.m5Steps.innerHTML = '<div class="math-step-box" style="color: #e74c3c;">Data probabilitas tidak ditemukan. Silakan isi Modul 4 terlebih dahulu.</div>';
+        const errDiv = document.createElement('div');
+        errDiv.className = 'math-step-box math-step-error';
+        errDiv.textContent = 'Data probabilitas tidak ditemukan. Silakan isi Modul 4 terlebih dahulu.';
+        refs.m5Steps.appendChild(errDiv);
         return;
     }
 
@@ -358,55 +400,80 @@ function calculateMath5() {
     let selectedParent = null;
     let selectedParentCumulative = null;
     let finalCumulative = 0;
-
-    let html = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: var(--text-color, inherit);">`;
-    html += `<thead><tr style="border-bottom: 1px solid var(--border-color, #444);"><th style="padding: 8px; text-align: left;">Individu</th><th style="padding: 8px; text-align: left;">Probabilitas (P<sub>i</sub>)</th><th style="padding: 8px; text-align: left;">Cara Hitung Kumulatif</th><th style="padding: 8px; text-align: left;">Kumulatif (C<sub>i</sub>)</th></tr></thead>`;
-    html += `<tbody>`;
+    const rows = [];
 
     probabilities.forEach((p, index) => {
         const prevCumulative = cumulative;
         cumulative += p;
         finalCumulative = cumulative;
-
-        let calculationText = '';
-        if (index === 0) {
-            calculationText = `${p.toFixed(4)}`;
-        } else {
-            calculationText = `${prevCumulative.toFixed(4)} + ${p.toFixed(4)}`;
-        }
-
-        html += `<tr style="border-bottom: 1px solid var(--border-color, #222);">`;
-        html += `<td style="padding: 8px;">${index + 1}</td>`;
-        html += `<td style="padding: 8px;">${p.toFixed(4)}</td>`;
-        html += `<td style="padding: 8px;">${calculationText}</td>`;
-        html += `<td style="padding: 8px;"><strong>${cumulative.toFixed(4)}</strong></td>`;
-        html += `</tr>`;
-
+        const calculationText = index === 0
+            ? `${p.toFixed(4)}`
+            : `${prevCumulative.toFixed(4)} + ${p.toFixed(4)}`;
+        rows.push({ index, p, calculationText, cumulative });
         if (r !== null && selectedParent === null && cumulative >= r) {
             selectedParent = index + 1;
             selectedParentCumulative = cumulative.toFixed(4);
         }
     });
-    html += `</tbody></table>`;
 
-    if (finalCumulative >= 0.9999 && finalCumulative <= 1.0001) {
-        html = `<div class="math-step-box" style="border-color: #27ae60; color: #27ae60; font-weight: bold; margin-bottom: 20px;">✅ Kumulatif valid (berakhir di 1.0000)</div>` + html;
-    } else {
-        html = `<div class="math-step-box" style="border-color: #c0392b; color: #c0392b; font-weight: bold; margin-bottom: 20px;">❌ Error: Kumulatif tidak berakhir di 1.0000. Cek kembali input di Modul 4.</div>` + html;
-    }
+    const validBanner = document.createElement('div');
+    validBanner.className = finalCumulative >= 0.9999 && finalCumulative <= 1.0001
+        ? 'math-step-box math-step-valid'
+        : 'math-step-box math-step-invalid';
+    validBanner.textContent = finalCumulative >= 0.9999 && finalCumulative <= 1.0001
+        ? '\u2705 Kumulatif valid (berakhir di 1.0000)'
+        : '\u274C Error: Kumulatif tidak berakhir di 1.0000. Cek kembali input di Modul 4.';
+    refs.m5Steps.appendChild(validBanner);
+
+    const table = document.createElement('table');
+    table.className = 'math-table';
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Individu', 'Probabilitas (Pi)', 'Cara Hitung Kumulatif', 'Kumulatif (Ci)'].forEach(text => {
+        const th = document.createElement('th');
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    rows.forEach(({ index, p, calculationText, cumulative: cum }) => {
+        const tr = document.createElement('tr');
+        [index + 1, p.toFixed(4), calculationText].forEach(val => {
+            const td = document.createElement('td');
+            td.textContent = val;
+            tr.appendChild(td);
+        });
+        const tdC = document.createElement('td');
+        const strongC = document.createElement('strong');
+        strongC.textContent = cum.toFixed(4);
+        tdC.appendChild(strongC);
+        tr.appendChild(tdC);
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    refs.m5Steps.appendChild(table);
 
     if (r !== null) {
+        const resultDiv = document.createElement('div');
         if (selectedParent !== null) {
-            html += `<div class="math-step-box" style="margin-top: 20px; border-left-color: #e67e22;">`;
-            html += `<h3>🎯 Parent Terpilih: Individu ${selectedParent}</h3>`;
-            html += `<p>Alasan: ${selectedParentCumulative} adalah nilai kumulatif pertama yang lebih besar atau sama dengan (&ge;) ${r}.</p>`;
-            html += `</div>`;
+            resultDiv.className = 'math-step-box math-step-selected';
+            const h3 = document.createElement('h3');
+            h3.textContent = `\uD83C\uDFAF Parent Terpilih: Individu ${selectedParent}`;
+            const p2 = document.createElement('p');
+            p2.textContent = `Alasan: ${selectedParentCumulative} adalah nilai kumulatif pertama yang lebih besar atau sama dengan (\u2265) ${r}.`;
+            resultDiv.appendChild(h3);
+            resultDiv.appendChild(p2);
         } else {
-            html += `<div class="math-step-box" style="margin-top: 20px; border-left-color: #c0392b;">`;
-            html += `<h3>❌ Tidak ada Parent terpilih</h3>`;
-            html += `<p>Alasan: Tidak ada nilai kumulatif yang lebih besar atau sama dengan (&ge;) ${r}.</p>`;
-            html += `</div>`;
+            resultDiv.className = 'math-step-box math-step-invalid';
+            const h3 = document.createElement('h3');
+            h3.textContent = '\u274C Tidak ada Parent terpilih';
+            const p2 = document.createElement('p');
+            p2.textContent = `Alasan: Tidak ada nilai kumulatif yang lebih besar atau sama dengan (\u2265) ${r}.`;
+            resultDiv.appendChild(h3);
+            resultDiv.appendChild(p2);
         }
+        refs.m5Steps.appendChild(resultDiv);
     }
-    refs.m5Steps.innerHTML = html;
 }

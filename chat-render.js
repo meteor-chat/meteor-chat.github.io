@@ -21,13 +21,13 @@ export function renderChat() {
     }
     showChatView();
     const atBottom = isAtBottom();
-    
-    if (state.messages.length < lastRenderedCount) {
+
+        if (state.messages.length < lastRenderedCount) {
         refs.conversationEl.innerHTML = '';
         lastRenderedCount = 0;
     }
-    
-    const wasNewMessageAdded = state.messages.length > lastRenderedCount;
+
+        const wasNewMessageAdded = state.messages.length > lastRenderedCount;
     for (let i = lastRenderedCount; i < state.messages.length; i++) {
         const msg = state.messages[i];
         if (msg.role === "user") {
@@ -37,8 +37,8 @@ export function renderChat() {
         }
     }
     lastRenderedCount = state.messages.length;
-    
-    if (atBottom || wasNewMessageAdded) {
+
+        if (atBottom || wasNewMessageAdded) {
         scrollToBottom();
     }
 }
@@ -51,8 +51,8 @@ export function updateStreamingMessage(text) {
     const now = Date.now();
     const timeSinceLast = now - lastUpdateTime;
     const throttleMs = 150;
-    
-    const doUpdate = () => {
+
+        const doUpdate = () => {
         lastUpdateTime = Date.now();
         const target = document.getElementById("streaming-target");
         if (target) {
@@ -62,8 +62,8 @@ export function updateStreamingMessage(text) {
         }
         state.isStreamingChunk = false;
     };
-    
-    if (timeSinceLast >= throttleMs) {
+
+        if (timeSinceLast >= throttleMs) {
         if (renderTimer) clearTimeout(renderTimer);
         doUpdate();
     } else {
