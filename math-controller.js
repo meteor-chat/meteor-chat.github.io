@@ -83,31 +83,31 @@ export function initMath() {
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
             if (typeof katex !== 'undefined') {
-                katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: true });
+                katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: false });
             }
             calculateMath();
         } else if (formNum === 2) {
             refs.form2.classList.remove("hidden");
             if (typeof katex !== 'undefined') {
-                katex.render(FORMULA2, refs.mathFormulaDisplay2, { throwOnError: false, displayMode: true });
+                katex.render(FORMULA2, refs.mathFormulaDisplay2, { throwOnError: false, displayMode: false });
             }
             calculateMath2();
         } else if (formNum === 3) {
             if(refs.form3) refs.form3.classList.remove("hidden");
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay3) {
-                katex.render(FORMULA3, refs.mathFormulaDisplay3, { throwOnError: false, displayMode: true });
+                katex.render(FORMULA3, refs.mathFormulaDisplay3, { throwOnError: false, displayMode: false });
             }
             calculateMath3();
         } else if (formNum === 4) {
             if(refs.form4) refs.form4.classList.remove("hidden");
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay4) {
-                katex.render(FORMULA4, refs.mathFormulaDisplay4, { throwOnError: false, displayMode: true });
+                katex.render(FORMULA4, refs.mathFormulaDisplay4, { throwOnError: false, displayMode: false });
             }
             if(refs.m4InN) calculateMath4();
         } else if (formNum === 5) {
             if(refs.form5) refs.form5.classList.remove("hidden");
             if (typeof katex !== 'undefined' && refs.mathFormulaDisplay5) {
-                katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: true });
+                katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: false });
             }
             if(refs.m5InR) calculateMath5();
         }
