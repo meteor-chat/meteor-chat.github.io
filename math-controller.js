@@ -238,7 +238,7 @@ function calculateMath() {
                 addStep(`x = ${fracPrefix}\\frac{${Math.abs(topSimp)}}{${Math.abs(bottomSimp)}}`);
             }
         }
-        const rounded = Math.round(val * 100) / 100;
+        const rounded = Math.round(val * 1000) / 1000;
         const step4 = `x \\approx ${rounded}`;
         if (!isInt || (num/den)*d % 1 !== 0) {
             addStep(step4, 'math-step-box');
@@ -269,12 +269,12 @@ function calculateMath2() {
         step2 = `h = ${x1Cubed} + \\frac{${x2Sq}}{3}`;
     } else {
         const x2Term = x2Sq / 3;
-        const x2TermRounded = Math.round(x2Term * 100) / 100;
+        const x2TermRounded = Math.round(x2Term * 1000) / 1000;
         step2 = `h = ${x1Cubed} + ${x2TermRounded}`;
     }
 
     const finalVal = x1Cubed + (x2Sq / 3);
-    const step3 = `h \\approx ${Math.round(finalVal * 100) / 100}`;
+    const step3 = `h \\approx ${Math.round(finalVal * 1000) / 1000}`;
 
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
@@ -306,7 +306,7 @@ function calculateMath3() {
     const sum = h + a;
     const step2 = `Fitness = \\frac{1}{${sum}}`;
     const finalVal = 1 / sum;
-    const step3 = `Fitness \\approx ${Math.round(finalVal * 100) / 100}`;
+    const step3 = `Fitness \\approx ${Math.round(finalVal * 1000) / 1000}`;
 
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
@@ -369,7 +369,7 @@ function calculateMath4() {
         });
         const tdP = document.createElement('td');
         const strongP = document.createElement('strong');
-        strongP.textContent = p.toFixed(4);
+        strongP.textContent = p.toFixed(3);
         tdP.appendChild(strongP);
         tr.appendChild(tdP);
         tbody.appendChild(tr);
@@ -407,22 +407,22 @@ function calculateMath5() {
         cumulative += p;
         finalCumulative = cumulative;
         const calculationText = index === 0
-            ? `${p.toFixed(4)}`
-            : `${prevCumulative.toFixed(4)} + ${p.toFixed(4)}`;
+            ? `${p.toFixed(3)}`
+            : `${prevCumulative.toFixed(3)} + ${p.toFixed(3)}`;
         rows.push({ index, p, calculationText, cumulative });
         if (r !== null && selectedParent === null && cumulative >= r) {
             selectedParent = index + 1;
-            selectedParentCumulative = cumulative.toFixed(4);
+            selectedParentCumulative = cumulative.toFixed(3);
         }
     });
 
     const validBanner = document.createElement('div');
-    validBanner.className = finalCumulative >= 0.9999 && finalCumulative <= 1.0001
+    validBanner.className = finalCumulative >= 0.999 && finalCumulative <= 1.001
         ? 'math-step-box math-step-valid'
         : 'math-step-box math-step-invalid';
-    validBanner.textContent = finalCumulative >= 0.9999 && finalCumulative <= 1.0001
-        ? '\u2705 Kumulatif valid (berakhir di 1.0000)'
-        : '\u274C Error: Kumulatif tidak berakhir di 1.0000. Cek kembali input di Modul 4.';
+    validBanner.textContent = finalCumulative >= 0.999 && finalCumulative <= 1.001
+        ? '\u2705 Kumulatif valid (berakhir di 1.000)'
+        : '\u274C Error: Kumulatif tidak berakhir di 1.000. Cek kembali input di Modul 4.';
     refs.m5Steps.appendChild(validBanner);
 
     const table = document.createElement('table');
@@ -440,14 +440,14 @@ function calculateMath5() {
     const tbody = document.createElement('tbody');
     rows.forEach(({ index, p, calculationText, cumulative: cum }) => {
         const tr = document.createElement('tr');
-        [index + 1, p.toFixed(4), calculationText].forEach(val => {
+        [index + 1, p.toFixed(3), calculationText].forEach(val => {
             const td = document.createElement('td');
             td.textContent = val;
             tr.appendChild(td);
         });
         const tdC = document.createElement('td');
         const strongC = document.createElement('strong');
-        strongC.textContent = cum.toFixed(4);
+        strongC.textContent = cum.toFixed(3);
         tdC.appendChild(strongC);
         tr.appendChild(tdC);
         tbody.appendChild(tr);
