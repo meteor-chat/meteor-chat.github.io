@@ -209,9 +209,31 @@ const closeForm = () => {
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
     }
-[refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath);
+[refs.inN, refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => { if(el) el.addEventListener("input", calculateMath); });
+    if(refs.inN) refs.inN.addEventListener("input", () => {
+        const n = parseInt(refs.inN.value, 10);
+        if(!isNaN(n) && n > 0 && !refs.inKromosom.value) { refs.inKromosom.value = "0".repeat(n); calculateMath(); }
     });
+    const handleK = (e, d) => {
+        const n = parseInt(refs.inN.value, 10);
+        if(isNaN(n) || n < 1) return;
+        e.preventDefault();
+        let v = parseInt(refs.inKromosom.value || "0", 2);
+        if(isNaN(v)) v = 0;
+        v += d;
+        const m = Math.pow(2, n) - 1;
+        if(v < 0) v = m;
+        if(v > m) v = 0;
+        refs.inKromosom.value = v.toString(2).padStart(n, '0');
+        calculateMath();
+    };
+    if(refs.inKromosom) {
+        refs.inKromosom.addEventListener("keydown", (e) => {
+            if(e.key === "ArrowUp") handleK(e, 1);
+            if(e.key === "ArrowDown") handleK(e, -1);
+        });
+        refs.inKromosom.addEventListener("wheel", (e) => handleK(e, e.deltaY < 0 ? 1 : -1), {passive: false});
+    }
     [refs.m2InX1, refs.m2InX2].forEach(el => {
         if(el) el.addEventListener("input", calculateMath2);
     });

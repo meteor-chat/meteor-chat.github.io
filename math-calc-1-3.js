@@ -1,25 +1,28 @@
 import { refs } from "./dom-refs.js";
 export function calculateMath() {
     if (typeof katex === 'undefined') return;
-    const kromosom = refs.inKromosom.value.trim() || "1011";
-    const xMinStr = refs.inXmin.value || "-2";
-    const xMaxStr = refs.inXmax.value || "3";
-    const xMin = parseFloat(xMinStr);
-    const xMax = parseFloat(xMaxStr);
-        refs.mathSteps.textContent = '';
+    refs.mathSteps.textContent = '';
+    const nStr = refs.inN.value.trim();
+    if (!nStr) return;
+    const n = parseInt(nStr, 10);
+    if (isNaN(n) || n < 1) {
+        refs.mathSteps.innerHTML = '<div class="math-step-box math-step-error">Masukkan nilai n (bilangan bulat positif).</div>';
+        return;
+    }
+    const kromosom = refs.inKromosom.value.trim();
+    if (kromosom === '') return;
     if (!/^[01]+$/.test(kromosom)) {
-        const err = document.createElement('div');
-        err.className = 'katex-error';
-        err.textContent = 'Kromosom harus biner (0/1)';
-        refs.mathSteps.appendChild(err);
-        if(refs.inN) refs.inN.value = "";
+        refs.mathSteps.innerHTML = '<div class="math-step-box math-step-error">Kromosom harus biner (0/1).</div>';
         return;
     }
-    const n = kromosom.length;
-    if(refs.inN) refs.inN.value = n;
-    if (isNaN(xMin) || isNaN(xMax)) {
+    if (kromosom.length !== n) {
+        refs.mathSteps.innerHTML = `<div class="math-step-box math-step-error">Panjang kromosom harus sama dengan n (${n} bit).</div>`;
         return;
     }
+    const xMin = parseFloat(refs.inXmin.value || "-2");
+    const xMax = parseFloat(refs.inXmax.value || "3");
+    if (isNaN(xMin) || isNaN(xMax)) return;
+
     const d = parseInt(kromosom, 2);
     const step1 = `d = (${kromosom})_2 = ${d}`;
     const num = xMax - xMin;
@@ -32,31 +35,16 @@ export function calculateMath() {
         katex.render(tex, div, { throwOnError: false, displayMode: true });
         refs.mathSteps.appendChild(div);
     };
-    addStep(step1);
-    addStep(step2);
-    if (den !== 0) {
-        const val = xMin + (num / den) * d;
-        const isInt = Number.isInteger(xMin) && Number.isInteger(xMax);
-        if (isInt) {
-            const top = (xMin * den) + (num * d);
-            const bottom = den;
-            const divisor = Math.abs(gcd(top, bottom));
-            const topSimp = top / Math.abs(divisor);
-            const bottomSimp = bottom / Math.abs(divisor);
-            if (bottomSimp === 1) {
-                addStep(`x = ${topSimp}`);
-            } else {
-                const fracPrefix = (topSimp < 0 && bottomSimp > 0) || (topSimp > 0 && bottomSimp < 0) ? "-" : "";
-                addStep(`x = ${fracPrefix}\\frac{${Math.abs(topSimp)}}{${Math.abs(bottomSimp)}}`);
-            }
-        }
-        const rounded = val.toFixed(3);
-        const step4 = `x \\approx ${rounded}`;
-        if (!isInt || (num/den)*d % 1 !== 0) {
-            addStep(step4, 'math-step-box');
-        }
+    addStep(step1, 'math-step-box math-step-valid');
+    addStep(step2, 'math-step-box math-step-valid');
+    if (den === 0) {
+        addStep(`x = \\text{Error: Division by zero}`, 'math-step-box math-step-error');
+    } else {
+        const res = xMin + (num / den) * d;
+        addStep(`x \\approx ${res.toFixed(3)}`, 'math-step-box math-step-valid math-result-highlight');
     }
 }
+
 export function calculateMath2() {
     if(!refs.m2InX1 || typeof katex === 'undefined') return;
     const x1Str = refs.m2InX1.value || "2";
