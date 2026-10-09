@@ -8,6 +8,7 @@ import { addM10Input, calculateMath10 } from "./math-calc-10.js";
 import { addM11Input, calculateMath11 } from "./math-calc-11.js";
 import { calculateMath12 } from "./math-calc-12.js";
 import { calculateMath13 } from "./math-calc-13.js";
+import { calculateMath14 } from "./math-calc-14.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -21,6 +22,7 @@ const FORMULA10 = "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}";
 const FORMULA11 = "s = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\bar{x})^2}{n-1}}";
 const FORMULA12 = "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}";
 const FORMULA13 = "\\binom{n}{k} = C(n,k) = \\frac{n!}{k!(n-k)!}";
+const FORMULA14 = "c^2 = a^2 + b^2";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -113,6 +115,10 @@ export function initMath() {
     refs.m13InN = document.getElementById("math13-in-n");
     refs.m13InK = document.getElementById("math13-in-k");
     refs.m13Steps = document.getElementById("math13-steps-container");
+    refs.m14InA = document.getElementById("math14-in-a");
+    refs.m14InB = document.getElementById("math14-in-b");
+    refs.m14InC = document.getElementById("math14-in-c");
+    refs.m14Steps = document.getElementById("math14-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
@@ -156,103 +162,81 @@ export function initMath() {
                 state.currentView = "math-calc";
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
-            if (typeof katex !== 'undefined') {
-                katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined') katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: false });
             calculateMath();
         } else if (formNum === 2) {
             refs.form2.classList.remove("hidden");
-            if (typeof katex !== 'undefined') {
-                katex.render(FORMULA2, refs.mathFormulaDisplay2, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined') katex.render(FORMULA2, refs.mathFormulaDisplay2, { throwOnError: false, displayMode: false });
             calculateMath2();
         } else if (formNum === 3) {
             if(refs.form3) refs.form3.classList.remove("hidden");
-            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay3) {
-                katex.render(FORMULA3, refs.mathFormulaDisplay3, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay3) katex.render(FORMULA3, refs.mathFormulaDisplay3, { throwOnError: false, displayMode: false });
             calculateMath3();
         } else if (formNum === 4) {
             if(refs.form4) refs.form4.classList.remove("hidden");
-            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay4) {
-                katex.render(FORMULA4, refs.mathFormulaDisplay4, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay4) katex.render(FORMULA4, refs.mathFormulaDisplay4, { throwOnError: false, displayMode: false });
             if (refs.m4DynamicInputs && refs.m4DynamicInputs.children.length === 0) {
                 addM4Input();
             }
             calculateMath4();
         } else if (formNum === 5) {
             if(refs.form5) refs.form5.classList.remove("hidden");
-            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay5) {
-                katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay5) katex.render(FORMULA5, refs.mathFormulaDisplay5, { throwOnError: false, displayMode: false });
             if (refs.m5DynamicInputs && refs.m5DynamicInputs.children.length === 0) {
                 addM5Input();
             }
             calculateMath5();
         } else if (formNum === 6) {
             if(refs.form6) refs.form6.classList.remove("hidden");
-            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay6) {
-                katex.render(FORMULA6, refs.mathFormulaDisplay6, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay6) katex.render(FORMULA6, refs.mathFormulaDisplay6, { throwOnError: false, displayMode: false });
             if (refs.m6DynamicInputs && refs.m6DynamicInputs.children.length === 0) {
                 addM6Input();
             }
             calculateMath6();
         } else if (formNum === 7) {
             if(refs.form7) refs.form7.classList.remove("hidden");
-            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay7) {
-                katex.render(FORMULA7, refs.mathFormulaDisplay7, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay7) katex.render(FORMULA7, refs.mathFormulaDisplay7, { throwOnError: false, displayMode: false });
             calculateMath7();
         } else if (formNum === 8) {
             if(refs.form8) refs.form8.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay8) {
-                katex.render(FORMULA8, refs.mathFormulaDisplay8, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay8) katex.render(FORMULA8, refs.mathFormulaDisplay8, { throwOnError: false, displayMode: false });
             calculateMath8();
         } else if (formNum === 9) {
             if(refs.form9) refs.form9.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay9) {
-                katex.render(FORMULA9, refs.mathFormulaDisplay9, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay9) katex.render(FORMULA9, refs.mathFormulaDisplay9, { throwOnError: false, displayMode: false });
             if (refs.m9DynamicInputs && refs.m9DynamicInputs.children.length === 0) {
                 addM9Input();
             }
             calculateMath9();
         } else if (formNum === 10) {
             if(refs.form10) refs.form10.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay10) {
-                katex.render(FORMULA10, refs.mathFormulaDisplay10, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay10) katex.render(FORMULA10, refs.mathFormulaDisplay10, { throwOnError: false, displayMode: false });
             if (refs.m10DynamicInputs && refs.m10DynamicInputs.children.length === 0) {
                 addM10Input();
             }
             calculateMath10();
         } else if (formNum === 11) {
             if(refs.form11) refs.form11.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay11) {
-                katex.render(FORMULA11, refs.mathFormulaDisplay11, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay11) katex.render(FORMULA11, refs.mathFormulaDisplay11, { throwOnError: false, displayMode: false });
             if (refs.m11DynamicInputs && refs.m11DynamicInputs.children.length === 0) {
                 addM11Input();
             }
             calculateMath11();
         } else if (formNum === 12) {
             if(refs.form12) refs.form12.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay12) {
-                katex.render(FORMULA12, refs.mathFormulaDisplay12, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay12) katex.render(FORMULA12, refs.mathFormulaDisplay12, { throwOnError: false, displayMode: false });
             calculateMath12();
         } else if (formNum === 13) {
             if(refs.form13) refs.form13.classList.remove("hidden");
-            if (typeof katex !== "undefined" && refs.mathFormulaDisplay13) {
-                katex.render(FORMULA13, refs.mathFormulaDisplay13, { throwOnError: false, displayMode: false });
-            }
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay13) katex.render(FORMULA13, refs.mathFormulaDisplay13, { throwOnError: false, displayMode: false });
             calculateMath13();
+        } else if (formNum === 14) {
+            if(refs.form14) refs.form14.classList.remove("hidden");
+            if (typeof katex !== 'undefined' && refs.mathFormulaDisplay14) katex.render(FORMULA14, refs.mathFormulaDisplay14, { throwOnError: false, displayMode: false });
+            calculateMath14();
         }
     };
-    for(let i=1; i<=13; i++) {
+    for(let i=1; i<=14; i++) {
         if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
     }
 const closeForm = () => {
@@ -260,7 +244,7 @@ const closeForm = () => {
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-    for(let i=1; i<=13; i++) {
+    for(let i=1; i<=14; i++) {
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
     }
@@ -282,7 +266,10 @@ const closeForm = () => {
     }); 
     [refs.m13InN, refs.m13InK].forEach(el => {
         if(el) el.addEventListener("input", calculateMath13);
-    });   [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
+    }); 
+    [refs.m14InA, refs.m14InB, refs.m14InC].forEach(el => {
+        if(el) el.addEventListener("input", calculateMath14);
+    });  [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
                 const type = refs.m7InType.value;
