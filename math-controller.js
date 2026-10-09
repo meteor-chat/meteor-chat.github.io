@@ -90,18 +90,30 @@ export function initMath() {
     refs.mathCard9 = document.getElementById("math-card-9");
     refs.mathCard10 = document.getElementById("math-card-10");
     refs.mathCard11 = document.getElementById("math-card-11");
+    refs.mathCard12 = document.getElementById("math-card-12");
+    refs.mathCard13 = document.getElementById("math-card-13");
+    refs.mathCard14 = document.getElementById("math-card-14");
     refs.form8 = document.getElementById("math-calc-form-8");
     refs.form9 = document.getElementById("math-calc-form-9");
     refs.form10 = document.getElementById("math-calc-form-10");
     refs.form11 = document.getElementById("math-calc-form-11");
+    refs.form12 = document.getElementById("math-calc-form-12");
+    refs.form13 = document.getElementById("math-calc-form-13");
+    refs.form14 = document.getElementById("math-calc-form-14");
     refs.mathFormulaDisplay8 = document.getElementById("math-calc-formula-display-8");
     refs.mathFormulaDisplay9 = document.getElementById("math-calc-formula-display-9");
     refs.mathFormulaDisplay10 = document.getElementById("math-calc-formula-display-10");
     refs.mathFormulaDisplay11 = document.getElementById("math-calc-formula-display-11");
+    refs.mathFormulaDisplay12 = document.getElementById("math-calc-formula-display-12");
+    refs.mathFormulaDisplay13 = document.getElementById("math-calc-formula-display-13");
+    refs.mathFormulaDisplay14 = document.getElementById("math-calc-formula-display-14");
     refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
     refs.btnMathCalcBack9 = document.getElementById("btn-math-calc-back-9");
     refs.btnMathCalcBack10 = document.getElementById("btn-math-calc-back-10");
     refs.btnMathCalcBack11 = document.getElementById("btn-math-calc-back-11");
+    refs.btnMathCalcBack12 = document.getElementById("btn-math-calc-back-12");
+    refs.btnMathCalcBack13 = document.getElementById("btn-math-calc-back-13");
+    refs.btnMathCalcBack14 = document.getElementById("btn-math-calc-back-14");
     refs.m9DynamicInputs = document.getElementById("math9-dynamic-inputs");
     refs.m10DynamicInputs = document.getElementById("math10-dynamic-inputs");
     refs.m11DynamicInputs = document.getElementById("math11-dynamic-inputs");
@@ -134,6 +146,9 @@ export function initMath() {
         if(refs.mathCard9) katex.render(FORMULA9, refs.mathCard9, { throwOnError: false, displayMode: false });
         if(refs.mathCard10) katex.render(FORMULA10, refs.mathCard10, { throwOnError: false, displayMode: false });
         if(refs.mathCard11) katex.render(FORMULA11, refs.mathCard11, { throwOnError: false, displayMode: false });
+        if(refs.mathCard12) katex.render(FORMULA12, refs.mathCard12, { throwOnError: false, displayMode: false });
+        if(refs.mathCard13) katex.render(FORMULA13, refs.mathCard13, { throwOnError: false, displayMode: false });
+        if(refs.mathCard14) katex.render(FORMULA14, refs.mathCard14, { throwOnError: false, displayMode: false });
     }
     refs.btnMathEor.addEventListener("click", () => {
         refs.landingEl.classList.add("hidden");
@@ -148,18 +163,10 @@ export function initMath() {
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
-        refs.form1.classList.add("hidden");
-        refs.form2.classList.add("hidden");
-        if(refs.form3) refs.form3.classList.add("hidden");
-        if(refs.form4) refs.form4.classList.add("hidden");
-        if(refs.form5) refs.form5.classList.add("hidden");
-        if(refs.form6) refs.form6.classList.add("hidden");
-        if(refs.form7) refs.form7.classList.add("hidden");
-        if(refs.form8) refs.form8.classList.add("hidden");
-        if(refs.form9) refs.form9.classList.add("hidden");
-        if(refs.form10) refs.form10.classList.add("hidden");
-        if(refs.form11) refs.form11.classList.add("hidden");
-                state.currentView = "math-calc";
+        for(let i=1; i<=14; i++) {
+            if(refs[`form${i}`]) refs[`form${i}`].classList.add("hidden");
+        }
+state.currentView = "math-calc";
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
             if (typeof katex !== 'undefined') katex.render(FORMULA, refs.mathFormulaDisplay, { throwOnError: false, displayMode: false });
