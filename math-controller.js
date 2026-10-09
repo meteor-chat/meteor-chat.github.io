@@ -60,7 +60,15 @@ export function initMath() {
     refs.m6Steps = document.getElementById("math6-steps-container");
     refs.m7InP1 = document.getElementById("math7-in-p1");
     refs.m7InP2 = document.getElementById("math7-in-p2");
+    refs.m7InType = document.getElementById("math7-in-type");
     refs.m7InK = document.getElementById("math7-in-k");
+    refs.m7InK1 = document.getElementById("math7-in-k1");
+    refs.m7InK2 = document.getElementById("math7-in-k2");
+    refs.m7InMask = document.getElementById("math7-in-mask");
+    refs.m7ContainerK = document.getElementById("math7-k-container");
+    refs.m7ContainerK1 = document.getElementById("math7-k1-container");
+    refs.m7ContainerK2 = document.getElementById("math7-k2-container");
+    refs.m7ContainerMask = document.getElementById("math7-mask-container");
     refs.m7Steps = document.getElementById("math7-steps-container");
     if (typeof katex !== 'undefined') {
         katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
@@ -174,8 +182,17 @@ export function initMath() {
         if(el) el.addEventListener("input", calculateMath3);
     });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
-    [refs.m7InP1, refs.m7InP2, refs.m7InK].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath7);
+    [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
+        if(el) el.addEventListener("input", () => {
+            if (el === refs.m7InType) {
+                const type = refs.m7InType.value;
+                if(refs.m7ContainerK) refs.m7ContainerK.classList.toggle("hidden", type !== "single");
+                if(refs.m7ContainerK1) refs.m7ContainerK1.classList.toggle("hidden", type !== "two");
+                if(refs.m7ContainerK2) refs.m7ContainerK2.classList.toggle("hidden", type !== "two");
+                if(refs.m7ContainerMask) refs.m7ContainerMask.classList.toggle("hidden", type !== "uniform");
+            }
+            calculateMath7();
+        });
     });
 }
 function addM4Input() {
