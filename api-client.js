@@ -82,11 +82,11 @@ export async function callChatAPI(messages, onChunk) {
         weekday: "long", year: "numeric", month: "long", day: "numeric",
         hour: "2-digit", minute: "2-digit"
     });
-    let contextSuffix = `\n\n[Waktu: ${timeStr}]`;
+    let contextSuffix = `\n\n[System Note: Waktu saat ini adalah ${timeStr}]`;
     let hasSchedule = false;
     const scheduleText = getScheduleContext(lastText, state.jadwalData);
     if (scheduleText) {
-        contextSuffix += `\n[Jadwal Kuliah:\n${scheduleText}]`;
+        contextSuffix += `\n[System Note: Berikut adalah data jadwal kuliah saat ini:\n${scheduleText}]`;
         hasSchedule = true;
     }
     const apiMessages = trimmed.map((msg, i) => {
