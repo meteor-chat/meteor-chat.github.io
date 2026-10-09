@@ -324,7 +324,7 @@ function calculateMath() {
                 addStep(`x = ${fracPrefix}\\frac{${Math.abs(topSimp)}}{${Math.abs(bottomSimp)}}`);
             }
         }
-        const rounded = Math.round(val * 1000) / 1000;
+        const rounded = val.toFixed(3);
         const step4 = `x \\approx ${rounded}`;
         if (!isInt || (num/den)*d % 1 !== 0) {
             addStep(step4, 'math-step-box');
@@ -351,11 +351,11 @@ function calculateMath2() {
         step2 = `h = ${x1Cubed} + \\frac{${x2Sq}}{3}`;
     } else {
         const x2Term = x2Sq / 3;
-        const x2TermRounded = Math.round(x2Term * 1000) / 1000;
+        const x2TermRounded = x2Term.toFixed(3);
         step2 = `h = ${x1Cubed} + ${x2TermRounded}`;
     }
     const finalVal = x1Cubed + (x2Sq / 3);
-    const step3 = `h \\approx ${Math.round(finalVal * 1000) / 1000}`;
+    const step3 = `h \\approx ${finalVal.toFixed(3)}`;
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
         div.className = boxClass;
@@ -382,7 +382,7 @@ function calculateMath3() {
     const sum = h + a;
     const step2 = `Fitness = \\frac{1}{${sum}}`;
     const finalVal = 1 / sum;
-    const step3 = `Fitness \\approx ${Math.round(finalVal * 1000) / 1000}`;
+    const step3 = `Fitness \\approx ${finalVal.toFixed(3)}`;
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
         div.className = boxClass;
@@ -412,7 +412,7 @@ function calculateMath4() {
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step math-step-total';
     const strong = document.createElement('strong');
-    strong.textContent = `Total Fitness (\u03A3F) = ${Math.round(totalFitness * 1000) / 1000}`;
+    strong.textContent = `Total Fitness (\u03A3F) = ${totalFitness.toFixed(3)}`;
     totalDiv.appendChild(strong);
     refs.m4Steps.appendChild(totalDiv);
     const table = document.createElement('table');
@@ -561,7 +561,7 @@ function calculateMath6() {
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step-box math-step-total';
     if (typeof katex !== 'undefined') {
-        katex.render(`\\sum F = ${Math.round(totalFitness * 1000) / 1000}`, totalDiv, { throwOnError: false, displayMode: true });
+        katex.render(`\\sum F = ${totalFitness.toFixed(3)}`, totalDiv, { throwOnError: false, displayMode: true });
     }
     refs.m6Steps.appendChild(totalDiv);
 }
