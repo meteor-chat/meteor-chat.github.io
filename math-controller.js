@@ -11,6 +11,7 @@ const FORMULA5 = "C_i = C_{i-1} + P_i";
 const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
 const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
 const FORMULA8 = "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exists j: f_j(A) < f_j(B)";
+const FORMULA9 = "\\text{Task A: } n_p \\text{ dan } S_p";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
