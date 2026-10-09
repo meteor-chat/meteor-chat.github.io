@@ -9,9 +9,8 @@ export const PROVIDERS = {
     openrouter: {
         url: "https://openrouter.ai/api/v1/chat/completions",
         models: [
-            "liquid/lfm-2.5-2.6b:free",
-            "nvidia/nemotron-3.5-lightning:free",
-            "dots-studio/dots-3-note-preview:free"
+            "google/gemma-4-26b-a4b-it:free",
+            "google/gemma-4-31b-it:free"
         ]
     }
 };
