@@ -111,6 +111,7 @@ export function initMath() {
         if(refs.form5) refs.form5.classList.add("hidden");
         if(refs.form6) refs.form6.classList.add("hidden");
         if(refs.form7) refs.form7.classList.add("hidden");
+        if(refs.form8) refs.form8.classList.add("hidden");
                 state.currentView = "math-calc";
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
