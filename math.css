@@ -10,3 +10,6 @@
 .m10-td-bold { padding: 8px; border: 1px solid #444; font-weight: 600; }
 .m10-summary { margin-top: 20px; text-align: left; font-size: 15px; }
 .m10-summary-item { margin-bottom: 8px; }
+
+.math-mt-15 { margin-top: 15px; }
+.math-result-highlight { border-left-color: #059669 !important; border-width: 2px !important; }

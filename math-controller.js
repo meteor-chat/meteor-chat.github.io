@@ -6,6 +6,7 @@ import { calculateMath7, calculateMath8 } from "./math-calc-7-8.js";
 import { addM9Input, calculateMath9 } from "./math-calc-9.js";
 import { addM10Input, calculateMath10 } from "./math-calc-10.js";
 import { addM11Input, calculateMath11 } from "./math-calc-11.js";
+import { calculateMath12 } from "./math-calc-12.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -17,6 +18,7 @@ const FORMULA8 = "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exis
 const FORMULA9 = "n_p \\text{ dan } S_p";
 const FORMULA10 = "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}";
 const FORMULA11 = "s = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\bar{x})^2}{n-1}}";
+const FORMULA12 = "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -102,6 +104,10 @@ export function initMath() {
     refs.m9Steps = document.getElementById("math9-steps-container");
     refs.m10Steps = document.getElementById("math10-steps-container");
     refs.m11Steps = document.getElementById("math11-steps-container");
+    refs.m12InPa = document.getElementById("math12-in-pa");
+    refs.m12InPba = document.getElementById("math12-in-pba");
+    refs.m12InPb = document.getElementById("math12-in-pb");
+    refs.m12Steps = document.getElementById("math12-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
@@ -227,36 +233,27 @@ export function initMath() {
                 addM11Input();
             }
             calculateMath11();
+        } else if (formNum === 12) {
+            if(refs.form12) refs.form12.classList.remove("hidden");
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay12) {
+                katex.render(FORMULA12, refs.mathFormulaDisplay12, { throwOnError: false, displayMode: false });
+            }
+            calculateMath12();
         }
     };
-    refs.mathCard1.addEventListener("click", () => openForm(1));
-    if(refs.mathCard2) refs.mathCard2.addEventListener("click", () => openForm(2));
-    if(refs.mathCard3) refs.mathCard3.addEventListener("click", () => openForm(3));
-    if(refs.mathCard4) refs.mathCard4.addEventListener("click", () => openForm(4));
-    if(refs.mathCard5) refs.mathCard5.addEventListener("click", () => openForm(5));
-    if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
-    if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
-    if(refs.mathCard8) refs.mathCard8.addEventListener("click", () => openForm(8));
-    if(refs.mathCard9) refs.mathCard9.addEventListener("click", () => openForm(9));
-    if(refs.mathCard10) refs.mathCard10.addEventListener("click", () => openForm(10));
-    if(refs.mathCard11) refs.mathCard11.addEventListener("click", () => openForm(11));
-    const closeForm = () => {
+    for(let i=1; i<=12; i++) {
+        if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
+    }
+const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-    refs.btnMathCalcBack1.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack2) refs.btnMathCalcBack2.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack3) refs.btnMathCalcBack3.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack4) refs.btnMathCalcBack4.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack5) refs.btnMathCalcBack5.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack8) refs.btnMathCalcBack8.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack9) refs.btnMathCalcBack9.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack10) refs.btnMathCalcBack10.addEventListener("click", closeForm);
-    if(refs.btnMathCalcBack11) refs.btnMathCalcBack11.addEventListener("click", closeForm);
-    [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
+    for(let i=1; i<=12; i++) {
+        const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
+        if (btnBack) btnBack.addEventListener("click", closeForm);
+    }
+[refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
     });
     [refs.m2InX1, refs.m2InX2].forEach(el => {
@@ -270,7 +267,10 @@ export function initMath() {
     [refs.m8InA, refs.m8InB].forEach(el => {
         if(el) el.addEventListener("input", calculateMath8);
     });
-    [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
+
+    [refs.m12InPa, refs.m12InPba, refs.m12InPb].forEach(el => {
+        if(el) el.addEventListener("input", calculateMath12);
+    });    [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
                 const type = refs.m7InType.value;
