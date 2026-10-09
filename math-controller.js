@@ -570,103 +570,113 @@ function calculateMath7() {
     refs.m7Steps.textContent = '';
     const p1 = refs.m7InP1 ? refs.m7InP1.value.trim() : '';
     const p2 = refs.m7InP2 ? refs.m7InP2.value.trim() : '';
-    const kStr = refs.m7InK ? refs.m7InK.value : '';
-        if (!p1 || !p2 || kStr === '') return;
-        const k = parseInt(kStr);
-        if (p1.length !== p2.length) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'math-step-box math-step-error';
+    const type = refs.m7InType ? refs.m7InType.value : 'single';
+    if (!p1 || !p2) return;
+    const errDiv = document.createElement('div');
+    errDiv.className = 'math-step-box math-step-error';
+    if (p1.length !== p2.length) {
         errDiv.textContent = '\u274C Error: Panjang kromosom Parent 1 dan Parent 2 harus sama!';
         refs.m7Steps.appendChild(errDiv);
         return;
     }
-    if (k < 1 || k >= p1.length) {
-        const errDiv = document.createElement('div');
-        errDiv.className = 'math-step-box math-step-error';
-        errDiv.textContent = `\u274C Error: Titik potong (k) harus antara 1 dan ${p1.length - 1}.`;
-        refs.m7Steps.appendChild(errDiv);
-        return;
-    }
-    const p1Left = p1.substring(0, k);
-    const p1Right = p1.substring(k);
-    const p2Left = p2.substring(0, k);
-    const p2Right = p2.substring(k);
+    const n = p1.length;
     const stepDiv = document.createElement('div');
     stepDiv.className = 'math-step-box';
     const h3_1 = document.createElement('h3');
     h3_1.style.marginBottom = '8px';
-    h3_1.textContent = `\u2702\uFE0F 1. Pemotongan pada k = ${k}`;
     stepDiv.appendChild(h3_1);
-    const p_1 = document.createElement('p');
-    p_1.style.fontFamily = 'monospace';
-    p_1.style.fontSize = '1.1em';
-    p_1.style.letterSpacing = '2px';
-    const s1_p1 = document.createElement('strong');
-    s1_p1.textContent = 'P1: ';
-    p_1.appendChild(s1_p1);
-    const sp1_1 = document.createElement('span');
-    sp1_1.style.color = '#60a5fa';
-    sp1_1.textContent = p1Left;
-    p_1.appendChild(sp1_1);
-    p_1.appendChild(document.createTextNode(' | '));
-    const sp1_2 = document.createElement('span');
-    sp1_2.style.color = '#60a5fa';
-    sp1_2.textContent = p1Right;
-    p_1.appendChild(sp1_2);
-    stepDiv.appendChild(p_1);
-    const p_2 = document.createElement('p');
-    p_2.style.fontFamily = 'monospace';
-    p_2.style.fontSize = '1.1em';
-    p_2.style.letterSpacing = '2px';
-    p_2.style.marginBottom = '15px';
-    const s1_p2 = document.createElement('strong');
-    s1_p2.textContent = 'P2: ';
-    p_2.appendChild(s1_p2);
-    const sp2_1 = document.createElement('span');
-    sp2_1.style.color = '#34d399';
-    sp2_1.textContent = p2Left;
-    p_2.appendChild(sp2_1);
-    p_2.appendChild(document.createTextNode(' | '));
-    const sp2_2 = document.createElement('span');
-    sp2_2.style.color = '#34d399';
-    sp2_2.textContent = p2Right;
-    p_2.appendChild(sp2_2);
-    stepDiv.appendChild(p_2);
+
+    const createP = (label, spans) => {
+        const p = document.createElement('p');
+        p.style.fontFamily = 'monospace';
+        p.style.fontSize = '1.1em';
+        p.style.letterSpacing = '2px';
+        const str = document.createElement('strong');
+        str.textContent = label;
+        p.appendChild(str);
+        spans.forEach(s => {
+            if(typeof s === 'string') {
+                p.appendChild(document.createTextNode(s));
+            } else {
+                const sp = document.createElement('span');
+                sp.style.color = s.color;
+                sp.textContent = s.text;
+                p.appendChild(sp);
+            }
+        });
+        return p;
+    };
+
+    let o1Spans = [];
+    let o2Spans = [];
+
+    if (type === 'single') {
+        const kStr = refs.m7InK ? refs.m7InK.value : '';
+        if (kStr === '') return;
+        const k = parseInt(kStr);
+        if (k < 1 || k >= n) {
+            errDiv.textContent = `\u274C Error: Titik potong (k) harus antara 1 dan ${n - 1}.`;
+            refs.m7Steps.appendChild(errDiv);
+            return;
+        }
+        h3_1.textContent = `\u2702\uFE0F 1. Single-point Crossover (k = ${k})`;
+        stepDiv.appendChild(createP('P1: ', [{color: '#60a5fa', text: p1.substring(0, k)}, ' | ', {color: '#60a5fa', text: p1.substring(k)}]));
+        const p2Node = createP('P2: ', [{color: '#34d399', text: p2.substring(0, k)}, ' | ', {color: '#34d399', text: p2.substring(k)}]);
+        p2Node.style.marginBottom = '15px';
+        stepDiv.appendChild(p2Node);
+        o1Spans = [{color: '#60a5fa', text: p1.substring(0, k)}, {color: '#34d399', text: p2.substring(k)}];
+        o2Spans = [{color: '#34d399', text: p2.substring(0, k)}, {color: '#60a5fa', text: p1.substring(k)}];
+    } else if (type === 'two') {
+        const k1Str = refs.m7InK1 ? refs.m7InK1.value : '';
+        const k2Str = refs.m7InK2 ? refs.m7InK2.value : '';
+        if (k1Str === '' || k2Str === '') return;
+        const k1 = parseInt(k1Str);
+        const k2 = parseInt(k2Str);
+        if (k1 < 1 || k2 >= n || k1 >= k2) {
+            errDiv.textContent = `\u274C Error: Titik potong tidak valid (1 \u2264 k1 < k2 < ${n}).`;
+            refs.m7Steps.appendChild(errDiv);
+            return;
+        }
+        h3_1.textContent = `\u2702\uFE0F 1. Two-point Crossover (k1 = ${k1}, k2 = ${k2})`;
+        stepDiv.appendChild(createP('P1: ', [{color: '#60a5fa', text: p1.substring(0, k1)}, ' | ', {color: '#60a5fa', text: p1.substring(k1, k2)}, ' | ', {color: '#60a5fa', text: p1.substring(k2)}]));
+        const p2Node = createP('P2: ', [{color: '#34d399', text: p2.substring(0, k1)}, ' | ', {color: '#34d399', text: p2.substring(k1, k2)}, ' | ', {color: '#34d399', text: p2.substring(k2)}]);
+        p2Node.style.marginBottom = '15px';
+        stepDiv.appendChild(p2Node);
+        o1Spans = [{color: '#60a5fa', text: p1.substring(0, k1)}, {color: '#34d399', text: p2.substring(k1, k2)}, {color: '#60a5fa', text: p1.substring(k2)}];
+        o2Spans = [{color: '#34d399', text: p2.substring(0, k1)}, {color: '#60a5fa', text: p1.substring(k1, k2)}, {color: '#34d399', text: p2.substring(k2)}];
+    } else if (type === 'uniform') {
+        const mask = refs.m7InMask ? refs.m7InMask.value.trim() : '';
+        if (mask === '') return;
+        if (mask.length !== n || !/^[01]+$/.test(mask)) {
+            errDiv.textContent = `\u274C Error: Mask harus biner dengan panjang ${n}.`;
+            refs.m7Steps.appendChild(errDiv);
+            return;
+        }
+        h3_1.textContent = `\uD83C\uDFB2 1. Uniform Crossover (mask = ${mask})`;
+        stepDiv.appendChild(createP('P1: ', [{color: '#60a5fa', text: p1}]));
+        stepDiv.appendChild(createP('P2: ', [{color: '#34d399', text: p2}]));
+        const maskNode = createP('Mask: ', [{color: '#fbbf24', text: mask}]);
+        maskNode.style.marginBottom = '15px';
+        stepDiv.appendChild(maskNode);
+        
+        for (let i = 0; i < n; i++) {
+            if (mask[i] === '1') {
+                o1Spans.push({color: '#60a5fa', text: p1[i]});
+                o2Spans.push({color: '#34d399', text: p2[i]});
+            } else {
+                o1Spans.push({color: '#34d399', text: p2[i]});
+                o2Spans.push({color: '#60a5fa', text: p1[i]});
+            }
+        }
+    }
+
     const h3_2 = document.createElement('h3');
     h3_2.style.marginBottom = '8px';
     h3_2.textContent = '\uD83D\uDD00 2. Hasil Persilangan (Offspring)';
     stepDiv.appendChild(h3_2);
-    const p_3 = document.createElement('p');
-    p_3.style.fontFamily = 'monospace';
-    p_3.style.fontSize = '1.1em';
-    p_3.style.letterSpacing = '2px';
-    const s1_p3 = document.createElement('strong');
-    s1_p3.textContent = 'O1 (P1 Kiri + P2 Kanan): ';
-    p_3.appendChild(s1_p3);
-    const sp3_1 = document.createElement('span');
-    sp3_1.style.color = '#60a5fa';
-    sp3_1.textContent = p1Left;
-    p_3.appendChild(sp3_1);
-    const sp3_2 = document.createElement('span');
-    sp3_2.style.color = '#34d399';
-    sp3_2.textContent = p2Right;
-    p_3.appendChild(sp3_2);
-    stepDiv.appendChild(p_3);
-    const p_4 = document.createElement('p');
-    p_4.style.fontFamily = 'monospace';
-    p_4.style.fontSize = '1.1em';
-    p_4.style.letterSpacing = '2px';
-    const s1_p4 = document.createElement('strong');
-    s1_p4.textContent = 'O2 (P2 Kiri + P1 Kanan): ';
-    p_4.appendChild(s1_p4);
-    const sp4_1 = document.createElement('span');
-    sp4_1.style.color = '#34d399';
-    sp4_1.textContent = p2Left;
-    p_4.appendChild(sp4_1);
-    const sp4_2 = document.createElement('span');
-    sp4_2.style.color = '#60a5fa';
-    sp4_2.textContent = p1Right;
-    p_4.appendChild(sp4_2);
-    stepDiv.appendChild(p_4);
+    
+    stepDiv.appendChild(createP('O1: ', o1Spans));
+    stepDiv.appendChild(createP('O2: ', o2Spans));
+
     refs.m7Steps.appendChild(stepDiv);
 }
