@@ -1,47 +1,110 @@
 import { refs } from "./dom-refs.js";
-export function calculateMath9() {
-    if (!refs.m9Steps) return;
-    refs.m9Steps.innerHTML = '';
-    const text = refs.m9InPoints ? refs.m9InPoints.value.trim() : '';
-    if (!text) return;
-    const lines = text.split('\n');
-    const points = [];
-    const regex = /^([A-Za-z0-9_]+)\s*=?\s*\(?\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)?$/;
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        const match = line.match(regex);
-        if (!match) {
-            const errDiv = document.createElement('div');
-            errDiv.className = 'math-step-box math-step-error';
-            errDiv.textContent = `\u274C Error pada baris ${i + 1}: Format tidak valid. Gunakan format "Nama = f1, f2" (contoh: A = 2, 8)`;
-            refs.m9Steps.appendChild(errDiv);
-            return;
-        }
-        points.push({
-            name: match[1],
-            f1: parseFloat(match[2]),
-            f2: parseFloat(match[3]),
-            n_p: 0,
-            S_p: [],
-            dominatedBy: []
-        });
+
+function getPointName(index) {
+    let name = '';
+    let i = index;
+    while (i >= 0) {
+        name = String.fromCharCode(65 + (i % 26)) + name;
+        i = Math.floor(i / 26) - 1;
     }
+    return name;
+}
+
+export function addM9Input() {
+    if (!refs.m9DynamicInputs) return;
+    const index = refs.m9DynamicInputs.children.length;
+    const charName = getPointName(index);
+
+    const div = document.createElement('div');
+    div.className = 'math-input-group';
+    div.style.display = 'flex';
+    div.style.gap = '10px';
+    div.style.alignItems = 'center';
+
+    const label = document.createElement('label');
+    label.style.width = '20px';
+    label.style.marginBottom = '0';
+    label.textContent = charName;
+
+    const input1 = document.createElement('input');
+    input1.type = 'number';
+    input1.step = '0.1';
+    input1.className = 'm9-f1-input';
+    input1.placeholder = 'f1';
+
+    const input2 = document.createElement('input');
+    input2.type = 'number';
+    input2.step = '0.1';
+    input2.className = 'm9-f2-input';
+    input2.placeholder = 'f2';
+
+    const onChange = () => {
+        const rows = refs.m9DynamicInputs.children;
+        const lastRow = rows[rows.length - 1];
+        const lastIn1 = lastRow.querySelector('.m9-f1-input');
+        const lastIn2 = lastRow.querySelector('.m9-f2-input');
+        if (lastIn1.value.trim() !== '' || lastIn2.value.trim() !== '') {
+            addM9Input();
+        }
+        calculateMath9();
+    };
+
+    input1.addEventListener("input", onChange);
+    input2.addEventListener("input", onChange);
+
+    div.appendChild(label);
+    div.appendChild(input1);
+    div.appendChild(input2);
+    refs.m9DynamicInputs.appendChild(div);
+}
+
+export function calculateMath9() {
+    if (!refs.m9Steps || !refs.m9DynamicInputs) return;
+    refs.m9Steps.innerHTML = '';
+    
+    const rows = refs.m9DynamicInputs.children;
+    const points = [];
+    
+    for (let i = 0; i < rows.length; i++) {
+        const f1In = rows[i].querySelector('.m9-f1-input');
+        const f2In = rows[i].querySelector('.m9-f2-input');
+        const v1 = f1In.value.trim();
+        const v2 = f2In.value.trim();
+        
+        if (v1 !== '' && v2 !== '') {
+            const name = rows[i].querySelector('label').textContent;
+            points.push({
+                name: name,
+                f1: parseFloat(v1),
+                f2: parseFloat(v2),
+                n_p: 0,
+                S_p: [],
+                dominatedBy: []
+            });
+        }
+    }
+    
+    if (points.length === 0) return;
+
     for (let i = 0; i < points.length; i++) {
         for (let j = 0; j < points.length; j++) {
             if (i === j) continue;
             const p = points[i];
             const q = points[j];
+            
             const pDomQ = p.f1 <= q.f1 && p.f2 <= q.f2 && (p.f1 < q.f1 || p.f2 < q.f2);
+            
             if (pDomQ) {
                 p.S_p.push(q.name);
                 q.dominatedBy.push(p.name);
             }
         }
     }
+
     points.forEach(p => {
         p.n_p = p.dominatedBy.length;
     });
+
     let html = `<table style="width: 100%; border-collapse: collapse; margin-top: 15px; color: white; text-align: center; font-family: monospace; font-size: 14px;">
         <thead>
             <tr style="background: #1f2937; border-bottom: 2px solid #374151;">
@@ -53,6 +116,7 @@ export function calculateMath9() {
             </tr>
         </thead>
         <tbody>`;
+
     points.forEach(p => {
         const domBy = p.dominatedBy.length > 0 ? p.dominatedBy.join(', ') : '\u2014';
         const sp = p.S_p.length > 0 ? p.S_p.join(', ') : '\u2014';
@@ -66,6 +130,7 @@ export function calculateMath9() {
             </tr>
         `;
     });
+
     html += `</tbody></table>`;
     refs.m9Steps.innerHTML = html;
 }

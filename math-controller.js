@@ -3,7 +3,7 @@ import { state } from "./app-state.js";
 import { calculateMath, calculateMath2, calculateMath3 } from "./math-calc-1-3.js";
 import { addM4Input, addM5Input, addM6Input, calculateMath4, calculateMath5, calculateMath6 } from "./math-calc-4-6.js";
 import { calculateMath7, calculateMath8 } from "./math-calc-7-8.js";
-import { calculateMath9 } from "./math-calc-9.js";
+import { addM9Input, calculateMath9 } from "./math-calc-9.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -84,7 +84,7 @@ export function initMath() {
     refs.mathFormulaDisplay9 = document.getElementById("math-calc-formula-display-9");
     refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
     refs.btnMathCalcBack9 = document.getElementById("btn-math-calc-back-9");
-    refs.m9InPoints = document.getElementById("math9-in-points");
+    refs.m9DynamicInputs = document.getElementById("math9-dynamic-inputs");
     refs.m9Steps = document.getElementById("math9-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
@@ -185,6 +185,9 @@ export function initMath() {
             if (typeof katex !== "undefined" && refs.mathFormulaDisplay9) {
                 katex.render(FORMULA9, refs.mathFormulaDisplay9, { throwOnError: false, displayMode: false });
             }
+            if (refs.m9DynamicInputs && refs.m9DynamicInputs.children.length === 0) {
+                addM9Input();
+            }
             calculateMath9();
         }
     };
@@ -221,7 +224,7 @@ export function initMath() {
         if(el) el.addEventListener("input", calculateMath3);
     });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
-    if (refs.m9InPoints) refs.m9InPoints.addEventListener("input", calculateMath9);
+    
     [refs.m8InA, refs.m8InB].forEach(el => {
         if(el) el.addEventListener("input", calculateMath8);
     });
