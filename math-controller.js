@@ -75,9 +75,15 @@ export function initMath() {
     refs.m7ContainerMask = document.getElementById("math7-mask-container");
     refs.m7Steps = document.getElementById("math7-steps-container");
     refs.mathCard8 = document.getElementById("math-card-8");
+    refs.mathCard9 = document.getElementById("math-card-9");
     refs.form8 = document.getElementById("math-calc-form-8");
+    refs.form9 = document.getElementById("math-calc-form-9");
     refs.mathFormulaDisplay8 = document.getElementById("math-calc-formula-display-8");
+    refs.mathFormulaDisplay9 = document.getElementById("math-calc-formula-display-9");
     refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
+    refs.btnMathCalcBack9 = document.getElementById("btn-math-calc-back-9");
+    refs.m9InPoints = document.getElementById("math9-in-points");
+    refs.m9Steps = document.getElementById("math9-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
@@ -90,6 +96,7 @@ export function initMath() {
         if (refs.mathCard6) katex.render(FORMULA6, refs.mathCard6, { throwOnError: false, displayMode: false });
         if (refs.mathCard7) katex.render(FORMULA7, refs.mathCard7, { throwOnError: false, displayMode: false });
         if(refs.mathCard8) katex.render(FORMULA8, refs.mathCard8, { throwOnError: false, displayMode: false });
+        if(refs.mathCard9) katex.render(FORMULA9, refs.mathCard9, { throwOnError: false, displayMode: false });
     }
     refs.btnMathEor.addEventListener("click", () => {
         refs.landingEl.classList.add("hidden");
@@ -112,6 +119,7 @@ export function initMath() {
         if(refs.form6) refs.form6.classList.add("hidden");
         if(refs.form7) refs.form7.classList.add("hidden");
         if(refs.form8) refs.form8.classList.add("hidden");
+        if(refs.form9) refs.form9.classList.add("hidden");
                 state.currentView = "math-calc";
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
@@ -170,6 +178,12 @@ export function initMath() {
                 katex.render(FORMULA8, refs.mathFormulaDisplay8, { throwOnError: false, displayMode: false });
             }
             calculateMath8();
+        } else if (formNum === 9) {
+            if(refs.form9) refs.form9.classList.remove("hidden");
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay9) {
+                katex.render(FORMULA9, refs.mathFormulaDisplay9, { throwOnError: false, displayMode: false });
+            }
+            calculateMath9();
         }
     };
     refs.mathCard1.addEventListener("click", () => openForm(1));
@@ -180,6 +194,7 @@ export function initMath() {
     if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
     if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
     if(refs.mathCard8) refs.mathCard8.addEventListener("click", () => openForm(8));
+    if(refs.mathCard9) refs.mathCard9.addEventListener("click", () => openForm(9));
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
@@ -193,6 +208,7 @@ export function initMath() {
     if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack8) refs.btnMathCalcBack8.addEventListener("click", closeForm);
+    if(refs.btnMathCalcBack9) refs.btnMathCalcBack9.addEventListener("click", closeForm);
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
     });
@@ -203,6 +219,7 @@ export function initMath() {
         if(el) el.addEventListener("input", calculateMath3);
     });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+    if (refs.m9InPoints) refs.m9InPoints.addEventListener("input", calculateMath9);
     [refs.m8InA, refs.m8InB].forEach(el => {
         if(el) el.addEventListener("input", calculateMath8);
     });
