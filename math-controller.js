@@ -7,6 +7,7 @@ import { addM9Input, calculateMath9 } from "./math-calc-9.js";
 import { addM10Input, calculateMath10 } from "./math-calc-10.js";
 import { addM11Input, calculateMath11 } from "./math-calc-11.js";
 import { calculateMath12 } from "./math-calc-12.js";
+import { calculateMath13 } from "./math-calc-13.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -19,6 +20,7 @@ const FORMULA9 = "n_p \\text{ dan } S_p";
 const FORMULA10 = "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}";
 const FORMULA11 = "s = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\bar{x})^2}{n-1}}";
 const FORMULA12 = "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}";
+const FORMULA13 = "\\binom{n}{k} = C(n,k) = \\frac{n!}{k!(n-k)!}";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -108,6 +110,9 @@ export function initMath() {
     refs.m12InPba = document.getElementById("math12-in-pba");
     refs.m12InPb = document.getElementById("math12-in-pb");
     refs.m12Steps = document.getElementById("math12-steps-container");
+    refs.m13InN = document.getElementById("math13-in-n");
+    refs.m13InK = document.getElementById("math13-in-k");
+    refs.m13Steps = document.getElementById("math13-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
@@ -239,9 +244,15 @@ export function initMath() {
                 katex.render(FORMULA12, refs.mathFormulaDisplay12, { throwOnError: false, displayMode: false });
             }
             calculateMath12();
+        } else if (formNum === 13) {
+            if(refs.form13) refs.form13.classList.remove("hidden");
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay13) {
+                katex.render(FORMULA13, refs.mathFormulaDisplay13, { throwOnError: false, displayMode: false });
+            }
+            calculateMath13();
         }
     };
-    for(let i=1; i<=12; i++) {
+    for(let i=1; i<=13; i++) {
         if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
     }
 const closeForm = () => {
@@ -249,7 +260,7 @@ const closeForm = () => {
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-    for(let i=1; i<=12; i++) {
+    for(let i=1; i<=13; i++) {
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
     }
@@ -263,14 +274,15 @@ const closeForm = () => {
         if(el) el.addEventListener("input", calculateMath3);
     });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
-    
     [refs.m8InA, refs.m8InB].forEach(el => {
         if(el) el.addEventListener("input", calculateMath8);
     });
-
     [refs.m12InPa, refs.m12InPba, refs.m12InPb].forEach(el => {
         if(el) el.addEventListener("input", calculateMath12);
-    });    [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
+    }); 
+    [refs.m13InN, refs.m13InK].forEach(el => {
+        if(el) el.addEventListener("input", calculateMath13);
+    });   [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
                 const type = refs.m7InType.value;

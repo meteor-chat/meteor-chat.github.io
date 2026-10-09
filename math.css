@@ -13,3 +13,5 @@
 
 .math-mt-15 { margin-top: 15px; }
 .math-result-highlight { border-left-color: #059669 !important; border-width: 2px !important; }
+
+.math-word-break { word-break: break-all; }
