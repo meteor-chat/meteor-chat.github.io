@@ -122,10 +122,10 @@ export function calculateMath9() {
         const sp = p.S_p.length > 0 ? p.S_p.join(', ') : '\u2014';
         html += `
             <tr style="border-bottom: 1px solid #374151;">
-                <td style="padding: 8px; border: 1px solid #374151; font-weight: bold;">${p.name}</td>
+                <td style="padding: 8px; border: 1px solid #374151; font-weight: 600;">${p.name}</td>
                 <td style="padding: 8px; border: 1px solid #374151;">(${p.f1}, ${p.f2})</td>
                 <td style="padding: 8px; border: 1px solid #374151;">${domBy}</td>
-                <td style="padding: 8px; border: 1px solid #374151; font-weight: bold; color: ${p.n_p === 0 ? '#34d399' : '#f87171'};">${p.n_p}</td>
+                <td style="padding: 8px; border: 1px solid #374151; font-weight: 600; color: ${p.n_p === 0 ? '#34d399' : '#f87171'};">${p.n_p}</td>
                 <td style="padding: 8px; border: 1px solid #374151;">${sp}</td>
             </tr>
         `;

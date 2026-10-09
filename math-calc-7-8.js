@@ -151,7 +151,7 @@ export function calculateMath8() {
     pTest.innerHTML = testStr + '<br>' + `Test B ≤ A: ${vecB[0]} ≤ ${vecA[0]} ➔ ${bLTE1 ? 'True' : 'False'}, ${vecB[1]} ≤ ${vecA[1]} ➔ ${bLTE2 ? 'True' : 'False'}`;
     stepDiv.appendChild(pTest);
     const resDiv = document.createElement('div');
-    resDiv.style.fontWeight = 'bold';
+    resDiv.style.fontWeight = '600';
     resDiv.style.fontSize = '1.2em';
     resDiv.style.padding = '10px';
     resDiv.style.borderRadius = '8px';

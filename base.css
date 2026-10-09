@@ -1,1 +1,2 @@
 * {    letter-spacing: 0.25%;    padding: 0;    margin: 0;    box-sizing: border-box;    outline: none;}body, textarea, input, button {    font-family: var(--font-stack);    color: var(--text-main);}body { background: var(--bg-main); }button { cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; padding: 0; }.hidden { display: none !important; }.error-box { color: red; text-align: center; margin-bottom: 10px; }.error-box-fallback { display: block; margin: 2rem; }
+strong, b { font-weight: 600; }
