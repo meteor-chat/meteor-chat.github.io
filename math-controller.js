@@ -7,6 +7,7 @@ const FORMULA4 = "P_i = \\frac{F_i}{\\sum F}";
 const FORMULA5 = "C_i = C_{i-1} + P_i";
 const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
 const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
+const FORMULA8 = "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exists j: f_j(A) < f_j(B)";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -70,6 +71,13 @@ export function initMath() {
     refs.m7ContainerK2 = document.getElementById("math7-k2-container");
     refs.m7ContainerMask = document.getElementById("math7-mask-container");
     refs.m7Steps = document.getElementById("math7-steps-container");
+    refs.mathCard8 = document.getElementById("math-card-8");
+    refs.form8 = document.getElementById("math-calc-form-8");
+    refs.mathFormulaDisplay8 = document.getElementById("math-calc-formula-display-8");
+    refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
+    refs.m8InA = document.getElementById("math8-in-a");
+    refs.m8InB = document.getElementById("math8-in-b");
+    refs.m8Steps = document.getElementById("math8-steps-container");
     if (typeof katex !== 'undefined') {
         katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
         if (refs.mathCard2) katex.render(FORMULA2, refs.mathCard2, { throwOnError: false, displayMode: false });
@@ -78,6 +86,7 @@ export function initMath() {
         if (refs.mathCard5) katex.render(FORMULA5, refs.mathCard5, { throwOnError: false, displayMode: false });
         if (refs.mathCard6) katex.render(FORMULA6, refs.mathCard6, { throwOnError: false, displayMode: false });
         if (refs.mathCard7) katex.render(FORMULA7, refs.mathCard7, { throwOnError: false, displayMode: false });
+        if(refs.mathCard8) katex.render(FORMULA8, refs.mathCard8, { throwOnError: false, displayMode: false });
     }
     refs.btnMathEor.addEventListener("click", () => {
         refs.landingEl.classList.add("hidden");
@@ -151,6 +160,12 @@ export function initMath() {
                 katex.render(FORMULA7, refs.mathFormulaDisplay7, { throwOnError: false, displayMode: false });
             }
             calculateMath7();
+        } else if (formNum === 8) {
+            if(refs.form8) refs.form8.classList.remove("hidden");
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay8) {
+                katex.render(FORMULA8, refs.mathFormulaDisplay8, { throwOnError: false, displayMode: false });
+            }
+            calculateMath8();
         }
     };
     refs.mathCard1.addEventListener("click", () => openForm(1));
@@ -160,6 +175,7 @@ export function initMath() {
     if(refs.mathCard5) refs.mathCard5.addEventListener("click", () => openForm(5));
     if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
     if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
+    if(refs.mathCard8) refs.mathCard8.addEventListener("click", () => openForm(8));
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
@@ -172,6 +188,7 @@ export function initMath() {
     if(refs.btnMathCalcBack5) refs.btnMathCalcBack5.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
+    if(refs.btnMathCalcBack8) refs.btnMathCalcBack8.addEventListener("click", closeForm);
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
     });
@@ -182,6 +199,9 @@ export function initMath() {
         if(el) el.addEventListener("input", calculateMath3);
     });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
+    [refs.m8InA, refs.m8InB].forEach(el => {
+        if(el) el.addEventListener("input", calculateMath8);
+    });
     [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
@@ -679,4 +699,89 @@ function calculateMath7() {
     stepDiv.appendChild(createP('O2: ', o2Spans));
 
     refs.m7Steps.appendChild(stepDiv);
+}
+
+function calculateMath8() {
+    if (!refs.m8Steps) return;
+    refs.m8Steps.textContent = '';
+    const strA = refs.m8InA ? refs.m8InA.value.trim() : '';
+    const strB = refs.m8InB ? refs.m8InB.value.trim() : '';
+    if (!strA || !strB) return;
+
+    const parseVec = (str) => {
+        const parts = str.split(',').map(s => parseFloat(s.trim()));
+        return parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) ? parts : null;
+    };
+
+    const vecA = parseVec(strA);
+    const vecB = parseVec(strB);
+
+    const errDiv = document.createElement('div');
+    errDiv.className = 'math-step-box math-step-error';
+    if (!vecA || !vecB) {
+        errDiv.textContent = '\u274C Error: Format tidak valid! Gunakan format "f1,f2" contoh: 3,45';
+        refs.m8Steps.appendChild(errDiv);
+        return;
+    }
+
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'math-step-box';
+
+    const pTest = document.createElement('p');
+    pTest.style.fontFamily = 'monospace';
+    pTest.style.fontSize = '1.1em';
+    pTest.style.marginBottom = '15px';
+    
+    // Condition A dominates B
+    // A <= B on all, A < B on at least one
+    const aLTE1 = vecA[0] <= vecB[0];
+    const aLTE2 = vecA[1] <= vecB[1];
+    const aLT1 = vecA[0] < vecB[0];
+    const aLT2 = vecA[1] < vecB[1];
+    const aDominatesB = (aLTE1 && aLTE2) && (aLT1 || aLT2);
+
+    const bLTE1 = vecB[0] <= vecA[0];
+    const bLTE2 = vecB[1] <= vecA[1];
+    const bLT1 = vecB[0] < vecA[0];
+    const bLT2 = vecB[1] < vecA[1];
+    const bDominatesA = (bLTE1 && bLTE2) && (bLT1 || bLT2);
+
+    const identical = (vecA[0] === vecB[0] && vecA[1] === vecB[1]);
+
+    const title = document.createElement('h3');
+    title.style.marginBottom = '10px';
+    title.textContent = '⚖️ Uji Pareto Dominance (Minimisasi)';
+    stepDiv.appendChild(title);
+
+    let testStr = `Test A ≤ B: ${vecA[0]} ≤ ${vecB[0]} ➔ ${aLTE1 ? 'True' : 'False'}, ${vecA[1]} ≤ ${vecB[1]} ➔ ${aLTE2 ? 'True' : 'False'}`;
+    pTest.innerHTML = testStr + '<br>' + `Test B ≤ A: ${vecB[0]} ≤ ${vecA[0]} ➔ ${bLTE1 ? 'True' : 'False'}, ${vecB[1]} ≤ ${vecA[1]} ➔ ${bLTE2 ? 'True' : 'False'}`;
+    stepDiv.appendChild(pTest);
+
+    const resDiv = document.createElement('div');
+    resDiv.style.fontWeight = 'bold';
+    resDiv.style.fontSize = '1.2em';
+    resDiv.style.padding = '10px';
+    resDiv.style.borderRadius = '8px';
+    resDiv.style.marginTop = '15px';
+
+    if (identical) {
+        resDiv.style.backgroundColor = '#4b5563';
+        resDiv.style.color = 'white';
+        resDiv.textContent = 'Result: Neither dominates (Identical)';
+    } else if (aDominatesB) {
+        resDiv.style.backgroundColor = '#059669';
+        resDiv.style.color = 'white';
+        resDiv.textContent = 'Result: A dominates B';
+    } else if (bDominatesA) {
+        resDiv.style.backgroundColor = '#2563eb';
+        resDiv.style.color = 'white';
+        resDiv.textContent = 'Result: B dominates A';
+    } else {
+        resDiv.style.backgroundColor = '#dc2626';
+        resDiv.style.color = 'white';
+        resDiv.textContent = 'Result: Neither dominates (Incomparable)';
+    }
+    
+    stepDiv.appendChild(resDiv);
+    refs.m8Steps.appendChild(stepDiv);
 }
