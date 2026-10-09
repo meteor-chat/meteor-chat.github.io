@@ -3,6 +3,7 @@ import { state } from "./app-state.js";
 import { calculateMath, calculateMath2, calculateMath3 } from "./math-calc-1-3.js";
 import { addM4Input, addM5Input, addM6Input, calculateMath4, calculateMath5, calculateMath6 } from "./math-calc-4-6.js";
 import { calculateMath7, calculateMath8 } from "./math-calc-7-8.js";
+import { calculateMath9 } from "./math-calc-9.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
