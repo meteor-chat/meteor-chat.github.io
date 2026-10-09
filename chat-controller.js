@@ -123,7 +123,6 @@ export async function sendMessage(text) {
             refs.sendChat.classList.remove("hidden");
         }
         if (window.innerWidth > 768) refs.msgChat.focus();
-
         const target = document.getElementById("streaming-target");
         if (target) {
             const btn = target.closest(".assistant-msg")?.querySelector(".btn-copy");

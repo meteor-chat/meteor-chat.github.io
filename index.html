@@ -1,199 +1,1 @@
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meteor</title>
-<link rel="icon" href="./icon.png" type="image/png">
-<link rel="stylesheet" href="./tokens.css">
-<link rel="stylesheet" href="./base.css">
-<link rel="stylesheet" href="./layout.css">
-<link rel="stylesheet" href="./input.css">
-<link rel="stylesheet" href="./messages.css">
-<link rel="stylesheet" href="./markdown.css">
-<link rel="stylesheet" href="./math.css">
-<link rel="stylesheet" href="./responsive.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-</head>
-<body>
-<div id="error-box" class="hidden error-box"></div>
-<div id="landing" class="landing">
-    <img src="./banner.png" class="banner" alt="Banner">
-    <div class="tagline"><h1>Minimalist. No Login. Meteor</h1></div>
-    <div class="input-wrap">
-        <textarea id="message-landing" placeholder="Ask Meteor" rows="1"></textarea>
-        <button id="send-landing" class="send-landing" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
-    </div>
-    <button id="btn-math-eor" class="btn-math-eor">Math eor</button>
-</div>
-<div id="chat-view" class="hidden">
-    <div id="chat-messages" aria-live="polite">
-        <div id="conversation"></div>
-    </div>
-    <div class="input-wrap">
-        <div id="edit-notice" class="hidden">Editing message</div>
-        <button id="cancel-btn" class="hidden">Cancel</button>
-        <textarea id="message-chat" placeholder="Ask Meteor" rows="1"></textarea>
-        <button id="send-chat" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>
-        <button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="stop.svg" alt="Stop"></button>
-    </div>
-</div>
-<div id="math-menu-view" class="hidden">
-    <h2 class="math-title">Pilihan Rumus</h2>
-    <div class="math-grid">
-        <button class="math-card active" data-formula="1" id="math-card-1"></button>
-        <button class="math-card active" data-formula="2" id="math-card-2"></button>
-        <button class="math-card active" data-formula="3" id="math-card-3"></button>
-        <button class="math-card active" data-formula="4" id="math-card-4"></button>
-        <button class="math-card active" data-formula="5" id="math-card-5"></button>
-        <button class="math-card active" data-formula="6" id="math-card-6"></button>
-        <button class="math-card active" data-formula="7" id="math-card-7"></button>
-        <button class="math-card disabled">rumus lain<br>coming soon</button>
-    </div>
-    <button id="btn-math-menu-back" class="btn-math-back">Kembali</button>
-</div>
-<div id="math-calc-view" class="hidden">
-    <h2 class="math-title">Pilihan Rumus</h2>
-    <div id="math-calc-form-1" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display" class="math-formula-box"></div>
-            <button id="btn-math-calc-back" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>kromosom (user input) (misalnya 1011)</label>
-                    <input type="text" id="math-in-kromosom" placeholder="1011">
-                </div>
-                <div class="math-input-group">
-                    <label>x min (user input) (misalnya -2)</label>
-                    <input type="number" id="math-in-xmin" placeholder="-2" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>x max (user input) (misalnya 3)</label>
-                    <input type="number" id="math-in-xmax" placeholder="3" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>n (auto terisi berdasarkan kromosom)</label>
-                    <input type="number" id="math-in-n" disabled>
-                </div>
-            </div>
-            <div class="math-steps" id="math-steps-container"></div>
-        </div>
-    </div>
-
-        <div id="math-calc-form-2" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-2" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>x1 (user input)</label>
-                    <input type="number" id="math2-in-x1" placeholder="misalnya 2" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>x2 (user input)</label>
-                    <input type="number" id="math2-in-x2" placeholder="misalnya 3" step="0.1">
-                </div>
-            </div>
-            <div class="math-steps" id="math2-table-container"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-3" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-3" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>h (user input)</label>
-                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>a (user input)</label>
-                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="0.1">
-                </div>
-            </div>
-            <div class="math-steps" id="math3-steps-container"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-4" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-4" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps" id="math4-steps-container"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-5" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-5" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-5" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Nilai Acak (r) (user input, opsional)</label>
-                    <input type="number" id="math5-in-r" placeholder="misalnya 0.45" step="0.1">
-                </div>
-                <div id="math5-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps" id="math5-steps-container"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-6" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-6" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-6" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div id="math6-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps" id="math6-steps-container"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-7" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-7" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Kromosom Parent 1 (P1)</label>
-                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">
-                </div>
-                <div class="math-input-group">
-                    <label>Kromosom Parent 2 (P2)</label>
-                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">
-                </div>
-                <div class="math-input-group">
-                    <label>Titik Potong (k)</label>
-                    <input type="number" id="math7-in-k" placeholder="misal: 4" step="1">
-                </div>
-            </div>
-            <div class="math-steps" id="math7-steps-container"></div>
-        </div>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script type="module" src="main.js?v=2"></script>
-</body>
-</html>
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meteor</title><link rel="icon" href="./icon.png" type="image/png"><link rel="stylesheet" href="./tokens.css"><link rel="stylesheet" href="./base.css"><link rel="stylesheet" href="./layout.css"><link rel="stylesheet" href="./input.css"><link rel="stylesheet" href="./messages.css"><link rel="stylesheet" href="./markdown.css"><link rel="stylesheet" href="./math.css"><link rel="stylesheet" href="./responsive.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"></head><body><div id="error-box" class="hidden error-box"></div><div id="landing" class="landing">    <img src="./banner.png" class="banner" alt="Banner">    <div class="tagline"><h1>Minimalist. No Login. Meteor</h1></div>    <div class="input-wrap">        <textarea id="message-landing" placeholder="Ask Meteor" rows="1"></textarea>        <button id="send-landing" class="send-landing" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>    </div>    <button id="btn-math-eor" class="btn-math-eor">Math eor</button></div><div id="chat-view" class="hidden">    <div id="chat-messages" aria-live="polite">        <div id="conversation"></div>    </div>    <div class="input-wrap">        <div id="edit-notice" class="hidden">Editing message</div>        <button id="cancel-btn" class="hidden">Cancel</button>        <textarea id="message-chat" placeholder="Ask Meteor" rows="1"></textarea>        <button id="send-chat" aria-label="Send"><img src="send-inactive.svg" alt="Send"></button>        <button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="stop.svg" alt="Stop"></button>    </div></div><div id="math-menu-view" class="hidden">    <h2 class="math-title">Pilihan Rumus</h2>    <div class="math-grid">        <button class="math-card active" data-formula="1" id="math-card-1"></button>        <button class="math-card active" data-formula="2" id="math-card-2"></button>        <button class="math-card active" data-formula="3" id="math-card-3"></button>        <button class="math-card active" data-formula="4" id="math-card-4"></button>        <button class="math-card active" data-formula="5" id="math-card-5"></button>        <button class="math-card active" data-formula="6" id="math-card-6"></button>        <button class="math-card active" data-formula="7" id="math-card-7"></button>        <button class="math-card disabled">rumus lain<br>coming soon</button>    </div>    <button id="btn-math-menu-back" class="btn-math-back">Kembali</button></div><div id="math-calc-view" class="hidden">    <h2 class="math-title">Pilihan Rumus</h2>    <div id="math-calc-form-1" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display" class="math-formula-box"></div>            <button id="btn-math-calc-back" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>kromosom (user input) (misalnya 1011)</label>                    <input type="text" id="math-in-kromosom" placeholder="1011">                </div>                <div class="math-input-group">                    <label>x min (user input) (misalnya -2)</label>                    <input type="number" id="math-in-xmin" placeholder="-2" step="0.1">                </div>                <div class="math-input-group">                    <label>x max (user input) (misalnya 3)</label>                    <input type="number" id="math-in-xmax" placeholder="3" step="0.1">                </div>                <div class="math-input-group">                    <label>n (auto terisi berdasarkan kromosom)</label>                    <input type="number" id="math-in-n" disabled>                </div>            </div>            <div class="math-steps" id="math-steps-container"></div>        </div>    </div>        <div id="math-calc-form-2" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-2" class="math-formula-box"></div>            <button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>x1 (user input)</label>                    <input type="number" id="math2-in-x1" placeholder="misalnya 2" step="0.1">                </div>                <div class="math-input-group">                    <label>x2 (user input)</label>                    <input type="number" id="math2-in-x2" placeholder="misalnya 3" step="0.1">                </div>            </div>            <div class="math-steps" id="math2-table-container"></div>        </div>    </div>    <div id="math-calc-form-3" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-3" class="math-formula-box"></div>            <button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>h (user input)</label>                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="0.1">                </div>                <div class="math-input-group">                    <label>a (user input)</label>                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="0.1">                </div>            </div>            <div class="math-steps" id="math3-steps-container"></div>        </div>    </div>    <div id="math-calc-form-4" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-4" class="math-formula-box"></div>            <button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math4-steps-container"></div>        </div>    </div>    <div id="math-calc-form-5" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-5" class="math-formula-box"></div>            <button id="btn-math-calc-back-5" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>Nilai Acak (r) (user input, opsional)</label>                    <input type="number" id="math5-in-r" placeholder="misalnya 0.45" step="0.1">                </div>                <div id="math5-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math5-steps-container"></div>        </div>    </div>    <div id="math-calc-form-6" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-6" class="math-formula-box"></div>            <button id="btn-math-calc-back-6" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div id="math6-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math6-steps-container"></div>        </div>    </div>    <div id="math-calc-form-7" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-7" class="math-formula-box"></div>            <button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>Kromosom Parent 1 (P1)</label>                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">                </div>                <div class="math-input-group">                    <label>Kromosom Parent 2 (P2)</label>                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">                </div>                <div class="math-input-group">                    <label>Titik Potong (k)</label>                    <input type="number" id="math7-in-k" placeholder="misal: 4" step="1">                </div>            </div>            <div class="math-steps" id="math7-steps-container"></div>        </div>    </div></div><script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script><script type="module" src="main.js?v=2"></script></body></html>

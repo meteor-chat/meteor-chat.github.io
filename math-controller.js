@@ -1,6 +1,5 @@
 import { refs } from "./dom-refs.js";
 import { state } from "./app-state.js";
-
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -8,7 +7,6 @@ const FORMULA4 = "P_i = \\frac{F_i}{\\sum F}";
 const FORMULA5 = "C_i = C_{i-1} + P_i";
 const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
 const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
-
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -64,7 +62,6 @@ export function initMath() {
     refs.m7InP2 = document.getElementById("math7-in-p2");
     refs.m7InK = document.getElementById("math7-in-k");
     refs.m7Steps = document.getElementById("math7-steps-container");
-
     if (typeof katex !== 'undefined') {
         katex.render(FORMULA, refs.mathCard1, { throwOnError: false, displayMode: false });
         if (refs.mathCard2) katex.render(FORMULA2, refs.mathCard2, { throwOnError: false, displayMode: false });
@@ -74,19 +71,16 @@ export function initMath() {
         if (refs.mathCard6) katex.render(FORMULA6, refs.mathCard6, { throwOnError: false, displayMode: false });
         if (refs.mathCard7) katex.render(FORMULA7, refs.mathCard7, { throwOnError: false, displayMode: false });
     }
-
     refs.btnMathEor.addEventListener("click", () => {
         refs.landingEl.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     });
-
     refs.btnMathMenuBack.addEventListener("click", () => {
         refs.mathMenu.classList.add("hidden");
         refs.landingEl.classList.remove("hidden");
         state.currentView = "landing";
     });
-
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
@@ -97,9 +91,7 @@ export function initMath() {
         if(refs.form5) refs.form5.classList.add("hidden");
         if(refs.form6) refs.form6.classList.add("hidden");
         if(refs.form7) refs.form7.classList.add("hidden");
-
                 state.currentView = "math-calc";
-
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
             if (typeof katex !== 'undefined') {
@@ -153,7 +145,6 @@ export function initMath() {
             calculateMath7();
         }
     };
-
     refs.mathCard1.addEventListener("click", () => openForm(1));
     if(refs.mathCard2) refs.mathCard2.addEventListener("click", () => openForm(2));
     if(refs.mathCard3) refs.mathCard3.addEventListener("click", () => openForm(3));
@@ -161,13 +152,11 @@ export function initMath() {
     if(refs.mathCard5) refs.mathCard5.addEventListener("click", () => openForm(5));
     if(refs.mathCard6) refs.mathCard6.addEventListener("click", () => openForm(6));
     if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
-
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-
     refs.btnMathCalcBack1.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack2) refs.btnMathCalcBack2.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack3) refs.btnMathCalcBack3.addEventListener("click", closeForm);
@@ -175,26 +164,20 @@ export function initMath() {
     if(refs.btnMathCalcBack5) refs.btnMathCalcBack5.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack6) refs.btnMathCalcBack6.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
-
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
     });
-
     [refs.m2InX1, refs.m2InX2].forEach(el => {
         if(el) el.addEventListener("input", calculateMath2);
     });
-
     [refs.m3InH, refs.m3InA].forEach(el => {
         if(el) el.addEventListener("input", calculateMath3);
     });
-
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
-
     [refs.m7InP1, refs.m7InP2, refs.m7InK].forEach(el => {
         if(el) el.addEventListener("input", calculateMath7);
     });
 }
-
 function addM4Input() {
     if (!refs.m4DynamicInputs) return;
     const index = refs.m4DynamicInputs.children.length + 1;
@@ -208,7 +191,6 @@ function addM4Input() {
     input.className = 'm4-fitness-input';
     input.id = `m4-fit-${index}`;
     input.placeholder = '0';
-
         input.addEventListener("input", () => {
         const inputs = document.querySelectorAll('.m4-fitness-input');
         const lastInput = inputs[inputs.length - 1];
@@ -217,12 +199,10 @@ function addM4Input() {
         }
         calculateMath4();
     });
-
     div.appendChild(label);
     div.appendChild(input);
     refs.m4DynamicInputs.appendChild(div);
 }
-
 function addM5Input() {
     if (!refs.m5DynamicInputs) return;
     const index = refs.m5DynamicInputs.children.length + 1;
@@ -236,7 +216,6 @@ function addM5Input() {
     input.className = 'm5-prob-input';
     input.id = `m5-prob-${index}`;
     input.placeholder = '0';
-
         input.addEventListener("input", () => {
         const inputs = document.querySelectorAll('.m5-prob-input');
         const lastInput = inputs[inputs.length - 1];
@@ -245,12 +224,10 @@ function addM5Input() {
         }
         calculateMath5();
     });
-
     div.appendChild(label);
     div.appendChild(input);
     refs.m5DynamicInputs.appendChild(div);
 }
-
 function addM6Input() {
     if (!refs.m6DynamicInputs) return;
     const index = refs.m6DynamicInputs.children.length + 1;
@@ -264,7 +241,6 @@ function addM6Input() {
     input.className = 'm6-fitness-input';
     input.id = `m6-fit-${index}`;
     input.placeholder = '0';
-
         input.addEventListener("input", () => {
         const inputs = document.querySelectorAll('.m6-fitness-input');
         const lastInput = inputs[inputs.length - 1];
@@ -273,16 +249,13 @@ function addM6Input() {
         }
         calculateMath6();
     });
-
     div.appendChild(label);
     div.appendChild(input);
     refs.m6DynamicInputs.appendChild(div);
 }
-
 function gcd(a, b) {
     return b === 0 ? a : gcd(b, a % b);
 }
-
 function calculateMath() {
     if (typeof katex === 'undefined') return;
     const kromosom = refs.inKromosom.value.trim() || "1011";
@@ -290,9 +263,7 @@ function calculateMath() {
     const xMaxStr = refs.inXmax.value || "3";
     const xMin = parseFloat(xMinStr);
     const xMax = parseFloat(xMaxStr);
-
         refs.mathSteps.textContent = '';
-
     if (!/^[01]+$/.test(kromosom)) {
         const err = document.createElement('div');
         err.className = 'katex-error';
@@ -301,31 +272,25 @@ function calculateMath() {
         if(refs.inN) refs.inN.value = "";
         return;
     }
-
     const n = kromosom.length;
     if(refs.inN) refs.inN.value = n;
-
     if (isNaN(xMin) || isNaN(xMax)) {
         return;
     }
-
     const d = parseInt(kromosom, 2);
     const step1 = `d = (${kromosom})_2 = ${d}`;
     const num = xMax - xMin;
     const den = Math.pow(2, n) - 1;
     const xMinFmt = xMin < 0 ? `(${xMin})` : xMin;
     const step2 = `x = ${xMin} + \\frac{${xMax} - ${xMinFmt}}{2^{${n}} - 1} \\cdot ${d}`;
-
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
         div.className = boxClass;
         katex.render(tex, div, { throwOnError: false, displayMode: true });
         refs.mathSteps.appendChild(div);
     };
-
     addStep(step1);
     addStep(step2);
-
     if (den !== 0) {
         const val = xMin + (num / den) * d;
         const isInt = Number.isInteger(xMin) && Number.isInteger(xMax);
@@ -335,7 +300,6 @@ function calculateMath() {
             const divisor = Math.abs(gcd(top, bottom));
             const topSimp = top / Math.abs(divisor);
             const bottomSimp = bottom / Math.abs(divisor);
-
             if (bottomSimp === 1) {
                 addStep(`x = ${topSimp}`);
             } else {
@@ -350,25 +314,21 @@ function calculateMath() {
         }
     }
 }
-
 function calculateMath2() {
     if(!refs.m2InX1 || typeof katex === 'undefined') return;
     const x1Str = refs.m2InX1.value || "2";
     const x2Str = refs.m2InX2.value || "3";
     const x1 = parseFloat(x1Str);
     const x2 = parseFloat(x2Str);
-
     refs.m2Table.textContent = "";
     if (isNaN(x1) || isNaN(x2)) {
         return;
     }
-
     const x1Fmt = x1 < 0 ? `(${x1})` : x1;
     const x2Fmt = x2 < 0 ? `(${x2})` : x2;
     const step1 = `h = ${x1Fmt}^3 + \\frac{1}{3}${x2Fmt}^2`;
     const x1Cubed = Math.pow(x1, 3);
     const x2Sq = Math.pow(x2, 2);
-
     let step2 = "";
     if (Number.isInteger(x2Sq) && x2Sq !== 0) {
         step2 = `h = ${x1Cubed} + \\frac{${x2Sq}}{3}`;
@@ -377,34 +337,28 @@ function calculateMath2() {
         const x2TermRounded = Math.round(x2Term * 1000) / 1000;
         step2 = `h = ${x1Cubed} + ${x2TermRounded}`;
     }
-
     const finalVal = x1Cubed + (x2Sq / 3);
     const step3 = `h \\approx ${Math.round(finalVal * 1000) / 1000}`;
-
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
         div.className = boxClass;
         katex.render(tex, div, { throwOnError: false, displayMode: true });
         refs.m2Table.appendChild(div);
     };
-
     addStep(step1);
     addStep(step2);
     addStep(step3, 'math-step-box');
 }
-
 function calculateMath3() {
     if(!refs.m3InH || typeof katex === 'undefined') return;
     const hStr = refs.m3InH.value || "5";
     const aStr = refs.m3InA.value || "0.1";
     const h = parseFloat(hStr);
     const a = parseFloat(aStr);
-
     refs.m3Steps.textContent = "";
     if (isNaN(h) || isNaN(a)) {
         return;
     }
-
     const hFmt = h < 0 ? `(${h})` : h;
     const aFmt = a < 0 ? `(${a})` : a;
     const step1 = `Fitness = \\frac{1}{${hFmt} + ${aFmt}}`;
@@ -412,29 +366,24 @@ function calculateMath3() {
     const step2 = `Fitness = \\frac{1}{${sum}}`;
     const finalVal = 1 / sum;
     const step3 = `Fitness \\approx ${Math.round(finalVal * 1000) / 1000}`;
-
     const addStep = (tex, boxClass = 'math-step') => {
         const div = document.createElement('div');
         div.className = boxClass;
         katex.render(tex, div, { throwOnError: false, displayMode: true });
         refs.m3Steps.appendChild(div);
     };
-
     addStep(step1);
     if (sum !== h && sum !== a) {
         addStep(step2);
     }
     addStep(step3, 'math-step-box');
 }
-
 function calculateMath4() {
     if (!refs.m4Steps) return;
     const inputs = document.querySelectorAll('.m4-fitness-input');
     refs.m4Steps.textContent = '';
-
         const fitnessValues = [];
     let totalFitness = 0;
-
         inputs.forEach(input => {
         if (input.value.trim() !== '') {
             const val = parseFloat(input.value) || 0;
@@ -442,19 +391,15 @@ function calculateMath4() {
             totalFitness += val;
         }
     });
-
     if (fitnessValues.length === 0) return;
-
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step math-step-total';
     const strong = document.createElement('strong');
     strong.textContent = `Total Fitness (\u03A3F) = ${Math.round(totalFitness * 1000) / 1000}`;
     totalDiv.appendChild(strong);
     refs.m4Steps.appendChild(totalDiv);
-
     const table = document.createElement('table');
     table.className = 'math-table';
-
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     ['Individu', 'Fitness (Fi)', 'Substitusi', 'Probabilitas (Pi)'].forEach(text => {
@@ -464,7 +409,6 @@ function calculateMath4() {
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
-
     const tbody = document.createElement('tbody');
     const probabilities = [];
     fitnessValues.forEach((f, index) => {
@@ -486,30 +430,24 @@ function calculateMath4() {
     table.appendChild(tbody);
     refs.m4Steps.appendChild(table);
 }
-
 function calculateMath5() {
     if (!refs.m5Steps) return;
     const inputs = document.querySelectorAll('.m5-prob-input');
     refs.m5Steps.textContent = '';
-
         const probabilities = [];
     inputs.forEach(input => {
         if (input.value.trim() !== '') {
             probabilities.push(parseFloat(input.value) || 0);
         }
     });
-
     if (probabilities.length === 0) return;
-
     const rInput = refs.m5InR.value;
     const r = rInput !== "" ? parseFloat(rInput) : null;
-
     let cumulative = 0;
     let selectedParent = null;
     let selectedParentCumulative = null;
     let finalCumulative = 0;
     const rows = [];
-
     probabilities.forEach((p, index) => {
         const prevCumulative = cumulative;
         cumulative += p;
@@ -523,7 +461,6 @@ function calculateMath5() {
             selectedParentCumulative = cumulative.toFixed(3);
         }
     });
-
     const validBanner = document.createElement('div');
     validBanner.className = finalCumulative >= 0.999 && finalCumulative <= 1.001
         ? 'math-step-box math-step-valid'
@@ -532,7 +469,6 @@ function calculateMath5() {
         ? '\u2705 Kumulatif valid (berakhir di 1.000)'
         : '\u274C Error: Kumulatif tidak berakhir di 1.000. Cek kembali input nilai probabilitas.';
     refs.m5Steps.appendChild(validBanner);
-
     const table = document.createElement('table');
     table.className = 'math-table';
     const thead = document.createElement('thead');
@@ -544,7 +480,6 @@ function calculateMath5() {
     });
     thead.appendChild(headerRow);
     table.appendChild(thead);
-
     const tbody = document.createElement('tbody');
     rows.forEach(({ index, p, calculationText, cumulative: cum }) => {
         const tr = document.createElement('tr');
@@ -562,7 +497,6 @@ function calculateMath5() {
     });
     table.appendChild(tbody);
     refs.m5Steps.appendChild(table);
-
     if (r !== null) {
         const resultDiv = document.createElement('div');
         if (selectedParent !== null) {
@@ -585,15 +519,12 @@ function calculateMath5() {
         refs.m5Steps.appendChild(resultDiv);
     }
 }
-
 function calculateMath6() {
     if (!refs.m6Steps) return;
     const inputs = document.querySelectorAll('.m6-fitness-input');
     refs.m6Steps.textContent = '';
-
         const fitnessValues = [];
     let totalFitness = 0;
-
         inputs.forEach(input => {
         if (input.value.trim() !== '') {
             const val = parseFloat(input.value) || 0;
@@ -601,19 +532,15 @@ function calculateMath6() {
             totalFitness += val;
         }
     });
-
     if (fitnessValues.length === 0) return;
-
     const joinedValues = fitnessValues.join(" + ");
     const expression = "\\sum F = " + (joinedValues || "0");
-
     const divStep = document.createElement('div');
     divStep.className = 'math-step';
     if (typeof katex !== 'undefined') {
         katex.render(expression, divStep, { throwOnError: false, displayMode: true });
     }
     refs.m6Steps.appendChild(divStep);
-
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step-box math-step-total';
     if (typeof katex !== 'undefined') {
@@ -621,18 +548,14 @@ function calculateMath6() {
     }
     refs.m6Steps.appendChild(totalDiv);
 }
-
 function calculateMath7() {
     if (!refs.m7Steps) return;
     refs.m7Steps.textContent = '';
     const p1 = refs.m7InP1 ? refs.m7InP1.value.trim() : '';
     const p2 = refs.m7InP2 ? refs.m7InP2.value.trim() : '';
     const kStr = refs.m7InK ? refs.m7InK.value : '';
-
         if (!p1 || !p2 || kStr === '') return;
-
         const k = parseInt(kStr);
-
         if (p1.length !== p2.length) {
         const errDiv = document.createElement('div');
         errDiv.className = 'math-step-box math-step-error';
@@ -640,7 +563,6 @@ function calculateMath7() {
         refs.m7Steps.appendChild(errDiv);
         return;
     }
-
     if (k < 1 || k >= p1.length) {
         const errDiv = document.createElement('div');
         errDiv.className = 'math-step-box math-step-error';
@@ -648,30 +570,86 @@ function calculateMath7() {
         refs.m7Steps.appendChild(errDiv);
         return;
     }
-
     const p1Left = p1.substring(0, k);
     const p1Right = p1.substring(k);
     const p2Left = p2.substring(0, k);
     const p2Right = p2.substring(k);
-
     const stepDiv = document.createElement('div');
     stepDiv.className = 'math-step-box';
-    stepDiv.innerHTML = `
-        <h3 style="margin-bottom: 8px;">\u2702\uFE0F 1. Pemotongan pada k = ${k}</h3>
-        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
-            <strong>P1:</strong> <span style="color: #60a5fa;">${p1Left}</span> | <span style="color: #60a5fa;">${p1Right}</span>
-        </p>
-        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px; margin-bottom: 15px;">
-            <strong>P2:</strong> <span style="color: #34d399;">${p2Left}</span> | <span style="color: #34d399;">${p2Right}</span>
-        </p>
-        
-        <h3 style="margin-bottom: 8px;">\uD83D\uDD00 2. Hasil Persilangan (Offspring)</h3>
-        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
-            <strong>O1 (P1 Kiri + P2 Kanan):</strong> <span style="color: #60a5fa;">${p1Left}</span><span style="color: #34d399;">${p2Right}</span>
-        </p>
-        <p style="font-family: monospace; font-size: 1.1em; letter-spacing: 2px;">
-            <strong>O2 (P2 Kiri + P1 Kanan):</strong> <span style="color: #34d399;">${p2Left}</span><span style="color: #60a5fa;">${p1Right}</span>
-        </p>
-    `;
+    const h3_1 = document.createElement('h3');
+    h3_1.style.marginBottom = '8px';
+    h3_1.textContent = `\u2702\uFE0F 1. Pemotongan pada k = ${k}`;
+    stepDiv.appendChild(h3_1);
+    const p_1 = document.createElement('p');
+    p_1.style.fontFamily = 'monospace';
+    p_1.style.fontSize = '1.1em';
+    p_1.style.letterSpacing = '2px';
+    const s1_p1 = document.createElement('strong');
+    s1_p1.textContent = 'P1: ';
+    p_1.appendChild(s1_p1);
+    const sp1_1 = document.createElement('span');
+    sp1_1.style.color = '#60a5fa';
+    sp1_1.textContent = p1Left;
+    p_1.appendChild(sp1_1);
+    p_1.appendChild(document.createTextNode(' | '));
+    const sp1_2 = document.createElement('span');
+    sp1_2.style.color = '#60a5fa';
+    sp1_2.textContent = p1Right;
+    p_1.appendChild(sp1_2);
+    stepDiv.appendChild(p_1);
+    const p_2 = document.createElement('p');
+    p_2.style.fontFamily = 'monospace';
+    p_2.style.fontSize = '1.1em';
+    p_2.style.letterSpacing = '2px';
+    p_2.style.marginBottom = '15px';
+    const s1_p2 = document.createElement('strong');
+    s1_p2.textContent = 'P2: ';
+    p_2.appendChild(s1_p2);
+    const sp2_1 = document.createElement('span');
+    sp2_1.style.color = '#34d399';
+    sp2_1.textContent = p2Left;
+    p_2.appendChild(sp2_1);
+    p_2.appendChild(document.createTextNode(' | '));
+    const sp2_2 = document.createElement('span');
+    sp2_2.style.color = '#34d399';
+    sp2_2.textContent = p2Right;
+    p_2.appendChild(sp2_2);
+    stepDiv.appendChild(p_2);
+    const h3_2 = document.createElement('h3');
+    h3_2.style.marginBottom = '8px';
+    h3_2.textContent = '\uD83D\uDD00 2. Hasil Persilangan (Offspring)';
+    stepDiv.appendChild(h3_2);
+    const p_3 = document.createElement('p');
+    p_3.style.fontFamily = 'monospace';
+    p_3.style.fontSize = '1.1em';
+    p_3.style.letterSpacing = '2px';
+    const s1_p3 = document.createElement('strong');
+    s1_p3.textContent = 'O1 (P1 Kiri + P2 Kanan): ';
+    p_3.appendChild(s1_p3);
+    const sp3_1 = document.createElement('span');
+    sp3_1.style.color = '#60a5fa';
+    sp3_1.textContent = p1Left;
+    p_3.appendChild(sp3_1);
+    const sp3_2 = document.createElement('span');
+    sp3_2.style.color = '#34d399';
+    sp3_2.textContent = p2Right;
+    p_3.appendChild(sp3_2);
+    stepDiv.appendChild(p_3);
+    const p_4 = document.createElement('p');
+    p_4.style.fontFamily = 'monospace';
+    p_4.style.fontSize = '1.1em';
+    p_4.style.letterSpacing = '2px';
+    const s1_p4 = document.createElement('strong');
+    s1_p4.textContent = 'O2 (P2 Kiri + P1 Kanan): ';
+    p_4.appendChild(s1_p4);
+    const sp4_1 = document.createElement('span');
+    sp4_1.style.color = '#34d399';
+    sp4_1.textContent = p2Left;
+    p_4.appendChild(sp4_1);
+    const sp4_2 = document.createElement('span');
+    sp4_2.style.color = '#60a5fa';
+    sp4_2.textContent = p1Right;
+    p_4.appendChild(sp4_2);
+    stepDiv.appendChild(p_4);
     refs.m7Steps.appendChild(stepDiv);
 }
