@@ -34,10 +34,10 @@ export function setupMarkdown() {
     };
     renderer.image = function(obj) {
         const src = obj.href || obj.src || "";
-        const alt = obj.text || obj.title || "image"; 
+        const alt = obj.text || obj.title || "image";
         const img = document.createElement("img");
         img.src = src;
-        img.alt = alt; 
+        img.alt = alt;
         return img.outerHTML;
     };
     renderer.link = function(obj) {
@@ -45,7 +45,7 @@ export function setupMarkdown() {
         const text = this.parser.parseInline(obj.tokens || []);
         const a = document.createElement("a");
         a.href = href;
-        a.innerHTML = text || href; 
+        a.innerHTML = text || href;
         if (obj.title) a.title = obj.title;
         return a.outerHTML;
     };

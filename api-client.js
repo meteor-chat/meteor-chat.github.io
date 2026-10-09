@@ -9,7 +9,7 @@ export class ApiError extends Error {
         super(message);
         this.name = "ApiError";
         this.status = status;
-        this.type = type; 
+        this.type = type;
         this.cooldown = cooldown;
     }
 }
@@ -22,7 +22,7 @@ export function classifyError(status, retryAfterHeader) {
         if (retryAfterHeader) {
             const parsed = parseInt(retryAfterHeader, 10);
             if (!isNaN(parsed) && parsed > 0) {
-                cd = Math.min(parsed * 1000, 60000); 
+                cd = Math.min(parsed * 1000, 60000);
             }
         }
         return new ApiError("Terlalu banyak request (429).", status, "RATE_LIMIT", cd);
@@ -62,9 +62,9 @@ function createTimeoutSignal(timeoutMs, parentSignal) {
             parentSignal.addEventListener("abort", onParentAbort);
         }
     }
-    return { 
-        signal: controller.signal, 
-        resetTimeout, 
+    return {
+        signal: controller.signal,
+        resetTimeout,
         clear: () => {
             clearTimeout(timeoutId);
             if (parentSignal) parentSignal.removeEventListener("abort", onParentAbort);
@@ -151,7 +151,7 @@ export async function callChatAPI(messages, onChunk) {
                 const apiErr = classifyError(res.status, retryAfter);
                 lastError = apiErr;
                 if (apiErr.type === "FATAL") {
-                    throw apiErr; 
+                    throw apiErr;
                 }
                 if (apiErr.type === "AUTH" || apiErr.type === "RATE_LIMIT") {
                     keyHealth.set(entry.key, { failedAt: Date.now(), cooldown: apiErr.cooldown });
@@ -160,7 +160,7 @@ export async function callChatAPI(messages, onChunk) {
                 if (apiErr.type === "SERVER") {
                     await new Promise(r => setTimeout(r, 1000));
                 }
-                continue; 
+                continue;
             }
             keyHealth.delete(entry.key);
             const { usage, finishReason } = await parseStream(res.body, (chunk) => {
@@ -192,7 +192,7 @@ export async function callChatAPI(messages, onChunk) {
             }
             if (e.message === "Timeout" || e.name === "TimeoutError") {
                 lastError = new ApiError("Koneksi timeout (tidak ada respon terlalu lama).", 408, "SERVER", KEY_COOLDOWN.server_error);
-                continue; 
+                continue;
             }
             if (e instanceof ApiError) throw e;
             if (receivedChunks && fullText) {

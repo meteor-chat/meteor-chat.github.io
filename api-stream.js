@@ -12,7 +12,7 @@ export async function parseStream(body, onChunk, onActivity) {
             try {
                 parsed = JSON.parse(trimmed);
             } catch (e) {
-                return; 
+                return;
             }
             if (parsed && parsed.error) throw new Error(parsed.error.message || "Stream error");
         }
@@ -25,14 +25,14 @@ export async function parseStream(body, onChunk, onActivity) {
         try {
             parsed = JSON.parse(data);
         } catch (e) {
-            return; 
+            return;
         }
         if (parsed.error) {
             throw new Error(parsed.error.message || "Provider error in stream");
         }
-        const delta = parsed.choices?.[0]?.delta?.content 
-                   || parsed.choices?.[0]?.message?.content 
-                   || parsed.choices?.[0]?.text 
+        const delta = parsed.choices?.[0]?.delta?.content
+                   || parsed.choices?.[0]?.message?.content
+                   || parsed.choices?.[0]?.text
                    || "";
         if (delta) onChunk(delta);
         if (parsed.choices?.[0]?.finish_reason) {
