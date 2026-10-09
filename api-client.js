@@ -99,13 +99,9 @@ export async function callChatAPI(messages, onChunk) {
     const provider = PROVIDERS.openrouter;
     const modelList = provider.models;
     const keys = getOrderedKeys();
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = keys.length;
     let attempts = 0;
     let lastError = null;
-    const baseModelIndex = currentModelIndex;
-    if (modelList.length > 0) {
-        currentModelIndex = (currentModelIndex + 1) % modelList.length;
-    }
     for (const entry of keys) {
         if (attempts >= MAX_RETRIES) break;
         const health = keyHealth.get(entry.key);
@@ -116,6 +112,10 @@ export async function callChatAPI(messages, onChunk) {
         const maxTokens = getMaxTokens(lastText);
         const selectedModels = [];
         const numModels = Math.min(3, modelList.length);
+        const baseModelIndex = currentModelIndex;
+        if (modelList.length > 0) {
+            currentModelIndex = (currentModelIndex + 1) % modelList.length;
+        }
         for (let i = 0; i < numModels; i++) {
             selectedModels.push(modelList[(baseModelIndex + i) % modelList.length]);
         }
