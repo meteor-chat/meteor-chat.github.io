@@ -4,6 +4,7 @@ import { calculateMath, calculateMath2, calculateMath3 } from "./math-calc-1-3.j
 import { addM4Input, addM5Input, addM6Input, calculateMath4, calculateMath5, calculateMath6 } from "./math-calc-4-6.js";
 import { calculateMath7, calculateMath8 } from "./math-calc-7-8.js";
 import { addM9Input, calculateMath9 } from "./math-calc-9.js";
+import { addM10Input, calculateMath10 } from "./math-calc-10.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -13,6 +14,7 @@ const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
 const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
 const FORMULA8 = "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exists j: f_j(A) < f_j(B)";
 const FORMULA9 = "n_p \\text{ dan } S_p";
+const FORMULA10 = "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
@@ -78,14 +80,20 @@ export function initMath() {
     refs.m7Steps = document.getElementById("math7-steps-container");
     refs.mathCard8 = document.getElementById("math-card-8");
     refs.mathCard9 = document.getElementById("math-card-9");
+    refs.mathCard10 = document.getElementById("math-card-10");
     refs.form8 = document.getElementById("math-calc-form-8");
     refs.form9 = document.getElementById("math-calc-form-9");
+    refs.form10 = document.getElementById("math-calc-form-10");
     refs.mathFormulaDisplay8 = document.getElementById("math-calc-formula-display-8");
     refs.mathFormulaDisplay9 = document.getElementById("math-calc-formula-display-9");
+    refs.mathFormulaDisplay10 = document.getElementById("math-calc-formula-display-10");
     refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
     refs.btnMathCalcBack9 = document.getElementById("btn-math-calc-back-9");
+    refs.btnMathCalcBack10 = document.getElementById("btn-math-calc-back-10");
     refs.m9DynamicInputs = document.getElementById("math9-dynamic-inputs");
+    refs.m10DynamicInputs = document.getElementById("math10-dynamic-inputs");
     refs.m9Steps = document.getElementById("math9-steps-container");
+    refs.m10Steps = document.getElementById("math10-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
@@ -99,6 +107,7 @@ export function initMath() {
         if (refs.mathCard7) katex.render(FORMULA7, refs.mathCard7, { throwOnError: false, displayMode: false });
         if(refs.mathCard8) katex.render(FORMULA8, refs.mathCard8, { throwOnError: false, displayMode: false });
         if(refs.mathCard9) katex.render(FORMULA9, refs.mathCard9, { throwOnError: false, displayMode: false });
+        if(refs.mathCard10) katex.render(FORMULA10, refs.mathCard10, { throwOnError: false, displayMode: false });
     }
     refs.btnMathEor.addEventListener("click", () => {
         refs.landingEl.classList.add("hidden");
@@ -122,6 +131,7 @@ export function initMath() {
         if(refs.form7) refs.form7.classList.add("hidden");
         if(refs.form8) refs.form8.classList.add("hidden");
         if(refs.form9) refs.form9.classList.add("hidden");
+        if(refs.form10) refs.form10.classList.add("hidden");
                 state.currentView = "math-calc";
                 if (formNum === 1) {
             refs.form1.classList.remove("hidden");
@@ -189,6 +199,15 @@ export function initMath() {
                 addM9Input();
             }
             calculateMath9();
+        } else if (formNum === 10) {
+            if(refs.form10) refs.form10.classList.remove("hidden");
+            if (typeof katex !== "undefined" && refs.mathFormulaDisplay10) {
+                katex.render(FORMULA10, refs.mathFormulaDisplay10, { throwOnError: false, displayMode: false });
+            }
+            if (refs.m10DynamicInputs && refs.m10DynamicInputs.children.length === 0) {
+                addM10Input();
+            }
+            calculateMath10();
         }
     };
     refs.mathCard1.addEventListener("click", () => openForm(1));
@@ -200,6 +219,7 @@ export function initMath() {
     if(refs.mathCard7) refs.mathCard7.addEventListener("click", () => openForm(7));
     if(refs.mathCard8) refs.mathCard8.addEventListener("click", () => openForm(8));
     if(refs.mathCard9) refs.mathCard9.addEventListener("click", () => openForm(9));
+    if(refs.mathCard10) refs.mathCard10.addEventListener("click", () => openForm(10));
     const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
@@ -214,6 +234,7 @@ export function initMath() {
     if(refs.btnMathCalcBack7) refs.btnMathCalcBack7.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack8) refs.btnMathCalcBack8.addEventListener("click", closeForm);
     if(refs.btnMathCalcBack9) refs.btnMathCalcBack9.addEventListener("click", closeForm);
+    if(refs.btnMathCalcBack10) refs.btnMathCalcBack10.addEventListener("click", closeForm);
     [refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => {
         if(el) el.addEventListener("input", calculateMath);
     });
