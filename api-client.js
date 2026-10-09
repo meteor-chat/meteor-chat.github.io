@@ -40,6 +40,7 @@ const KEY_COOLDOWN = {
     default: 10000
 };
 const keyHealth = new Map();
+let currentModelIndex = 0;
 function createTimeoutSignal(timeoutMs, parentSignal) {
     const controller = new AbortController();
     let timeoutId;
@@ -101,6 +102,10 @@ export async function callChatAPI(messages, onChunk) {
     const MAX_RETRIES = 3;
     let attempts = 0;
     let lastError = null;
+    const baseModelIndex = currentModelIndex;
+    if (modelList.length > 0) {
+        currentModelIndex = (currentModelIndex + 1) % modelList.length;
+    }
     for (const entry of keys) {
         if (attempts >= MAX_RETRIES) break;
         const health = keyHealth.get(entry.key);
@@ -109,8 +114,13 @@ export async function callChatAPI(messages, onChunk) {
             if (waitTime > 0) continue;
         }
         const maxTokens = getMaxTokens(lastText);
+        const selectedModels = [];
+        const numModels = Math.min(3, modelList.length);
+        for (let i = 0; i < numModels; i++) {
+            selectedModels.push(modelList[(baseModelIndex + i) % modelList.length]);
+        }
         const payload = {
-            models: modelList.slice(0, 3),
+            models: selectedModels,
             messages: [sysMsg, ...apiMessages],
             stream: true,
             max_tokens: maxTokens,

@@ -10,7 +10,13 @@ export const PROVIDERS = {
         url: "https://openrouter.ai/api/v1/chat/completions",
         models: [
             "google/gemma-4-26b-a4b-it:free",
-            "google/gemma-4-31b-it:free"
+            "google/gemma-4-31b-it:free",
+            "cohere/north-mini-code:free",
+            "poolside/laguna-xs-2.1:free",
+            "poolside/laguna-s-2.1:free",
+            "liquid/lfm-2.5-2.6b:free",
+            "dots-studio/dots-3-note-preview:free",
+            "apodex/apodex-1.1-mini:free"
         ]
     }
 };
