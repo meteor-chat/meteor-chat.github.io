@@ -114,6 +114,8 @@ export async function callChatAPI(messages, onChunk) {
             messages: [sysMsg, ...apiMessages],
             stream: true,
             max_tokens: maxTokens,
+            temperature: 0.6,
+            top_p: 0.9,
             stream_options: { include_usage: true }
         };
         let receivedChunks = false;
