@@ -11,293 +11,25 @@
         <button class="math-card active" data-formula="18" id="math-card-18"></button>
         <button class="math-card active" data-formula="19" id="math-card-19"></button>
         <button class="math-card active" data-formula="20" id="math-card-20"></button>
-        <button class="math-card disabled">rumus lain<br>coming soon</button>    </div>    <button id="btn-math-menu-back" class="btn-math-back">Kembali</button></div><div id="math-calc-view" class="hidden">    <h2 class="math-title">Pilihan Rumus</h2>    <div id="math-calc-form-1" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display" class="math-formula-box"></div>            <button id="btn-math-calc-back" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">
-                    <label>n (wajib diinput, misalnya 5)</label>
-                    <input type="number" id="math-in-n" placeholder="5" min="1" step="1">
-                </div>
-                <div class="math-input-group">
-                    <label>kromosom (scroll/panah &uarr;&darr;)</label>
-                    <input type="text" id="math-in-kromosom" placeholder="00000">
-                </div>
-                <div class="math-input-group">
-                    <label>x min (user input) (misalnya -2)</label>
-                    <input type="number" id="math-in-xmin" placeholder="-2" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>x max (user input) (misalnya 3)</label>
-                    <input type="number" id="math-in-xmax" placeholder="3" step="0.1">
-                </div>            </div>            <div class="math-steps" id="math-steps-container"></div>        </div>    </div>        <div id="math-calc-form-2" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-2" class="math-formula-box"></div>            <button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>x1 (user input)</label>                    <input type="number" id="math2-in-x1" placeholder="misalnya 2" step="0.1">                </div>                <div class="math-input-group">                    <label>x2 (user input)</label>                    <input type="number" id="math2-in-x2" placeholder="misalnya 3" step="0.1">                </div>            </div>            <div class="math-steps" id="math2-table-container"></div>        </div>    </div>    <div id="math-calc-form-3" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-3" class="math-formula-box"></div>            <button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>h (user input)</label>                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="0.1">                </div>                <div class="math-input-group">                    <label>a (user input)</label>                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="0.1">                </div>            </div>            <div class="math-steps" id="math3-steps-container"></div>        </div>    </div>    <div id="math-calc-form-4" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-4" class="math-formula-box"></div>            <button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math4-steps-container"></div>        </div>    </div>    <div id="math-calc-form-5" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-5" class="math-formula-box"></div>            <button id="btn-math-calc-back-5" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>Nilai Acak (r) (user input, opsional)</label>                    <input type="number" id="math5-in-r" placeholder="misalnya 0.45" step="0.1">                </div>                <div id="math5-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math5-steps-container"></div>        </div>    </div>    <div id="math-calc-form-6" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-6" class="math-formula-box"></div>            <button id="btn-math-calc-back-6" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div id="math6-dynamic-inputs" class="math-dynamic-inputs"></div>            </div>            <div class="math-steps" id="math6-steps-container"></div>        </div>    </div>    <div id="math-calc-form-7" class="math-calc-container hidden">        <div class="math-calc-left">            <div id="math-calc-formula-display-7" class="math-formula-box"></div>            <button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">Kembali</button>        </div>        <div class="math-calc-right">            <div class="math-inputs">                <div class="math-input-group">                    <label>Kromosom Parent 1 (P1)</label>                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">                </div>                <div class="math-input-group">                    <label>Kromosom Parent 2 (P2)</label>                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">                </div>                <div class="math-input-group"><label>Tipe Crossover</label><select id="math7-in-type"><option value="single">Single-point</option><option value="two">Two-point</option><option value="uniform">Uniform</option></select></div><div class="math-input-group" id="math7-k-container"><label>Titik Potong (k)</label><input type="number" id="math7-in-k" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-k1-container"><label>Titik Potong 1 (k1)</label><input type="number" id="math7-in-k1" placeholder="misal: 2" step="1"></div><div class="math-input-group hidden" id="math7-k2-container"><label>Titik Potong 2 (k2)</label><input type="number" id="math7-in-k2" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-mask-container"><label>Mask (biner, 1=P2)</label><input type="text" id="math7-in-mask" placeholder="misal: 01001"></div>            </div>            <div class="math-steps" id="math7-steps-container"></div>        </div>    </div>
-    <div id="math-calc-form-8" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-8" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-8" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Fungsi Objektif A (contoh: 3,45)</label>
-                    <input type="text" id="math8-in-a" placeholder="misal: 3, 45">
-                </div>
-                <div class="math-input-group">
-                    <label>Fungsi Objektif B (contoh: 5,40)</label>
-                    <input type="text" id="math8-in-b" placeholder="misal: 5, 40">
-                </div>
-            </div>
-            <div class="math-steps" id="math8-steps-container"></div>
-        </div>
-    </div>
-    <div id="math-calc-form-9" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-9" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-9" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div id="math9-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps" id="math9-steps-container" class="math-steps-scroll"></div>
-        </div>
-    </div>
-
-    <div id="math-calc-form-10" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-10" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-10" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div id="math10-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps math-steps-scroll" id="math10-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-11" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-11" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-11" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div id="math11-dynamic-inputs" class="math-dynamic-inputs"></div>
-            </div>
-            <div class="math-steps math-steps-scroll" id="math11-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-12" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-12" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-12" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>P(A) - Probabilitas Prior (0.0 - 1.0)</label>
-                    <input type="number" id="math12-in-pa" placeholder="contoh: 0.01" step="0.0001" min="0" max="1">
-                </div>
-                <div class="math-input-group">
-                    <label>P(B|A) - Likelihood (0.0 - 1.0)</label>
-                    <input type="number" id="math12-in-pba" placeholder="contoh: 0.99" step="0.0001" min="0" max="1">
-                </div>
-                <div class="math-input-group">
-                    <label>P(B) - Probabilitas Evidence (0.0 - 1.0)</label>
-                    <input type="number" id="math12-in-pb" placeholder="contoh: 0.0198" step="0.0001" min="0" max="1">
-                </div>
-            </div>
-            <div class="math-steps" id="math12-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-13" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-13" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-13" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>n (Jumlah Total Elemen)</label>
-                    <input type="number" id="math13-in-n" placeholder="contoh: 5" step="1" min="0">
-                </div>
-                <div class="math-input-group">
-                    <label>k (Jumlah Elemen yang Dipilih)</label>
-                    <input type="number" id="math13-in-k" placeholder="contoh: 2" step="1" min="0">
-                </div>
-            </div>
-            <div class="math-steps" id="math13-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-14" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-14" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-14" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Sisi Alas (a)</label>
-                    <input type="number" id="math14-in-a" placeholder="kosongkan jika dicari" step="any" min="0">
-                </div>
-                <div class="math-input-group">
-                    <label>Sisi Tinggi/Tegak (b)</label>
-                    <input type="number" id="math14-in-b" placeholder="kosongkan jika dicari" step="any" min="0">
-                </div>
-                <div class="math-input-group">
-                    <label>Sisi Miring/Hipotenusa (c)</label>
-                    <input type="number" id="math14-in-c" placeholder="kosongkan jika dicari" step="any" min="0">
-                </div>
-            </div>
-            <div class="math-steps" id="math14-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-15" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-15" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-15" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Fungsi Pembilang f(x)</label>
-                    <input type="text" id="math15-in-f" placeholder="contoh: sin(x)">
-                </div>
-                <div class="math-input-group">
-                    <label>Fungsi Penyebut g(x)</label>
-                    <input type="text" id="math15-in-g" placeholder="contoh: x">
-                </div>
-                <div class="math-input-group">
-                    <label>Titik Limit Pendekatan (c)</label>
-                    <input type="number" id="math15-in-c" placeholder="contoh: 0" step="any">
-                </div>
-            </div>
-            <div class="math-steps" id="math15-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-16" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-16" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-16" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Fungsi Integran f(t)</label>
-                    <input type="text" id="math16-in-f" placeholder="contoh: t^2 + 2*t">
-                </div>
-                <div class="math-input-group">
-                    <label>Batas Bawah Integral (a)</label>
-                    <input type="number" id="math16-in-a" placeholder="contoh: 0" step="any">
-                </div>
-            </div>
-            <div class="math-steps" id="math16-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-17" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-17" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-17" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Fungsi Integran f(x)</label>
-                    <input type="text" id="math17-in-f" placeholder="contoh: 2*x">
-                </div>
-                <div class="math-input-group">
-                    <label>Anti-turunan F(x)</label>
-                    <input type="text" id="math17-in-bigf" placeholder="contoh: x^2">
-                </div>
-                <div class="math-input-group">
-                    <label>Batas Bawah (a)</label>
-                    <input type="number" id="math17-in-a" placeholder="contoh: 0" step="any">
-                </div>
-                <div class="math-input-group">
-                    <label>Batas Atas (b)</label>
-                    <input type="number" id="math17-in-b" placeholder="contoh: 5" step="any">
-                </div>
-            </div>
-            <div class="math-steps" id="math17-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-18" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-18" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-18" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Fungsi Integran f(x)</label>
-                    <input type="text" id="math18-in-f" placeholder="contoh: x^2">
-                </div>
-                <div class="math-input-group">
-                    <label>Batas Bawah (a)</label>
-                    <input type="number" id="math18-in-a" placeholder="contoh: 0" step="any">
-                </div>
-                <div class="math-input-group">
-                    <label>Batas Atas (b)</label>
-                    <input type="number" id="math18-in-b" placeholder="contoh: 2" step="any">
-                </div>
-            </div>
-            <div class="math-steps" id="math18-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-19" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-19" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-19" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Jumlah Jenis/Kategori (n)</label>
-                    <input type="number" id="math19-in-n" placeholder="contoh: 3" min="1" step="1">
-                </div>
-                <div class="math-input-group">
-                    <label>Jumlah Objek Dipilih (r)</label>
-                    <input type="number" id="math19-in-r" placeholder="contoh: 5" min="0" step="1">
-                </div>
-            </div>
-            <div class="math-steps" id="math19-steps-container"></div>
-        </div>
-    </div>
-
-
-    <div id="math-calc-form-20" class="math-calc-container hidden">
-        <div class="math-calc-left">
-            <div id="math-calc-formula-display-20" class="math-formula-box"></div>
-            <button id="btn-math-calc-back-20" class="btn-math-back calc-back-btn">Kembali</button>
-        </div>
-        <div class="math-calc-right">
-            <div class="math-inputs">
-                <div class="math-input-group">
-                    <label>Matriks A (contoh: [1, 2; 3, 4])</label>
-                    <input type="text" id="math20-in-a" placeholder="[1, 2; 3, 4]">
-                </div>
-                <div class="math-input-group">
-                    <label>Matriks B (contoh: [5, 6; 7, 8])</label>
-                    <input type="text" id="math20-in-b" placeholder="[5, 6; 7, 8]">
-                </div>
-            </div>
-            <div class="math-steps" id="math20-steps-container"></div>
-        </div>
-    </div>
-
-</div>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script><script type="module" src="main.js?v=3"></script></body></html>
+        <button class="math-card disabled">rumus lain<br>coming soon</button>    </div>    <button id="btn-math-menu-back" class="btn-math-back">Kembali</button></div><div id="math-calc-view" class="hidden">    <h2 class="math-title">Pilihan Rumus</h2>    
+      <div id="math-calc-form-1" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>n (wajib diinput, misalnya 5)</label><input type="number" id="math-in-n" placeholder="5" min="1" step="1"></div><div class="math-input-group"><label>kromosom (scroll/panah &uarr;&darr;)</label><input type="text" id="math-in-kromosom" placeholder="00000"></div><div class="math-input-group"><label>x min (user input) (misalnya -2)</label><input type="number" id="math-in-xmin" placeholder="-2" step="0.1"></div><div class="math-input-group"><label>x max (user input) (misalnya 3)</label><input type="number" id="math-in-xmax" placeholder="3" step="0.1"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math-steps-container"></div>        </div>    </div>        
+      <div id="math-calc-form-2" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-2" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">                    <label>x1 (user input)</label>                    <input type="number" id="math2-in-x1" placeholder="misalnya 2" step="0.1">                </div>                <div class="math-input-group">                    <label>x2 (user input)</label>                    <input type="number" id="math2-in-x2" placeholder="misalnya 3" step="0.1">                </div></div></div><div class="math-calc-right"><div class="math-steps" id="math2-table-container"></div>        </div>    </div>    
+      <div id="math-calc-form-3" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-3" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">                    <label>h (user input)</label>                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="0.1">                </div>                <div class="math-input-group">                    <label>a (user input)</label>                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="0.1">                </div></div></div><div class="math-calc-right"><div class="math-steps" id="math3-steps-container"></div>        </div>    </div>    
+      <div id="math-calc-form-4" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-4" class="math-formula-box"></div><div class="math-inputs"><div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math4-steps-container"></div>        </div>    </div>    
+      <div id="math-calc-form-5" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-5" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-5" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">                    <label>Nilai Acak (r) (user input, opsional)</label>                    <input type="number" id="math5-in-r" placeholder="misalnya 0.45" step="0.1">                </div>                <div id="math5-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math5-steps-container"></div>        </div>    </div>    
+      <div id="math-calc-form-6" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-6" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-6" class="math-formula-box"></div><div class="math-inputs"><div id="math6-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math6-steps-container"></div>        </div>    </div>    
+      <div id="math-calc-form-7" class="math-calc-container hidden">        <div class="math-calc-left"><button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-7" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">                    <label>Kromosom Parent 1 (P1)</label>                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">                </div>                <div class="math-input-group">                    <label>Kromosom Parent 2 (P2)</label>                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">                </div>                <div class="math-input-group"><label>Tipe Crossover</label><select id="math7-in-type"><option value="single">Single-point</option><option value="two">Two-point</option><option value="uniform">Uniform</option></select></div><div class="math-input-group" id="math7-k-container"><label>Titik Potong (k)</label><input type="number" id="math7-in-k" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-k1-container"><label>Titik Potong 1 (k1)</label><input type="number" id="math7-in-k1" placeholder="misal: 2" step="1"></div><div class="math-input-group hidden" id="math7-k2-container"><label>Titik Potong 2 (k2)</label><input type="number" id="math7-in-k2" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-mask-container"><label>Mask (biner, 1=P2)</label><input type="text" id="math7-in-mask" placeholder="misal: 01001"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math7-steps-container"></div>        </div>    </div>
+      <div id="math-calc-form-8" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-8" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-8" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Objektif A (contoh: 3,45)</label><input type="text" id="math8-in-a" placeholder="misal: 3, 45"></div><div class="math-input-group"><label>Fungsi Objektif B (contoh: 5,40)</label><input type="text" id="math8-in-b" placeholder="misal: 5, 40"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math8-steps-container"></div></div></div>
+      <div id="math-calc-form-9" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-9" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-9" class="math-formula-box"></div><div class="math-inputs"><div id="math9-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math9-steps-container" class="math-steps-scroll"></div></div></div>
+      <div id="math-calc-form-10" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-10" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-10" class="math-formula-box"></div><div class="math-inputs"><div id="math10-dynamic-inputs" class="math-dynamic-inputs"></div></div><div class="math-steps math-steps-scroll" id="math10-steps-container"></div></div></div>
+      <div id="math-calc-form-11" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-11" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-11" class="math-formula-box"></div><div class="math-inputs"><div id="math11-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps math-steps-scroll" id="math11-steps-container"></div></div></div>
+      <div id="math-calc-form-12" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-12" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-12" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>P(A) - Probabilitas Prior (0.0 - 1.0)</label><input type="number" id="math12-in-pa" placeholder="contoh: 0.01" step="0.0001" min="0" max="1"></div><div class="math-input-group"><label>P(B|A) - Likelihood (0.0 - 1.0)</label><input type="number" id="math12-in-pba" placeholder="contoh: 0.99" step="0.0001" min="0" max="1"></div><div class="math-input-group"><label>P(B) - Probabilitas Evidence (0.0 - 1.0)</label><input type="number" id="math12-in-pb" placeholder="contoh: 0.0198" step="0.0001" min="0" max="1"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math12-steps-container"></div></div></div>
+      <div id="math-calc-form-13" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-13" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-13" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>n (Jumlah Total Elemen)</label><input type="number" id="math13-in-n" placeholder="contoh: 5" step="1" min="0"></div><div class="math-input-group"><label>k (Jumlah Elemen yang Dipilih)</label><input type="number" id="math13-in-k" placeholder="contoh: 2" step="1" min="0"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math13-steps-container"></div></div></div>
+      <div id="math-calc-form-14" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-14" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-14" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Sisi Alas (a)</label><input type="number" id="math14-in-a" placeholder="kosongkan jika dicari" step="any" min="0"></div><div class="math-input-group"><label>Sisi Tinggi/Tegak (b)</label><input type="number" id="math14-in-b" placeholder="kosongkan jika dicari" step="any" min="0"></div><div class="math-input-group"><label>Sisi Miring/Hipotenusa (c)</label><input type="number" id="math14-in-c" placeholder="kosongkan jika dicari" step="any" min="0"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math14-steps-container"></div></div></div>
+      <div id="math-calc-form-15" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-15" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-15" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Pembilang f(x)</label><input type="text" id="math15-in-f" placeholder="contoh: sin(x)"></div><div class="math-input-group"><label>Fungsi Penyebut g(x)</label><input type="text" id="math15-in-g" placeholder="contoh: x"></div><div class="math-input-group"><label>Titik Limit Pendekatan (c)</label><input type="number" id="math15-in-c" placeholder="contoh: 0" step="any"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math15-steps-container"></div></div></div>
+      <div id="math-calc-form-16" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-16" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-16" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Integran f(t)</label><input type="text" id="math16-in-f" placeholder="contoh: t^2 + 2*t"></div><div class="math-input-group"><label>Batas Bawah Integral (a)</label><input type="number" id="math16-in-a" placeholder="contoh: 0" step="any"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math16-steps-container"></div></div></div>
+      <div id="math-calc-form-17" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-17" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-17" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Integran f(x)</label><input type="text" id="math17-in-f" placeholder="contoh: 2*x"></div><div class="math-input-group"><label>Anti-turunan F(x)</label><input type="text" id="math17-in-bigf" placeholder="contoh: x^2"></div><div class="math-input-group"><label>Batas Bawah (a)</label><input type="number" id="math17-in-a" placeholder="contoh: 0" step="any"></div><div class="math-input-group"><label>Batas Atas (b)</label><input type="number" id="math17-in-b" placeholder="contoh: 5" step="any"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math17-steps-container"></div></div></div>
+      <div id="math-calc-form-18" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-18" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-18" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Integran f(x)</label><input type="text" id="math18-in-f" placeholder="contoh: x^2"></div><div class="math-input-group"><label>Batas Bawah (a)</label><input type="number" id="math18-in-a" placeholder="contoh: 0" step="any"></div><div class="math-input-group"><label>Batas Atas (b)</label><input type="number" id="math18-in-b" placeholder="contoh: 2" step="any"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math18-steps-container"></div></div></div>
+      <div id="math-calc-form-19" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-19" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-19" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Jumlah Jenis/Kategori (n)</label><input type="number" id="math19-in-n" placeholder="contoh: 3" min="1" step="1"></div><div class="math-input-group"><label>Jumlah Objek Dipilih (r)</label><input type="number" id="math19-in-r" placeholder="contoh: 5" min="0" step="1"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math19-steps-container"></div></div></div>
+      <div id="math-calc-form-20" class="math-calc-container hidden"><div class="math-calc-left"><button id="btn-math-calc-back-20" class="btn-math-back calc-back-btn" style="align-self: flex-start; margin-top: 0; margin-bottom: 20px;">&larr; Kembali</button><div id="math-calc-formula-display-20" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Matriks A (contoh: [1, 2; 3, 4])</label><input type="text" id="math20-in-a" placeholder="[1, 2; 3, 4]"></div><div class="math-input-group"><label>Matriks B (contoh: [5, 6; 7, 8])</label><input type="text" id="math20-in-b" placeholder="[5, 6; 7, 8]"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math20-steps-container"></div></div></div></div>
+      <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script><script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script><script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script><script type="module" src="main.js?v=3"></script></body></html>
