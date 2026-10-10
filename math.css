@@ -17,3 +17,35 @@
 .math-word-break { word-break: break-all; }
  .math-card[data-category]::before { content: attr(data-category); position: absolute; top: 8px; left: 8px; background-color: white; color: black; padding: 4px 8px; font-size: 16px; border-radius: 8px; font-weight: 600; font-family: var(--font-stack); line-height: 1; z-index: 10; letter-spacing: 0.2px; }
 .math-canvas { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; margin: 0 auto 20px; background: var(--bg-main); border-radius: 8px; border: 1px solid var(--border); }
+.math-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 40px;
+    padding: 0 var(--space-lg);
+    max-width: 900px;
+    width: 100%;
+}
+.math-filter-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: var(--text-main);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.math-filter-btn:hover {
+    border-color: #888;
+}
+.math-filter-btn.active {
+    background: var(--text-main);
+    color: var(--bg-main);
+    border-color: var(--text-main);
+}
+.math-hidden {
+    display: none !important;
+}

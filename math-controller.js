@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { initFilters } from "./math-filter.js";
 import { state } from "./app-state.js";
 import { calculateMath, calculateMath2, calculateMath3 } from "./math-calc-1-3.js";
 import { addM4Input, addM5Input, addM6Input, calculateMath4, calculateMath5, calculateMath6 } from "./math-calc-4-6.js";
@@ -283,4 +284,5 @@ const closeForm = () => {
             calculateMath7();
         });
     });
+    initFilters();
 }
