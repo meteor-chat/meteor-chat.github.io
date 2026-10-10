@@ -15,7 +15,7 @@
 .math-result-highlight { border-left-color: var(--text-main) !important; border-width: 2px !important; }
 
 .math-word-break { word-break: break-all; }
- .math-card[data-category]::before { content: attr(data-category); position: absolute; top: 8px; left: 8px; background-color: white; color: black; padding: 4px 8px; font-size: 16px; border-radius: 8px; font-weight: 600; font-family: var(--font-stack); line-height: 1; z-index: 10; letter-spacing: 0.2px; }
+ .math-card[data-category]::before { content: attr(data-category); position: absolute; top: 8px; left: 8px; background-color: white; color: black; padding: 4px 8px; font-size: 12px; border-radius: 8px; font-weight: 600; font-family: var(--font-stack); line-height: 1; z-index: 10; letter-spacing: 0.2px; }
 .math-canvas { width: 100%; max-width: 320px; aspect-ratio: 1; display: block; margin: 0 auto 20px; background: var(--bg-main); border-radius: 8px; border: 1px solid var(--border); }
 .math-filter-container {
     display: flex;
@@ -33,7 +33,7 @@
     color: var(--text-main);
     padding: 8px 20px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 16px;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.2s ease;
