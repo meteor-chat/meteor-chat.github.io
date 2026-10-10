@@ -114,7 +114,7 @@ export function calculateMath4() {
         const p = totalFitness === 0 ? 0 : f / totalFitness;
         probabilities.push(p);
         const tr = document.createElement('tr');
-        [index + 1, f, `${f} / ${totalFitness}`].forEach(val => {
+        [index + 1, parseFloat(f.toFixed(3)), `${parseFloat(f.toFixed(3))} / ${parseFloat(totalFitness.toFixed(3))}`].forEach(val => {
             const td = document.createElement('td');
             td.textContent = val;
             tr.appendChild(td);
