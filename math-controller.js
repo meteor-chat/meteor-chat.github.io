@@ -15,6 +15,7 @@ import { calculateMath17 } from "./math-calc-17.js";
 import { calculateMath18 } from "./math-calc-18.js";
 import { calculateMath19 } from "./math-calc-19.js";
 import { calculateMath20 } from "./math-calc-20.js";
+import { calculateMath21 } from "./math-calc-21.js";
 const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
 const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
 const FORMULA3 = "Fitness = \\frac{1}{h+a}";
@@ -35,15 +36,16 @@ const FORMULA17 = "\\int_a^b f(x) dx = F(b) - F(a)";
 const FORMULA18 = "f(c) = \\frac{1}{b-a} \\int_a^b f(x) dx";
 const FORMULA19 = "C(n+r-1, r) = \\binom{n+r-1}{r}";
 const FORMULA20 = "\\det(AB) = \\det(A) \\cdot \\det(B)";
+const FORMULA21 = "\\pi";
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
     refs.mathCalc = document.getElementById("math-calc-view");
-    for(let i=1; i<=20; i++) refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
-    for(let i=1; i<=20; i++) refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
+    for(let i=1; i<=21; i++) refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
+    for(let i=1; i<=21; i++) refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
     refs.btnMathMenuBack = document.getElementById("btn-math-menu-back");
-    for(let i=1; i<=20; i++) refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
-    for(let i=1; i<=20; i++) refs[`mathFormulaDisplay${i===1?'':i}`] = document.getElementById(i===1?'math-calc-formula-display':`math-calc-formula-display-${i}`);
+    for(let i=1; i<=21; i++) refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
+    for(let i=1; i<=21; i++) refs[`mathFormulaDisplay${i===1?'':i}`] = document.getElementById(i===1?'math-calc-formula-display':`math-calc-formula-display-${i}`);
     refs.btnMathCalcBack6 = document.getElementById("btn-math-calc-back-6");
     refs.btnMathCalcBack7 = document.getElementById("btn-math-calc-back-7");
     refs.inKromosom = document.getElementById("math-in-kromosom");
@@ -147,12 +149,14 @@ export function initMath() {
     refs.m20InA = document.getElementById("math20-in-a");
     refs.m20InB = document.getElementById("math20-in-b");
     refs.m20Steps = document.getElementById("math20-steps-container");
+    refs.m21InD = document.getElementById("math21-in-d");
+    refs.m21Steps = document.getElementById("math21-steps-container");
     refs.m8InA = document.getElementById("math8-in-a");
     refs.m8InB = document.getElementById("math8-in-b");
     refs.m8Steps = document.getElementById("math8-steps-container");
     if (typeof katex !== 'undefined') {
-        const F = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20];
-        for(let i=1; i<=20; i++) if(refs[`mathCard${i}`] && F[i]) katex.render(F[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
+        const F = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20, FORMULA21];
+        for(let i=1; i<=21; i++) if(refs[`mathCard${i}`] && F[i]) katex.render(F[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
         }
     if (refs.btnMathEor && refs.btnMathEor.tagName !== "A") {
         refs.btnMathEor.addEventListener("click", () => {
@@ -171,12 +175,12 @@ export function initMath() {
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
-        for(let i=1; i<=20; i++) {
+        for(let i=1; i<=21; i++) {
             if(refs[`form${i}`]) refs[`form${i}`].classList.add("hidden");
         }
 state.currentView = "math-calc";
                 if(refs[`form${formNum}`]) refs[`form${formNum}`].classList.remove("hidden");
-        const F_ARR = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17];
+        const F_ARR = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20, FORMULA21];
         const disp = refs[`mathFormulaDisplay${formNum===1?'':formNum}`];
         if (typeof katex !== 'undefined' && disp && F_ARR[formNum]) katex.render(F_ARR[formNum], disp, { throwOnError: false, displayMode: false });
         
@@ -200,8 +204,9 @@ state.currentView = "math-calc";
         else if (formNum === 18) calculateMath18();
         else if (formNum === 19) calculateMath19();
         else if (formNum === 20) calculateMath20();
+        else if (formNum === 21) calculateMath21();
     };
-    for(let i=1; i<=20; i++) {
+    for(let i=1; i<=21; i++) {
         if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
     }
 const closeForm = () => {
@@ -209,7 +214,7 @@ const closeForm = () => {
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-    for(let i=1; i<=20; i++) {
+    for(let i=1; i<=21; i++) {
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
     }
@@ -265,6 +270,7 @@ const closeForm = () => {
     [refs.m18InF, refs.m18InA, refs.m18InB].forEach(el => { if(el) el.addEventListener("input", calculateMath18); });
     [refs.m19InN, refs.m19InR].forEach(el => { if(el) el.addEventListener("input", calculateMath19); });
     [refs.m20InA, refs.m20InB].forEach(el => { if(el) el.addEventListener("input", calculateMath20); });
+    if(refs.m21InD) refs.m21InD.addEventListener("input", calculateMath21);
     [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
