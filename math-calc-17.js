@@ -1,8 +1,10 @@
 import { refs } from "./dom-refs.js";
+import { drawIntegral, clearIntegral } from "./math-visual-integral.js";
 
 export function calculateMath17() {
     if (!refs.m17Steps) return;
     refs.m17Steps.innerHTML = '';
+    clearIntegral('math17-canvas');
     
     if (!refs.m17InF || !refs.m17InBigF || !refs.m17InA || !refs.m17InB) return;
     
@@ -66,4 +68,5 @@ export function calculateMath17() {
     
     html += `</div>`;
     refs.m17Steps.innerHTML = html;
+    drawIntegral('math17-canvas', strF, a, b, 'area');
 }

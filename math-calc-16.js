@@ -1,8 +1,10 @@
 import { refs } from "./dom-refs.js";
+import { drawIntegral, clearIntegral } from "./math-visual-integral.js";
 
 export function calculateMath16() {
     if (!refs.m16Steps) return;
     refs.m16Steps.innerHTML = '';
+    clearIntegral('math16-canvas');
     
     if (!refs.m16InF || !refs.m16InA) return;
     
@@ -57,4 +59,5 @@ export function calculateMath16() {
     
     html += `</div>`;
     refs.m16Steps.innerHTML = html;
+    drawIntegral('math16-canvas', strF, a, undefined, 'formula16');
 }

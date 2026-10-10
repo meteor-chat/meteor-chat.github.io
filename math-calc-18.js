@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawIntegral, clearIntegral } from "./math-visual-integral.js";
 
 function simpsonsRule(fNode, a, b, n = 1000) {
     if (n % 2 !== 0) n++;
@@ -20,6 +21,7 @@ function simpsonsRule(fNode, a, b, n = 1000) {
 export function calculateMath18() {
     if (!refs.m18Steps) return;
     refs.m18Steps.innerHTML = '';
+    clearIntegral('math18-canvas');
     
     if (!refs.m18InF || !refs.m18InA || !refs.m18InB) return;
     
@@ -76,4 +78,5 @@ export function calculateMath18() {
     
     html += `</div>`;
     refs.m18Steps.innerHTML = html;
+    drawIntegral('math18-canvas', strF, a, b, 'mean');
 }
