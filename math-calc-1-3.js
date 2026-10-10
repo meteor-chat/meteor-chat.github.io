@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawObjectiveCurve, drawFitnessCurve, clearVisual2, clearVisual3 } from "./math-visual-2-3.js";
 export function calculateMath() {
     if (typeof katex === 'undefined') return;
     refs.mathSteps.textContent = '';
@@ -52,6 +53,7 @@ export function calculateMath2() {
     const x1 = parseFloat(x1Str);
     const x2 = parseFloat(x2Str);
     refs.m2Table.textContent = "";
+    clearVisual2();
     if (isNaN(x1) || isNaN(x2)) {
         return;
     }
@@ -79,6 +81,7 @@ export function calculateMath2() {
     addStep(step1);
     addStep(step2);
     addStep(step3, 'math-step-box');
+    drawObjectiveCurve(x1, x2);
 }
 export function calculateMath3() {
     if(!refs.m3InH || typeof katex === 'undefined') return;
@@ -87,6 +90,7 @@ export function calculateMath3() {
     const h = parseFloat(hStr);
     const a = parseFloat(aStr);
     refs.m3Steps.textContent = "";
+    clearVisual3();
     if (isNaN(h) || isNaN(a)) {
         return;
     }
@@ -108,4 +112,5 @@ export function calculateMath3() {
         addStep(step2);
     }
     addStep(step3, 'math-step-box');
+    drawFitnessCurve(h, a);
 }
