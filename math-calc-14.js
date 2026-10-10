@@ -1,8 +1,10 @@
 import { refs } from "./dom-refs.js";
+import { drawPythagoras, clearPythagoras } from "./math-visual-14.js";
 
 export function calculateMath14() {
     if (!refs.m14Steps) return;
     refs.m14Steps.innerHTML = '';
+    clearPythagoras();
     
     if (!refs.m14InA || !refs.m14InB || !refs.m14InC) return;
     
@@ -39,6 +41,7 @@ export function calculateMath14() {
         html += `<div class="math-step-box math-step-valid">c = \u221A(${a*a} + ${b*b})</div>`;
         html += `<div class="math-step-box math-step-valid">c = \u221A${cSq}</div>`;
         html += `<div class="math-step-box math-step-valid math-result-highlight">c = <span class="m10-td-bold">${resC.toFixed(4)}</span></div>`;
+        drawPythagoras(a, b, resC);
     } else if (a !== null && c !== null) {
         if (a >= c) {
             refs.m14Steps.innerHTML = '<div class="math-step-box math-step-error">\u274C Error: Sisi miring (c) harus menjadi sisi terpanjang (c > a).</div>';
@@ -52,6 +55,7 @@ export function calculateMath14() {
         html += `<div class="math-step-box math-step-valid">b = \u221A(${c*c} - ${a*a})</div>`;
         html += `<div class="math-step-box math-step-valid">b = \u221A${bSq}</div>`;
         html += `<div class="math-step-box math-step-valid math-result-highlight">b = <span class="m10-td-bold">${resB.toFixed(4)}</span></div>`;
+        drawPythagoras(a, resB, c);
     } else if (b !== null && c !== null) {
         if (b >= c) {
             refs.m14Steps.innerHTML = '<div class="math-step-box math-step-error">\u274C Error: Sisi miring (c) harus menjadi sisi terpanjang (c > b).</div>';
@@ -65,6 +69,7 @@ export function calculateMath14() {
         html += `<div class="math-step-box math-step-valid">a = \u221A(${c*c} - ${b*b})</div>`;
         html += `<div class="math-step-box math-step-valid">a = \u221A${aSq}</div>`;
         html += `<div class="math-step-box math-step-valid math-result-highlight">a = <span class="m10-td-bold">${resA.toFixed(4)}</span></div>`;
+        drawPythagoras(resA, b, c);
     }
     
     html += `</div>`;
