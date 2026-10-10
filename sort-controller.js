@@ -1,6 +1,7 @@
 import { bubbleSort } from "./sort-bubble.js";
 import { selectionSort } from "./sort-selection.js";
 import { insertionSort } from "./sort-insertion.js";
+import { quickSort } from "./sort-quick.js";
 
 const container = document.getElementById("sort-visualizer");
 const buttons = document.querySelectorAll(".sort-filter-btn");
@@ -75,6 +76,8 @@ async function startSort(type) {
         await selectionSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
     } else if (type === "insertion") {
         await insertionSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
+    } else if (type === "quick") {
+        await quickSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
     } else {
         await sleep(500);
     }
