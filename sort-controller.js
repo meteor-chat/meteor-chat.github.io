@@ -1,4 +1,5 @@
 import { bubbleSort } from "./sort-bubble.js";
+import { selectionSort } from "./sort-selection.js";
 
 const container = document.getElementById("sort-visualizer");
 const buttons = document.querySelectorAll(".sort-filter-btn");
@@ -69,6 +70,8 @@ async function startSort(type) {
     
     if (type === "bubble") {
         await bubbleSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
+    } else if (type === "selection") {
+        await selectionSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
     } else {
         await sleep(500);
     }
