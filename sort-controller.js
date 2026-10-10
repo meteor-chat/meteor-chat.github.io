@@ -2,6 +2,7 @@ import { bubbleSort } from "./sort-bubble.js";
 
 const container = document.getElementById("sort-visualizer");
 const buttons = document.querySelectorAll(".sort-filter-btn");
+const btnRandomize = document.getElementById("btn-randomize");
 
 let arr = [];
 let domBars = [];
@@ -64,6 +65,7 @@ async function startSort(type) {
     
     isSorting = true;
     buttons.forEach(btn => btn.style.pointerEvents = "none");
+    if (btnRandomize) btnRandomize.disabled = true;
     
     if (type === "bubble") {
         await bubbleSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
@@ -73,6 +75,7 @@ async function startSort(type) {
     
     isSorting = false;
     buttons.forEach(btn => btn.style.pointerEvents = "auto");
+    if (btnRandomize) btnRandomize.disabled = false;
     buttons.forEach(b => b.classList.remove('active'));
 }
 
@@ -85,6 +88,16 @@ if (buttons.length > 0) {
             const type = btn.getAttribute("data-sort");
             startSort(type);
         });
+    });
+}
+
+
+if (btnRandomize) {
+    btnRandomize.addEventListener("click", () => {
+        if (isSorting) return;
+        buttons.forEach(b => b.classList.remove('active'));
+        initArray();
+        renderBars();
     });
 }
 

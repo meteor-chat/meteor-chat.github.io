@@ -72,3 +72,30 @@
     .sort-visualizer-wrapper { margin-top: 20px; }
     .sort-visualizer { transform: scale(0.5); transform-origin: top center; }
 }
+
+.sort-action-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-bottom: 40px;
+    width: 100%;
+}
+.btn-sort-action {
+    background: transparent;
+    border: 1px solid #555;
+    color: var(--text-main);
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-sort-action:hover:not(:disabled) {
+    border-color: #888;
+    background: rgba(255, 255, 255, 0.05);
+}
+.btn-sort-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
