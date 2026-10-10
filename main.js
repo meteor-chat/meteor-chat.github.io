@@ -53,7 +53,7 @@ async function init() {
         setupInputs();
         setupMarkdown();
         initMath();
-        refs.cancelBtn.addEventListener("click", cancelEdit);
+        if (refs.cancelBtn) refs.cancelBtn.addEventListener("click", cancelEdit);
         if (refs.stopBtn) {
             refs.stopBtn.addEventListener("click", stopGeneration);
         }

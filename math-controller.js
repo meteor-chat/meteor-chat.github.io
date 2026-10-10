@@ -154,16 +154,20 @@ export function initMath() {
         const F = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20];
         for(let i=1; i<=20; i++) if(refs[`mathCard${i}`] && F[i]) katex.render(F[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
         }
-    refs.btnMathEor.addEventListener("click", () => {
-        refs.landingEl.classList.add("hidden");
-        refs.mathMenu.classList.remove("hidden");
-        state.currentView = "math-menu";
-    });
-    refs.btnMathMenuBack.addEventListener("click", () => {
-        refs.mathMenu.classList.add("hidden");
-        refs.landingEl.classList.remove("hidden");
-        state.currentView = "landing";
-    });
+    if (refs.btnMathEor && refs.btnMathEor.tagName !== "A") {
+        refs.btnMathEor.addEventListener("click", () => {
+            refs.landingEl.classList.add("hidden");
+            refs.mathMenu.classList.remove("hidden");
+            state.currentView = "math-menu";
+        });
+    }
+    if (refs.btnMathMenuBack && refs.btnMathMenuBack.tagName !== "A") {
+        refs.btnMathMenuBack.addEventListener("click", () => {
+            refs.mathMenu.classList.add("hidden");
+            refs.landingEl.classList.remove("hidden");
+            state.currentView = "landing";
+        });
+    }
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
