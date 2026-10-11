@@ -5,6 +5,7 @@ import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, r
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
 import { stripThinkTags } from "./text-utils.js";
+import { ensureTemplates } from "./template-loader.js";
 export function stopGeneration() {
     if (state.abortController) {
         state.abortController.abort();
@@ -44,6 +45,7 @@ export async function sendMessage(text) {
         exitEditMode();
     }
     let content = text;
+    await ensureTemplates();
     state.messages.push({ role: "user", content });
     renderChat();
     showTypingIndicator();

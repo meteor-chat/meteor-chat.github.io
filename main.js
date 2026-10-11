@@ -1,4 +1,3 @@
-import { state } from "./app-state.js";
 import { setupInputs } from "./input-controls.js";
 import { setupMarkdown } from "./markdown-setup.js";
 import { refs } from "./dom-refs.js";
@@ -6,36 +5,7 @@ import { cancelEdit } from "./edit-mode.js";
 import { copyCode } from "./message-actions.js";
 import { stopGeneration } from "./chat-controller.js";
 import { showError } from "./error-view.js";
-import { initMath } from "./math-controller.js?v=3";
-async function loadTemplates() {
-    const tpls = ["tpl-user-msg.html", "tpl-user-bubble.html", "tpl-user-actions.html", "tpl-assistant-msg.html", "tpl-typing.html", "tpl-thinking.html", "tpl-code-block.html"];
-    const promises = tpls.map(async (file) => {
-        const res = await fetch(file);
-        if (!res.ok) throw new Error(`Gagal memuat template: ${file}`);
-        const text = await res.text();
-        state.templates[file.replace(".html", "")] = text;
-    });
-    await Promise.all(promises);
-}
-async function loadJadwal() {
-    try {
-        const res = await fetch("jadwal-kuliah.json");
-        if (res.ok) {
-            const data = await res.json();
-            const validData = {};
-            for (const day in data) {
-                if (Array.isArray(data[day])) {
-                    validData[day] = data[day].filter(item =>
-                        item && typeof item.jam === 'string' && typeof item.nama_mata_kuliah === 'string' && typeof item.lokasi === 'string'
-                    );
-                }
-            }
-            state.jadwalData = validData;
-        }
-    } catch(e) {
-        console.warn("Gagal memuat jadwal kuliah", e);
-    }
-}
+import { ensureTemplates, loadJadwal } from "./template-loader.js";
 function checkDependencies() {
     const missing = [];
     if (typeof window.marked === 'undefined') missing.push('marked');
@@ -49,10 +19,14 @@ function checkDependencies() {
 async function init() {
     try {
         checkDependencies();
-        await Promise.all([loadTemplates(), loadJadwal()]);
+        ensureTemplates();
+        loadJadwal();
         setupInputs();
         setupMarkdown();
-        initMath();
+        if (document.getElementById("math-menu-view")) {
+            const { initMath } = await import("./math-controller.js?v=3");
+            initMath();
+        }
         if (refs.cancelBtn) refs.cancelBtn.addEventListener("click", cancelEdit);
         if (refs.stopBtn) {
             refs.stopBtn.addEventListener("click", stopGeneration);
