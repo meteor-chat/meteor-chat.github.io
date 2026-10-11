@@ -6,6 +6,22 @@ import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
 import { stripThinkTags } from "./text-utils.js";
 import { ensureTemplates } from "./template-loader.js";
+import { setupMarkdown } from "./markdown-setup.js";
+let markdownReady = false;
+function initMarkdown() {
+    if (!markdownReady) {
+        const missing = [];
+        if (typeof window.marked === 'undefined') missing.push('marked');
+        if (typeof window.DOMPurify === 'undefined') missing.push('DOMPurify');
+        if (typeof window.katex === 'undefined') missing.push('katex');
+        if (typeof window.hljs === 'undefined') missing.push('highlight.js');
+        if (missing.length > 0) {
+            throw new Error(`Library CDN gagal dimuat: ${missing.join(', ')}`);
+        }
+        setupMarkdown();
+        markdownReady = true;
+    }
+}
 export function stopGeneration() {
     if (state.abortController) {
         state.abortController.abort();
@@ -45,6 +61,18 @@ export async function sendMessage(text) {
         exitEditMode();
     }
     let content = text;
+    try {
+        initMarkdown();
+    } catch (e) {
+        state.isLoading = false;
+        getActiveSendBtn().disabled = false;
+        if (refs.stopBtn) {
+            refs.stopBtn.classList.add("hidden");
+            refs.sendChat.classList.remove("hidden");
+        }
+        showError(e.message);
+        return;
+    }
     await ensureTemplates();
     state.messages.push({ role: "user", content });
     renderChat();

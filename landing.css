@@ -1,0 +1,37 @@
+:root { --bg-main: black; --text-main: white; --text-muted: #afafaf; --text-assist: #e0e0e0; --border-input: #414141; --bg-user-bubble: #072d71; --bg-code: #161b22; --bg-code-inline: #1e1e2e; --text-code: #e6edf3; --text-code-inline: #ff7b72; --border-code: #30363d; --quote-border: #3b82f6; --quote-bg: linear-gradient(90deg, rgba(59,130,246,0.1) 0%, transparent 100%); --font-stack: 'Google Sans', sans-serif; --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 26px; --radius-bubble: 28px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 20px; --space-xl: 24px; --space-xxl: 32px; }
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, textarea, input, button { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); }
+button { cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; padding: 0; }
+.hidden { display: none !important; }
+.error-box { color: red; text-align: center; margin-bottom: 10px; }
+.error-box-fallback { display: block; margin: 2rem; }
+strong, b { font-weight: 600; }
+.app-main { display: flex; flex-direction: column; width: 100%; min-height: 100dvh; }
+.landing { display: flex; flex-direction: column; align-items: center; gap: var(--space-xxl); justify-content: center; height: 100dvh; }
+.banner { position: fixed; z-index: -1; top: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 768px; pointer-events: none; }
+.banner img { width: 100%; height: auto; display: block; }
+.tagline h1 { font-weight: 400; font-size: 32px; }
+#chat-view { display: flex; flex-direction: column; align-items: center; height: 100dvh; padding-bottom: var(--space-lg); }
+#chat-messages { flex: 1; width: 100%; max-width: 768px; overflow-y: auto; padding: var(--space-lg) var(--space-xl) 0 var(--space-xl); display: flex; flex-direction: column; scrollbar-width: none; }
+#chat-messages::-webkit-scrollbar { display: none; }
+#conversation { display: flex; flex-direction: column; width: 100%; }
+.home-nav-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+.btn-home-nav { background-color: #333; color: var(--text-main); text-decoration: none; padding: 10px 24px; border-radius: 24px; font-size: 14px; font-weight: 500; font-family: inherit; transition: opacity 0.2s; }
+.btn-home-nav:hover { opacity: 0.8; }
+.input-wrap { display: flex; flex-direction: column; position: relative; border: solid 1px var(--border-input); border-radius: var(--radius-xl); width: calc(100% - var(--space-xxl)); max-width: 768px; margin: 0 auto; z-index: 1; }
+textarea { width: 100%; height: 52px; resize: none; background: transparent; padding: 17px 52px 15px 26px; line-height: 20px; font-size: 16px; border: none; overflow-y: auto; scrollbar-width: none; }
+textarea::-webkit-scrollbar { display: none; }
+textarea::placeholder { font-size: 16px; color: var(--text-muted); }
+.send-landing, #send-chat { position: absolute; bottom: var(--space-xs); right: var(--space-xs); }
+.stop-btn { position: absolute; bottom: var(--space-xs); right: var(--space-xs); width: 36px; height: 36px; background: rgba(255,255,255,0.12); border-radius: 50%; transition: background 0.2s; }
+.stop-btn:hover { background: rgba(255,255,255,0.22); }
+.stop-btn img { width: 18px; height: 18px; }
+.continue-btn { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 8px 4px; padding: 8px 16px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-input); border-radius: var(--radius-lg); color: var(--text-main); font-size: 14px; cursor: pointer; transition: background 0.2s; }
+.continue-btn:hover { background: rgba(255,255,255,0.14); }
+@media (max-width: 768px) {
+    .tagline h1 { font-size: 24px; text-align: center; padding: 0 var(--space-md); }
+    #chat-messages { padding: var(--space-md) var(--space-md) 0 var(--space-md); }
+    .input-wrap { width: calc(100% - var(--space-xl)); }
+}

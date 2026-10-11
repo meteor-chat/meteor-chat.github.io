@@ -4,6 +4,7 @@ import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
 import { stripThinkTags, getMaxTokens } from "./text-utils.js";
 import { trimMessages, getScheduleContext, getLastUserText } from "./history.js";
+import { ensureJadwal } from "./template-loader.js";
 export class ApiError extends Error {
     constructor(message, status, type, cooldown = 0) {
         super(message);
@@ -84,6 +85,7 @@ export async function callChatAPI(messages, onChunk) {
     });
     let contextSuffix = `\n\n[System Note: Waktu saat ini adalah ${timeStr}]`;
     let hasSchedule = false;
+    if (!state.jadwalData) await ensureJadwal();
     const scheduleText = getScheduleContext(lastText, state.jadwalData);
     if (scheduleText) {
         contextSuffix += `\n[System Note: Berikut adalah data jadwal kuliah saat ini:\n${scheduleText}]`;
