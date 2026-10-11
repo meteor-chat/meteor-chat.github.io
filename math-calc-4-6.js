@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawRouletteWheel4, drawRouletteWheel5, clearWheel4, clearWheel5 } from "./math-visual-4-5.js";
 export function addM4Input() {
     if (!refs.m4DynamicInputs) return;
     const index = refs.m4DynamicInputs.children.length + 1;
@@ -90,7 +91,10 @@ export function calculateMath4() {
             totalFitness += val;
         }
     });
-    if (fitnessValues.length === 0) return;
+    if (fitnessValues.length === 0) {
+        clearWheel4();
+        return;
+    }
     const totalDiv = document.createElement('div');
     totalDiv.className = 'math-step math-step-total';
     const strong = document.createElement('strong');
@@ -128,6 +132,7 @@ export function calculateMath4() {
     });
     table.appendChild(tbody);
     refs.m4Steps.appendChild(table);
+    drawRouletteWheel4(fitnessValues, probabilities);
 }
 export function calculateMath5() {
     if (!refs.m5Steps) return;
@@ -139,7 +144,10 @@ export function calculateMath5() {
             probabilities.push(parseFloat(input.value) || 0);
         }
     });
-    if (probabilities.length === 0) return;
+    if (probabilities.length === 0) {
+        clearWheel5();
+        return;
+    }
     const rInput = refs.m5InR.value;
     const r = rInput !== "" ? parseFloat(rInput) : null;
     let cumulative = 0;
@@ -217,6 +225,7 @@ export function calculateMath5() {
         }
         refs.m5Steps.appendChild(resultDiv);
     }
+    drawRouletteWheel5(probabilities, rows, r, selectedParent);
 }
 export function calculateMath6() {
     if (!refs.m6Steps) return;
