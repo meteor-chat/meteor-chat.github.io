@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { initCube, renderCube } from "./cube-3d.js";
+import { initCubeAnimation, triggerCubeAnimation } from "./cube-animation.js";
 
 let cubeInitialized = false;
 
@@ -98,11 +99,13 @@ export function calculateMath23() {
     }
     renderCube();
     requestAnimationFrame(updateCubeLines);
+    triggerCubeAnimation();
 }
 
 export function initCubeView() {
     if (!cubeInitialized && refs.cubeCanvas) {
         initCube(refs.cubeCanvas, getCubeSisiValue);
+        initCubeAnimation();
         window.addEventListener("resize", updateCubeLines);
         cubeInitialized = true;
     }
