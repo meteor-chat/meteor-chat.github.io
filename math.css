@@ -56,20 +56,38 @@
     text-align: left;
     line-height: 1.6;
 }
+.cube-calc-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
 .cube-calc-layout {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 32px;
+    gap: 40px;
     width: 100%;
-    max-width: 900px;
+    max-width: 980px;
     margin: 20px auto 0;
-    flex-wrap: wrap;
 }
-.cube-io-group {
+.cube-lines-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+.cube-left-panel {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    z-index: 2;
 }
 .cube-io-label {
     font-size: 16px;
@@ -91,20 +109,17 @@
 .cube-io-input:focus {
     border-color: #38bdf8;
 }
-.cube-io-output {
-    font-size: 16px;
-    color: #ffffff;
-    background: transparent;
-    border: 1px solid #555555;
-    border-radius: 8px;
-    padding: 8px 16px;
-    min-width: 80px;
-    text-align: center;
-    display: inline-block;
+.cube-center-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 2;
 }
 .cube-3d-canvas {
-    width: 100%;
-    max-width: 380px;
+    width: 340px;
+    height: 340px;
+    max-width: 340px;
     aspect-ratio: 1;
     display: block;
     background: transparent;
@@ -115,6 +130,36 @@
 }
 .cube-3d-canvas.is-grabbing {
     cursor: grabbing !important;
+}
+.cube-right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex-shrink: 0;
+    z-index: 2;
+}
+.cube-out-row {
+    display: grid;
+    grid-template-columns: 140px 16px 1fr;
+    align-items: center;
+    gap: 6px;
+}
+.cube-out-name {
+    font-size: 16px;
+    color: #ffffff;
+    font-weight: 500;
+}
+.cube-out-colon {
+    font-size: 16px;
+    color: #ffffff;
+    text-align: center;
+}
+.cube-out-val {
+    font-size: 16px;
+    color: #ffffff;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: left;
 }
 .cube-calc-col {
     width: 100%;
