@@ -73,7 +73,7 @@ export function calculateMath23() {
     const outDr = document.getElementById("cube-out-dr");
     const outBd = document.getElementById("cube-out-bd");
 
-    if (isNaN(s) || s < 0) {
+    if (isNaN(s) || s <= 0) {
         if (outVol) outVol.textContent = "0";
         if (outLp) outLp.textContent = "0";
         if (outPr) outPr.textContent = "0";
@@ -84,16 +84,16 @@ export function calculateMath23() {
         const vol = Math.pow(s, 3);
         const lp = 6 * s * s;
         const pr = 12 * s;
-        const ds = parseFloat((s * Math.SQRT2).toFixed(2));
-        const dr = parseFloat((s * Math.SQRT3).toFixed(2));
+        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
+        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
         const bd = parseFloat((s * ds).toFixed(2));
 
         if (outVol) outVol.textContent = formatVal(vol);
         if (outLp) outLp.textContent = formatVal(lp);
         if (outPr) outPr.textContent = formatVal(pr);
-        if (outDs) outDs.textContent = ds.toFixed(2);
-        if (outDr) outDr.textContent = dr.toFixed(2);
-        if (outBd) outBd.textContent = bd.toFixed(2);
+        if (outDs) outDs.textContent = isNaN(ds) ? "0" : ds.toFixed(2);
+        if (outDr) outDr.textContent = isNaN(dr) ? "0" : dr.toFixed(2);
+        if (outBd) outBd.textContent = isNaN(bd) ? "0" : bd.toFixed(2);
     }
     renderCube();
     requestAnimationFrame(updateCubeLines);

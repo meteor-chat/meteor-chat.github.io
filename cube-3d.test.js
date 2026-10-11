@@ -6,8 +6,8 @@ describe("cube-3d math calculations", () => {
         const vol = Math.pow(s, 3);
         const lp = 6 * s * s;
         const pr = 12 * s;
-        const ds = parseFloat((s * Math.SQRT2).toFixed(2));
-        const dr = parseFloat((s * Math.SQRT3).toFixed(2));
+        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
+        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
         const bd = parseFloat((s * ds).toFixed(2));
 
         expect(vol).toBe(1728);
@@ -18,13 +18,30 @@ describe("cube-3d math calculations", () => {
         expect(bd).toBe(203.64);
     });
 
+    it("computes all 6 metrics correctly for s = 6 matching user screenshot", () => {
+        const s = 6;
+        const vol = Math.pow(s, 3);
+        const lp = 6 * s * s;
+        const pr = 12 * s;
+        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
+        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
+        const bd = parseFloat((s * ds).toFixed(2));
+
+        expect(vol).toBe(216);
+        expect(lp).toBe(216);
+        expect(pr).toBe(72);
+        expect(ds).toBe(8.49);
+        expect(dr).toBe(10.39);
+        expect(bd).toBe(50.94);
+    });
+
     it("computes correctly for s = 5", () => {
         const s = 5;
         const vol = Math.pow(s, 3);
         const lp = 6 * s * s;
         const pr = 12 * s;
-        const ds = parseFloat((s * Math.SQRT2).toFixed(2));
-        const dr = parseFloat((s * Math.SQRT3).toFixed(2));
+        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
+        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
         const bd = parseFloat((s * ds).toFixed(2));
 
         expect(vol).toBe(125);
