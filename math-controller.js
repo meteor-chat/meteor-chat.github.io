@@ -18,6 +18,7 @@ import { calculateMath19 } from "./math-calc-19.js";
 import { calculateMath20 } from "./math-calc-20.js";
 import { calculateMath21 } from "./math-calc-21.js";
 import { calculateMath22 } from "./math-calc-22.js";
+import { calculateMath23, initCubeView } from "./math-calc-23.js";
 
 const FORMULAS = [
     null,
@@ -42,14 +43,15 @@ const FORMULAS = [
     "C(n+r-1, r) = \\binom{n+r-1}{r}",
     "\\det(AB) = \\det(A) \\cdot \\det(B)",
     "\\pi",
-    "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}"
+    "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}",
+    "V = s^3"
 ];
 
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
     refs.mathCalc = document.getElementById("math-calc-view");
-    for(let i=1; i<=22; i++) {
+    for(let i=1; i<=23; i++) {
         refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
         refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
         refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
@@ -132,9 +134,12 @@ export function initMath() {
     refs.m21Steps = document.getElementById("math21-steps-container");
     refs.m22InN = document.getElementById("math22-in-n");
     refs.m22Steps = document.getElementById("math22-steps-container");
+    refs.cubeInSisi = document.getElementById("cube-in-sisi");
+    refs.cubeOutVolume = document.getElementById("cube-out-volume");
+    refs.cubeCanvas = document.getElementById("cube-canvas");
 
     if (typeof katex !== 'undefined') {
-        for(let i=1; i<=22; i++) {
+        for(let i=1; i<=23; i++) {
             if(refs[`mathCard${i}`] && FORMULAS[i]) {
                 katex.render(FORMULAS[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
             }
@@ -179,13 +184,14 @@ export function initMath() {
         19: calculateMath19,
         20: calculateMath20,
         21: calculateMath21,
-        22: calculateMath22
+        22: calculateMath22,
+        23: () => { initCubeView(); calculateMath23(); }
     };
 
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
-        for(let i=1; i<=22; i++) {
+        for(let i=1; i<=23; i++) {
             if(refs[`form${i}`]) refs[`form${i}`].classList.add("hidden");
         }
         state.currentView = "math-calc";
@@ -203,7 +209,7 @@ export function initMath() {
         state.currentView = "math-menu";
     };
 
-    for(let i=1; i<=22; i++) {
+    for(let i=1; i<=23; i++) {
         if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
@@ -249,6 +255,7 @@ export function initMath() {
     [refs.m20InA, refs.m20InB].forEach(el => { if(el) el.addEventListener("input", calculateMath20); });
     if(refs.m21InD) refs.m21InD.addEventListener("input", calculateMath21);
     if(refs.m22InN) refs.m22InN.addEventListener("input", calculateMath22);
+    if(refs.cubeInSisi) refs.cubeInSisi.addEventListener("input", calculateMath23);
     [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {

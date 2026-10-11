@@ -56,3 +56,69 @@
     text-align: left;
     line-height: 1.6;
 }
+.cube-calc-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    width: 100%;
+    max-width: 900px;
+    margin: 20px auto 0;
+    flex-wrap: wrap;
+}
+.cube-io-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.cube-io-label {
+    font-size: 16px;
+    color: #ffffff;
+    font-weight: 500;
+}
+.cube-io-input {
+    font-size: 16px;
+    color: #ffffff;
+    background: transparent;
+    border: 1px solid #555555;
+    border-radius: 8px;
+    padding: 8px 14px;
+    width: 80px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.cube-io-input:focus {
+    border-color: #38bdf8;
+}
+.cube-io-output {
+    font-size: 16px;
+    color: #ffffff;
+    background: transparent;
+    border: 1px solid #555555;
+    border-radius: 8px;
+    padding: 8px 16px;
+    min-width: 80px;
+    text-align: center;
+    display: inline-block;
+}
+.cube-3d-canvas {
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1;
+    display: block;
+    background: transparent;
+    border-radius: 12px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.cube-3d-canvas.is-grabbing {
+    cursor: grabbing !important;
+}
+.cube-calc-col {
+    width: 100%;
+    align-items: center;
+}
+
+
