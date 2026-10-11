@@ -28,7 +28,7 @@ function renderBars() {
         const bar = document.createElement("div");
         bar.className = "sort-bar";
         bar.style.height = `${val * 80}px`;
-        bar.style.transform = `translateX(${index * 90}px)`;
+        bar.style.transform = `translate3d(${index * 90}px, 0, 0)`;
         container.appendChild(bar);
         domBars.push(bar);
     });
@@ -36,7 +36,7 @@ function renderBars() {
 
 export function updateBarPosition(index, positionIndex) {
     if (domBars[index]) {
-        domBars[index].style.transform = `translateX(${positionIndex * 90}px)`;
+        domBars[index].style.transform = `translate3d(${positionIndex * 90}px, 0, 0)`;
     }
 }
 

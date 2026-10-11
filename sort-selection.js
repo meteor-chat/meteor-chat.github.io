@@ -1,3 +1,5 @@
+import { animateSwap } from "./sort-animator.js";
+
 export async function selectionSort(arr, domBars, updatePos, setTemp, sleep) {
     let n = arr.length;
     for (let i = 0; i < n - 1; i++) {
@@ -6,7 +8,7 @@ export async function selectionSort(arr, domBars, updatePos, setTemp, sleep) {
         
         for (let j = i + 1; j < n; j++) {
             setTemp(j, true);
-            await sleep(300);
+            await sleep(250);
             
             if (arr[j] < arr[min_idx]) {
                 if (min_idx !== i) {
@@ -21,20 +23,9 @@ export async function selectionSort(arr, domBars, updatePos, setTemp, sleep) {
         if (min_idx !== i) {
             setTemp(i, true);
             setTemp(min_idx, true);
-            await sleep(300);
-            
-            let temp = arr[i];
-            arr[i] = arr[min_idx];
-            arr[min_idx] = temp;
-            
-            let tempDom = domBars[i];
-            domBars[i] = domBars[min_idx];
-            domBars[min_idx] = tempDom;
-            
-            updatePos(i, i);
-            updatePos(min_idx, min_idx);
-            
-            await sleep(300);
+            await sleep(200);
+            await animateSwap(arr, domBars, min_idx, i);
+            await sleep(150);
         }
         
         setTemp(min_idx, false);
