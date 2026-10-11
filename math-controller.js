@@ -17,38 +17,45 @@ import { calculateMath18 } from "./math-calc-18.js";
 import { calculateMath19 } from "./math-calc-19.js";
 import { calculateMath20 } from "./math-calc-20.js";
 import { calculateMath21 } from "./math-calc-21.js";
-const FORMULA = "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d";
-const FORMULA2 = "h = (x_1)^3 + \\frac{1}{3}(x_2)^2";
-const FORMULA3 = "Fitness = \\frac{1}{h+a}";
-const FORMULA4 = "P_i = \\frac{F_i}{\\sum F}";
-const FORMULA5 = "C_i = C_{i-1} + P_i";
-const FORMULA6 = "\\sum F = \\sum_{i=1}^{n} F_i";
-const FORMULA7 = "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)";
-const FORMULA8 = "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exists j: f_j(A) < f_j(B)";
-const FORMULA9 = "n_p \\text{ dan } S_p";
-const FORMULA10 = "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}";
-const FORMULA11 = "s = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\bar{x})^2}{n-1}}";
-const FORMULA12 = "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}";
-const FORMULA13 = "\\binom{n}{k} = C(n,k) = \\frac{n!}{k!(n-k)!}";
-const FORMULA14 = "c^2 = a^2 + b^2";
-const FORMULA15 = "\\lim_{x\\to c} \\frac{f'(x)}{g'(x)}";
-const FORMULA16 = "g'(x) = \\frac{d}{dx} \\left[ \\int_a^x f(t) dt \\right] = f(x)";
-const FORMULA17 = "\\int_a^b f(x) dx = F(b) - F(a)";
-const FORMULA18 = "f(c) = \\frac{1}{b-a} \\int_a^b f(x) dx";
-const FORMULA19 = "C(n+r-1, r) = \\binom{n+r-1}{r}";
-const FORMULA20 = "\\det(AB) = \\det(A) \\cdot \\det(B)";
-const FORMULA21 = "\\pi";
+import { calculateMath22 } from "./math-calc-22.js";
+
+const FORMULAS = [
+    null,
+    "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot d",
+    "h = (x_1)^3 + \\frac{1}{3}(x_2)^2",
+    "Fitness = \\frac{1}{h+a}",
+    "P_i = \\frac{F_i}{\\sum F}",
+    "C_i = C_{i-1} + P_i",
+    "\\sum F = \\sum_{i=1}^{n} F_i",
+    "O_1 = P_1(0..k) + P_2(k..n), \\; O_2 = P_2(0..k) + P_1(k..n)",
+    "A \\prec B \\iff \\forall i: f_i(A) \\leq f_i(B) \\land \\exists j: f_j(A) < f_j(B)",
+    "n_p \\text{ dan } S_p",
+    "\\sigma = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\mu)^2}{n}}",
+    "s = \\sqrt{\\frac{\\sum_{i=1}^{n}(x_i - \\bar{x})^2}{n-1}}",
+    "P(A|B) = \\frac{P(B|A) \\cdot P(A)}{P(B)}",
+    "\\binom{n}{k} = C(n,k) = \\frac{n!}{k!(n-k)!}",
+    "c^2 = a^2 + b^2",
+    "\\lim_{x\\to c} \\frac{f'(x)}{g'(x)}",
+    "g'(x) = \\frac{d}{dx} \\left[ \\int_a^x f(t) dt \\right] = f(x)",
+    "\\int_a^b f(x) dx = F(b) - F(a)",
+    "f(c) = \\frac{1}{b-a} \\int_a^b f(x) dx",
+    "C(n+r-1, r) = \\binom{n+r-1}{r}",
+    "\\det(AB) = \\det(A) \\cdot \\det(B)",
+    "\\pi",
+    "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}"
+];
+
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
     refs.mathCalc = document.getElementById("math-calc-view");
-    for(let i=1; i<=21; i++) refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
-    for(let i=1; i<=21; i++) refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
+    for(let i=1; i<=22; i++) {
+        refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
+        refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
+        refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
+        refs[`mathFormulaDisplay${i===1?'':i}`] = document.getElementById(i===1?'math-calc-formula-display':`math-calc-formula-display-${i}`);
+    }
     refs.btnMathMenuBack = document.getElementById("btn-math-menu-back");
-    for(let i=1; i<=21; i++) refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
-    for(let i=1; i<=21; i++) refs[`mathFormulaDisplay${i===1?'':i}`] = document.getElementById(i===1?'math-calc-formula-display':`math-calc-formula-display-${i}`);
-    refs.btnMathCalcBack6 = document.getElementById("btn-math-calc-back-6");
-    refs.btnMathCalcBack7 = document.getElementById("btn-math-calc-back-7");
     refs.inKromosom = document.getElementById("math-in-kromosom");
     refs.inXmin = document.getElementById("math-in-xmin");
     refs.inXmax = document.getElementById("math-in-xmax");
@@ -79,43 +86,14 @@ export function initMath() {
     refs.m7ContainerK2 = document.getElementById("math7-k2-container");
     refs.m7ContainerMask = document.getElementById("math7-mask-container");
     refs.m7Steps = document.getElementById("math7-steps-container");
-    refs.mathCard8 = document.getElementById("math-card-8");
-    refs.mathCard9 = document.getElementById("math-card-9");
-    refs.mathCard10 = document.getElementById("math-card-10");
-    refs.mathCard11 = document.getElementById("math-card-11");
-    refs.mathCard12 = document.getElementById("math-card-12");
-    refs.mathCard13 = document.getElementById("math-card-13");
-    refs.mathCard14 = document.getElementById("math-card-14");
-    refs.mathCard15 = document.getElementById("math-card-15");
-    refs.form8 = document.getElementById("math-calc-form-8");
-    refs.form9 = document.getElementById("math-calc-form-9");
-    refs.form10 = document.getElementById("math-calc-form-10");
-    refs.form11 = document.getElementById("math-calc-form-11");
-    refs.form12 = document.getElementById("math-calc-form-12");
-    refs.form13 = document.getElementById("math-calc-form-13");
-    refs.form14 = document.getElementById("math-calc-form-14");
-    refs.form15 = document.getElementById("math-calc-form-15");
-    refs.mathFormulaDisplay8 = document.getElementById("math-calc-formula-display-8");
-    refs.mathFormulaDisplay9 = document.getElementById("math-calc-formula-display-9");
-    refs.mathFormulaDisplay10 = document.getElementById("math-calc-formula-display-10");
-    refs.mathFormulaDisplay11 = document.getElementById("math-calc-formula-display-11");
-    refs.mathFormulaDisplay12 = document.getElementById("math-calc-formula-display-12");
-    refs.mathFormulaDisplay13 = document.getElementById("math-calc-formula-display-13");
-    refs.mathFormulaDisplay14 = document.getElementById("math-calc-formula-display-14");
-    refs.mathFormulaDisplay15 = document.getElementById("math-calc-formula-display-15");
-    refs.btnMathCalcBack8 = document.getElementById("btn-math-calc-back-8");
-    refs.btnMathCalcBack9 = document.getElementById("btn-math-calc-back-9");
-    refs.btnMathCalcBack10 = document.getElementById("btn-math-calc-back-10");
-    refs.btnMathCalcBack11 = document.getElementById("btn-math-calc-back-11");
-    refs.btnMathCalcBack12 = document.getElementById("btn-math-calc-back-12");
-    refs.btnMathCalcBack13 = document.getElementById("btn-math-calc-back-13");
-    refs.btnMathCalcBack14 = document.getElementById("btn-math-calc-back-14");
-    refs.btnMathCalcBack15 = document.getElementById("btn-math-calc-back-15");
+    refs.m8InA = document.getElementById("math8-in-a");
+    refs.m8InB = document.getElementById("math8-in-b");
+    refs.m8Steps = document.getElementById("math8-steps-container");
     refs.m9DynamicInputs = document.getElementById("math9-dynamic-inputs");
-    refs.m10DynamicInputs = document.getElementById("math10-dynamic-inputs");
-    refs.m11DynamicInputs = document.getElementById("math11-dynamic-inputs");
     refs.m9Steps = document.getElementById("math9-steps-container");
+    refs.m10DynamicInputs = document.getElementById("math10-dynamic-inputs");
     refs.m10Steps = document.getElementById("math10-steps-container");
+    refs.m11DynamicInputs = document.getElementById("math11-dynamic-inputs");
     refs.m11Steps = document.getElementById("math11-steps-container");
     refs.m12InPa = document.getElementById("math12-in-pa");
     refs.m12InPba = document.getElementById("math12-in-pba");
@@ -152,13 +130,17 @@ export function initMath() {
     refs.m20Steps = document.getElementById("math20-steps-container");
     refs.m21InD = document.getElementById("math21-in-d");
     refs.m21Steps = document.getElementById("math21-steps-container");
-    refs.m8InA = document.getElementById("math8-in-a");
-    refs.m8InB = document.getElementById("math8-in-b");
-    refs.m8Steps = document.getElementById("math8-steps-container");
+    refs.m22InN = document.getElementById("math22-in-n");
+    refs.m22Steps = document.getElementById("math22-steps-container");
+
     if (typeof katex !== 'undefined') {
-        const F = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20, FORMULA21];
-        for(let i=1; i<=21; i++) if(refs[`mathCard${i}`] && F[i]) katex.render(F[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
+        for(let i=1; i<=22; i++) {
+            if(refs[`mathCard${i}`] && FORMULAS[i]) {
+                katex.render(FORMULAS[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
+            }
         }
+    }
+
     if (refs.btnMathEor && refs.btnMathEor.tagName !== "A") {
         refs.btnMathEor.addEventListener("click", () => {
             refs.landingEl.classList.add("hidden");
@@ -166,6 +148,7 @@ export function initMath() {
             state.currentView = "math-menu";
         });
     }
+
     if (refs.btnMathMenuBack && refs.btnMathMenuBack.tagName !== "A") {
         refs.btnMathMenuBack.addEventListener("click", () => {
             refs.mathMenu.classList.add("hidden");
@@ -173,53 +156,60 @@ export function initMath() {
             state.currentView = "landing";
         });
     }
+
+    const CALC_MAP = {
+        1: calculateMath,
+        2: calculateMath2,
+        3: calculateMath3,
+        4: () => { if (refs.m4DynamicInputs && refs.m4DynamicInputs.children.length === 0) addM4Input(); calculateMath4(); },
+        5: () => { if (refs.m5DynamicInputs && refs.m5DynamicInputs.children.length === 0) addM5Input(); calculateMath5(); },
+        6: () => { if (refs.m6DynamicInputs && refs.m6DynamicInputs.children.length === 0) addM6Input(); calculateMath6(); },
+        7: calculateMath7,
+        8: calculateMath8,
+        9: () => { if (refs.m9DynamicInputs && refs.m9DynamicInputs.children.length === 0) addM9Input(); calculateMath9(); },
+        10: () => { if (refs.m10DynamicInputs && refs.m10DynamicInputs.children.length === 0) addM10Input(); calculateMath10(); },
+        11: () => { if (refs.m11DynamicInputs && refs.m11DynamicInputs.children.length === 0) addM11Input(); calculateMath11(); },
+        12: calculateMath12,
+        13: calculateMath13,
+        14: calculateMath14,
+        15: calculateMath15,
+        16: calculateMath16,
+        17: calculateMath17,
+        18: calculateMath18,
+        19: calculateMath19,
+        20: calculateMath20,
+        21: calculateMath21,
+        22: calculateMath22
+    };
+
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
-        for(let i=1; i<=21; i++) {
+        for(let i=1; i<=22; i++) {
             if(refs[`form${i}`]) refs[`form${i}`].classList.add("hidden");
         }
-state.currentView = "math-calc";
-                if(refs[`form${formNum}`]) refs[`form${formNum}`].classList.remove("hidden");
-        const F_ARR = [null, FORMULA, FORMULA2, FORMULA3, FORMULA4, FORMULA5, FORMULA6, FORMULA7, FORMULA8, FORMULA9, FORMULA10, FORMULA11, FORMULA12, FORMULA13, FORMULA14, FORMULA15, FORMULA16, FORMULA17, FORMULA18, FORMULA19, FORMULA20, FORMULA21];
+        state.currentView = "math-calc";
+        if(refs[`form${formNum}`]) refs[`form${formNum}`].classList.remove("hidden");
         const disp = refs[`mathFormulaDisplay${formNum===1?'':formNum}`];
-        if (typeof katex !== 'undefined' && disp && F_ARR[formNum]) katex.render(F_ARR[formNum], disp, { throwOnError: false, displayMode: false });
-        
-        if (formNum === 1) calculateMath();
-        else if (formNum === 2) calculateMath2();
-        else if (formNum === 3) calculateMath3();
-        else if (formNum === 4) { if (refs.m4DynamicInputs && refs.m4DynamicInputs.children.length === 0) addM4Input(); calculateMath4(); }
-        else if (formNum === 5) { if (refs.m5DynamicInputs && refs.m5DynamicInputs.children.length === 0) addM5Input(); calculateMath5(); }
-        else if (formNum === 6) { if (refs.m6DynamicInputs && refs.m6DynamicInputs.children.length === 0) addM6Input(); calculateMath6(); }
-        else if (formNum === 7) calculateMath7();
-        else if (formNum === 8) calculateMath8();
-        else if (formNum === 9) { if (refs.m9DynamicInputs && refs.m9DynamicInputs.children.length === 0) addM9Input(); calculateMath9(); }
-        else if (formNum === 10) { if (refs.m10DynamicInputs && refs.m10DynamicInputs.children.length === 0) addM10Input(); calculateMath10(); }
-        else if (formNum === 11) { if (refs.m11DynamicInputs && refs.m11DynamicInputs.children.length === 0) addM11Input(); calculateMath11(); }
-        else if (formNum === 12) calculateMath12();
-        else if (formNum === 13) calculateMath13();
-        else if (formNum === 14) calculateMath14();
-        else if (formNum === 15) calculateMath15();
-        else if (formNum === 16) calculateMath16();
-        else if (formNum === 17) calculateMath17();
-        else if (formNum === 18) calculateMath18();
-        else if (formNum === 19) calculateMath19();
-        else if (formNum === 20) calculateMath20();
-        else if (formNum === 21) calculateMath21();
+        if (typeof katex !== 'undefined' && disp && FORMULAS[formNum]) {
+            katex.render(FORMULAS[formNum], disp, { throwOnError: false, displayMode: false });
+        }
+        if (CALC_MAP[formNum]) CALC_MAP[formNum]();
     };
-    for(let i=1; i<=21; i++) {
-        if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
-    }
-const closeForm = () => {
+
+    const closeForm = () => {
         refs.mathCalc.classList.add("hidden");
         refs.mathMenu.classList.remove("hidden");
         state.currentView = "math-menu";
     };
-    for(let i=1; i<=21; i++) {
+
+    for(let i=1; i<=22; i++) {
+        if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
     }
-[refs.inN, refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => { if(el) el.addEventListener("input", calculateMath); });
+
+    [refs.inN, refs.inKromosom, refs.inXmin, refs.inXmax].forEach(el => { if(el) el.addEventListener("input", calculateMath); });
     if(refs.inN) refs.inN.addEventListener("input", () => {
         const n = parseInt(refs.inN.value, 10);
         if(!isNaN(n) && n > 0 && !refs.inKromosom.value) { refs.inKromosom.value = "0".repeat(n); calculateMath(); }
@@ -244,34 +234,21 @@ const closeForm = () => {
         });
         refs.inKromosom.addEventListener("wheel", (e) => handleK(e, e.deltaY < 0 ? 1 : -1), {passive: false});
     }
-    [refs.m2InX1, refs.m2InX2].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath2);
-    });
-    [refs.m3InH, refs.m3InA].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath3);
-    });
+    [refs.m2InX1, refs.m2InX2].forEach(el => { if(el) el.addEventListener("input", calculateMath2); });
+    [refs.m3InH, refs.m3InA].forEach(el => { if(el) el.addEventListener("input", calculateMath3); });
     if (refs.m5InR) refs.m5InR.addEventListener("input", calculateMath5);
-    [refs.m8InA, refs.m8InB].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath8);
-    });
-    [refs.m12InPa, refs.m12InPba, refs.m12InPb].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath12);
-    }); 
-    [refs.m13InN, refs.m13InK].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath13);
-    }); 
-    [refs.m14InA, refs.m14InB, refs.m14InC].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath14);
-    }); 
-    [refs.m15InF, refs.m15InG, refs.m15InC].forEach(el => {
-        if(el) el.addEventListener("input", calculateMath15);
-    }); 
+    [refs.m8InA, refs.m8InB].forEach(el => { if(el) el.addEventListener("input", calculateMath8); });
+    [refs.m12InPa, refs.m12InPba, refs.m12InPb].forEach(el => { if(el) el.addEventListener("input", calculateMath12); });
+    [refs.m13InN, refs.m13InK].forEach(el => { if(el) el.addEventListener("input", calculateMath13); });
+    [refs.m14InA, refs.m14InB, refs.m14InC].forEach(el => { if(el) el.addEventListener("input", calculateMath14); });
+    [refs.m15InF, refs.m15InG, refs.m15InC].forEach(el => { if(el) el.addEventListener("input", calculateMath15); });
     [refs.m16InF, refs.m16InA].forEach(el => { if(el) el.addEventListener("input", calculateMath16); });
     [refs.m17InF, refs.m17InBigF, refs.m17InA, refs.m17InB].forEach(el => { if(el) el.addEventListener("input", calculateMath17); });
     [refs.m18InF, refs.m18InA, refs.m18InB].forEach(el => { if(el) el.addEventListener("input", calculateMath18); });
     [refs.m19InN, refs.m19InR].forEach(el => { if(el) el.addEventListener("input", calculateMath19); });
     [refs.m20InA, refs.m20InB].forEach(el => { if(el) el.addEventListener("input", calculateMath20); });
     if(refs.m21InD) refs.m21InD.addEventListener("input", calculateMath21);
+    if(refs.m22InN) refs.m22InN.addEventListener("input", calculateMath22);
     [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {

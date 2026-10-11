@@ -49,3 +49,10 @@
 .math-hidden {
     display: none !important;
 }
+.math-prime-result {
+    word-break: break-all;
+    font-size: 20px;
+    max-width: 100%;
+    text-align: left;
+    line-height: 1.6;
+}
