@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawDistributionCurve, clearVisual10 } from "./math-visual-10-11.js";
 export function addM10Input() {
     if (!refs.m10DynamicInputs) return;
     const index = refs.m10DynamicInputs.children.length + 1;
@@ -39,7 +40,10 @@ export function calculateMath10() {
         }
     }
     const n = data.length;
-    if (n === 0) return;
+    if (n === 0) {
+        clearVisual10();
+        return;
+    }
     const sumX = data.reduce((a, b) => a + b, 0);
     const mu = sumX / n;
     let sumSq = 0;
@@ -87,4 +91,5 @@ export function calculateMath10() {
         <div class="m10-summary-item">\u03C3 (Standar Deviasi) = \u221A${variance.toFixed(4)} = <span class="m10-td-bold">${sigma.toFixed(4)}</span></div>
     </div>`;
     refs.m10Steps.innerHTML = html;
+    drawDistributionCurve("math10-canvas", data, mu, sigma, false);
 }

@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawDistributionCurve, clearVisual11 } from "./math-visual-10-11.js";
 
 export function addM11Input() {
     if (!refs.m11DynamicInputs) return;
@@ -50,7 +51,10 @@ export function calculateMath11() {
     }
     
     const n = data.length;
-    if (n === 0) return;
+    if (n === 0) {
+        clearVisual11();
+        return;
+    }
 
     const sumX = data.reduce((a, b) => a + b, 0);
     const mean = sumX / n;
@@ -118,4 +122,5 @@ export function calculateMath11() {
     }
 
     refs.m11Steps.innerHTML = html;
+    drawDistributionCurve("math11-canvas", data, mean, sigma, true);
 }
