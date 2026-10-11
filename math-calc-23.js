@@ -48,15 +48,16 @@ export function updateCubeLines() {
     const ry1 = canvasRect.top + canvasRect.height / 2 - layoutRect.top;
 
     rows.forEach((row, i) => {
-        const line = document.getElementById(`cube-line-r${i}`);
-        if (line) {
+        const path = document.getElementById(`cube-path-r${i}`);
+        if (path) {
             const rowRect = row.getBoundingClientRect();
             const rx2 = rowRect.left - layoutRect.left;
             const ry2 = rowRect.top + rowRect.height / 2 - layoutRect.top;
-            line.setAttribute("x1", rx1);
-            line.setAttribute("y1", ry1);
-            line.setAttribute("x2", rx2);
-            line.setAttribute("y2", ry2);
+            const w = rx2 - rx1;
+            const xStem = rx1 + w * 0.25;
+            const cpx = xStem + (rx2 - xStem) * 0.5;
+            const d = `M ${rx1} ${ry1} L ${xStem} ${ry1} C ${cpx} ${ry1}, ${cpx} ${ry2}, ${rx2} ${ry2}`;
+            path.setAttribute("d", d);
         }
     });
 }
