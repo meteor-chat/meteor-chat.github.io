@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { drawVennDiagram, clearVisual12 } from "./math-visual-12.js";
 
 export function calculateMath12() {
     if (!refs.m12Steps) return;
@@ -10,7 +11,10 @@ export function calculateMath12() {
     const vPba = refs.m12InPba.value.trim();
     const vPb = refs.m12InPb.value.trim();
     
-    if (vPa === '' || vPba === '' || vPb === '') return;
+    if (vPa === '' || vPba === '' || vPb === '') {
+        clearVisual12();
+        return;
+    }
     
     const pA = parseFloat(vPa);
     const pBA = parseFloat(vPba);
@@ -18,11 +22,13 @@ export function calculateMath12() {
     
     if (pA < 0 || pA > 1 || pBA < 0 || pBA > 1 || pB < 0 || pB > 1) {
         refs.m12Steps.innerHTML = '<div class="math-step-box math-step-error">\u274C Error: Semua nilai probabilitas harus berada di antara 0 dan 1.</div>';
+        clearVisual12();
         return;
     }
     
     if (pB === 0) {
         refs.m12Steps.innerHTML = '<div class="math-step-box math-step-error">\u274C Error: P(B) tidak boleh bernilai 0.</div>';
+        clearVisual12();
         return;
     }
     
@@ -40,4 +46,5 @@ export function calculateMath12() {
     
     html += `</div>`;
     refs.m12Steps.innerHTML = html;
+    drawVennDiagram(pA, pBA, pB, pAB);
 }
