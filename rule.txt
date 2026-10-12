@@ -1,0 +1,11 @@
+dengan aturan:
+1. hapus **semua** komentar! sisakan **hanya** kode saja!
+2. setiap file sesuai dengan bahasa pemrograman nya sendiri, misalnya:
+   a. tidak boleh ada kode python di file html, css dan js.
+   b. tidak boleh ada kode html di file js, css dan python.
+   c. tidak boleh ada kode js di file html, css dan python.
+   d. tidak boleh ada kode css di file html, js, dan python.
+   e. etc. intinya, 1 file = 1 bahasa.
+3. tidak boleh ada file raksasa **(maksimal 300 baris kode dalam 1 file)**, tapi aku mau semuanya modular! **WAJIB** pisah-pisah dan pecah-pecah file sesuai fungsinya masing-masing!
+4. gunakan **metode** atau **tech stack** yang terbaik atau **best practice** dalam mengerjakan tugas ini!
+5. langsung push ke branch main!
