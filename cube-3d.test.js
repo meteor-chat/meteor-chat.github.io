@@ -1,62 +1,64 @@
 import { describe, it, expect } from "vitest";
+import { computeCubeMetrics, formatVal } from "./cube-metrics.js";
 
 describe("cube-3d math calculations", () => {
     it("computes all 6 metrics correctly for sisi = 12 matching illustration", () => {
-        const s = 12;
-        const vol = Math.pow(s, 3);
-        const lp = 6 * s * s;
-        const pr = 12 * s;
-        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
-        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
-        const bd = parseFloat((s * ds).toFixed(2));
+        const res = computeCubeMetrics("12");
+        expect(res.vol).toBe("1728");
+        expect(res.lp).toBe("864");
+        expect(res.pr).toBe("144");
+        expect(res.ds).toBe("16.97");
+        expect(res.dr).toBe("20.78");
+        expect(res.bd).toBe("203.64");
+    });
 
-        expect(vol).toBe(1728);
-        expect(lp).toBe(864);
-        expect(pr).toBe(144);
-        expect(ds).toBe(16.97);
-        expect(dr).toBe(20.78);
-        expect(bd).toBe(203.64);
+    it("computes all 6 metrics correctly for s = 9 matching user prompt", () => {
+        const res = computeCubeMetrics("9");
+        expect(res.vol).toBe("729");
+        expect(res.lp).toBe("486");
+        expect(res.pr).toBe("108");
+        expect(res.ds).toBe("12.73");
+        expect(res.dr).toBe("15.59");
+        expect(res.bd).toBe("114.57");
     });
 
     it("computes all 6 metrics correctly for s = 6 matching user screenshot", () => {
-        const s = 6;
-        const vol = Math.pow(s, 3);
-        const lp = 6 * s * s;
-        const pr = 12 * s;
-        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
-        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
-        const bd = parseFloat((s * ds).toFixed(2));
-
-        expect(vol).toBe(216);
-        expect(lp).toBe(216);
-        expect(pr).toBe(72);
-        expect(ds).toBe(8.49);
-        expect(dr).toBe(10.39);
-        expect(bd).toBe(50.94);
+        const res = computeCubeMetrics("6");
+        expect(res.vol).toBe("216");
+        expect(res.lp).toBe("216");
+        expect(res.pr).toBe("72");
+        expect(res.ds).toBe("8.49");
+        expect(res.dr).toBe("10.39");
+        expect(res.bd).toBe("50.94");
     });
 
     it("computes correctly for s = 5", () => {
-        const s = 5;
-        const vol = Math.pow(s, 3);
-        const lp = 6 * s * s;
-        const pr = 12 * s;
-        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
-        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
-        const bd = parseFloat((s * ds).toFixed(2));
-
-        expect(vol).toBe(125);
-        expect(lp).toBe(150);
-        expect(pr).toBe(60);
-        expect(ds).toBe(7.07);
-        expect(dr).toBe(8.66);
-        expect(bd).toBe(35.35);
+        const res = computeCubeMetrics("5");
+        expect(res.vol).toBe("125");
+        expect(res.lp).toBe("150");
+        expect(res.pr).toBe("60");
+        expect(res.ds).toBe("7.07");
+        expect(res.dr).toBe("8.66");
+        expect(res.bd).toBe("35.35");
     });
 
-    it("handles zero sisi correctly", () => {
-        const s = 0;
-        expect(Math.pow(s, 3)).toBe(0);
-        expect(6 * s * s).toBe(0);
-        expect(12 * s).toBe(0);
+    it("handles zero and negative or invalid sisi correctly", () => {
+        const zeroRes = computeCubeMetrics("0");
+        expect(zeroRes.vol).toBe("0");
+        expect(zeroRes.lp).toBe("0");
+        expect(zeroRes.pr).toBe("0");
+
+        const emptyRes = computeCubeMetrics("");
+        expect(emptyRes.vol).toBe("0");
+
+        const invalidRes = computeCubeMetrics("abc");
+        expect(invalidRes.vol).toBe("0");
+    });
+
+    it("formats values properly with formatVal", () => {
+        expect(formatVal(0)).toBe("0");
+        expect(formatVal(100)).toBe("100");
+        expect(formatVal(12.3456)).toBe("12.35");
+        expect(formatVal(-5)).toBe("0");
     });
 });
-

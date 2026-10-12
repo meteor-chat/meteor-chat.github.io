@@ -1,19 +1,14 @@
 export function escapeHTML(text) {
-    if (typeof document === 'undefined') {
-        return text.replace(/[&<>"']/g, function(m) {
-            switch (m) {
-                case '&': return '&amp;';
-                case '<': return '&lt;';
-                case '>': return '&gt;';
-                case '"': return '&quot;';
-                case "'": return '&#039;';
-                default: return m;
-            }
-        });
-    }
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    return (text || '').replace(/[&<>"']/g, function(m) {
+        switch (m) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            default: return m;
+        }
+    });
 }
 export function stripThinkTags(text) {
     if (!text) return text;

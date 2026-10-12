@@ -22,14 +22,31 @@ function resizeAnimCanvas() {
     animCanvas.height = rect.height * dpr;
 }
 
-export function triggerCubeAnimation() {
+export function triggerCubeAnimation(options = {}) {
     resizeAnimCanvas();
+    const duration = typeof options.duration === "number" ? options.duration : 950;
     pulses.push({
         startTime: performance.now(),
-        duration: 950
+        duration: duration,
+        payload: options.payload || null,
+        onReachCube: options.onReachCube || null,
+        onReachResults: options.onReachResults || null,
+        reachedCube: false,
+        reachedResults: false
     });
     if (!animFrameId) {
         animFrameId = requestAnimationFrame(animLoop);
+    }
+}
+
+export function clearCubeAnimation() {
+    pulses.length = 0;
+    if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+    }
+    if (animCanvas && animCtx) {
+        animCtx.clearRect(0, 0, animCanvas.width, animCanvas.height);
     }
 }
 
@@ -93,7 +110,20 @@ function animLoop(now) {
         const elapsed = now - pulse.startTime;
         const p = elapsed / pulse.duration;
 
+        if (p >= 0.28 && !pulse.reachedCube) {
+            pulse.reachedCube = true;
+            if (typeof pulse.onReachCube === "function") {
+                pulse.onReachCube(pulse.payload);
+            }
+        }
+
         if (p >= 1) {
+            if (!pulse.reachedResults) {
+                pulse.reachedResults = true;
+                if (typeof pulse.onReachResults === "function") {
+                    pulse.onReachResults(pulse.payload);
+                }
+            }
             pulses.splice(i, 1);
             continue;
         }

@@ -185,7 +185,7 @@ export function initMath() {
         20: calculateMath20,
         21: calculateMath21,
         22: calculateMath22,
-        23: () => { initCubeView(); calculateMath23(); }
+        23: initCubeView
     };
 
     const openForm = (formNum) => {

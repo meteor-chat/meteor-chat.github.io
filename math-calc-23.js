@@ -1,19 +1,16 @@
 import { refs } from "./dom-refs.js";
 import { initCube, renderCube } from "./cube-3d.js";
 import { initCubeAnimation, triggerCubeAnimation } from "./cube-animation.js";
+import { computeCubeMetrics } from "./cube-metrics.js";
 
 let cubeInitialized = false;
-
-function formatVal(v) {
-    if (isNaN(v) || !isFinite(v) || v <= 0) return "0";
-    if (Number.isInteger(v)) return v.toString();
-    return parseFloat(v.toFixed(2)).toString();
-}
+let displayedSisi = "12";
+let pulseSequence = 0;
+let lastCubeSeq = 0;
+let lastResultsSeq = 0;
 
 export function getCubeSisiValue() {
-    if (!refs.cubeInSisi) return "12";
-    const v = refs.cubeInSisi.value.trim();
-    return v === "" ? "12" : v;
+    return displayedSisi;
 }
 
 export function updateCubeLines() {
@@ -63,11 +60,18 @@ export function updateCubeLines() {
     });
 }
 
-export function calculateMath23() {
-    if (!refs.cubeInSisi) return;
-    const raw = refs.cubeInSisi.value.trim();
-    const s = parseFloat(raw);
+function flashResultRows() {
+    const rightPanel = document.getElementById("cube-right-panel");
+    if (!rightPanel) return;
+    const rows = rightPanel.querySelectorAll(".cube-out-row");
+    rows.forEach((row) => {
+        row.classList.remove("cube-row-highlight");
+        void row.offsetWidth;
+        row.classList.add("cube-row-highlight");
+    });
+}
 
+export function applyCubeResultsToDOM(metrics) {
     const outVol = document.getElementById("cube-out-volume");
     const outLp = document.getElementById("cube-out-lp");
     const outPr = document.getElementById("cube-out-pr");
@@ -75,31 +79,44 @@ export function calculateMath23() {
     const outDr = document.getElementById("cube-out-dr");
     const outBd = document.getElementById("cube-out-bd");
 
-    if (isNaN(s) || s <= 0) {
-        if (outVol) outVol.textContent = "0";
-        if (outLp) outLp.textContent = "0";
-        if (outPr) outPr.textContent = "0";
-        if (outDs) outDs.textContent = "0";
-        if (outDr) outDr.textContent = "0";
-        if (outBd) outBd.textContent = "0";
-    } else {
-        const vol = Math.pow(s, 3);
-        const lp = 6 * s * s;
-        const pr = 12 * s;
-        const ds = parseFloat((s * Math.sqrt(2)).toFixed(2));
-        const dr = parseFloat((s * Math.sqrt(3)).toFixed(2));
-        const bd = parseFloat((s * ds).toFixed(2));
+    if (outVol) outVol.textContent = metrics.vol;
+    if (outLp) outLp.textContent = metrics.lp;
+    if (outPr) outPr.textContent = metrics.pr;
+    if (outDs) outDs.textContent = metrics.ds;
+    if (outDr) outDr.textContent = metrics.dr;
+    if (outBd) outBd.textContent = metrics.bd;
 
-        if (outVol) outVol.textContent = formatVal(vol);
-        if (outLp) outLp.textContent = formatVal(lp);
-        if (outPr) outPr.textContent = formatVal(pr);
-        if (outDs) outDs.textContent = isNaN(ds) ? "0" : ds.toFixed(2);
-        if (outDr) outDr.textContent = isNaN(dr) ? "0" : dr.toFixed(2);
-        if (outBd) outBd.textContent = isNaN(bd) ? "0" : bd.toFixed(2);
-    }
-    renderCube();
+    flashResultRows();
+}
+
+export function calculateMath23() {
+    if (!refs.cubeInSisi) return;
+    const raw = refs.cubeInSisi.value.trim();
+    const metrics = computeCubeMetrics(raw);
+    const seq = ++pulseSequence;
+
     requestAnimationFrame(updateCubeLines);
-    triggerCubeAnimation();
+
+    triggerCubeAnimation({
+        payload: {
+            seq: seq,
+            sisiText: metrics.sisiText,
+            metrics: metrics
+        },
+        onReachCube: (payload) => {
+            if (payload && payload.seq >= lastCubeSeq) {
+                lastCubeSeq = payload.seq;
+                displayedSisi = payload.sisiText;
+                renderCube();
+            }
+        },
+        onReachResults: (payload) => {
+            if (payload && payload.seq >= lastResultsSeq) {
+                lastResultsSeq = payload.seq;
+                applyCubeResultsToDOM(payload.metrics);
+            }
+        }
+    });
 }
 
 export function initCubeView() {
@@ -109,6 +126,11 @@ export function initCubeView() {
         window.addEventListener("resize", updateCubeLines);
         cubeInitialized = true;
     }
-    calculateMath23();
+    const raw = refs.cubeInSisi ? refs.cubeInSisi.value.trim() : "12";
+    const initialVal = raw === "" ? "12" : raw;
+    displayedSisi = initialVal;
+    const metrics = computeCubeMetrics(initialVal);
+    applyCubeResultsToDOM(metrics);
+    renderCube();
     requestAnimationFrame(updateCubeLines);
 }
