@@ -27,11 +27,18 @@
         <button class="sort-filter-btn" data-sort="merge">Merge Sort</button>
         <button class="sort-filter-btn" data-sort="shaker">Shaker Sort</button>
     </div>
-    <div class="sort-visualizer-wrapper"><div id="sort-visualizer" class="sort-visualizer"></div></div>
+    <div id="sort-mode-container" class="sort-mode-container">
+        <button id="btn-mode-bar" class="sort-mode-btn active" data-mode="bar">Bar</button>
+        <button id="btn-mode-color" class="sort-mode-btn" data-mode="color">Warna</button>
+    </div>
+    <div class="sort-visualizer-wrapper">
+        <div id="sort-visualizer" class="sort-visualizer"></div>
+        <canvas id="sort-canvas" class="sort-canvas sort-hidden" width="800" height="450"></canvas>
+    </div>
     <div class="sort-action-container">
         <button id="btn-randomize" class="btn-sort-action">Randomize</button>
     </div>
 </main>
-<script type="module" src="sort-controller.js?v=3"></script>
+<script type="module" src="sort-controller.js?v=4"></script>
 </body>
 </html>

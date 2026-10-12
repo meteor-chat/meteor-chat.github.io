@@ -42,17 +42,60 @@
     border-color: var(--text-main);
 }
 
+.sort-mode-container {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+}
+.sort-mode-btn {
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.sort-mode-btn:hover {
+    border-color: #888;
+    color: var(--text-main);
+}
+.sort-mode-btn.active {
+    background: var(--text-main);
+    color: var(--bg-main);
+    border-color: var(--text-main);
+}
+
 .sort-visualizer-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin-top: 80px;
-    margin-bottom: 40px;
+    align-items: center;
+    margin-top: 40px;
+    margin-bottom: 30px;
+    padding: 0 var(--space-lg);
+    max-width: 900px;
 }
 .sort-visualizer {
     position: relative;
     width: 620px;
     height: 320px;
+}
+.sort-canvas {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    background-color: #161616;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    display: block;
+}
+.sort-hidden {
+    display: none !important;
 }
 .sort-bar {
     position: absolute;
@@ -66,7 +109,7 @@
     background-color: #4CAF50;
 }
 @media (max-width: 650px) {
-    .sort-visualizer-wrapper { margin-top: 40px; }
+    .sort-visualizer-wrapper { margin-top: 30px; }
     .sort-visualizer { transform: scale(0.7); transform-origin: top center; }
 }
 @media (max-width: 480px) {
