@@ -8,8 +8,9 @@ export function syncInputUI(input) {
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 120) + "px";
 }
+let preparing = false;
 async function submit(input) {
-    if (state.isLoading) return;
+    if (state.isLoading || preparing) return;
     let text = input.value.trim();
     if (!text) return;
     const maxLen = state.config.max_message || 4000;
@@ -18,16 +19,24 @@ async function submit(input) {
         return;
     }
     hideError();
-    input.value = "";
-    syncInputUI(input);
-    const { sendMessage } = await import("./chat-controller.js");
-    sendMessage(text);
+    preparing = true;
+    try {
+        const chat = await import("./chat-controller.js");
+        await chat.prepareChat();
+        input.value = "";
+        syncInputUI(input);
+        chat.sendMessage(text);
+    } catch (e) {
+        showError(e.message);
+    } finally {
+        preparing = false;
+    }
 }
 export function setupInputs() {
     [refs.msgLanding, refs.msgChat].forEach(input => {
         if (!input) return;
         input.addEventListener("focus", () => {
-            import("./chat-controller.js");
+            import("./chat-controller.js").then((chat) => chat.prepareChat()).catch(() => {});
         }, { once: true });
         input.addEventListener("input", () => syncInputUI(input));
         input.addEventListener("keydown", (e) => {

@@ -7,7 +7,11 @@ import { exitEditMode } from "./edit-mode.js";
 import { stripThinkTags } from "./text-utils.js";
 import { ensureTemplates } from "./template-loader.js";
 import { setupMarkdown } from "./markdown-setup.js";
+import { ensureChatAssets } from "./lazy-assets.js";
 let markdownReady = false;
+export function prepareChat() {
+    return ensureChatAssets();
+}
 function initMarkdown() {
     if (!markdownReady) {
         const missing = [];

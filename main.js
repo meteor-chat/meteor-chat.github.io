@@ -1,7 +1,5 @@
 import { setupInputs } from "./input-controls.js";
 import { refs } from "./dom-refs.js";
-import { cancelEdit } from "./edit-mode.js";
-import { copyCode } from "./message-actions.js";
 import { showError } from "./error-view.js";
 async function init() {
     try {
@@ -10,16 +8,23 @@ async function init() {
             const { initMath } = await import("./math-controller.js?v=4");
             initMath();
         }
-        if (refs.cancelBtn) refs.cancelBtn.addEventListener("click", cancelEdit);
+        if (refs.cancelBtn) {
+            refs.cancelBtn.addEventListener("click", async () => {
+                const { cancelEdit } = await import("./edit-mode.js");
+                cancelEdit();
+            });
+        }
         if (refs.stopBtn) {
             refs.stopBtn.addEventListener("click", async () => {
                 const { stopGeneration } = await import("./chat-controller.js");
                 stopGeneration();
             });
         }
-        document.addEventListener("click", (e) => {
+        document.addEventListener("click", async (e) => {
             const btn = e.target.closest(".copy-btn");
-            if (btn) copyCode(btn);
+            if (!btn) return;
+            const { copyCode } = await import("./message-actions.js");
+            copyCode(btn);
         });
     } catch (e) {
         showError(`Inisialisasi aplikasi gagal: ${e.message}`);
