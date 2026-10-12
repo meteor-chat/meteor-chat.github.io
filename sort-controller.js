@@ -1,15 +1,4 @@
-import { bubbleSort } from "./sort-bubble.js";
-import { selectionSort } from "./sort-selection.js";
-import { insertionSort } from "./sort-insertion.js";
-import { quickSort } from "./sort-quick.js";
-import { mergeSort } from "./sort-merge.js";
-import { shakerSort } from "./sort-shaker.js";
-import {
-    initCircleArray,
-    renderCircle,
-    startCircleSort,
-    isCircleSortingActive
-} from "./sort-circle-runner.js";
+import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
@@ -18,13 +7,23 @@ const btnRandomize = document.getElementById("btn-randomize");
 const btnModeBar = document.getElementById("btn-mode-bar");
 const btnModeColor = document.getElementById("btn-mode-color");
 
+const SORTED_REF = [1, 1.5, 2, 2.5, 3, 3.5, 4];
+const TITLES = {
+    bubble: "Bubble Sort",
+    selection: "Selection Sort",
+    insertion: "Insertion Sort",
+    quick: "Quick Sort",
+    merge: "Merge Sort",
+    shaker: "Shaker Sort"
+};
+
 let currentMode = "bar";
 let arr = [];
 let domBars = [];
 let isSorting = false;
 
 function initArray() {
-    arr = [1, 1.5, 2, 2.5, 3, 3.5, 4];
+    arr = [...SORTED_REF];
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
@@ -53,20 +52,25 @@ export function updateBarPosition(index, positionIndex) {
 
 export function setBarTemp(index, isTemp) {
     if (domBars[index]) {
-        if (isTemp) {
-            domBars[index].classList.add("temp");
-        } else {
-            domBars[index].classList.remove("temp");
-        }
+        domBars[index].classList.toggle("temp", isTemp);
     }
 }
 
 export function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isBusy() {
+    const circle = getLoadedCircle();
+    return isSorting || (circle ? circle.isCircleSortingActive() : false);
+}
+
+function clearActive() {
+    buttons.forEach((b) => b.classList.remove("active"));
 }
 
 function setControlsDisabled(disabled) {
-    buttons.forEach(btn => {
+    buttons.forEach((btn) => {
         btn.style.pointerEvents = disabled ? "none" : "auto";
     });
     if (btnRandomize) btnRandomize.disabled = disabled;
@@ -74,125 +78,105 @@ function setControlsDisabled(disabled) {
     if (btnModeColor) btnModeColor.disabled = disabled;
 }
 
-function getTitle(type) {
-    if (type === "bubble") return "Bubble Sort";
-    if (type === "selection") return "Selection Sort";
-    if (type === "insertion") return "Insertion Sort";
-    if (type === "quick") return "Quick Sort";
-    if (type === "merge") return "Merge Sort";
-    if (type === "shaker") return "Shaker Sort";
-    return "Bubble Sort";
+function finishSort() {
+    isSorting = false;
+    setControlsDisabled(false);
+    clearActive();
+}
+
+function isBarSorted() {
+    return arr.every((val, i) => val === SORTED_REF[i]);
 }
 
 async function startBarSort(type) {
-    let isSorted = true;
-    const sortedRef = [1, 1.5, 2, 2.5, 3, 3.5, 4];
-    for (let i = 0; i < arr.length; i++) {
-        if (arr[i] !== sortedRef[i]) isSorted = false;
-    }
-    if (isSorted) {
+    if (isBarSorted()) {
         initArray();
         renderBars();
         await sleep(500);
     }
-
-    if (type === "bubble") {
-        await bubbleSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
-    } else if (type === "selection") {
-        await selectionSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
-    } else if (type === "insertion") {
-        await insertionSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
-    } else if (type === "quick") {
-        await quickSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
-    } else if (type === "merge") {
-        await mergeSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
-    } else if (type === "shaker") {
-        await shakerSort(arr, domBars, updateBarPosition, setBarTemp, sleep);
+    const sort = await loadAlgorithm(type);
+    if (sort) {
+        await sort(arr, domBars, updateBarPosition, setBarTemp, sleep);
     } else {
         await sleep(500);
     }
 }
 
 async function startSort(type) {
-    if (isSorting || isCircleSortingActive()) return;
+    if (isBusy()) return;
     isSorting = true;
     setControlsDisabled(true);
-
-    if (currentMode === "bar") {
-        await startBarSort(type);
-        isSorting = false;
-        setControlsDisabled(false);
-        buttons.forEach(b => b.classList.remove("active"));
-    } else {
-        await startCircleSort(canvas, type, getTitle(type), () => {
-            isSorting = false;
-            setControlsDisabled(false);
-            buttons.forEach(b => b.classList.remove("active"));
-        });
+    try {
+        if (currentMode === "bar") {
+            await startBarSort(type);
+            finishSort();
+        } else {
+            const circle = await loadCircle();
+            await circle.startCircleSort(canvas, type, TITLES[type] || TITLES.bubble, finishSort);
+        }
+    } catch {
+        finishSort();
     }
+}
+
+function drawCircle(reset) {
+    loadCircle()
+        .then((circle) => {
+            if (currentMode !== "color" || circle.isCircleSortingActive()) return;
+            if (reset) circle.initCircleArray();
+            circle.renderCircle(canvas, -1, TITLES.bubble);
+        })
+        .catch(() => {});
 }
 
 function setMode(mode) {
-    if (isSorting || isCircleSortingActive()) return;
-    if (mode === currentMode) return;
+    if (isBusy() || mode === currentMode) return;
     currentMode = mode;
-    buttons.forEach(b => b.classList.remove("active"));
-
-    if (mode === "bar") {
-        if (btnModeBar) btnModeBar.classList.add("active");
-        if (btnModeColor) btnModeColor.classList.remove("active");
-        if (canvas) canvas.classList.add("sort-hidden");
-        if (container) container.classList.remove("sort-hidden");
+    clearActive();
+    const isBar = mode === "bar";
+    if (btnModeBar) btnModeBar.classList.toggle("active", isBar);
+    if (btnModeColor) btnModeColor.classList.toggle("active", !isBar);
+    if (canvas) canvas.classList.toggle("sort-hidden", isBar);
+    if (container) container.classList.toggle("sort-hidden", !isBar);
+    if (isBar) {
         renderBars();
     } else {
-        if (btnModeColor) btnModeColor.classList.add("active");
-        if (btnModeBar) btnModeBar.classList.remove("active");
-        if (container) container.classList.add("sort-hidden");
-        if (canvas) canvas.classList.remove("sort-hidden");
-        renderCircle(canvas, -1, "Bubble Sort");
+        drawCircle(false);
     }
 }
 
-if (btnModeBar) {
-    btnModeBar.addEventListener("click", () => setMode("bar"));
-}
+if (btnModeBar) btnModeBar.addEventListener("click", () => setMode("bar"));
+if (btnModeColor) btnModeColor.addEventListener("click", () => setMode("color"));
 
-if (btnModeColor) {
-    btnModeColor.addEventListener("click", () => setMode("color"));
-}
-
-if (buttons.length > 0) {
-    buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            if (isSorting || isCircleSortingActive()) return;
-            buttons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            const type = btn.getAttribute("data-sort");
-            startSort(type);
-        });
+buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+        if (isBusy()) return;
+        clearActive();
+        btn.classList.add("active");
+        startSort(btn.getAttribute("data-sort"));
     });
-}
+});
 
 if (btnRandomize) {
     btnRandomize.addEventListener("click", () => {
-        if (isSorting || isCircleSortingActive()) return;
-        buttons.forEach(b => b.classList.remove("active"));
+        if (isBusy()) return;
+        clearActive();
         if (currentMode === "bar") {
             initArray();
             renderBars();
         } else {
-            initCircleArray();
-            renderCircle(canvas, -1, "Bubble Sort");
+            drawCircle(true);
         }
     });
 }
 
 window.addEventListener("resize", () => {
-    if (currentMode === "color" && !isCircleSortingActive()) {
-        renderCircle(canvas, -1, "Bubble Sort");
+    const circle = getLoadedCircle();
+    if (currentMode === "color" && circle && !circle.isCircleSortingActive()) {
+        circle.renderCircle(canvas, -1, TITLES.bubble);
     }
 });
 
 initArray();
 renderBars();
-initCircleArray();
+preloadWhenIdle();
