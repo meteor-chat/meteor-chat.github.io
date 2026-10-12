@@ -1,0 +1,93 @@
+import { initFilters } from "./math-filter.js";
+
+const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
+const CALC_CSS_HREF = new URL("./math.css", import.meta.url).href;
+const CONTROLLER_GRAPH = [
+    "./math-controller.js",
+    "./dom-refs.js",
+    "./app-state.js",
+    "./error-view.js",
+    "./math-formulas.js",
+    "./math-refs.js",
+    "./math-inputs.js",
+    "./math-modules.js",
+    "./lazy-assets.js"
+];
+
+let controllerPromise = null;
+
+function loadController() {
+    if (!controllerPromise) {
+        controllerPromise = import("./math-controller.js").catch((error) => {
+            controllerPromise = null;
+            throw error;
+        });
+    }
+    return controllerPromise;
+}
+
+function reportError(error) {
+    import("./error-view.js")
+        .then(({ showError }) => showError(`Kalkulator gagal dimuat: ${error.message}`))
+        .catch(() => {});
+}
+
+function findCard(target) {
+    const card = target.closest(".math-card[data-formula]");
+    return card && !card.disabled ? card : null;
+}
+
+function addHint(rel, href, as) {
+    const link = document.createElement("link");
+    link.rel = rel;
+    link.href = href;
+    if (as) link.as = as;
+    document.head.appendChild(link);
+}
+
+function prefetchWhenIdle() {
+    if (navigator.connection && navigator.connection.saveData) return;
+    const run = () => {
+        CONTROLLER_GRAPH.forEach((path) => addHint("modulepreload", new URL(path, import.meta.url).href));
+        addHint("prefetch", KATEX_HREF, "script");
+        addHint("prefetch", CALC_CSS_HREF, "style");
+    };
+    const schedule = () => {
+        if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(run, { timeout: 3000 });
+        } else {
+            setTimeout(run, 1500);
+        }
+    };
+    if (document.readyState === "complete") {
+        schedule();
+    } else {
+        window.addEventListener("load", schedule, { once: true });
+    }
+}
+
+function bindGrid(grid) {
+    const warm = (e) => {
+        const card = findCard(e.target);
+        if (!card) return;
+        const n = Number(card.dataset.formula);
+        loadController()
+            .then((controller) => controller.prefetchForm(n))
+            .catch(() => {});
+    };
+    grid.addEventListener("pointerover", warm, { passive: true });
+    grid.addEventListener("focusin", warm);
+    grid.addEventListener("click", (e) => {
+        const card = findCard(e.target);
+        if (!card) return;
+        const n = Number(card.dataset.formula);
+        loadController()
+            .then((controller) => controller.openForm(n, card))
+            .catch(reportError);
+    });
+}
+
+initFilters();
+const grid = document.querySelector(".math-grid");
+if (grid) bindGrid(grid);
+prefetchWhenIdle();

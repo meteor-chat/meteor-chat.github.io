@@ -6,6 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write .",
+    "build:math": "node scripts/build-math.mjs",
     "test": "vitest"
   },
   "repository": {

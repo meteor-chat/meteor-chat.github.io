@@ -4,10 +4,6 @@ import { showError } from "./error-view.js";
 async function init() {
     try {
         setupInputs();
-        if (document.getElementById("math-menu-view")) {
-            const { initMath } = await import("./math-controller.js?v=4");
-            initMath();
-        }
         if (refs.cancelBtn) {
             refs.cancelBtn.addEventListener("click", async () => {
                 const { cancelEdit } = await import("./edit-mode.js");

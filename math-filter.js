@@ -1,50 +1,27 @@
 export function initFilters() {
-    const filterContainer = document.getElementById('math-filter-container');
-    const grid = document.querySelector('.math-grid');
-    if (!filterContainer || !grid) return;
-    
-    const cards = Array.from(grid.querySelectorAll('.math-card'));
-    
-    const categories = new Set();
-    cards.forEach(card => {
-        const cat = card.getAttribute('data-category');
-        if (cat) categories.add(cat);
-    });
-    
+    const container = document.getElementById("math-filter-container");
+    const grid = document.querySelector(".math-grid");
+    if (!container || !grid) return;
+
+    const buttons = Array.from(container.querySelectorAll(".math-filter-btn"));
+    const cards = Array.from(grid.querySelectorAll(".math-card"));
     let activeFilter = null;
-    
-    categories.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.className = 'math-filter-btn';
-        btn.textContent = cat;
-        
-        btn.addEventListener('click', () => {
-            if (activeFilter === cat) {
-                activeFilter = null;
-                btn.classList.remove('active');
-            } else {
-                const allBtns = filterContainer.querySelectorAll('.math-filter-btn');
-                allBtns.forEach(b => b.classList.remove('active'));
-                
-                activeFilter = cat;
-                btn.classList.add('active');
-            }
-            
-            cards.forEach(card => {
-                const cardCat = card.getAttribute('data-category');
-                
-                if (activeFilter === null) {
-                    card.classList.remove('math-hidden');
-                } else {
-                    if (cardCat === activeFilter) {
-                        card.classList.remove('math-hidden');
-                    } else {
-                        card.classList.add('math-hidden');
-                    }
-                }
-            });
+
+    container.addEventListener("click", (e) => {
+        const btn = e.target.closest(".math-filter-btn");
+        if (!btn) return;
+        const category = btn.dataset.filter;
+        activeFilter = activeFilter === category ? null : category;
+
+        buttons.forEach((b) => {
+            const isActive = b.dataset.filter === activeFilter;
+            b.classList.toggle("active", isActive);
+            b.setAttribute("aria-pressed", String(isActive));
         });
-        
-        filterContainer.appendChild(btn);
+
+        cards.forEach((card) => {
+            const hidden = activeFilter !== null && card.dataset.category !== activeFilter;
+            card.classList.toggle("math-hidden", hidden);
+        });
     });
 }
