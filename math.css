@@ -199,3 +199,45 @@
 
 
 
+.cone-card-icon {
+    width: 72px;
+    height: 72px;
+    display: block;
+    margin: 0 auto;
+}
+.math-card-cone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cone-mode-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 14px;
+    flex-wrap: wrap;
+}
+.cone-mode-select {
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 15px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.cone-mode-select:focus {
+    border-color: #38bdf8;
+}
+.cone-left-panel {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+.cone-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

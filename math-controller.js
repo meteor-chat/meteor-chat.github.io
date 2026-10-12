@@ -19,6 +19,7 @@ import { calculateMath20 } from "./math-calc-20.js";
 import { calculateMath21 } from "./math-calc-21.js";
 import { calculateMath22 } from "./math-calc-22.js";
 import { calculateMath23, initCubeView } from "./math-calc-23.js";
+import { calculateMath24, initConeView } from "./math-calc-24.js";
 
 const FORMULAS = [
     null,
@@ -44,14 +45,15 @@ const FORMULAS = [
     "\\det(AB) = \\det(A) \\cdot \\det(B)",
     "\\pi",
     "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}",
-    "V = s^3"
+    "V = s^3",
+    "V = \\frac{1}{3} \\pi r^2 t"
 ];
 
 export function initMath() {
     refs.btnMathEor = document.getElementById("btn-math-eor");
     refs.mathMenu = document.getElementById("math-menu-view");
     refs.mathCalc = document.getElementById("math-calc-view");
-    for(let i=1; i<=23; i++) {
+    for(let i=1; i<=24; i++) {
         refs[`mathCard${i}`] = document.getElementById(`math-card-${i}`);
         refs[`form${i}`] = document.getElementById(`math-calc-form-${i}`);
         refs[`btnMathCalcBack${i===1?'1':i}`] = document.getElementById(i===1?'btn-math-calc-back':`btn-math-calc-back-${i}`);
@@ -137,9 +139,17 @@ export function initMath() {
     refs.cubeInSisi = document.getElementById("cube-in-sisi");
     refs.cubeOutVolume = document.getElementById("cube-out-volume");
     refs.cubeCanvas = document.getElementById("cube-canvas");
+    refs.coneInMode = document.getElementById("cone-in-mode");
+    refs.coneInA = document.getElementById("cone-in-a");
+    refs.coneInB = document.getElementById("cone-in-b");
+    refs.coneLabelA = document.getElementById("cone-label-a");
+    refs.coneLabelB = document.getElementById("cone-label-b");
+    refs.coneCanvas = document.getElementById("cone-canvas");
 
     if (typeof katex !== 'undefined') {
-        for(let i=1; i<=23; i++) {
+        for(let i=1; i<=24; i++) {
+            // Card 24 (Kerucut) shows a 3D cone illustration instead of a formula.
+            if(i === 24) continue;
             if(refs[`mathCard${i}`] && FORMULAS[i]) {
                 katex.render(FORMULAS[i], refs[`mathCard${i}`], { throwOnError: false, displayMode: false });
             }
@@ -185,13 +195,14 @@ export function initMath() {
         20: calculateMath20,
         21: calculateMath21,
         22: calculateMath22,
-        23: initCubeView
+        23: initCubeView,
+        24: initConeView
     };
 
     const openForm = (formNum) => {
         refs.mathMenu.classList.add("hidden");
         refs.mathCalc.classList.remove("hidden");
-        for(let i=1; i<=23; i++) {
+        for(let i=1; i<=24; i++) {
             if(refs[`form${i}`]) refs[`form${i}`].classList.add("hidden");
         }
         state.currentView = "math-calc";
@@ -209,7 +220,7 @@ export function initMath() {
         state.currentView = "math-menu";
     };
 
-    for(let i=1; i<=23; i++) {
+    for(let i=1; i<=24; i++) {
         if(refs[`mathCard${i}`]) refs[`mathCard${i}`].addEventListener("click", () => openForm(i));
         const btnBack = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
         if (btnBack) btnBack.addEventListener("click", closeForm);
@@ -256,6 +267,7 @@ export function initMath() {
     if(refs.m21InD) refs.m21InD.addEventListener("input", calculateMath21);
     if(refs.m22InN) refs.m22InN.addEventListener("input", calculateMath22);
     if(refs.cubeInSisi) refs.cubeInSisi.addEventListener("input", calculateMath23);
+    [refs.coneInA, refs.coneInB].forEach(el => { if(el) el.addEventListener("input", calculateMath24); });
     [refs.m7InP1, refs.m7InP2, refs.m7InType, refs.m7InK, refs.m7InK1, refs.m7InK2, refs.m7InMask].forEach(el => {
         if(el) el.addEventListener("input", () => {
             if (el === refs.m7InType) {
