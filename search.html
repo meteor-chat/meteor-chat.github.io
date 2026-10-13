@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive search algorithm visualizations on Meteor - Explore BFS, DFS, and Dijkstra pathfinding simulations.">
+<title>Search - Meteor</title>
+<link rel="icon" href="./icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root { --bg-main: black; --text-main: white; --font-stack: 'Google Sans', sans-serif; --space-lg: 20px; }
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, button { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); }
+button { cursor: pointer; background: transparent; border: none; display: flex; align-items: center; justify-content: center; padding: 0; }
+#search-menu-view { display: flex; flex-direction: column; align-items: center; padding: 60px var(--space-lg); width: 100%; min-height: 100dvh; background-color: var(--bg-main); }
+.search-title { font-size: 24px; font-weight: 400; margin-bottom: 60px; color: var(--text-main); }
+.search-filter-container { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 0 var(--space-lg); max-width: 900px; width: 100%; }
+.search-filter-btn { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 20px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+.search-filter-btn:hover { border-color: #888; }
+.search-filter-btn.active { background: var(--text-main); color: var(--bg-main); border-color: var(--text-main); }
+.search-visualizer-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 40px; margin-bottom: 30px; padding: 0 var(--space-lg); max-width: 900px; min-height: 320px; }
+.search-canvas { width: 100%; max-width: 800px; aspect-ratio: 16 / 9; height: auto; background: transparent; display: block; }
+.search-hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main id="search-menu-view">
+    <h1 class="search-title">Search</h1>
+    <div id="search-filter-container" class="search-filter-container">
+        <button class="search-filter-btn active" data-search="bfs">BFS</button>
+        <button class="search-filter-btn" data-search="dfs">DFS</button>
+        <button class="search-filter-btn" data-search="dijkstra">Dijkstra</button>
+    </div>
+    <div class="search-visualizer-wrapper">
+        <canvas id="search-canvas" class="search-canvas" width="800" height="450"></canvas>
+    </div>
+</main>
+<script type="module" src="search-controller.js"></script>
+</body>
+</html>
