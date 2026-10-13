@@ -109,5 +109,22 @@ describe("Sort Circle Algorithms", () => {
         drawDisparityCircle(mockCtx, 800, 450, [], "Empty");
         expect(strokeCalled).toBe(false);
     });
+
+    it("initWorstCircleArray should create completely reversed array", async () => {
+        const { initWorstCircleArray, isCircleSorted } = await import("./sort-circle-runner.js");
+        initWorstCircleArray();
+        expect(isCircleSorted()).toBe(false);
+    });
+
+    it("all generators should sort worst case array to ascending", () => {
+        const algos = ["bubble", "selection", "insertion", "shaker", "quick"];
+        for (const algo of algos) {
+            const arr = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+            const gen = createSortGenerator(algo, arr);
+            runToCompletion(gen);
+            expect(isSorted(arr)).toBe(true);
+            expect(arr).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        }
+    });
 });
 

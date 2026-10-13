@@ -37,7 +37,7 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .sort-hidden { display: none !important; }
 .sort-bar { position: absolute; bottom: 0; width: 80px; background-color: #fff; transition: background-color 0.2s ease; will-change: transform; }
 .sort-bar.temp { background-color: #4CAF50; }
-.sort-action-container { display: flex; justify-content: center; margin-top: 20px; padding-bottom: 40px; width: 100%; }
+.sort-action-container { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 40px; width: 100%; }
 .btn-sort-action { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 24px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .btn-sort-action:hover:not(:disabled) { border-color: #888; background: rgba(255, 255, 255, 0.05); }
 .btn-sort-action:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -72,8 +72,9 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
     </div>
     <div class="sort-action-container">
         <button id="btn-randomize" class="btn-sort-action">Randomize</button>
+        <button id="btn-worst" class="btn-sort-action">Worst</button>
     </div>
 </main>
-<script type="module" src="sort-controller.js?v=6"></script>
+<script type="module" src="sort-controller.js?v=7"></script>
 </body>
 </html>

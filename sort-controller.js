@@ -4,6 +4,7 @@ const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
 const buttons = document.querySelectorAll(".sort-filter-btn");
 const btnRandomize = document.getElementById("btn-randomize");
+const btnWorst = document.getElementById("btn-worst");
 const btnModeBar = document.getElementById("btn-mode-bar");
 const btnModeColor = document.getElementById("btn-mode-color");
 
@@ -28,6 +29,10 @@ function initArray() {
         const j = Math.floor(Math.random() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+}
+
+function setWorstArray() {
+    arr = [...SORTED_REF].reverse();
 }
 
 function renderBars() {
@@ -74,6 +79,7 @@ function setControlsDisabled(disabled) {
         btn.style.pointerEvents = disabled ? "none" : "auto";
     });
     if (btnRandomize) btnRandomize.disabled = disabled;
+    if (btnWorst) btnWorst.disabled = disabled;
     if (btnModeBar) btnModeBar.disabled = disabled;
     if (btnModeColor) btnModeColor.disabled = disabled;
 }
@@ -123,7 +129,11 @@ function drawCircle(reset) {
     loadCircle()
         .then((circle) => {
             if (currentMode !== "color" || circle.isCircleSortingActive()) return;
-            if (reset) circle.initCircleArray();
+            if (reset === "worst") {
+                circle.initWorstCircleArray();
+            } else if (reset) {
+                circle.initCircleArray();
+            }
             circle.renderCircle(canvas, TITLES.bubble);
         })
         .catch(() => {});
@@ -166,6 +176,19 @@ if (btnRandomize) {
             renderBars();
         } else {
             drawCircle(true);
+        }
+    });
+}
+
+if (btnWorst) {
+    btnWorst.addEventListener("click", () => {
+        if (isBusy()) return;
+        clearActive();
+        if (currentMode === "bar") {
+            setWorstArray();
+            renderBars();
+        } else {
+            drawCircle("worst");
         }
     });
 }

@@ -14,6 +14,10 @@ export function initCircleArray() {
     }
 }
 
+export function initWorstCircleArray() {
+    circleArray = Array.from({ length: TOTAL_ELEMENTS }, (_, i) => TOTAL_ELEMENTS - 1 - i);
+}
+
 export function isCircleSorted() {
     for (let i = 0; i < circleArray.length; i++) {
         if (circleArray[i] !== i) return false;
