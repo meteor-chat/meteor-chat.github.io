@@ -1,10 +1,10 @@
 const ALGORITHMS = {
-    bubble: () => import("./sort-bubble.js").then((m) => m.bubbleSort),
-    selection: () => import("./sort-selection.js").then((m) => m.selectionSort),
-    insertion: () => import("./sort-insertion.js").then((m) => m.insertionSort),
-    quick: () => import("./sort-quick.js").then((m) => m.quickSort),
-    merge: () => import("./sort-merge.js").then((m) => m.mergeSort),
-    shaker: () => import("./sort-shaker.js").then((m) => m.shakerSort)
+    bubble: () => import("./sort-bubble.js?v=10").then((m) => m.bubbleSort),
+    selection: () => import("./sort-selection.js?v=10").then((m) => m.selectionSort),
+    insertion: () => import("./sort-insertion.js?v=10").then((m) => m.insertionSort),
+    quick: () => import("./sort-quick.js?v=10").then((m) => m.quickSort),
+    merge: () => import("./sort-merge.js?v=10").then((m) => m.mergeSort),
+    shaker: () => import("./sort-shaker.js?v=10").then((m) => m.shakerSort)
 };
 
 let circlePromise = null;
@@ -17,7 +17,7 @@ export function loadAlgorithm(type) {
 
 export function loadCircle() {
     if (!circlePromise) {
-        circlePromise = import("./sort-circle-runner.js")
+        circlePromise = import("./sort-circle-runner.js?v=10")
             .then((m) => {
                 m.initCircleArray();
                 circleModule = m;

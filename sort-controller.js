@@ -1,4 +1,4 @@
-import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js";
+import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=10";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");

@@ -79,7 +79,7 @@ describe("Sort Circle Algorithms", () => {
     });
 
     it("drawDisparityCircle should never stroke red lines", async () => {
-        const { drawDisparityCircle } = await import("./sort-circle-renderer.js");
+        const { drawDisparityCircle } = await import("./sort-circle-draw.js");
         let strokeCalled = false;
         let ellipseCalled = false;
         const mockCtx = {

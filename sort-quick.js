@@ -1,4 +1,4 @@
-import { animateSwap } from "./sort-animator.js";
+import { animateSwap } from "./sort-animator.js?v=10";
 
 async function partition(arr, low, high, domBars, updatePos, setTemp, sleep) {
     let pivot = arr[high];
