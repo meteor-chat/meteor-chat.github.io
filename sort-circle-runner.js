@@ -1,5 +1,5 @@
-import { setupCanvas, drawDisparityCircle } from "./sort-circle-draw.js?v=11";
-import { createSortGenerator } from "./sort-circle-algorithms.js?v=11";
+import { setupCanvas, drawDisparityCircle } from "./sort-circle-draw.js?v=12";
+import { createSortGenerator } from "./sort-circle-algorithms.js?v=12";
 
 const TOTAL_ELEMENTS = 360;
 let circleArray = [];
@@ -25,11 +25,10 @@ export function isCircleSorted() {
     return true;
 }
 
-export function renderCircle(canvas, titleOrIdx, maybeTitle) {
+export function renderCircle(canvas) {
     if (!canvas) return;
-    const title = typeof titleOrIdx === "string" ? titleOrIdx : (typeof maybeTitle === "string" ? maybeTitle : "Bubble Sort");
     const ctx = setupCanvas(canvas);
-    drawDisparityCircle(ctx, 800, 450, circleArray, title);
+    drawDisparityCircle(ctx, 800, 450, circleArray);
 }
 
 export function stopCircleSort() {
@@ -50,12 +49,13 @@ function getStepsPerFrame(type) {
     return 120;
 }
 
-export async function startCircleSort(canvas, type, title, onComplete) {
+export async function startCircleSort(canvas, type, onCompleteOrTitle, maybeOnComplete) {
+    const onComplete = typeof onCompleteOrTitle === "function" ? onCompleteOrTitle : (typeof maybeOnComplete === "function" ? maybeOnComplete : null);
     if (isCircleSorting) return;
     if (isCircleSorted()) {
         initCircleArray();
-        renderCircle(canvas, title);
-        await new Promise(resolve => setTimeout(resolve, 400));
+        renderCircle(canvas);
+        await new Promise((resolve) => setTimeout(resolve, 400));
     }
 
     isCircleSorting = true;
@@ -76,7 +76,7 @@ export async function startCircleSort(canvas, type, title, onComplete) {
         }
 
         if (isDone) {
-            drawDisparityCircle(ctx, 800, 450, circleArray, title);
+            drawDisparityCircle(ctx, 800, 450, circleArray);
             isCircleSorting = false;
             animationFrameId = null;
             if (typeof onComplete === "function") {
@@ -85,7 +85,7 @@ export async function startCircleSort(canvas, type, title, onComplete) {
             return;
         }
 
-        drawDisparityCircle(ctx, 800, 450, circleArray, title);
+        drawDisparityCircle(ctx, 800, 450, circleArray);
         animationFrameId = requestAnimationFrame(loop);
     }
 

@@ -78,14 +78,17 @@ describe("Sort Circle Algorithms", () => {
         expect(isSorted(arr)).toBe(true);
     });
 
-    it("drawDisparityCircle should never stroke red lines", async () => {
+    it("drawDisparityCircle should never stroke red lines, fill background, or draw text", async () => {
         const { drawDisparityCircle } = await import("./sort-circle-draw.js");
         let strokeCalled = false;
         let ellipseCalled = false;
+        let fillRectCalled = false;
+        let fillTextCalled = false;
+        let clearRectCalled = false;
         const mockCtx = {
-            clearRect: () => {},
-            fillRect: () => {},
-            fillText: () => {},
+            clearRect: () => { clearRectCalled = true; },
+            fillRect: () => { fillRectCalled = true; },
+            fillText: () => { fillTextCalled = true; },
             beginPath: () => {},
             arc: () => {},
             fill: () => {},
@@ -97,16 +100,17 @@ describe("Sort Circle Algorithms", () => {
             font: "",
             textBaseline: ""
         };
-        drawDisparityCircle(mockCtx, 800, 450, [2, 0, 1], 1, "Shaker Sort");
+        drawDisparityCircle(mockCtx, 800, 450, [2, 0, 1]);
+        expect(clearRectCalled).toBe(true);
+        expect(fillRectCalled).toBe(false);
+        expect(fillTextCalled).toBe(false);
         expect(strokeCalled).toBe(false);
         expect(ellipseCalled).toBe(false);
         expect(mockCtx.strokeStyle).toBe("");
 
-        drawDisparityCircle(mockCtx, 800, 450, [2, 0, 1], "Shaker Sort");
-        expect(strokeCalled).toBe(false);
-        expect(ellipseCalled).toBe(false);
-
-        drawDisparityCircle(mockCtx, 800, 450, [], "Empty");
+        drawDisparityCircle(mockCtx, 800, 450, []);
+        expect(fillRectCalled).toBe(false);
+        expect(fillTextCalled).toBe(false);
         expect(strokeCalled).toBe(false);
     });
 

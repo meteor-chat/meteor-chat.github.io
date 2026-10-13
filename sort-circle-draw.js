@@ -9,20 +9,10 @@ export function setupCanvas(canvas) {
     return ctx;
 }
 
-export function drawDisparityCircle(ctx, width, height, arr, titleOrIdx, maybeTitle) {
-    const title = typeof titleOrIdx === "string" ? titleOrIdx : (typeof maybeTitle === "string" ? maybeTitle : "");
+export function drawDisparityCircle(ctx, width, height, arr) {
     ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#161616";
-    ctx.fillRect(0, 0, width, height);
 
-    if (title) {
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "16px sans-serif";
-        ctx.textBaseline = "top";
-        ctx.fillText(title, 24, 24);
-    }
-
-    const n = arr.length;
+    const n = arr ? arr.length : 0;
     if (n === 0) return;
 
     const cx = width / 2;

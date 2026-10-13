@@ -1,4 +1,4 @@
-import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=11";
+import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=12";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
@@ -9,14 +9,6 @@ const btnModeBar = document.getElementById("btn-mode-bar");
 const btnModeColor = document.getElementById("btn-mode-color");
 
 const SORTED_REF = [1, 1.5, 2, 2.5, 3, 3.5, 4];
-const TITLES = {
-    bubble: "Bubble Sort",
-    selection: "Selection Sort",
-    insertion: "Insertion Sort",
-    quick: "Quick Sort",
-    merge: "Merge Sort",
-    shaker: "Shaker Sort"
-};
 
 let currentMode = "bar";
 let arr = [];
@@ -118,7 +110,7 @@ async function startSort(type) {
             finishSort();
         } else {
             const circle = await loadCircle();
-            await circle.startCircleSort(canvas, type, TITLES[type] || TITLES.bubble, finishSort);
+            await circle.startCircleSort(canvas, type, finishSort);
         }
     } catch {
         finishSort();
@@ -130,7 +122,7 @@ function drawCircle(reset) {
         .then((circle) => {
             if (currentMode !== "color" || circle.isCircleSortingActive()) return;
             if (reset) circle.initCircleArray();
-            circle.renderCircle(canvas, TITLES.bubble);
+            circle.renderCircle(canvas);
         })
         .catch(() => {});
 }
@@ -189,7 +181,7 @@ if (btnWorst) {
 window.addEventListener("resize", () => {
     const circle = getLoadedCircle();
     if (currentMode === "color" && circle && !circle.isCircleSortingActive()) {
-        circle.renderCircle(canvas, TITLES.bubble);
+        circle.renderCircle(canvas);
     }
 });
 
