@@ -1,5 +1,5 @@
-import { setupCanvas, drawDisparityCircle } from "./sort-circle-draw.js?v=10";
-import { createSortGenerator } from "./sort-circle-algorithms.js?v=10";
+import { setupCanvas, drawDisparityCircle } from "./sort-circle-draw.js?v=11";
+import { createSortGenerator } from "./sort-circle-algorithms.js?v=11";
 
 const TOTAL_ELEMENTS = 360;
 let circleArray = [];

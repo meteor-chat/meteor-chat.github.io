@@ -1,4 +1,4 @@
-import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=10";
+import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=11";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
@@ -129,11 +129,7 @@ function drawCircle(reset) {
     loadCircle()
         .then((circle) => {
             if (currentMode !== "color" || circle.isCircleSortingActive()) return;
-            if (reset === "worst") {
-                circle.initWorstCircleArray();
-            } else if (reset) {
-                circle.initCircleArray();
-            }
+            if (reset) circle.initCircleArray();
             circle.renderCircle(canvas, TITLES.bubble);
         })
         .catch(() => {});
@@ -148,6 +144,7 @@ function setMode(mode) {
     if (btnModeColor) btnModeColor.classList.toggle("active", !isBar);
     if (canvas) canvas.classList.toggle("sort-hidden", isBar);
     if (container) container.classList.toggle("sort-hidden", !isBar);
+    if (btnWorst) btnWorst.classList.toggle("sort-hidden", !isBar);
     if (isBar) {
         renderBars();
     } else {
@@ -182,14 +179,10 @@ if (btnRandomize) {
 
 if (btnWorst) {
     btnWorst.addEventListener("click", () => {
-        if (isBusy()) return;
+        if (isBusy() || currentMode !== "bar") return;
         clearActive();
-        if (currentMode === "bar") {
-            setWorstArray();
-            renderBars();
-        } else {
-            drawCircle("worst");
-        }
+        setWorstArray();
+        renderBars();
     });
 }
 

@@ -1,4 +1,4 @@
-import { animateShiftInsert } from "./sort-animator.js?v=10";
+import { animateShiftInsert } from "./sort-animator.js?v=11";
 
 export async function mergeSort(arr, domBars, updatePos, setTemp, sleep) {
     await mergeSortHelper(arr, 0, arr.length - 1, domBars, updatePos, setTemp, sleep);

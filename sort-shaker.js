@@ -1,4 +1,4 @@
-import { animateSwap } from "./sort-animator.js?v=10";
+import { animateSwap } from "./sort-animator.js?v=11";
 
 export async function shakerSort(arr, domBars, updatePos, setTemp, sleep) {
     let swapped = true;

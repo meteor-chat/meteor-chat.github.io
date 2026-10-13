@@ -1,4 +1,4 @@
-import { animateSwap } from "./sort-animator.js?v=10";
+import { animateSwap } from "./sort-animator.js?v=11";
 
 export async function insertionSort(arr, domBars, updatePos, setTemp, sleep) {
     let n = arr.length;
