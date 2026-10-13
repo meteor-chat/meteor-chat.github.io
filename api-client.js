@@ -5,6 +5,7 @@ import { parseStream } from "./api-stream.js";
 import { stripThinkTags, getMaxTokens } from "./text-utils.js";
 import { trimMessages, getScheduleContext, getLastUserText } from "./history.js";
 import { ensureJadwal } from "./template-loader.js";
+import { getFeatureContext } from "./feature-context.js";
 export class ApiError extends Error {
     constructor(message, status, type, cooldown = 0) {
         super(message);
@@ -90,6 +91,10 @@ export async function callChatAPI(messages, onChunk) {
     if (scheduleText) {
         contextSuffix += `\n[System Note: Berikut adalah data jadwal kuliah saat ini:\n${scheduleText}]`;
         hasSchedule = true;
+    }
+    const featureText = getFeatureContext(lastText, messages);
+    if (featureText) {
+        contextSuffix += `\n[System Note: Panduan fitur web Meteor:\n${featureText}]`;
     }
     const apiMessages = trimmed.map((msg, i) => {
         if (i === trimmed.length - 1 && msg.role === "user") {
