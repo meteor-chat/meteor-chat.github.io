@@ -6,6 +6,7 @@ import {
     setStartNode,
     setTargetNode
 } from "./search-grid-state.js";
+import { isPathfindingActive } from "./search-animator.js";
 
 function getCellCoords(canvas, state, clientX, clientY, width = 800, height = 450) {
     const rect = canvas.getBoundingClientRect();
@@ -31,6 +32,8 @@ export function attachArenaEvents(canvas, state, onUpdate, width = 800, height =
     let lastCell = null;
 
     function handlePointerDown(e) {
+        if (isPathfindingActive()) return;
+
         const cell = getCellCoords(canvas, state, e.clientX, e.clientY, width, height);
         if (!cell) return;
 
@@ -50,7 +53,7 @@ export function attachArenaEvents(canvas, state, onUpdate, width = 800, height =
     }
 
     function handlePointerMove(e) {
-        if (!mode) return;
+        if (!mode || isPathfindingActive()) return;
 
         const cell = getCellCoords(canvas, state, e.clientX, e.clientY, width, height);
         if (!cell) return;

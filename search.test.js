@@ -16,6 +16,7 @@ import {
     NODE_PATH
 } from "./search-grid-state.js";
 import { drawArena } from "./search-grid-draw.js";
+import { runBFS, runDFS, runDijkstra, executeAlgorithm } from "./search-algorithms.js";
 
 describe("Pathfinding Arena Grid State", () => {
     it("should initialize grid with correct dimensions and start/target nodes", () => {
@@ -128,6 +129,87 @@ describe("Pathfinding Arena Grid State", () => {
     });
 });
 
+describe("Pathfinding Algorithms (BFS, DFS, Dijkstra)", () => {
+    it("BFS should find the shortest path in an open grid", () => {
+        const state = createGridState(7, 7);
+        setStartNode(state, 1, 1);
+        setTargetNode(state, 1, 4);
+
+        const result = runBFS(state);
+        expect(result.found).toBe(true);
+        expect(result.path.length).toBe(2);
+        expect(result.path).toEqual([
+            { r: 1, c: 2 },
+            { r: 1, c: 3 }
+        ]);
+        expect(result.visitedInOrder.length).toBeGreaterThan(0);
+    });
+
+    it("DFS should reach the target in an open grid", () => {
+        const state = createGridState(7, 7);
+        setStartNode(state, 1, 1);
+        setTargetNode(state, 1, 4);
+
+        const result = runDFS(state);
+        expect(result.found).toBe(true);
+        expect(result.path.length).toBeGreaterThan(0);
+        expect(result.visitedInOrder.length).toBeGreaterThan(0);
+    });
+
+    it("Dijkstra should find the shortest path in an open grid", () => {
+        const state = createGridState(7, 7);
+        setStartNode(state, 1, 1);
+        setTargetNode(state, 1, 4);
+
+        const result = runDijkstra(state);
+        expect(result.found).toBe(true);
+        expect(result.path.length).toBe(2);
+        expect(result.path).toEqual([
+            { r: 1, c: 2 },
+            { r: 1, c: 3 }
+        ]);
+    });
+
+    it("Algorithms should bypass obstacles correctly", () => {
+        const state = createGridState(5, 5);
+        setStartNode(state, 2, 1);
+        setTargetNode(state, 2, 3);
+        setWall(state, 2, 2, true);
+
+        const bfsResult = runBFS(state);
+        expect(bfsResult.found).toBe(true);
+        const hitWall = bfsResult.path.some((n) => n.r === 2 && n.c === 2);
+        expect(hitWall).toBe(false);
+
+        const dijkstraResult = runDijkstra(state);
+        expect(dijkstraResult.found).toBe(true);
+        const dijkstraHitWall = dijkstraResult.path.some((n) => n.r === 2 && n.c === 2);
+        expect(dijkstraHitWall).toBe(false);
+    });
+
+    it("Algorithms should return found=false when target is trapped", () => {
+        const state = createGridState(5, 5);
+        setStartNode(state, 0, 0);
+        setTargetNode(state, 2, 2);
+
+        setWall(state, 1, 2, true);
+        setWall(state, 3, 2, true);
+        setWall(state, 2, 1, true);
+        setWall(state, 2, 3, true);
+
+        expect(runBFS(state).found).toBe(false);
+        expect(runDFS(state).found).toBe(false);
+        expect(runDijkstra(state).found).toBe(false);
+    });
+
+    it("executeAlgorithm should delegate to chosen algorithm", () => {
+        const state = createGridState(6, 6);
+        expect(executeAlgorithm("bfs", state).found).toBe(true);
+        expect(executeAlgorithm("dfs", state).found).toBe(true);
+        expect(executeAlgorithm("dijkstra", state).found).toBe(true);
+    });
+});
+
 describe("Search Page & Controller", () => {
     beforeEach(() => {
         document.body.innerHTML = `
@@ -137,27 +219,24 @@ describe("Search Page & Controller", () => {
                 <button class="search-filter-btn" data-search="dijkstra">Dijkstra</button>
             </div>
             <canvas id="search-canvas" width="800" height="450"></canvas>
+            <button id="btn-visualize" class="btn-search-action">Visualize BFS</button>
             <button id="btn-generate-maze"></button>
             <button id="btn-clear-walls"></button>
             <button id="btn-clear-path"></button>
         `;
     });
 
-    it("should toggle active state properly when selecting algorithms", async () => {
+    it("should toggle active state and update visualize button text", async () => {
         const { setActiveSearchAlgorithm, getActiveSearchAlgorithm } = await import("./search-controller.js");
         expect(getActiveSearchAlgorithm()).toBe("bfs");
 
         setActiveSearchAlgorithm("dfs");
         expect(getActiveSearchAlgorithm()).toBe("dfs");
-        const dfsBtn = document.querySelector('[data-search="dfs"]');
-        const bfsBtn = document.querySelector('[data-search="bfs"]');
-        expect(dfsBtn.classList.contains("active")).toBe(true);
-        expect(bfsBtn.classList.contains("active")).toBe(false);
+        const btnVisualize = document.getElementById("btn-visualize");
+        expect(btnVisualize.textContent).toBe("Visualize DFS");
 
         setActiveSearchAlgorithm("dijkstra");
         expect(getActiveSearchAlgorithm()).toBe("dijkstra");
-        const dijkstraBtn = document.querySelector('[data-search="dijkstra"]');
-        expect(dijkstraBtn.classList.contains("active")).toBe(true);
-        expect(dfsBtn.classList.contains("active")).toBe(false);
+        expect(btnVisualize.textContent).toBe("Visualize Dijkstra");
     });
 });

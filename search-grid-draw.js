@@ -57,11 +57,15 @@ export function drawArena(ctx, width, height, state) {
                 ctx.strokeStyle = "#38455b";
                 ctx.strokeRect(x + 1.5, y + 1.5, cellW - 3, cellH - 3);
             } else if (val === NODE_VISITED) {
-                ctx.fillStyle = "rgba(37, 99, 235, 0.45)";
+                ctx.fillStyle = "rgba(14, 165, 233, 0.4)";
                 ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                ctx.strokeStyle = "rgba(56, 189, 248, 0.6)";
+                ctx.strokeRect(x + 1.5, y + 1.5, cellW - 3, cellH - 3);
             } else if (val === NODE_PATH) {
-                ctx.fillStyle = "rgba(251, 191, 36, 0.85)";
+                ctx.fillStyle = "#fbbf24";
                 ctx.fillRect(x + 1, y + 1, cellW - 2, cellH - 2);
+                ctx.strokeStyle = "#fef08a";
+                ctx.strokeRect(x + 1.5, y + 1.5, cellW - 3, cellH - 3);
             }
         }
     }
