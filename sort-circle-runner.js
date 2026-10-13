@@ -21,10 +21,11 @@ export function isCircleSorted() {
     return true;
 }
 
-export function renderCircle(canvas, activeIdx = -1, title = "Bubble Sort") {
+export function renderCircle(canvas, titleOrIdx, maybeTitle) {
     if (!canvas) return;
+    const title = typeof titleOrIdx === "string" ? titleOrIdx : (typeof maybeTitle === "string" ? maybeTitle : "Bubble Sort");
     const ctx = setupCanvas(canvas);
-    drawDisparityCircle(ctx, 800, 450, circleArray, activeIdx, title);
+    drawDisparityCircle(ctx, 800, 450, circleArray, title);
 }
 
 export function stopCircleSort() {
@@ -49,7 +50,7 @@ export async function startCircleSort(canvas, type, title, onComplete) {
     if (isCircleSorting) return;
     if (isCircleSorted()) {
         initCircleArray();
-        renderCircle(canvas, -1, title);
+        renderCircle(canvas, title);
         await new Promise(resolve => setTimeout(resolve, 400));
     }
 
@@ -60,7 +61,6 @@ export async function startCircleSort(canvas, type, title, onComplete) {
 
     function loop() {
         if (!isCircleSorting) return;
-        let lastIdx = -1;
         let isDone = false;
 
         for (let s = 0; s < steps; s++) {
@@ -69,11 +69,10 @@ export async function startCircleSort(canvas, type, title, onComplete) {
                 isDone = true;
                 break;
             }
-            lastIdx = next.value;
         }
 
         if (isDone) {
-            drawDisparityCircle(ctx, 800, 450, circleArray, -1, title);
+            drawDisparityCircle(ctx, 800, 450, circleArray, title);
             isCircleSorting = false;
             animationFrameId = null;
             if (typeof onComplete === "function") {
@@ -82,7 +81,7 @@ export async function startCircleSort(canvas, type, title, onComplete) {
             return;
         }
 
-        drawDisparityCircle(ctx, 800, 450, circleArray, lastIdx, title);
+        drawDisparityCircle(ctx, 800, 450, circleArray, title);
         animationFrameId = requestAnimationFrame(loop);
     }
 

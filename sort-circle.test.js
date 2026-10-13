@@ -77,4 +77,37 @@ describe("Sort Circle Algorithms", () => {
         runToCompletion(gen);
         expect(isSorted(arr)).toBe(true);
     });
+
+    it("drawDisparityCircle should never stroke red lines", async () => {
+        const { drawDisparityCircle } = await import("./sort-circle-renderer.js");
+        let strokeCalled = false;
+        let ellipseCalled = false;
+        const mockCtx = {
+            clearRect: () => {},
+            fillRect: () => {},
+            fillText: () => {},
+            beginPath: () => {},
+            arc: () => {},
+            fill: () => {},
+            stroke: () => { strokeCalled = true; },
+            ellipse: () => { ellipseCalled = true; },
+            fillStyle: "",
+            strokeStyle: "",
+            lineWidth: 0,
+            font: "",
+            textBaseline: ""
+        };
+        drawDisparityCircle(mockCtx, 800, 450, [2, 0, 1], 1, "Shaker Sort");
+        expect(strokeCalled).toBe(false);
+        expect(ellipseCalled).toBe(false);
+        expect(mockCtx.strokeStyle).toBe("");
+
+        drawDisparityCircle(mockCtx, 800, 450, [2, 0, 1], "Shaker Sort");
+        expect(strokeCalled).toBe(false);
+        expect(ellipseCalled).toBe(false);
+
+        drawDisparityCircle(mockCtx, 800, 450, [], "Empty");
+        expect(strokeCalled).toBe(false);
+    });
 });
+

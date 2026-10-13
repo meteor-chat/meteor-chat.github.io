@@ -124,7 +124,7 @@ function drawCircle(reset) {
         .then((circle) => {
             if (currentMode !== "color" || circle.isCircleSortingActive()) return;
             if (reset) circle.initCircleArray();
-            circle.renderCircle(canvas, -1, TITLES.bubble);
+            circle.renderCircle(canvas, TITLES.bubble);
         })
         .catch(() => {});
 }
@@ -173,7 +173,7 @@ if (btnRandomize) {
 window.addEventListener("resize", () => {
     const circle = getLoadedCircle();
     if (currentMode === "color" && circle && !circle.isCircleSortingActive()) {
-        circle.renderCircle(canvas, -1, TITLES.bubble);
+        circle.renderCircle(canvas, TITLES.bubble);
     }
 });
 

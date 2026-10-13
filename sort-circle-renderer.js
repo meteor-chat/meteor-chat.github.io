@@ -9,15 +9,18 @@ export function setupCanvas(canvas) {
     return ctx;
 }
 
-export function drawDisparityCircle(ctx, width, height, arr, activeIdx, title) {
+export function drawDisparityCircle(ctx, width, height, arr, titleOrIdx, maybeTitle) {
+    const title = typeof titleOrIdx === "string" ? titleOrIdx : (typeof maybeTitle === "string" ? maybeTitle : "");
     ctx.clearRect(0, 0, width, height);
     ctx.fillStyle = "#161616";
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "16px sans-serif";
-    ctx.textBaseline = "top";
-    ctx.fillText(title, 24, 24);
+    if (title) {
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "16px sans-serif";
+        ctx.textBaseline = "top";
+        ctx.fillText(title, 24, 24);
+    }
 
     const n = arr.length;
     if (n === 0) return;
@@ -26,16 +29,6 @@ export function drawDisparityCircle(ctx, width, height, arr, activeIdx, title) {
     const cy = height / 2;
     const rx = width * 0.44;
     const ry = height * 0.38;
-
-    if (activeIdx >= 0) {
-        const startAngle = -Math.PI / 2;
-        const currentAngle = -Math.PI / 2 + (activeIdx / n) * 2 * Math.PI;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx, ry, 0, startAngle, currentAngle, false);
-        ctx.strokeStyle = "#ef4444";
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-    }
 
     const dotRadius = 1.8;
     for (let i = 0; i < n; i++) {
