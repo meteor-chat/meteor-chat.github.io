@@ -27,9 +27,12 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .search-filter-btn { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 20px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .search-filter-btn:hover { border-color: #888; }
 .search-filter-btn.active { background: var(--text-main); color: var(--bg-main); border-color: var(--text-main); }
-.search-visualizer-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 40px; margin-bottom: 30px; padding: 0 var(--space-lg); max-width: 900px; min-height: 320px; }
-.search-canvas { width: 100%; max-width: 800px; aspect-ratio: 16 / 9; height: auto; background: transparent; display: block; }
-.search-hidden { display: none !important; }
+.search-visualizer-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; margin-top: 40px; margin-bottom: 20px; padding: 0 var(--space-lg); max-width: 900px; }
+.search-canvas { width: 100%; max-width: 800px; aspect-ratio: 16 / 9; height: auto; border: 1px solid #23272f; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); display: block; touch-action: none; cursor: crosshair; }
+.search-action-container { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 40px; width: 100%; }
+.btn-search-action { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 24px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+.btn-search-action:hover:not(:disabled) { border-color: #888; background: rgba(255, 255, 255, 0.05); }
+.btn-search-action:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -42,6 +45,11 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
     </div>
     <div class="search-visualizer-wrapper">
         <canvas id="search-canvas" class="search-canvas" width="800" height="450"></canvas>
+    </div>
+    <div class="search-action-container">
+        <button id="btn-generate-maze" class="btn-search-action">Generate Maze</button>
+        <button id="btn-clear-walls" class="btn-search-action">Clear Walls</button>
+        <button id="btn-clear-path" class="btn-search-action">Clear Path</button>
     </div>
 </main>
 <script type="module" src="search-controller.js"></script>
