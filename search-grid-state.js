@@ -100,3 +100,5 @@ export function generateMaze(state) {
         }
     }
 }
+
+export const randomizeGrid = generateMaze;

@@ -219,24 +219,33 @@ describe("Search Page & Controller", () => {
                 <button class="search-filter-btn" data-search="dijkstra">Dijkstra</button>
             </div>
             <canvas id="search-canvas" width="800" height="450"></canvas>
-            <button id="btn-visualize" class="btn-search-action">Visualize BFS</button>
-            <button id="btn-generate-maze"></button>
-            <button id="btn-clear-walls"></button>
-            <button id="btn-clear-path"></button>
+            <div class="search-action-container">
+                <button id="btn-run" class="btn-search-action btn-run-action">Run</button>
+                <button id="btn-randomize" class="btn-search-action">Randomize</button>
+            </div>
         `;
     });
 
-    it("should toggle active state and update visualize button text", async () => {
+    it("should toggle active state and maintain Run button", async () => {
         const { setActiveSearchAlgorithm, getActiveSearchAlgorithm } = await import("./search-controller.js");
         expect(getActiveSearchAlgorithm()).toBe("bfs");
 
         setActiveSearchAlgorithm("dfs");
         expect(getActiveSearchAlgorithm()).toBe("dfs");
-        const btnVisualize = document.getElementById("btn-visualize");
-        expect(btnVisualize.textContent).toBe("Visualize DFS");
+        const btnRun = document.getElementById("btn-run");
+        expect(btnRun.textContent).toBe("Run");
 
         setActiveSearchAlgorithm("dijkstra");
         expect(getActiveSearchAlgorithm()).toBe("dijkstra");
-        expect(btnVisualize.textContent).toBe("Visualize Dijkstra");
+        expect(btnRun.textContent).toBe("Run");
+    });
+
+    it("should handle randomize button click and generate maze", async () => {
+        const { randomizeGrid, getGridState } = await import("./search-controller.js");
+        randomizeGrid();
+        const state = getGridState();
+        expect(state.grid[state.start.r][state.start.c]).toBe(NODE_START);
+        expect(state.grid[state.target.r][state.target.c]).toBe(NODE_TARGET);
     });
 });
+

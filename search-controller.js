@@ -1,6 +1,5 @@
 import {
     createGridState,
-    clearWalls,
     clearPath,
     generateMaze
 } from "./search-grid-state.js";
@@ -18,18 +17,10 @@ const HEIGHT = 450;
 const ROWS = 22;
 const COLS = 40;
 
-const ALGO_NAMES = {
-    bfs: "BFS",
-    dfs: "DFS",
-    dijkstra: "Dijkstra"
-};
-
 const canvas = document.getElementById("search-canvas");
 const filterButtons = document.querySelectorAll(".search-filter-btn");
-const btnVisualize = document.getElementById("btn-visualize");
-const btnClearWalls = document.getElementById("btn-clear-walls");
-const btnClearPath = document.getElementById("btn-clear-path");
-const btnGenerateMaze = document.getElementById("btn-generate-maze");
+const btnRun = document.getElementById("btn-run") || document.getElementById("btn-visualize");
+const btnRandomize = document.getElementById("btn-randomize") || document.getElementById("btn-generate-maze");
 
 let currentAlgorithm = "bfs";
 const gridState = createGridState(ROWS, COLS);
@@ -43,20 +34,12 @@ function render() {
     drawArena(ctx, WIDTH, HEIGHT, gridState);
 }
 
-function updateVisualizeButtonText() {
-    if (!btnVisualize) return;
-    const name = ALGO_NAMES[currentAlgorithm] || "Search";
-    btnVisualize.textContent = `Visualize ${name}`;
-}
-
 function setControlsDisabled(disabled) {
     filterButtons.forEach((btn) => {
         btn.style.pointerEvents = disabled ? "none" : "auto";
     });
-    if (btnVisualize) btnVisualize.disabled = disabled;
-    if (btnClearWalls) btnClearWalls.disabled = disabled;
-    if (btnClearPath) btnClearPath.disabled = disabled;
-    if (btnGenerateMaze) btnGenerateMaze.disabled = disabled;
+    if (btnRun) btnRun.disabled = disabled;
+    if (btnRandomize) btnRandomize.disabled = disabled;
 }
 
 export function getActiveSearchAlgorithm() {
@@ -70,7 +53,8 @@ export function setActiveSearchAlgorithm(algo) {
         const matches = btn.getAttribute("data-search") === algo;
         btn.classList.toggle("active", matches);
     });
-    updateVisualizeButtonText();
+    clearPath(gridState);
+    render();
 }
 
 export function getGridState() {
@@ -97,14 +81,19 @@ export function startSearch() {
     );
 }
 
+export function randomizeGrid() {
+    if (isPathfindingActive()) stopPathfindingAnimation();
+    setControlsDisabled(false);
+    generateMaze(gridState);
+    render();
+}
+
 export function initSearchController() {
     if (canvas) {
         ctx = setupArenaCanvas(canvas, WIDTH, HEIGHT);
         render();
         attachArenaEvents(canvas, gridState, render, WIDTH, HEIGHT);
     }
-
-    updateVisualizeButtonText();
 
     filterButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -115,36 +104,15 @@ export function initSearchController() {
         });
     });
 
-    if (btnVisualize) {
-        btnVisualize.addEventListener("click", () => {
+    if (btnRun) {
+        btnRun.addEventListener("click", () => {
             startSearch();
         });
     }
 
-    if (btnClearWalls) {
-        btnClearWalls.addEventListener("click", () => {
-            if (isPathfindingActive()) stopPathfindingAnimation();
-            setControlsDisabled(false);
-            clearWalls(gridState);
-            render();
-        });
-    }
-
-    if (btnClearPath) {
-        btnClearPath.addEventListener("click", () => {
-            if (isPathfindingActive()) stopPathfindingAnimation();
-            setControlsDisabled(false);
-            clearPath(gridState);
-            render();
-        });
-    }
-
-    if (btnGenerateMaze) {
-        btnGenerateMaze.addEventListener("click", () => {
-            if (isPathfindingActive()) stopPathfindingAnimation();
-            setControlsDisabled(false);
-            generateMaze(gridState);
-            render();
+    if (btnRandomize) {
+        btnRandomize.addEventListener("click", () => {
+            randomizeGrid();
         });
     }
 
@@ -157,3 +125,4 @@ export function initSearchController() {
 }
 
 initSearchController();
+
