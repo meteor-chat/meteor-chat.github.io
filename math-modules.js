@@ -6,7 +6,7 @@ export const CALC_CSS = new URL("./math.css", import.meta.url).href;
 const MATHJS_SRC = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js";
 
 const FORMS = {
-    1: { file: "math-calc-1-3", calc: "calculateMath" },
+    1: { file: "math-calc-1", calc: "calculateMath", open: "initChromoView" },
     2: { file: "math-calc-1-3", calc: "calculateMath2" },
     3: { file: "math-calc-1-3", calc: "calculateMath3" },
     4: { file: "math-calc-4-6", calc: "calculateMath4", add: "addM4Input", box: "m4DynamicInputs" },

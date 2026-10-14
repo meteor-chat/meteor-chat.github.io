@@ -2,7 +2,7 @@ import { refs } from "./dom-refs.js";
 import { loadForm } from "./math-modules.js";
 
 const INPUTS = {
-    1: ["inN", "inKromosom", "inXmin", "inXmax"],
+    1: ["inKromosom", "inXmin", "inXmax"],
     2: ["m2InX1", "m2InX2"],
     3: ["m3InH", "m3InA"],
     5: ["m5InR"],
@@ -38,10 +38,11 @@ function syncCrossoverType() {
 }
 
 function stepKromosom(e, delta) {
-    const n = parseInt(refs.inN.value, 10);
-    if (isNaN(n) || n < 1) return;
+    if (!refs.inKromosom) return;
+    const raw = refs.inKromosom.value.trim();
+    const n = raw.length || 4;
     e.preventDefault();
-    let v = parseInt(refs.inKromosom.value || "0", 2);
+    let v = parseInt(raw || "0", 2);
     if (isNaN(v)) v = 0;
     v += delta;
     const max = Math.pow(2, n) - 1;
@@ -52,15 +53,6 @@ function stepKromosom(e, delta) {
 }
 
 function bindKromosom() {
-    if (refs.inN) {
-        refs.inN.addEventListener("input", () => {
-            const n = parseInt(refs.inN.value, 10);
-            if (!isNaN(n) && n > 0 && !refs.inKromosom.value) {
-                refs.inKromosom.value = "0".repeat(n);
-                recalc(1);
-            }
-        });
-    }
     if (!refs.inKromosom) return;
     refs.inKromosom.addEventListener("keydown", (e) => {
         if (e.key === "ArrowUp") stepKromosom(e, 1);

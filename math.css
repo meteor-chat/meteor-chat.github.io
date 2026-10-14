@@ -69,3 +69,42 @@
 .cone-mode-select:focus { border-color: #38bdf8; }
 .cone-left-panel { flex-direction: column; align-items: flex-start; gap: 14px; }
 .cone-input-row { display: flex; align-items: center; gap: 8px; }
+.chromo-page { flex-direction: column; align-items: center; width: 100%; }
+.chromo-layout { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 900px; gap: 28px; }
+.chromo-top-formula { margin: 0 auto; text-align: center; }
+.chromo-section-top { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 14px; }
+.chromo-top-input-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; }
+.chromo-top-label { font-size: 16px; color: #ffffff; font-weight: 500; }
+.chromo-binary-field { background: transparent; border: 1px solid #555555; border-radius: 6px; color: #ffffff; font-size: 16px; padding: 6px 12px; width: 110px; text-align: center; letter-spacing: 3px; font-family: monospace; outline: none; transition: border-color 0.2s; }
+.chromo-binary-field:focus { border-color: #38bdf8; }
+.chromo-diagram { width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 6px 0; }
+.chromo-table { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin: 0 auto; }
+.chromo-row { display: flex; align-items: center; min-height: 44px; }
+.chromo-row-label { width: 250px; text-align: right; padding-right: 18px; color: #ffffff; font-size: 15px; font-weight: 400; flex-shrink: 0; white-space: nowrap; }
+.chromo-arrow-row { display: flex; align-items: center; min-height: 18px; line-height: 1; }
+.chromo-arrow-label-spacer { width: 250px; flex-shrink: 0; }
+.chromo-arrow-cells { display: flex; gap: 8px; }
+.chromo-arrow-cell { width: 48px; text-align: center; color: #ffffff; font-size: 16px; user-select: none; }
+.chromo-cells-group { display: flex; gap: 8px; align-items: center; }
+.chromo-cell { width: 48px; height: 44px; border: 1px solid #444444; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 15px; background: transparent; flex-shrink: 0; box-sizing: border-box; }
+.chromo-cell-interactive { cursor: pointer; transition: background 0.15s, border-color 0.15s; font-family: inherit; font-size: 16px; }
+.chromo-cell-interactive:hover { border-color: #888888; background: rgba(255, 255, 255, 0.08); }
+.chromo-n-tag { color: #ffffff; font-size: 15px; margin-left: 14px; white-space: nowrap; }
+.chromo-sum-content { color: #ffffff; font-size: 16px; font-weight: 500; text-align: center; letter-spacing: 1px; }
+.chromo-brace-row { display: flex; align-items: center; min-height: 20px; }
+.chromo-brace-content { display: flex; justify-content: center; align-items: center; }
+.chromo-brace-svg { display: block; overflow: visible; }
+.chromo-final-content { color: #ffffff; font-size: 16px; font-weight: 500; text-align: center; }
+.chromo-section-bottom { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 12px; margin-top: 14px; }
+.chromo-minmax-inputs { display: flex; justify-content: space-between; width: 100%; max-width: 420px; padding: 0 10px; }
+.chromo-param-group { display: flex; align-items: center; gap: 8px; }
+.chromo-param-label { font-size: 15px; color: #ffffff; font-weight: 400; white-space: nowrap; }
+.chromo-param-input { background: transparent; border: 1px solid #555555; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 10px; width: 64px; text-align: center; outline: none; transition: border-color 0.2s; }
+.chromo-param-input:focus { border-color: #38bdf8; }
+.chromo-curved-arrows-box { width: 100%; max-width: 380px; height: 50px; display: flex; justify-content: center; }
+.chromo-curved-arrows-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.chromo-card { background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center; text-align: center; padding: 14px 28px; width: auto; min-width: 240px; max-width: 90vw; overflow-x: auto; }
+.chromo-card-rounded { border: 1px solid #333333; border-radius: 14px; }
+.chromo-card-rect { border: 1px solid #444444; border-radius: 4px; }
+.chromo-card-result { border: 1px solid #444444; border-radius: 4px; min-width: 130px; }
+.chromo-step-arrow { color: #ffffff; font-size: 20px; text-align: center; line-height: 1; user-select: none; }

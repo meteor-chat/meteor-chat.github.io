@@ -1,50 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawObjectiveCurve, drawFitnessCurve, clearVisual2, clearVisual3 } from "./math-visual-2-3.js";
-export function calculateMath() {
-    if (typeof katex === 'undefined') return;
-    refs.mathSteps.textContent = '';
-    const nStr = refs.inN.value.trim();
-    if (!nStr) return;
-    const n = parseInt(nStr, 10);
-    if (isNaN(n) || n < 1) {
-        refs.mathSteps.innerHTML = '<div class="math-step-box math-step-error">Masukkan nilai n (bilangan bulat positif).</div>';
-        return;
-    }
-    const kromosom = refs.inKromosom.value.trim();
-    if (kromosom === '') return;
-    if (!/^[01]+$/.test(kromosom)) {
-        refs.mathSteps.innerHTML = '<div class="math-step-box math-step-error">Kromosom harus biner (0/1).</div>';
-        return;
-    }
-    if (kromosom.length !== n) {
-        refs.mathSteps.innerHTML = `<div class="math-step-box math-step-error">Panjang kromosom harus sama dengan n (${n} bit).</div>`;
-        return;
-    }
-    const xMin = parseFloat(refs.inXmin.value || "-2");
-    const xMax = parseFloat(refs.inXmax.value || "3");
-    if (isNaN(xMin) || isNaN(xMax)) return;
-
-    const d = parseInt(kromosom, 2);
-    const step1 = `d = (${kromosom})_2 = ${d}`;
-    const num = xMax - xMin;
-    const den = Math.pow(2, n) - 1;
-    const xMinFmt = xMin < 0 ? `(${xMin})` : xMin;
-    const step2 = `x = ${xMin} + \\frac{${xMax} - ${xMinFmt}}{2^{${n}} - 1} \\cdot ${d}`;
-    const addStep = (tex, boxClass = 'math-step') => {
-        const div = document.createElement('div');
-        div.className = boxClass;
-        katex.render(tex, div, { throwOnError: false, displayMode: true });
-        refs.mathSteps.appendChild(div);
-    };
-    addStep(step1, 'math-step-box math-step-valid');
-    addStep(step2, 'math-step-box math-step-valid');
-    if (den === 0) {
-        addStep(`x = \\text{Error: Division by zero}`, 'math-step-box math-step-error');
-    } else {
-        const res = xMin + (num / den) * d;
-        addStep(`x \\approx ${res.toFixed(3)}`, 'math-step-box math-step-valid math-result-highlight');
-    }
-}
+export { calculateMath } from "./math-calc-1.js";
 
 export function calculateMath2() {
     if(!refs.m2InX1 || typeof katex === 'undefined') return;

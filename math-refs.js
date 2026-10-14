@@ -4,7 +4,6 @@ const IDS = {
     inKromosom: "math-in-kromosom",
     inXmin: "math-in-xmin",
     inXmax: "math-in-xmax",
-    inN: "math-in-n",
     mathSteps: "math-steps-container",
     m2InX1: "math2-in-x1",
     m2InX2: "math2-in-x2",
