@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stripThinkTags, escapeHTML, getMaxTokens } from './text-utils.js';
+import { stripThinkTags, escapeHTML, getMaxTokens, getQueryType } from './text-utils.js';
 describe('stripThinkTags', () => {
     it('removes complete think tags', () => {
         expect(stripThinkTags('<think>some thoughts</think>Hello')).toBe('Hello');
@@ -19,15 +19,22 @@ describe('escapeHTML', () => {
         expect(escapeHTML('<script>alert("x")</script>')).toBe('&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
     });
 });
-describe('getMaxTokens', () => {
-    it('returns 1536 for short requests', () => {
-        expect(getMaxTokens('Halo Meteor')).toBe(1536);
+describe('getMaxTokens & getQueryType', () => {
+    it('classifies micro queries and returns 384 tokens', () => {
+        expect(getQueryType('Halo Meteor')).toBe('micro');
+        expect(getMaxTokens('Halo Meteor')).toBe(384);
+        expect(getMaxTokens('Apa ibukota Australia?')).toBe(384);
     });
-    it('returns 3072 for code requests', () => {
-        expect(getMaxTokens('Tolong buatkan kode python')).toBe(3072);
+    it('classifies standard queries and returns 1024 tokens', () => {
+        expect(getQueryType('Jelaskan perbedaan fotosintesis dan kemosintesis')).toBe('standard');
+        expect(getMaxTokens('Jelaskan perbedaan fotosintesis dan kemosintesis')).toBe(1024);
+    });
+    it('classifies heavy code requests and returns 2560 tokens', () => {
+        expect(getQueryType('Tolong buatkan kode python')).toBe('heavy');
+        expect(getMaxTokens('Tolong buatkan kode python')).toBe(2560);
     });
     it('matches whole words only', () => {
-        expect(getMaxTokens('lanjutkan ke langkah 2')).toBe(3072);
-        expect(getMaxTokens('saya ingin melanjutkan')).toBe(1536);
+        expect(getMaxTokens('buatkan program')).toBe(2560);
+        expect(getMaxTokens('apakah ini bekerja?')).toBe(384);
     });
 });

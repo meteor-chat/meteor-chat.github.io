@@ -30,16 +30,38 @@ export function stripThinkTags(text) {
     }
     return cleaned.trim();
 }
-export function getMaxTokens(text) {
-    const lower = (text || "").toLowerCase();
-    const longKeywords = [
-        "kode", "code", "program", "script", "jelaskan", "explain",
-        "langkah", "steps", "tulis", "write", "buatkan", "implementasi",
-        "lanjutkan"
+export function getQueryType(text) {
+    const trimmed = (text || "").trim();
+    if (!trimmed) return "micro";
+    const lower = trimmed.toLowerCase();
+    const heavyKeywords = [
+        "kode", "code", "program", "script", "buatkan", "implementasi",
+        "lanjutkan", "proyek", "lengkap", "buatlah", "bikin", "algoritma"
     ];
-    const isLong = longKeywords.some(kw => {
-        const regex = new RegExp(`\\b${kw}\\b`);
+    const isHeavy = heavyKeywords.some(kw => {
+        const regex = new RegExp(`\\b${kw}\\b`, "i");
         return regex.test(lower);
     });
-    return isLong ? 3072 : 1536;
+    if (isHeavy) return "heavy";
+
+    const explainKeywords = ["jelaskan", "explain", "mengapa", "kenapa", "bagaimana", "bandingkan", "analisis", "uraikan", "ceritakan", "langkah", "steps"];
+    const wantsExplanation = explainKeywords.some(kw => {
+        const regex = new RegExp(`\\b${kw}\\b`, "i");
+        return regex.test(lower);
+    });
+    if (wantsExplanation) return "standard";
+
+    const words = trimmed.split(/\s+/);
+    if (words.length <= 6 && trimmed.length <= 45) {
+        return "micro";
+    }
+
+    return "standard";
+}
+
+export function getMaxTokens(text) {
+    const type = getQueryType(text);
+    if (type === "heavy") return 2560;
+    if (type === "micro") return 384;
+    return 1024;
 }

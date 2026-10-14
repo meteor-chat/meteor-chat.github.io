@@ -10,12 +10,25 @@ export function estimateTokens(text) {
 export function getTextContent(msg) {
     return msg.content || "";
 }
+export function compressUserMessage(text) {
+    if (!text) return "";
+    let cleaned = text.replace(/^(halo|hai|hi|hey|permisi|tolong|coba|bisa\s+tolong|assalamu['’]?alaikum)\b[\s,!.]*/i, "");
+    cleaned = cleaned.replace(/[\s,!.]*(terima\s*kasih|makasih|thanks|thank\s*you)[\s,!.]*$/i, "");
+    return cleaned.trim() || text;
+}
 export function compressAssistantMessage(text) {
     if (!text) return "";
     let compressed = text.replace(/```[\s\S]*?```/g, "[kode]");
     compressed = compressed.replace(/\$\$[\s\S]*?\$\$/g, "[rumus]");
     if (compressed.length > COMPRESS_MAX_CHARS) {
-        compressed = compressed.substring(0, COMPRESS_MAX_CHARS) + "\u2026";
+        const slice = compressed.substring(0, COMPRESS_MAX_CHARS);
+        const lastPeriod = Math.max(slice.lastIndexOf(". "), slice.lastIndexOf(".\n"), slice.lastIndexOf("\n"));
+        if (lastPeriod > 100) {
+            compressed = slice.substring(0, lastPeriod + 1);
+        } else {
+            const lastSpace = slice.lastIndexOf(" ");
+            compressed = (lastSpace > 50 ? slice.substring(0, lastSpace) : slice) + "\u2026";
+        }
     }
     return compressed;
 }
@@ -32,6 +45,9 @@ export function trimMessages(messages) {
     const processed = olderMessages.map(msg => {
         if (msg.role === "assistant") {
             return { ...msg, content: compressAssistantMessage(msg.content || "") };
+        }
+        if (msg.role === "user") {
+            return { ...msg, content: compressUserMessage(msg.content || "") };
         }
         return msg;
     });

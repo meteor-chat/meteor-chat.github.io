@@ -2,10 +2,12 @@ import { PROVIDERS, SYSTEM_MESSAGE, CONFIG_API_KEYS } from "./config.js";
 import { getOrderedKeys } from "./api-keys.js";
 import { state } from "./app-state.js";
 import { parseStream } from "./api-stream.js";
-import { stripThinkTags, getMaxTokens } from "./text-utils.js";
+import { stripThinkTags, getMaxTokens, getQueryType } from "./text-utils.js";
 import { trimMessages, getScheduleContext, getLastUserText } from "./history.js";
 import { ensureJadwal } from "./template-loader.js";
 import { getFeatureContext } from "./feature-context.js";
+import { createTwoTierTimeoutSignal, selectModels } from "./api-dispatch.js";
+
 export class ApiError extends Error {
     constructor(message, status, type, cooldown = 0) {
         super(message);
@@ -15,6 +17,7 @@ export class ApiError extends Error {
         this.cooldown = cooldown;
     }
 }
+
 export function classifyError(status, retryAfterHeader) {
     if (status === 401 || status === 402) {
         return new ApiError("Akses ditolak atau kredit habis (401/402).", status, "AUTH", KEY_COOLDOWN.auth_error);
@@ -34,6 +37,7 @@ export function classifyError(status, retryAfterHeader) {
     }
     return new ApiError(`Permintaan ditolak oleh server (${status}).`, status, "FATAL", 0);
 }
+
 const KEY_COOLDOWN = {
     rate_limit: 10000,
     auth_error: 3600000,
@@ -41,38 +45,10 @@ const KEY_COOLDOWN = {
     server_error: 30000,
     default: 10000
 };
+
 const keyHealth = new Map();
 let currentModelIndex = 0;
-function createTimeoutSignal(timeoutMs, parentSignal) {
-    const controller = new AbortController();
-    let timeoutId;
-    const resetTimeout = () => {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            controller.abort(new Error("Timeout"));
-        }, timeoutMs);
-    };
-    resetTimeout();
-    const onParentAbort = () => {
-        clearTimeout(timeoutId);
-        controller.abort(parentSignal.reason);
-    };
-    if (parentSignal) {
-        if (parentSignal.aborted) {
-            onParentAbort();
-        } else {
-            parentSignal.addEventListener("abort", onParentAbort);
-        }
-    }
-    return {
-        signal: controller.signal,
-        resetTimeout,
-        clear: () => {
-            clearTimeout(timeoutId);
-            if (parentSignal) parentSignal.removeEventListener("abort", onParentAbort);
-        }
-    };
-}
+
 export async function callChatAPI(messages, onChunk) {
     if (CONFIG_API_KEYS.length === 0) throw new Error("Belum ada API key yang dikonfigurasi.");
     let sysContent = SYSTEM_MESSAGE;
@@ -109,6 +85,8 @@ export async function callChatAPI(messages, onChunk) {
     const MAX_RETRIES = keys.length;
     let attempts = 0;
     let lastError = null;
+    const queryType = getQueryType(lastText);
+
     for (const entry of keys) {
         if (attempts >= MAX_RETRIES) break;
         const health = keyHealth.get(entry.key);
@@ -117,15 +95,9 @@ export async function callChatAPI(messages, onChunk) {
             if (waitTime > 0) continue;
         }
         const maxTokens = getMaxTokens(lastText);
-        const selectedModels = [];
-        const numModels = Math.min(3, modelList.length);
-        const baseModelIndex = currentModelIndex;
-        if (modelList.length > 0) {
-            currentModelIndex = (currentModelIndex + 1) % modelList.length;
-        }
-        for (let i = 0; i < numModels; i++) {
-            selectedModels.push(modelList[(baseModelIndex + i) % modelList.length]);
-        }
+        const { models: selectedModels, nextIndex } = selectModels(modelList, queryType, currentModelIndex, 3);
+        currentModelIndex = nextIndex;
+
         const payload = {
             models: selectedModels,
             messages: [sysMsg, ...apiMessages],
@@ -137,7 +109,7 @@ export async function callChatAPI(messages, onChunk) {
         };
         let receivedChunks = false;
         let fullText = "";
-        const { signal, resetTimeout, clear } = createTimeoutSignal(30000, state.abortController.signal);
+        const { signal, resetTimeout, clear } = createTwoTierTimeoutSignal(8000, 15000, state.abortController.signal);
         try {
             attempts++;
             const headers = {
@@ -203,26 +175,12 @@ export async function callChatAPI(messages, onChunk) {
             }
             if (e instanceof ApiError) throw e;
             if (receivedChunks && fullText) {
-                return { text: stripThinkTags(fullText), usage: null, finishReason: "error" };
+                const cleanText = stripThinkTags(fullText);
+                return { text: cleanText, usage: null, finishReason: "interrupted" };
             }
             lastError = e;
-            await new Promise(r => setTimeout(r, 1000));
-            continue;
         }
     }
-    if (lastError instanceof ApiError) {
-        throw new Error(lastError.message);
-    }
-    let minWait = Infinity;
-    for (const entry of keys) {
-        const health = keyHealth.get(entry.key);
-        if (health) {
-            const waitTime = health.failedAt + health.cooldown - Date.now();
-            if (waitTime > 0 && waitTime < minWait) minWait = waitTime;
-        }
-    }
-    if (minWait !== Infinity && minWait > 0) {
-        throw new Error(`Semua kunci API sedang sibuk. Coba lagi dalam ${Math.ceil(minWait / 1000)} detik.`);
-    }
-    throw new Error(lastError ? lastError.message : "Gagal menghubungi server Meteor setelah beberapa percobaan.");
+    if (lastError) throw lastError;
+    throw new Error("Gagal menghubungi AI. Coba lagi.");
 }

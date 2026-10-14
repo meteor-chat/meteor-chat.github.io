@@ -1,7 +1,7 @@
 import { state } from "./app-state.js";
 import { refs, getActiveSendBtn } from "./dom-refs.js";
 import { callChatAPI } from "./api-client.js";
-import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage, scrollToBottom } from "./chat-render.js";
+import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage, flushStreamingMessage, scrollToBottom } from "./chat-render.js";
 import { showError, hideError } from "./error-view.js";
 import { exitEditMode } from "./edit-mode.js";
 import { stripThinkTags } from "./text-utils.js";
@@ -98,6 +98,7 @@ export async function sendMessage(text) {
                 updateStreamingMessage(currentText);
             }
         });
+        flushStreamingMessage();
         if (firstChunk) {
             removeThinking();
             if (!result.text) throw new Error("Pesan kosong dari provider.");
@@ -112,6 +113,7 @@ export async function sendMessage(text) {
             showContinueButton(isLength ? "▶ Lanjutkan (Batas tercapai)" : "▶ Coba Lanjutkan (Terputus)");
         }
     } catch (err) {
+        flushStreamingMessage();
         removeThinking();
         const restoreState = () => {
             if (backupMessages) {
