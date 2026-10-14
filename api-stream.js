@@ -4,6 +4,7 @@ export async function parseStream(body, onChunk, onActivity) {
     let buffer = "";
     let usage = null;
     let finishReason = null;
+    let reasoningBuffer = "";
     function handleLine(line) {
         const trimmed = line.trim();
         if (!trimmed) return;
@@ -35,6 +36,12 @@ export async function parseStream(body, onChunk, onActivity) {
                    || parsed.choices?.[0]?.text
                    || "";
         if (delta) onChunk(delta);
+        const reasoningDelta = parsed.choices?.[0]?.delta?.reasoning
+                            || parsed.choices?.[0]?.delta?.reasoning_content
+                            || "";
+        if (reasoningDelta) {
+            reasoningBuffer += reasoningDelta;
+        }
         if (parsed.choices?.[0]?.finish_reason) {
             finishReason = parsed.choices[0].finish_reason;
         }
@@ -56,5 +63,5 @@ export async function parseStream(body, onChunk, onActivity) {
     if (buffer.trim()) {
         handleLine(buffer);
     }
-    return { usage, finishReason };
+    return { usage, finishReason, reasoning: reasoningBuffer };
 }

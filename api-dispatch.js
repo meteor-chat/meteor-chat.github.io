@@ -42,16 +42,20 @@ export function rankModelsByIntent(modelList, queryType) {
     if (!modelList || modelList.length === 0) return [];
     const isHeavy = queryType === "heavy";
     const fastList = [
-        "liquid/lfm-2.5-2.6b:free",
-        "apodex/apodex-1.1-mini:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "dots-studio/dots-3-note-preview:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "cohere/north-mini-code:free",
         "poolside/laguna-xs-2.1:free",
         "poolside/laguna-s-2.1:free"
     ];
     const heavyList = [
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
         "cohere/north-mini-code:free",
-        "google/gemma-4-31b-it:free",
-        "google/gemma-4-26b-a4b-it:free",
-        "dots-studio/dots-3-note-preview:free"
+        "dots-studio/dots-3-note-preview:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "poolside/laguna-s-2.1:free",
+        "poolside/laguna-xs-2.1:free"
     ];
     const priority = isHeavy ? [...heavyList, ...fastList] : [...fastList, ...heavyList];
     const ordered = [];
