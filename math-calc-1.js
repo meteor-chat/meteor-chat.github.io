@@ -52,7 +52,7 @@ function createBraceSvg(width) {
 
 export function initChromoView() {
     if (refs.inKromosom && !refs.inKromosom.value) {
-        refs.inKromosom.value = "1010";
+        refs.inKromosom.value = "1001";
     }
     if (refs.inXmin && !refs.inXmin.value) {
         refs.inXmin.value = "2";
@@ -70,7 +70,7 @@ export function calculateMath() {
     if (refs.inKromosom && refs.inKromosom.value !== cleanKromosom) {
         refs.inKromosom.value = cleanKromosom;
     }
-    const kromosom = cleanKromosom || "1010";
+    const kromosom = cleanKromosom || "1001";
     const n = kromosom.length;
     if (n < 1) return;
 
@@ -194,8 +194,7 @@ export function calculateMath() {
             katex.render("x = \\text{Error: } 2^n - 1 = 0", card3, { throwOnError: false, displayMode: true });
         } else {
             const res = xMin + ((xMax - xMin) / den) * d;
-            const resFmt = Number.isInteger(res) ? `${res}` : res.toFixed(3);
-            katex.render(`x \\approx ${resFmt}`, card3, { throwOnError: false, displayMode: true });
+            katex.render(`x \\approx ${res.toFixed(3)}`, card3, { throwOnError: false, displayMode: true });
         }
     }
 }
