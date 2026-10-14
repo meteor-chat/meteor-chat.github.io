@@ -50,6 +50,20 @@ function createBraceSvg(width) {
     return svg;
 }
 
+function renderParamLabels() {
+    if (typeof katex === "undefined") return;
+    const xMinLabel = document.getElementById("chromo-label-xmin");
+    if (xMinLabel) {
+        xMinLabel.textContent = "";
+        katex.render("x_{\\min}", xMinLabel, { throwOnError: false });
+    }
+    const xMaxLabel = document.getElementById("chromo-label-xmax");
+    if (xMaxLabel) {
+        xMaxLabel.textContent = "";
+        katex.render("x_{\\max}", xMaxLabel, { throwOnError: false });
+    }
+}
+
 export function initChromoView() {
     if (refs.inKromosom && !refs.inKromosom.value) {
         refs.inKromosom.value = "1001";
@@ -65,6 +79,7 @@ export function initChromoView() {
 
 export function calculateMath() {
     if (typeof katex === "undefined") return;
+    renderParamLabels();
     const raw = refs.inKromosom ? refs.inKromosom.value.trim() : "";
     const cleanKromosom = raw.replace(/[^01]/g, "");
     if (refs.inKromosom && refs.inKromosom.value !== cleanKromosom) {
@@ -80,7 +95,6 @@ export function calculateMath() {
     const xMax = isNaN(xMaxVal) ? 6 : xMaxVal;
 
     const powers = [];
-    const hitungs = [];
     const cleans = [];
     let d = 0;
 
@@ -90,7 +104,6 @@ export function calculateMath() {
         const pVal = Math.pow(2, exp);
         const cleanVal = pVal * bit;
         powers.push({ exp, pVal });
-        hitungs.push(`${pVal}×${bit}`);
         cleans.push(cleanVal);
         d += cleanVal;
     }
@@ -102,9 +115,10 @@ export function calculateMath() {
 
         const row1Cells = [];
         for (let i = 0; i < n; i++) {
-            const cell = makeEl("button", "chromo-cell chromo-cell-interactive", kromosom[i]);
+            const cell = makeEl("button", "chromo-cell chromo-cell-interactive");
             cell.type = "button";
             cell.setAttribute("aria-label", `Toggle gen ${i + 1}`);
+            katex.render(kromosom[i], cell, { throwOnError: false });
             cell.addEventListener("click", () => {
                 const arr = kromosom.split("");
                 arr[i] = arr[i] === "1" ? "0" : "1";
@@ -118,9 +132,15 @@ export function calculateMath() {
 
         const row2Cells = [];
         for (let i = 0; i < n; i++) {
-            row2Cells.push(makeEl("div", "chromo-cell", String(i + 1)));
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(i + 1), cell, { throwOnError: false });
+            row2Cells.push(cell);
         }
-        const nTag = makeEl("div", "chromo-n-tag", `→ n = ${n}`);
+        const nTag = makeEl("div", "chromo-n-tag");
+        nTag.appendChild(makeEl("span", "chromo-n-arrow", "→ "));
+        const nMath = makeEl("span", "chromo-n-math");
+        katex.render(`n = ${n}`, nMath, { throwOnError: false });
+        nTag.appendChild(nMath);
         table.appendChild(makeCellRow("posisi setiap gen →", row2Cells, nTag));
         table.appendChild(makeArrowRow(n));
 
@@ -133,22 +153,36 @@ export function calculateMath() {
         table.appendChild(makeCellRow("proses konversi →", row3Cells));
         table.appendChild(makeArrowRow(n));
 
-        const row4Cells = powers.map((p) => makeEl("div", "chromo-cell", String(p.pVal)));
+        const row4Cells = powers.map((p) => {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(p.pVal), cell, { throwOnError: false });
+            return cell;
+        });
         table.appendChild(makeCellRow("hasil kotor konversi →", row4Cells));
         table.appendChild(makeArrowRow(n));
 
-        const row5Cells = hitungs.map((h) => makeEl("div", "chromo-cell", h));
+        const row5Cells = powers.map((p, idx) => {
+            const cell = makeEl("div", "chromo-cell");
+            const bit = kromosom[idx];
+            katex.render(`${p.pVal} \\times ${bit}`, cell, { throwOnError: false });
+            return cell;
+        });
         table.appendChild(makeCellRow("hitung konversi →", row5Cells));
         table.appendChild(makeArrowRow(n));
 
-        const row6Cells = cleans.map((c) => makeEl("div", "chromo-cell", String(c)));
+        const row6Cells = cleans.map((c) => {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(c), cell, { throwOnError: false });
+            return cell;
+        });
         table.appendChild(makeCellRow("hasil bersih konversi →", row6Cells));
 
         const cellBlockWidth = n * 56 - 8;
 
         const sumRow = makeEl("div", "chromo-row");
         sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan hasil konversi →"));
-        const sumContent = makeEl("div", "chromo-sum-content", cleans.join(" + "));
+        const sumContent = makeEl("div", "chromo-sum-content");
+        katex.render(cleans.join(" + "), sumContent, { throwOnError: false });
         sumContent.style.width = `${cellBlockWidth}px`;
         sumRow.appendChild(sumContent);
         table.appendChild(sumRow);
@@ -163,8 +197,15 @@ export function calculateMath() {
 
         const finalRow = makeEl("div", "chromo-row");
         finalRow.appendChild(makeEl("div", "chromo-row-label", "hasil akhir →"));
-        const finalContent = makeEl("div", "chromo-final-content", `d (desimal) = ${d}`);
+        const finalContent = makeEl("div", "chromo-final-content");
         finalContent.style.width = `${cellBlockWidth}px`;
+        const dMath = makeEl("span", "chromo-final-math");
+        katex.render("d", dMath, { throwOnError: false });
+        finalContent.appendChild(dMath);
+        finalContent.appendChild(makeEl("span", "chromo-final-text", " (desimal) = "));
+        const valMath = makeEl("span", "chromo-final-math");
+        katex.render(String(d), valMath, { throwOnError: false });
+        finalContent.appendChild(valMath);
         finalRow.appendChild(finalContent);
         table.appendChild(finalRow);
 
