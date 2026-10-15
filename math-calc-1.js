@@ -8,6 +8,7 @@ import {
     renderChromoCards
 } from "./math-calc-1-dom.js";
 
+const MAX_BITS = 10;
 let currentBits = [];
 
 function focusCell(idx) {
@@ -23,10 +24,10 @@ function handleInputKey(e, i) {
         e.preventDefault();
         if (i < currentBits.length) {
             currentBits[i] = e.key;
-            calculateMath(i + 1);
-        } else if (currentBits.length < 16) {
+            calculateMath(Math.min(i + 1, currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1));
+        } else if (currentBits.length < MAX_BITS) {
             currentBits.push(e.key);
-            calculateMath(currentBits.length < 16 ? currentBits.length : 15);
+            calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
         }
     } else if (e.key === "Backspace") {
         e.preventDefault();
@@ -48,7 +49,7 @@ function handleInputKey(e, i) {
         if (i > 0) focusCell(i - 1);
     } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        const limit = currentBits.length < 16 ? currentBits.length : 15;
+        const limit = currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1;
         if (i < limit) focusCell(i + 1);
     } else if (e.key === " ") {
         e.preventDefault();
@@ -69,10 +70,10 @@ function handleInputChange(input, i) {
     if (last === "0" || last === "1") {
         if (i < currentBits.length) {
             currentBits[i] = last;
-            calculateMath(i + 1);
-        } else if (currentBits.length < 16) {
+            calculateMath(Math.min(i + 1, currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1));
+        } else if (currentBits.length < MAX_BITS) {
             currentBits.push(last);
-            calculateMath(currentBits.length < 16 ? currentBits.length : 15);
+            calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
         }
     } else if (val === "" && i < currentBits.length) {
         currentBits.splice(i, 1);
@@ -85,10 +86,10 @@ function handleInputChange(input, i) {
 function handlePaste(e) {
     e.preventDefault();
     const clip = (e.clipboardData || window.clipboardData)?.getData("text") || "";
-    const clean = clip.replace(/[^01]/g, "").slice(0, 16);
+    const clean = clip.replace(/[^01]/g, "").slice(0, MAX_BITS);
     if (clean.length > 0) {
         currentBits = clean.split("");
-        calculateMath(currentBits.length < 16 ? currentBits.length : 15);
+        calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
     }
 }
 
@@ -129,7 +130,7 @@ export function calculateMath(focusIdx) {
         const table = makeEl("div", "chromo-table");
 
         const row1Cells = [];
-        const cellCount = n < 16 ? n + 1 : 16;
+        const cellCount = n < MAX_BITS ? n + 1 : MAX_BITS;
         for (let i = 0; i < cellCount; i++) {
             const input = makeEl("input", "chromo-cell chromo-cell-input");
             input.type = "text";
@@ -146,7 +147,7 @@ export function calculateMath(focusIdx) {
             input.addEventListener("focus", () => input.select());
             row1Cells.push(input);
         }
-        table.appendChild(makeCellRow("kromosom biner kamu →", row1Cells));
+        table.appendChild(makeCellRow("kromosom biner →", row1Cells));
 
         if (n > 0) {
             table.appendChild(makeArrowRow(n));
@@ -157,12 +158,12 @@ export function calculateMath(focusIdx) {
                 katex.render(String(i + 1), cell, { throwOnError: false });
                 row2Cells.push(cell);
             }
-            const nTag = makeEl("div", n < 16 ? "chromo-n-tag chromo-n-tag-offset" : "chromo-n-tag");
+            const nTag = makeEl("div", n < MAX_BITS ? "chromo-n-tag chromo-n-tag-offset" : "chromo-n-tag");
             nTag.appendChild(makeEl("span", "chromo-n-arrow", "→ "));
             const nMath = makeEl("span", "chromo-n-math");
             katex.render(`n = ${n}`, nMath, { throwOnError: false });
             nTag.appendChild(nMath);
-            table.appendChild(makeCellRow("posisi setiap gen →", row2Cells, nTag));
+            table.appendChild(makeCellRow("posisi gen →", row2Cells, nTag));
             table.appendChild(makeArrowRow(n));
 
             const row3Cells = [];
@@ -171,7 +172,7 @@ export function calculateMath(focusIdx) {
                 katex.render(`2^{${powers[i].exp}}`, cell, { throwOnError: false });
                 row3Cells.push(cell);
             }
-            table.appendChild(makeCellRow("proses konversi →", row3Cells));
+            table.appendChild(makeCellRow("bobot biner (2^p) →", row3Cells));
             table.appendChild(makeArrowRow(n));
 
             const row4Cells = powers.map((p) => {
@@ -179,7 +180,7 @@ export function calculateMath(focusIdx) {
                 katex.render(String(p.pVal), cell, { throwOnError: false });
                 return cell;
             });
-            table.appendChild(makeCellRow("hasil kotor konversi →", row4Cells));
+            table.appendChild(makeCellRow("nilai bobot →", row4Cells));
             table.appendChild(makeArrowRow(n));
 
             const row5Cells = powers.map((p, idx) => {
@@ -192,7 +193,7 @@ export function calculateMath(focusIdx) {
                 katex.render(`${p.pVal} \\times ${bit}`, cell, { throwOnError: false });
                 return cell;
             });
-            table.appendChild(makeCellRow("hitung konversi →", row5Cells));
+            table.appendChild(makeCellRow("perkalian bobot × gen →", row5Cells));
             table.appendChild(makeArrowRow(n));
 
             const row6Cells = cleans.map((c) => {
@@ -200,12 +201,12 @@ export function calculateMath(focusIdx) {
                 katex.render(String(c), cell, { throwOnError: false });
                 return cell;
             });
-            table.appendChild(makeCellRow("hasil bersih konversi →", row6Cells));
+            table.appendChild(makeCellRow("nilai desimal gen →", row6Cells));
 
             const cellBlockWidth = n * 56 - 8;
 
             const sumRow = makeEl("div", "chromo-row");
-            sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan hasil konversi →"));
+            sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan nilai desimal →"));
             const sumContent = makeEl("div", "chromo-sum-content");
             katex.render(cleans.join(" + "), sumContent, { throwOnError: false });
             sumContent.style.width = `${cellBlockWidth}px`;
@@ -221,7 +222,7 @@ export function calculateMath(focusIdx) {
             table.appendChild(braceRow);
 
             const finalRow = makeEl("div", "chromo-row");
-            finalRow.appendChild(makeEl("div", "chromo-row-label", "hasil akhir →"));
+            finalRow.appendChild(makeEl("div", "chromo-row-label", "nilai desimal (d) →"));
             const finalContent = makeEl("div", "chromo-final-content");
             finalContent.style.width = `${cellBlockWidth}px`;
             const finalMath = makeEl("span", "chromo-final-math");
