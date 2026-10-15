@@ -161,9 +161,24 @@ export function calculateMath(focusIdx) {
             const nTag = makeEl("div", n < MAX_BITS ? "chromo-n-tag chromo-n-tag-offset" : "chromo-n-tag");
             nTag.appendChild(makeEl("span", "chromo-n-arrow", "→ "));
             const nMath = makeEl("span", "chromo-n-math");
-            katex.render(`n = ${n}`, nMath, { throwOnError: false });
+            katex.render(`n = \\htmlClass{chromo-token-n}{${n}}`, nMath, { throwOnError: false, trust: true });
             nTag.appendChild(nMath);
-            table.appendChild(makeCellRow("posisi gen →", row2Cells, nTag));
+            nTag.addEventListener("mouseenter", () => {
+                document.querySelectorAll(".chromo-token-n").forEach((el) => el.classList.add("chromo-glow"));
+            });
+            nTag.addEventListener("mouseleave", () => {
+                document.querySelectorAll(".chromo-token-n").forEach((el) => el.classList.remove("chromo-glow"));
+            });
+            table.appendChild(makeCellRow("posisi gen (i) →", row2Cells, nTag));
+            table.appendChild(makeArrowRow(n));
+
+            const rowFormulaCells = [];
+            for (let i = 0; i < n; i++) {
+                const cell = makeEl("div", "chromo-cell");
+                katex.render(`2^{\\htmlClass{chromo-token-n}{${n}}-${i + 1}}`, cell, { throwOnError: false, trust: true });
+                rowFormulaCells.push(cell);
+            }
+            table.appendChild(makeCellRow("rumus bobot 2^(n-i) →", rowFormulaCells));
             table.appendChild(makeArrowRow(n));
 
             const row3Cells = [];
@@ -226,16 +241,22 @@ export function calculateMath(focusIdx) {
             const finalContent = makeEl("div", "chromo-final-content");
             finalContent.style.width = `${cellBlockWidth}px`;
             const finalMath = makeEl("span", "chromo-final-math");
-            katex.render(`d\\text{ (desimal)} = ${d}`, finalMath, { throwOnError: false });
+            katex.render(`d\\text{ (desimal)} = \\htmlClass{chromo-token-d}{${d}}`, finalMath, { throwOnError: false, trust: true });
             finalContent.appendChild(finalMath);
             finalRow.appendChild(finalContent);
+            finalRow.addEventListener("mouseenter", () => {
+                document.querySelectorAll(".chromo-token-d").forEach((el) => el.classList.add("chromo-glow"));
+            });
+            finalRow.addEventListener("mouseleave", () => {
+                document.querySelectorAll(".chromo-token-d").forEach((el) => el.classList.remove("chromo-glow"));
+            });
             table.appendChild(finalRow);
         }
 
         container.appendChild(table);
     }
 
-    renderChromoCards(n, d, xMin, xMax);
+    renderChromoCards(n, d, xMin, xMax, powers);
 
     if (typeof focusIdx === "number") {
         requestAnimationFrame(() => focusCell(focusIdx));

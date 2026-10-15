@@ -64,42 +64,117 @@ export function renderParamLabels() {
     }
 }
 
-export function renderChromoCards(n, d, xMin, xMax) {
+export function bindTokenHover() {
+    const dTokens = document.querySelectorAll(".chromo-token-d");
+    dTokens.forEach((el) => {
+        el.onmouseenter = () => dTokens.forEach((t) => t.classList.add("chromo-glow"));
+        el.onmouseleave = () => dTokens.forEach((t) => t.classList.remove("chromo-glow"));
+    });
+    const nTokens = document.querySelectorAll(".chromo-token-n");
+    nTokens.forEach((el) => {
+        el.onmouseenter = () => nTokens.forEach((t) => t.classList.add("chromo-glow"));
+        el.onmouseleave = () => nTokens.forEach((t) => t.classList.remove("chromo-glow"));
+    });
+}
+
+export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     if (typeof katex === "undefined") return;
+
     const card1 = document.getElementById("chromo-card-step1");
     if (card1) {
         card1.textContent = "";
-        const tex1 = n === 0
-            ? "x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot ?"
-            : `x = x_{\\min} + \\frac{x_{\\max} - x_{\\min}}{2^n - 1} \\cdot ${d}`;
-        katex.render(tex1, card1, { throwOnError: false, displayMode: true });
+        const partXmin = xMin !== null ? `${formatMax3(xMin)}` : "?";
+        const partXminFmt = xMin !== null ? (xMin < 0 ? `(${formatMax3(xMin)})` : `${formatMax3(xMin)}`) : "?";
+        const partXmax = xMax !== null ? `${formatMax3(xMax)}` : "?";
+        const partN = n > 0 ? `\\htmlClass{chromo-token-n}{${n}}` : "?";
+        const partD = n > 0 ? `\\htmlClass{chromo-token-d}{${d}}` : "?";
+        const tex1 = `x = ${partXmin} + \\frac{${partXmax} - ${partXminFmt}}{2^{${partN}} - 1} \\cdot ${partD}`;
+        katex.render(tex1, card1, { throwOnError: false, trust: true, displayMode: true });
     }
+
+    const intermediateEls = [
+        document.getElementById("chromo-card-step2"),
+        document.getElementById("chromo-arrow-2"),
+        document.getElementById("chromo-card-step3"),
+        document.getElementById("chromo-arrow-3"),
+        document.getElementById("chromo-card-step4"),
+        document.getElementById("chromo-arrow-4")
+    ];
+
+    const card5 = document.getElementById("chromo-card-step5");
+
+    if (n === 0 || xMin === null || xMax === null) {
+        intermediateEls.forEach((el) => el && el.classList.add("hidden"));
+        if (card5) {
+            card5.textContent = "";
+            katex.render("x \\approx ?", card5, { throwOnError: false, trust: true, displayMode: true });
+        }
+        bindTokenHover();
+        return;
+    }
+
+    intermediateEls.forEach((el) => el && el.classList.remove("hidden"));
+
+    const deltaX = xMax - xMin;
+    const powVal = Math.pow(2, n);
+    const den = powVal - 1;
+    const stepSize = deltaX / den;
+    const contrib = stepSize * d;
+    const finalX = xMin + contrib;
+    const partXmin = `${formatMax3(xMin)}`;
 
     const card2 = document.getElementById("chromo-card-step2");
     if (card2) {
         card2.textContent = "";
-        const partXmin = xMin !== null ? `${formatMax3(xMin)}` : "?";
-        const partXminFmt = xMin !== null ? (xMin < 0 ? `(${formatMax3(xMin)})` : `${formatMax3(xMin)}`) : "?";
-        const partXmax = xMax !== null ? `${formatMax3(xMax)}` : "?";
-        const partN = n > 0 ? `${n}` : "?";
-        const partD = n > 0 ? `${d}` : "?";
-        const tex2 = `x = ${partXmin} + \\frac{${partXmax} - ${partXminFmt}}{2^{${partN}} - 1} \\cdot ${partD}`;
-        katex.render(tex2, card2, { throwOnError: false, displayMode: true });
+        const tex2 = `x = ${partXmin} + \\frac{${formatMax3(deltaX)}}{${powVal} - 1} \\cdot \\htmlClass{chromo-token-d}{${d}}`;
+        katex.render(tex2, card2, { throwOnError: false, trust: true, displayMode: true });
     }
 
     const card3 = document.getElementById("chromo-card-step3");
     if (card3) {
         card3.textContent = "";
-        if (n === 0 || xMin === null || xMax === null) {
-            katex.render("x \\approx ?", card3, { throwOnError: false, displayMode: true });
-        } else {
-            const den = Math.pow(2, n) - 1;
-            if (den === 0) {
-                katex.render("x = \\text{Error: } 2^n - 1 = 0", card3, { throwOnError: false, displayMode: true });
+        const topMath = makeEl("div");
+        const tex3 = `x = ${partXmin} + \\frac{${formatMax3(deltaX)}}{${den}} \\cdot \\htmlClass{chromo-token-d}{${d}}`;
+        katex.render(tex3, topMath, { throwOnError: false, trust: true, displayMode: true });
+        card3.appendChild(topMath);
+
+        const subnote = makeEl("div", "chromo-card-subnote");
+        let weightStr = "";
+        if (powers && powers.length > 0) {
+            if (n <= 6) {
+                weightStr = powers.map((p) => p.pVal).join(" + ");
             } else {
-                const res = xMin + ((xMax - xMin) / den) * d;
-                katex.render(`x \\approx ${formatMax3(res)}`, card3, { throwOnError: false, displayMode: true });
+                weightStr = `${powers[0].pVal} + ${powers[1].pVal} + \\dots + 1`;
             }
         }
+        const noteTex = weightStr
+            ? `\\text{penyebut } (2^{${n}} - 1 = ${den}) \\equiv \\sum \\text{bobot } (${weightStr})`
+            : `\\text{penyebut } (2^{${n}} - 1 = ${den})`;
+        katex.render(noteTex, subnote, { throwOnError: false, trust: true });
+        card3.appendChild(subnote);
     }
+
+    const card4 = document.getElementById("chromo-card-step4");
+    if (card4) {
+        card4.textContent = "";
+        let tex4 = "";
+        if (d === 0) {
+            tex4 = `x = ${partXmin} + 0`;
+        } else if (contrib < 0) {
+            tex4 = `x = ${partXmin} - ${formatMax3(Math.abs(contrib))}`;
+        } else {
+            tex4 = `x = ${partXmin} + ${formatMax3(contrib)}`;
+        }
+        katex.render(tex4, card4, { throwOnError: false, trust: true, displayMode: true });
+    }
+
+    if (card5) {
+        card5.textContent = "";
+        const isExact = Number.isInteger(finalX) || parseFloat(finalX.toFixed(3)) === finalX;
+        const sym = isExact ? "=" : "\\approx";
+        const tex5 = `x ${sym} ${formatMax3(finalX)}`;
+        katex.render(tex5, card5, { throwOnError: false, trust: true, displayMode: true });
+    }
+
+    bindTokenHover();
 }
