@@ -2,7 +2,7 @@ import { refs } from "./dom-refs.js";
 import { loadForm } from "./math-modules.js";
 
 const INPUTS = {
-    1: ["inKromosom", "inXmin", "inXmax"],
+    1: ["inXmin", "inXmax"],
     2: ["m2InX1", "m2InX2"],
     3: ["m3InH", "m3InA"],
     5: ["m5InR"],
@@ -37,32 +37,6 @@ function syncCrossoverType() {
     if (refs.m7ContainerMask) refs.m7ContainerMask.classList.toggle("hidden", type !== "uniform");
 }
 
-function stepKromosom(e, delta) {
-    if (!refs.inKromosom) return;
-    const raw = refs.inKromosom.value.trim();
-    const n = raw.length || 4;
-    e.preventDefault();
-    let v = parseInt(raw || "0", 2);
-    if (isNaN(v)) v = 0;
-    v += delta;
-    const max = Math.pow(2, n) - 1;
-    if (v < 0) v = max;
-    if (v > max) v = 0;
-    refs.inKromosom.value = v.toString(2).padStart(n, "0");
-    recalc(1);
-}
-
-function bindKromosom() {
-    if (!refs.inKromosom) return;
-    refs.inKromosom.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowUp") stepKromosom(e, 1);
-        if (e.key === "ArrowDown") stepKromosom(e, -1);
-    });
-    refs.inKromosom.addEventListener("wheel", (e) => stepKromosom(e, e.deltaY < 0 ? 1 : -1), {
-        passive: false
-    });
-}
-
 export function bindMathInputs() {
     Object.entries(INPUTS).forEach(([key, names]) => {
         const n = Number(key);
@@ -75,5 +49,4 @@ export function bindMathInputs() {
             });
         });
     });
-    bindKromosom();
 }

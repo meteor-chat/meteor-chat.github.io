@@ -1,7 +1,6 @@
 import { refs } from "./dom-refs.js";
 
 const IDS = {
-    inKromosom: "math-in-kromosom",
     inXmin: "math-in-xmin",
     inXmax: "math-in-xmax",
     mathSteps: "math-steps-container",

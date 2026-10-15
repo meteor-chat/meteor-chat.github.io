@@ -79,8 +79,6 @@
 .chromo-top-formula { margin: 0 auto; text-align: center; }
 .chromo-top-input-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .chromo-top-label { font-size: 16px; color: #ffffff; font-weight: 500; }
-.chromo-binary-field { background: transparent; border: 1px solid #555555; border-radius: 6px; color: #ffffff; font-size: 16px; padding: 6px 12px; width: 110px; text-align: center; letter-spacing: 3px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; transition: border-color 0.2s; }
-.chromo-binary-field:focus { border-color: #38bdf8; }
 .chromo-diagram { width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 6px 0; }
 .chromo-table { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin: 0 auto; }
 .chromo-row { display: flex; align-items: center; min-height: 44px; }
@@ -95,7 +93,11 @@
 .chromo-cell .katex .mbin { margin-left: 0.1em; margin-right: 0.1em; }
 .chromo-cell-interactive { cursor: pointer; transition: background 0.15s, border-color 0.15s; font-family: inherit; font-size: 16px; }
 .chromo-cell-interactive:hover { border-color: #888888; background: rgba(255, 255, 255, 0.08); }
+.chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; transition: border-color 0.15s, background 0.15s; caret-color: #38bdf8; padding: 0; }
+.chromo-cell-input:focus { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
+.chromo-cell-input:hover:not(:focus) { border-color: #888888; }
 .chromo-n-tag { display: flex; align-items: center; gap: 4px; color: #ffffff; font-size: 15px; margin-left: 14px; white-space: nowrap; }
+.chromo-n-tag-offset { margin-left: 70px; }
 .chromo-n-arrow { font-family: var(--font-stack); }
 .chromo-n-math .katex { font-size: 1em; }
 .chromo-sum-content { color: #ffffff; font-size: 16px; font-weight: 500; text-align: center; letter-spacing: 1px; }
