@@ -76,24 +76,28 @@ export function renderChromoCards(n, d, xMin, xMax) {
     const card2 = document.getElementById("chromo-card-step2");
     if (card2) {
         card2.textContent = "";
-        if (n === 0) {
-            katex.render("?", card2, { throwOnError: false, displayMode: true });
-        } else {
-            const xMinFmt = xMin < 0 ? `(${xMin})` : `${xMin}`;
-            const tex2 = `x = ${xMin} + \\frac{${xMax} - ${xMinFmt}}{2^{${n}} - 1} \\cdot ${d}`;
-            katex.render(tex2, card2, { throwOnError: false, displayMode: true });
-        }
+        const partXmin = xMin !== null ? `${xMin}` : "?";
+        const partXminFmt = xMin !== null ? (xMin < 0 ? `(${xMin})` : `${xMin}`) : "?";
+        const partXmax = xMax !== null ? `${xMax}` : "?";
+        const partN = n > 0 ? `${n}` : "?";
+        const partD = n > 0 ? `${d}` : "?";
+        const tex2 = `x = ${partXmin} + \\frac{${partXmax} - ${partXminFmt}}{2^{${partN}} - 1} \\cdot ${partD}`;
+        katex.render(tex2, card2, { throwOnError: false, displayMode: true });
     }
 
     const card3 = document.getElementById("chromo-card-step3");
     if (card3) {
         card3.textContent = "";
-        if (n === 0) {
+        if (n === 0 || xMin === null || xMax === null) {
             katex.render("x \\approx ?", card3, { throwOnError: false, displayMode: true });
         } else {
             const den = Math.pow(2, n) - 1;
-            const res = xMin + ((xMax - xMin) / den) * d;
-            katex.render(`x \\approx ${res.toFixed(3)}`, card3, { throwOnError: false, displayMode: true });
+            if (den === 0) {
+                katex.render("x = \\text{Error: } 2^n - 1 = 0", card3, { throwOnError: false, displayMode: true });
+            } else {
+                const res = xMin + ((xMax - xMin) / den) * d;
+                katex.render(`x \\approx ${res.toFixed(3)}`, card3, { throwOnError: false, displayMode: true });
+            }
         }
     }
 }

@@ -94,12 +94,8 @@ function handlePaste(e) {
 
 export function initChromoView() {
     currentBits = [];
-    if (refs.inXmin && !refs.inXmin.value) {
-        refs.inXmin.value = "2";
-    }
-    if (refs.inXmax && !refs.inXmax.value) {
-        refs.inXmax.value = "6";
-    }
+    if (refs.inXmin) refs.inXmin.value = "";
+    if (refs.inXmax) refs.inXmax.value = "";
     calculateMath(0);
 }
 
@@ -108,10 +104,10 @@ export function calculateMath(focusIdx) {
     renderParamLabels();
 
     const n = currentBits.length;
-    const xMinVal = refs.inXmin ? parseFloat(refs.inXmin.value || "2") : 2;
-    const xMaxVal = refs.inXmax ? parseFloat(refs.inXmax.value || "6") : 6;
-    const xMin = isNaN(xMinVal) ? 2 : xMinVal;
-    const xMax = isNaN(xMaxVal) ? 6 : xMaxVal;
+    const rawXmin = refs.inXmin ? refs.inXmin.value.trim() : "";
+    const rawXmax = refs.inXmax ? refs.inXmax.value.trim() : "";
+    const xMin = rawXmin !== "" && !isNaN(parseFloat(rawXmin)) ? parseFloat(rawXmin) : null;
+    const xMax = rawXmax !== "" && !isNaN(parseFloat(rawXmax)) ? parseFloat(rawXmax) : null;
 
     const powers = [];
     const cleans = [];
