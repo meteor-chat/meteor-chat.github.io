@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawDistributionCurve, clearVisual10 } from "./math-visual-10-11.js";
+import { formatMax3 } from "./math-format.js";
 export function addM10Input() {
     if (!refs.m10DynamicInputs) return;
     const index = refs.m10DynamicInputs.children.length + 1;
@@ -57,7 +58,7 @@ export function calculateMath10() {
     const sigma = Math.sqrt(variance);
     let html = `<div class="m10-summary">
         <div class="m10-summary-item">n (Jumlah Data) = ${n}</div>
-        <div class="m10-summary-item">\u03BC (Mean) = ${sumX} / ${n} = ${mu.toFixed(4)}</div>
+        <div class="m10-summary-item">\u03BC (Mean) = ${formatMax3(sumX)} / ${n} = ${formatMax3(mu)}</div>
     </div>`;
     html += `<table class="m10-table">
         <thead>
@@ -73,22 +74,22 @@ export function calculateMath10() {
         html += `
             <tr class="m10-tr">
                 <td class="m10-td">${r.i}</td>
-                <td class="m10-td">${r.x}</td>
-                <td class="m10-td">${r.diff.toFixed(4)}</td>
-                <td class="m10-td">${r.sq.toFixed(4)}</td>
+                <td class="m10-td">${formatMax3(r.x)}</td>
+                <td class="m10-td">${formatMax3(r.diff)}</td>
+                <td class="m10-td">${formatMax3(r.sq)}</td>
             </tr>
         `;
     });
     html += `
             <tr class="m10-tr">
                 <td class="m10-td-bold" colspan="3">Total \u03A3(x_i - \u03BC)\u00B2</td>
-                <td class="m10-td-bold">${sumSq.toFixed(4)}</td>
+                <td class="m10-td-bold">${formatMax3(sumSq)}</td>
             </tr>
         </tbody>
     </table>`;
     html += `<div class="m10-summary">
-        <div class="m10-summary-item">\u03C3\u00B2 (Variance) = ${sumSq.toFixed(4)} / ${n} = ${variance.toFixed(4)}</div>
-        <div class="m10-summary-item">\u03C3 (Standar Deviasi) = \u221A${variance.toFixed(4)} = <span class="m10-td-bold">${sigma.toFixed(4)}</span></div>
+        <div class="m10-summary-item">\u03C3\u00B2 (Variance) = ${formatMax3(sumSq)} / ${n} = ${formatMax3(variance)}</div>
+        <div class="m10-summary-item">\u03C3 (Standar Deviasi) = \u221A${formatMax3(variance)} = <span class="m10-td-bold">${formatMax3(sigma)}</span></div>
     </div>`;
     refs.m10Steps.innerHTML = html;
     drawDistributionCurve("math10-canvas", data, mu, sigma, false);

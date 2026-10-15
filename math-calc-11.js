@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawDistributionCurve, clearVisual11 } from "./math-visual-10-11.js";
+import { formatMax3 } from "./math-format.js";
 
 export function addM11Input() {
     if (!refs.m11DynamicInputs) return;
@@ -77,7 +78,7 @@ export function calculateMath11() {
 
     let html = `<div class="m10-summary">
         <div class="m10-summary-item">n (Jumlah Data Sampel) = ${n}</div>
-        <div class="m10-summary-item">x\u0304 (Mean Sampel) = ${sumX} / ${n} = ${mean.toFixed(4)}</div>
+        <div class="m10-summary-item">x\u0304 (Mean Sampel) = ${formatMax3(sumX)} / ${n} = ${formatMax3(mean)}</div>
     </div>`;
 
     html += `<table class="m10-table">
@@ -95,9 +96,9 @@ export function calculateMath11() {
         html += `
             <tr class="m10-tr">
                 <td class="m10-td">${r.i}</td>
-                <td class="m10-td">${r.x}</td>
-                <td class="m10-td">${r.diff.toFixed(4)}</td>
-                <td class="m10-td">${r.sq.toFixed(4)}</td>
+                <td class="m10-td">${formatMax3(r.x)}</td>
+                <td class="m10-td">${formatMax3(r.diff)}</td>
+                <td class="m10-td">${formatMax3(r.sq)}</td>
             </tr>
         `;
     });
@@ -105,7 +106,7 @@ export function calculateMath11() {
     html += `
             <tr class="m10-tr">
                 <td class="m10-td-bold" colspan="3">Total \u03A3(x_i - x\u0304)\u00B2</td>
-                <td class="m10-td-bold">${sumSq.toFixed(4)}</td>
+                <td class="m10-td-bold">${formatMax3(sumSq)}</td>
             </tr>
         </tbody>
     </table>`;
@@ -116,8 +117,8 @@ export function calculateMath11() {
         </div>`;
     } else {
         html += `<div class="m10-summary">
-            <div class="m10-summary-item">s\u00B2 (Variance Sampel) = ${sumSq.toFixed(4)} / (${n} - 1) = ${variance.toFixed(4)}</div>
-            <div class="m10-summary-item">s (Standar Deviasi Sampel) = \u221A${variance.toFixed(4)} = <span class="m10-td-bold">${sigma.toFixed(4)}</span></div>
+            <div class="m10-summary-item">s\u00B2 (Variance Sampel) = ${formatMax3(sumSq)} / (${n} - 1) = ${formatMax3(variance)}</div>
+            <div class="m10-summary-item">s (Standar Deviasi Sampel) = \u221A${formatMax3(variance)} = <span class="m10-td-bold">${formatMax3(sigma)}</span></div>
         </div>`;
     }
 

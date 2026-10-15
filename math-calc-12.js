@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawVennDiagram, clearVisual12 } from "./math-visual-12.js";
+import { formatMax3 } from "./math-format.js";
 
 export function calculateMath12() {
     if (!refs.m12Steps) return;
@@ -35,10 +36,10 @@ export function calculateMath12() {
     const pAB = (pBA * pA) / pB;
     
     let html = `<div class="math-step">`;
-    html += `<div class="math-step-box math-step-selected">Diketahui:<br>P(A) = ${pA}<br>P(B|A) = ${pBA}<br>P(B) = ${pB}</div>`;
-    html += `<div class="math-step-box math-step-valid math-mt-15">P(A|B) = (${pBA} \u00D7 ${pA}) / ${pB}</div>`;
-    html += `<div class="math-step-box math-step-valid">P(A|B) = ${(pBA * pA).toFixed(6)} / ${pB}</div>`;
-    html += `<div class="math-step-box math-step-valid math-result-highlight">P(A|B) = <span class="m10-td-bold">${pAB.toFixed(6)}</span></div>`;
+    html += `<div class="math-step-box math-step-selected">Diketahui:<br>P(A) = ${formatMax3(pA)}<br>P(B|A) = ${formatMax3(pBA)}<br>P(B) = ${formatMax3(pB)}</div>`;
+    html += `<div class="math-step-box math-step-valid math-mt-15">P(A|B) = (${formatMax3(pBA)} \u00D7 ${formatMax3(pA)}) / ${formatMax3(pB)}</div>`;
+    html += `<div class="math-step-box math-step-valid">P(A|B) = ${formatMax3(pBA * pA)} / ${formatMax3(pB)}</div>`;
+    html += `<div class="math-step-box math-step-valid math-result-highlight">P(A|B) = <span class="m10-td-bold">${formatMax3(pAB)}</span></div>`;
     
     if (pAB > 1) {
          html += `<div class="math-step-box math-step-error">Peringatan: Hasil melebihi 1, pastikan input P(B) valid sesuai Hukum Probabilitas Total.</div>`;

@@ -194,8 +194,8 @@ export function drawFitnessCurve(h, a) {
     
     ctx.fillStyle = "rgba(79, 195, 247, 0.8)";
     ctx.font = "italic 13px 'Google Sans', sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText("\u2191 Puncak Fitness", px(minX + (maxX-minX)*0.15), py(finalMaxY * 0.9));
+    ctx.textAlign = "left";
+    ctx.fillText("\u2191 Puncak Fitness", px(minX) + 8, py(finalMaxY * 0.9));
     
     ctx.fillStyle = "#E0E0E0";
     ctx.font = "14px 'Google Sans', sans-serif";

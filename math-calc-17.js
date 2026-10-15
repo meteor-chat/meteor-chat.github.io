@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawIntegral, clearIntegral } from "./math-visual-integral.js";
+import { formatMax3 } from "./math-format.js";
 
 export function calculateMath17() {
     if (!refs.m17Steps) return;
@@ -59,12 +60,12 @@ export function calculateMath17() {
     const res = valB - valA;
     
     html += `<div class="math-step-box math-step-valid math-mt-15">Teorema Dasar Kalkulus II:</div>`;
-    html += `<div class="math-step-box math-step-valid">\u222B [dari ${a} sampai ${b}] f(x) dx = F(${b}) - F(${a})</div>`;
-    html += `<div class="math-step-box math-step-valid">F(${b}) = ${valB.toFixed ? valB.toFixed(6) : valB}</div>`;
-    html += `<div class="math-step-box math-step-valid">F(${a}) = ${valA.toFixed ? valA.toFixed(6) : valA}</div>`;
-    html += `<div class="math-step-box math-step-valid">Integral = ${valB.toFixed ? valB.toFixed(6) : valB} - (${valA.toFixed ? valA.toFixed(6) : valA})</div>`;
+    html += `<div class="math-step-box math-step-valid">\u222B [dari ${formatMax3(a)} sampai ${formatMax3(b)}] f(x) dx = F(${formatMax3(b)}) - F(${formatMax3(a)})</div>`;
+    html += `<div class="math-step-box math-step-valid">F(${formatMax3(b)}) = ${formatMax3(valB)}</div>`;
+    html += `<div class="math-step-box math-step-valid">F(${formatMax3(a)}) = ${formatMax3(valA)}</div>`;
+    html += `<div class="math-step-box math-step-valid">Integral = ${formatMax3(valB)} - (${formatMax3(valA)})</div>`;
     
-    html += `<div class="math-step-box math-step-valid math-result-highlight">Hasil = <span class="m10-td-bold">${res.toFixed(6)}</span></div>`;
+    html += `<div class="math-step-box math-step-valid math-result-highlight">Hasil = <span class="m10-td-bold">${formatMax3(res)}</span></div>`;
     
     html += `</div>`;
     refs.m17Steps.innerHTML = html;

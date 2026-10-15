@@ -1,5 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { drawIntegral, clearIntegral } from "./math-visual-integral.js";
+import { formatMax3 } from "./math-format.js";
 
 function simpsonsRule(fNode, a, b, n = 1000) {
     if (n % 2 !== 0) n++;
@@ -68,13 +69,13 @@ export function calculateMath18() {
     const fC = integral / (b - a);
     
     html += `<div class="math-step-box math-step-valid math-mt-15">Menghitung Integral Tentu:</div>`;
-    html += `<div class="math-step-box math-step-valid">\u222B [dari ${a} sampai ${b}] f(x) dx \u2248 ${integral.toFixed(6)}</div>`;
+    html += `<div class="math-step-box math-step-valid">\u222B [dari ${formatMax3(a)} sampai ${formatMax3(b)}] f(x) dx \u2248 ${formatMax3(integral)}</div>`;
     
     html += `<div class="math-step-box math-step-valid math-mt-15">Menerapkan Teorema Nilai Rata-Rata Integral:</div>`;
-    html += `<div class="math-step-box math-step-valid">f(c) = 1 / (${b} - ${a}) \u00D7 \u222B f(x) dx</div>`;
-    html += `<div class="math-step-box math-step-valid">f(c) = 1 / ${(b - a).toFixed(4)} \u00D7 ${integral.toFixed(6)}</div>`;
+    html += `<div class="math-step-box math-step-valid">f(c) = 1 / (${formatMax3(b)} - ${formatMax3(a)}) \u00D7 \u222B f(x) dx</div>`;
+    html += `<div class="math-step-box math-step-valid">f(c) = 1 / ${formatMax3(b - a)} \u00D7 ${formatMax3(integral)}</div>`;
     
-    html += `<div class="math-step-box math-step-valid math-result-highlight">f(c) (Nilai Rata-Rata) = <span class="m10-td-bold">${fC.toFixed(6)}</span></div>`;
+    html += `<div class="math-step-box math-step-valid math-result-highlight">f(c) (Nilai Rata-Rata) = <span class="m10-td-bold">${formatMax3(fC)}</span></div>`;
     
     html += `</div>`;
     refs.m18Steps.innerHTML = html;

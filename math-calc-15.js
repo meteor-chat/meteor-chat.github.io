@@ -1,4 +1,5 @@
 import { refs } from "./dom-refs.js";
+import { formatMax3 } from "./math-format.js";
 
 const isZero = (val) => Math.abs(val) < 1e-10;
 const isInf = (val) => Math.abs(val) > 1e10 || !isFinite(val);
@@ -60,14 +61,14 @@ export function calculateMath15() {
         
         if (!is00 && !isInfInf) {
             html += `<div class="math-step-box math-step-valid math-mt-15">Iterasi ${iter}: Bentuk Tentu</div>`;
-            html += `<div class="math-step-box math-step-valid">f(${c}) = ${fVal.toFixed ? fVal.toFixed(4) : fVal}</div>`;
-            html += `<div class="math-step-box math-step-valid">g(${c}) = ${gVal.toFixed ? gVal.toFixed(4) : gVal}</div>`;
+            html += `<div class="math-step-box math-step-valid">f(${formatMax3(c)}) = ${formatMax3(fVal)}</div>`;
+            html += `<div class="math-step-box math-step-valid">g(${formatMax3(c)}) = ${formatMax3(gVal)}</div>`;
             
             if (isZero(gVal)) {
                 html += `<div class="math-step-box math-step-error">\u274C Error: Limit pembagian oleh nol bukan bentuk tak tentu.</div>`;
             } else {
                 const res = fVal / gVal;
-                html += `<div class="math-step-box math-step-valid math-result-highlight">Limit = <span class="m10-td-bold">${res.toFixed(6)}</span></div>`;
+                html += `<div class="math-step-box math-step-valid math-result-highlight">Limit = <span class="m10-td-bold">${formatMax3(res)}</span></div>`;
             }
             success = true;
             break;
