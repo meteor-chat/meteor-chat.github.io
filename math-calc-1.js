@@ -199,13 +199,9 @@ export function calculateMath() {
         finalRow.appendChild(makeEl("div", "chromo-row-label", "hasil akhir →"));
         const finalContent = makeEl("div", "chromo-final-content");
         finalContent.style.width = `${cellBlockWidth}px`;
-        const dMath = makeEl("span", "chromo-final-math");
-        katex.render("d", dMath, { throwOnError: false });
-        finalContent.appendChild(dMath);
-        finalContent.appendChild(makeEl("span", "chromo-final-text", " (desimal) = "));
-        const valMath = makeEl("span", "chromo-final-math");
-        katex.render(String(d), valMath, { throwOnError: false });
-        finalContent.appendChild(valMath);
+        const finalMath = makeEl("span", "chromo-final-math");
+        katex.render(`d\\text{ (desimal)} = ${d}`, finalMath, { throwOnError: false });
+        finalContent.appendChild(finalMath);
         finalRow.appendChild(finalContent);
         table.appendChild(finalRow);
 
