@@ -88,9 +88,14 @@
 .chromo-arrow-cells { display: flex; gap: 8px; }
 .chromo-arrow-cell { width: 48px; text-align: center; color: #ffffff; font-size: 16px; user-select: none; }
 .chromo-cells-group { display: flex; gap: 8px; align-items: center; }
-.chromo-cell { width: 48px; height: 44px; border: 1px solid #444444; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 15px; background: transparent; flex-shrink: 0; box-sizing: border-box; }
-.chromo-cell .katex { font-size: 0.95em; }
-.chromo-cell .katex .mbin { margin-left: 0.1em; margin-right: 0.1em; }
+.chromo-cell { width: 48px; height: 44px; border: 1px solid #444444; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 15px; background: transparent; flex-shrink: 0; box-sizing: border-box; white-space: nowrap; }
+.chromo-cell .katex { font-size: 0.95em; white-space: nowrap; }
+.chromo-cell .katex-html { white-space: nowrap; display: inline-flex; align-items: baseline; justify-content: center; }
+.chromo-cell .katex .mbin { margin-left: 0.08em; margin-right: 0.08em; }
+.chromo-cell-calc .katex .mbin { margin-left: 0.04em; margin-right: 0.04em; }
+.chromo-cell-fit-md .katex { font-size: 0.82em; }
+.chromo-cell-fit-sm .katex { font-size: 0.74em; }
+.chromo-cell-fit-xs .katex { font-size: 0.65em; }
 .chromo-cell-interactive { cursor: pointer; transition: background 0.15s, border-color 0.15s; font-family: inherit; font-size: 16px; }
 .chromo-cell-interactive:hover { border-color: #888888; background: rgba(255, 255, 255, 0.08); }
 .chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; transition: border-color 0.15s, background 0.15s; caret-color: #38bdf8; padding: 0; }

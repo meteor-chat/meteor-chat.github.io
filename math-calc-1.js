@@ -187,7 +187,11 @@ export function calculateMath(focusIdx) {
             table.appendChild(makeArrowRow(n));
 
             const row5Cells = powers.map((p, idx) => {
-                const cell = makeEl("div", "chromo-cell");
+                let fitClass = "";
+                if (p.pVal >= 10000) fitClass = " chromo-cell-fit-xs";
+                else if (p.pVal >= 1000) fitClass = " chromo-cell-fit-sm";
+                else if (p.pVal >= 100) fitClass = " chromo-cell-fit-md";
+                const cell = makeEl("div", `chromo-cell chromo-cell-calc${fitClass}`);
                 const bit = currentBits[idx];
                 katex.render(`${p.pVal} \\times ${bit}`, cell, { throwOnError: false });
                 return cell;
