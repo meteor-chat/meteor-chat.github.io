@@ -1,3 +1,5 @@
+import { formatMax3 } from "./math-format.js";
+
 export function makeEl(tag, className, textContent) {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -76,9 +78,9 @@ export function renderChromoCards(n, d, xMin, xMax) {
     const card2 = document.getElementById("chromo-card-step2");
     if (card2) {
         card2.textContent = "";
-        const partXmin = xMin !== null ? `${xMin}` : "?";
-        const partXminFmt = xMin !== null ? (xMin < 0 ? `(${xMin})` : `${xMin}`) : "?";
-        const partXmax = xMax !== null ? `${xMax}` : "?";
+        const partXmin = xMin !== null ? `${formatMax3(xMin)}` : "?";
+        const partXminFmt = xMin !== null ? (xMin < 0 ? `(${formatMax3(xMin)})` : `${formatMax3(xMin)}`) : "?";
+        const partXmax = xMax !== null ? `${formatMax3(xMax)}` : "?";
         const partN = n > 0 ? `${n}` : "?";
         const partD = n > 0 ? `${d}` : "?";
         const tex2 = `x = ${partXmin} + \\frac{${partXmax} - ${partXminFmt}}{2^{${partN}} - 1} \\cdot ${partD}`;
@@ -96,7 +98,7 @@ export function renderChromoCards(n, d, xMin, xMax) {
                 katex.render("x = \\text{Error: } 2^n - 1 = 0", card3, { throwOnError: false, displayMode: true });
             } else {
                 const res = xMin + ((xMax - xMin) / den) * d;
-                katex.render(`x \\approx ${res.toFixed(3)}`, card3, { throwOnError: false, displayMode: true });
+                katex.render(`x \\approx ${formatMax3(res)}`, card3, { throwOnError: false, displayMode: true });
             }
         }
     }

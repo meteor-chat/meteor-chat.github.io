@@ -1,3 +1,5 @@
+import { formatMax3 } from "./math-format.js";
+
 export function drawObjectiveCurve(x1, x2) {
     const canvas = document.getElementById("math2-canvas");
     if (!canvas) return;
@@ -81,11 +83,11 @@ export function drawObjectiveCurve(x1, x2) {
     ctx.font = "14px 'Google Sans', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText(`x\u2081 = ${x1}`, px(x1), py(0) + 5);
+    ctx.fillText(`x\u2081 = ${formatMax3(x1)}`, px(x1), py(0) + 5);
     
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(`h = ${actualY.toFixed(2)}`, px(0) + 5, py(actualY) - 15);
+    ctx.fillText(`h = ${formatMax3(actualY)}`, px(0) + 5, py(actualY) - 15);
 }
 
 export function drawFitnessCurve(h, a) {
@@ -199,11 +201,11 @@ export function drawFitnessCurve(h, a) {
     ctx.font = "14px 'Google Sans', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.fillText(`h = ${h.toFixed(2)}`, px(h), py(0) + 5);
+    ctx.fillText(`h = ${formatMax3(h)}`, px(h), py(0) + 5);
     
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(`Fit = ${actualY.toFixed(3)}`, px(0) + 5, py(actualY) - 15);
+    ctx.fillText(`Fit = ${formatMax3(actualY)}`, px(0) + 5, py(actualY) - 15);
 }
 
 export function clearVisual2() {
