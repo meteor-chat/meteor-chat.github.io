@@ -178,3 +178,115 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
 
     bindTokenHover();
 }
+
+export function renderChromoTable(container, n, currentBits, powers, cleans, d, row1Cells, maxBits) {
+    container.textContent = "";
+    const table = makeEl("div", "chromo-table");
+    table.appendChild(makeCellRow("kromosom biner →", row1Cells));
+
+    if (n > 0) {
+        table.appendChild(makeArrowRow(n));
+
+        const row2Cells = [];
+        for (let i = 0; i < n; i++) {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(i + 1), cell, { throwOnError: false });
+            row2Cells.push(cell);
+        }
+        const nTag = makeEl("div", n < maxBits ? "chromo-n-tag chromo-n-tag-offset" : "chromo-n-tag");
+        nTag.appendChild(makeEl("span", "chromo-n-arrow", "→ "));
+        const nMath = makeEl("span", "chromo-n-math");
+        katex.render(`n = \\htmlClass{chromo-token-n}{${n}}`, nMath, { throwOnError: false, trust: true });
+        nTag.appendChild(nMath);
+        nTag.addEventListener("mouseenter", () => {
+            document.querySelectorAll(".chromo-token-n").forEach((el) => el.classList.add("chromo-glow"));
+        });
+        nTag.addEventListener("mouseleave", () => {
+            document.querySelectorAll(".chromo-token-n").forEach((el) => el.classList.remove("chromo-glow"));
+        });
+        table.appendChild(makeCellRow("posisi gen (i) →", row2Cells, nTag));
+        table.appendChild(makeArrowRow(n));
+
+        const rowFormulaCells = [];
+        for (let i = 0; i < n; i++) {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(`2^{\\htmlClass{chromo-token-n}{${n}}-${i + 1}}`, cell, { throwOnError: false, trust: true });
+            rowFormulaCells.push(cell);
+        }
+        table.appendChild(makeCellRow("rumus bobot 2^(n-i) →", rowFormulaCells));
+        table.appendChild(makeArrowRow(n));
+
+        const row3Cells = [];
+        for (let i = 0; i < n; i++) {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(`2^{${powers[i].exp}}`, cell, { throwOnError: false });
+            row3Cells.push(cell);
+        }
+        table.appendChild(makeCellRow("bobot biner (2^p) →", row3Cells));
+        table.appendChild(makeArrowRow(n));
+
+        const row4Cells = powers.map((p) => {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(p.pVal), cell, { throwOnError: false });
+            return cell;
+        });
+        table.appendChild(makeCellRow("nilai bobot →", row4Cells));
+        table.appendChild(makeArrowRow(n));
+
+        const row5Cells = powers.map((p, idx) => {
+            let fitClass = "";
+            if (p.pVal >= 10000) fitClass = " chromo-cell-fit-xs";
+            else if (p.pVal >= 1000) fitClass = " chromo-cell-fit-sm";
+            else if (p.pVal >= 100) fitClass = " chromo-cell-fit-md";
+            const cell = makeEl("div", `chromo-cell chromo-cell-calc${fitClass}`);
+            const bit = currentBits[idx];
+            katex.render(`${p.pVal} \\times ${bit}`, cell, { throwOnError: false });
+            return cell;
+        });
+        table.appendChild(makeCellRow("perkalian bobot × gen →", row5Cells));
+        table.appendChild(makeArrowRow(n));
+
+        const row6Cells = cleans.map((c) => {
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(c), cell, { throwOnError: false });
+            return cell;
+        });
+        table.appendChild(makeCellRow("nilai desimal gen →", row6Cells));
+
+        const cellBlockWidth = n * 56 - 8;
+
+        const sumRow = makeEl("div", "chromo-row");
+        sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan nilai desimal →"));
+        const sumContent = makeEl("div", "chromo-sum-content");
+        katex.render(cleans.join(" + "), sumContent, { throwOnError: false });
+        sumContent.style.width = `${cellBlockWidth}px`;
+        sumRow.appendChild(sumContent);
+        table.appendChild(sumRow);
+
+        const braceRow = makeEl("div", "chromo-brace-row");
+        braceRow.appendChild(makeEl("div", "chromo-arrow-label-spacer"));
+        const braceContent = makeEl("div", "chromo-brace-content");
+        braceContent.style.width = `${cellBlockWidth}px`;
+        braceContent.appendChild(createBraceSvg(cellBlockWidth));
+        braceRow.appendChild(braceContent);
+        table.appendChild(braceRow);
+
+        const finalRow = makeEl("div", "chromo-row");
+        finalRow.appendChild(makeEl("div", "chromo-row-label", "nilai desimal (d) →"));
+        const finalContent = makeEl("div", "chromo-final-content");
+        finalContent.style.width = `${cellBlockWidth}px`;
+        const finalMath = makeEl("span", "chromo-final-math");
+        katex.render(`d\\text{ (desimal)} = \\htmlClass{chromo-token-d}{${d}}`, finalMath, { throwOnError: false, trust: true });
+        finalContent.appendChild(finalMath);
+        finalRow.appendChild(finalContent);
+        finalRow.addEventListener("mouseenter", () => {
+            document.querySelectorAll(".chromo-token-d").forEach((el) => el.classList.add("chromo-glow"));
+        });
+        finalRow.addEventListener("mouseleave", () => {
+            document.querySelectorAll(".chromo-token-d").forEach((el) => el.classList.remove("chromo-glow"));
+        });
+        table.appendChild(finalRow);
+    }
+
+    container.appendChild(table);
+}
