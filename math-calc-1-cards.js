@@ -119,15 +119,10 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     const card4 = document.getElementById("chromo-card-step4");
     if (card4) {
         card4.textContent = "";
-        const topMath = makeEl("div");
         const stepFmt = formatMax3(stepSize);
         const stepFmtWrap = stepSize < 0 ? `(${stepFmt})` : stepFmt;
         const tex4 = `x = ${partXmin} + (${stepFmtWrap} \\cdot ${tokenD})`;
-        katex.render(tex4, topMath, { throwOnError: false, trust: true, displayMode: true });
-        card4.appendChild(topMath);
-        const subnote4 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\Delta x = \\frac{${formatMax3(deltaX)}}{${den}} = ${stepFmt} \\text{ (resolusi per bit)}`, subnote4, { throwOnError: false, trust: true });
-        card4.appendChild(subnote4);
+        katex.render(tex4, card4, { throwOnError: false, trust: true, displayMode: true });
     }
 
     const card5 = document.getElementById("chromo-card-step5");

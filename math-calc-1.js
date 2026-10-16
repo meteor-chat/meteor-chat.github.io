@@ -1,6 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { makeEl } from "./math-calc-1-tokens.js";
-import { renderSubHeaderAndSigma, renderChromoTable } from "./math-calc-1-table.js";
+import { renderChromoTable } from "./math-calc-1-table.js";
 import { renderParamLabels, renderChromoCards } from "./math-calc-1-cards.js";
 
 const MAX_BITS = 10;
@@ -95,7 +95,6 @@ export function initChromoView() {
 
 export function calculateMath(focusIdx) {
     if (typeof katex === "undefined") return;
-    renderSubHeaderAndSigma(currentBits.length);
     renderParamLabels();
 
     const n = currentBits.length;

@@ -25,45 +25,18 @@ function makeCellRow(label, cells, extraEl = null) {
     return row;
 }
 
-export function renderSubHeaderAndSigma(n) {
-    if (typeof katex === "undefined") return;
-    const subMapping = document.getElementById("chromo-sub-mapping");
-    if (subMapping && !subMapping.hasChildNodes()) {
-        const texMap = "\\text{Pemetaan: } \\underbrace{\\{0, 1\\}^n}_{\\text{Genotipe (Biner Diskret)}} \\xrightarrow{\\quad \\text{Dekode Linear} \\quad} \\underbrace{x \\in [x_{\\min}, x_{\\max}]}_{\\text{Fenotipe (Solusi Kontinu)}}";
-        katex.render(texMap, subMapping, { throwOnError: false, trust: true });
-    }
-    const sigmaBox = document.getElementById("chromo-sigma-container");
-    if (sigmaBox) {
-        sigmaBox.textContent = "";
-        const texSigma = n > 0
-            ? `d = \\sum_{i=1}^{\\htmlClass{chromo-token-n}{${n}}} b_i \\cdot 2^{\\htmlClass{chromo-token-n}{${n}}-i} = \\htmlClass{chromo-token-d}{d}`
-            : "d = \\sum_{i=1}^{n} b_i \\cdot 2^{n-i}";
-        katex.render(texSigma, sigmaBox, { throwOnError: false, trust: true });
-    }
-}
-
 export function renderChromoTable(container, n, currentBits, powers, cleans, d, row1Cells, maxBits) {
     container.textContent = "";
     const table = makeEl("div", "chromo-table");
-    table.appendChild(makeCellRow("kromosom biner (b_i) →", row1Cells));
+    table.appendChild(makeCellRow("kromosom biner →", row1Cells));
 
     if (n > 0) {
         table.appendChild(makeArrowRow(n));
 
         const row2Cells = [];
         for (let i = 0; i < n; i++) {
-            const cell = makeEl("div", "chromo-cell chromo-pos-cell");
-            const posNum = String(i + 1);
-            let badgeText = "";
-            if (i === 0) badgeText = "MSB";
-            else if (i === n - 1 && n > 1) badgeText = "LSB";
-
-            if (badgeText) {
-                const tex = `\\begin{matrix} ${posNum} \\\\ \\htmlClass{chromo-badge-text}{(${badgeText})} \\end{matrix}`;
-                katex.render(tex, cell, { throwOnError: false, trust: true });
-            } else {
-                katex.render(posNum, cell, { throwOnError: false });
-            }
+            const cell = makeEl("div", "chromo-cell");
+            katex.render(String(i + 1), cell, { throwOnError: false });
             row2Cells.push(cell);
         }
 
