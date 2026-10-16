@@ -5,6 +5,7 @@ import { FORMULAS } from "./math-formulas.js";
 import { bindMathRefs, FORM_COUNT } from "./math-refs.js";
 import { bindMathInputs } from "./math-inputs.js";
 import { loadForm, hasForm } from "./math-modules.js";
+import { FORMULA_NAMES } from "./math-formula-names.js";
 
 let ready = false;
 let openToken = 0;
@@ -34,6 +35,7 @@ function showForm(n) {
         if (refs[`form${i}`]) refs[`form${i}`].classList.toggle("hidden", i !== n);
     }
     state.currentView = "math-calc";
+    if (FORMULA_NAMES[n]) document.title = `${FORMULA_NAMES[n]} - Meteor`;
     window.scrollTo(0, 0);
 }
 
@@ -66,4 +68,5 @@ export function closeForm() {
     refs.mathCalc.classList.add("hidden");
     refs.mathMenu.classList.remove("hidden");
     state.currentView = "math-menu";
+    document.title = "Math - Meteor";
 }
