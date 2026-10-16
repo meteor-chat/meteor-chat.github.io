@@ -140,7 +140,7 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         katex.render(tex5, topMath, { throwOnError: false, trust: true, displayMode: true });
         card5.appendChild(topMath);
         const subnote5 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\text{pergeseran } = \\Delta x \\cdot d = ${formatMax3(stepSize)} \\times ${d} = ${formatMax3(contrib)}`, subnote5, { throwOnError: false, trust: true });
+        katex.render(`\\text{Pergeseran } = \\Delta x \\cdot d = ${formatMax3(stepSize)} \\times ${d} = ${formatMax3(contrib)}`, subnote5, { throwOnError: false, trust: true });
         card5.appendChild(subnote5);
     }
 
