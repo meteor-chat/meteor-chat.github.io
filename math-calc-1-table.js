@@ -15,9 +15,27 @@ function makeArrowRow(n) {
     return row;
 }
 
+function makeMathRowLabel(prefix, mathTex) {
+    const label = makeEl("div", "chromo-row-label");
+    label.appendChild(makeEl("span", "", prefix + " "));
+    const mathSpan = makeEl("span", "chromo-row-label-math");
+    if (typeof katex !== "undefined") {
+        katex.render(mathTex, mathSpan, { throwOnError: false, trust: true });
+    } else {
+        mathSpan.textContent = mathTex;
+    }
+    label.appendChild(mathSpan);
+    label.appendChild(makeEl("span", "", " →"));
+    return label;
+}
+
 function makeCellRow(label, cells, extraEl = null) {
     const row = makeEl("div", "chromo-row");
-    row.appendChild(makeEl("div", "chromo-row-label", label));
+    if (typeof label === "string") {
+        row.appendChild(makeEl("div", "chromo-row-label", label));
+    } else {
+        row.appendChild(label);
+    }
     const group = makeEl("div", "chromo-cells-group");
     cells.forEach((c) => group.appendChild(c));
     row.appendChild(group);
@@ -45,7 +63,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
         const nMath = makeEl("span", "chromo-n-math");
         katex.render(`n = \\htmlClass{chromo-token-n}{${n}}`, nMath, { throwOnError: false, trust: true });
         nTag.appendChild(nMath);
-        table.appendChild(makeCellRow("posisi gen (i) →", row2Cells, nTag));
+        table.appendChild(makeCellRow(makeMathRowLabel("posisi gen", "(i)"), row2Cells, nTag));
         table.appendChild(makeArrowRow(n));
 
         const rowFormulaCells = [];
@@ -54,7 +72,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
             katex.render(`2^{\\htmlClass{chromo-token-n}{${n}}-${i + 1}}`, cell, { throwOnError: false, trust: true });
             rowFormulaCells.push(cell);
         }
-        table.appendChild(makeCellRow("rumus bobot 2^(n-i) →", rowFormulaCells));
+        table.appendChild(makeCellRow(makeMathRowLabel("rumus bobot", "2^{n-i}"), rowFormulaCells));
         table.appendChild(makeArrowRow(n));
 
         const row3Cells = [];
@@ -63,7 +81,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
             katex.render(`2^{${powers[i].exp}}`, cell, { throwOnError: false });
             row3Cells.push(cell);
         }
-        table.appendChild(makeCellRow("bobot biner 2^p (p = n-i) →", row3Cells));
+        table.appendChild(makeCellRow(makeMathRowLabel("bobot biner", "2^p\\ (p = n-i)"), row3Cells));
         table.appendChild(makeArrowRow(n));
 
         const row4Cells = powers.map((p) => {

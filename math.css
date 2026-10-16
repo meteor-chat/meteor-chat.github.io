@@ -87,6 +87,7 @@
 .chromo-table { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin: 0 auto; width: fit-content; min-width: max-content; padding: 0 8px; box-sizing: border-box; }
 .chromo-row { display: flex; align-items: center; min-height: 44px; }
 .chromo-row-label { width: 250px; text-align: right; padding-right: 18px; color: #ffffff; font-size: 15px; font-weight: 400; flex-shrink: 0; white-space: nowrap; }
+.chromo-row-label .katex { font-size: 1em; }
 .chromo-arrow-row { display: flex; align-items: center; min-height: 18px; line-height: 1; }
 .chromo-arrow-label-spacer { width: 250px; flex-shrink: 0; }
 .chromo-arrow-cells { display: flex; gap: 8px; }
