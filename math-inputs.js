@@ -37,7 +37,27 @@ function syncCrossoverType() {
     if (refs.m7ContainerMask) refs.m7ContainerMask.classList.toggle("hidden", type !== "uniform");
 }
 
+let eventsBound = false;
+function disableNumberSpinAndScroll() {
+    if (eventsBound) return;
+    eventsBound = true;
+    document.addEventListener("wheel", (e) => {
+        if (e.target && e.target.tagName === "INPUT" && e.target.type === "number") {
+            e.preventDefault();
+            e.target.blur();
+        }
+    }, { passive: false });
+    document.addEventListener("keydown", (e) => {
+        if (e.target && e.target.tagName === "INPUT" && e.target.type === "number") {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                e.preventDefault();
+            }
+        }
+    });
+}
+
 export function bindMathInputs() {
+    disableNumberSpinAndScroll();
     Object.entries(INPUTS).forEach(([key, names]) => {
         const n = Number(key);
         names.forEach((name) => {
@@ -50,3 +70,5 @@ export function bindMathInputs() {
         });
     });
 }
+
+disableNumberSpinAndScroll();

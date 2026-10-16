@@ -102,11 +102,11 @@
 .chromo-cell-fit-xs .katex { font-size: 0.65em; }
 .chromo-cell-interactive { cursor: pointer; transition: background 0.15s, border-color 0.15s; font-family: inherit; font-size: 16px; }
 .chromo-cell-interactive:hover { border-color: #888888; background: rgba(255, 255, 255, 0.08); }
-.chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; transition: border-color 0.15s, background 0.15s; caret-color: #38bdf8; padding: 0 0 0 14px; }
+.chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; transition: border-color 0.15s, background 0.15s; caret-color: #38bdf8; padding: 0; }
 .chromo-cell-input:focus { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
 .chromo-cell-input:hover:not(:focus) { border-color: #888888; }
-.chromo-cell-input::-webkit-inner-spin-button, .chromo-param-input::-webkit-inner-spin-button { opacity: 0.7; cursor: pointer; }
-.chromo-cell-input:hover::-webkit-inner-spin-button, .chromo-cell-input:focus::-webkit-inner-spin-button, .chromo-param-input:hover::-webkit-inner-spin-button, .chromo-param-input:focus::-webkit-inner-spin-button { opacity: 1; }
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chromo-n-tag { display: flex; align-items: center; gap: 4px; color: #ffffff; font-size: 15px; margin-left: 14px; white-space: nowrap; }
 .chromo-n-tag-offset { margin-left: 70px; }
 .chromo-n-arrow { font-family: var(--font-stack); }

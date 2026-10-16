@@ -19,19 +19,6 @@ function focusCell(idx) {
     }
 }
 
-function setBitAt(i, val) {
-    if (val !== "0" && val !== "1") return;
-    if (i < currentBits.length) {
-        if (currentBits[i] !== val) {
-            currentBits[i] = val;
-            calculateMath(i);
-        }
-    } else if (currentBits.length < MAX_BITS) {
-        currentBits.push(val);
-        calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
-    }
-}
-
 function handleInputKey(e, i) {
     if (e.key === "0" || e.key === "1") {
         e.preventDefault();
@@ -42,12 +29,8 @@ function handleInputKey(e, i) {
             currentBits.push(e.key);
             calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
         }
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === " ") {
         e.preventDefault();
-        setBitAt(i, "1");
-    } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setBitAt(i, "0");
     } else if (e.key === "Backspace") {
         e.preventDefault();
         if (i < currentBits.length) {
@@ -70,12 +53,6 @@ function handleInputKey(e, i) {
         e.preventDefault();
         const limit = currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1;
         if (i < limit) focusCell(i + 1);
-    } else if (e.key === " ") {
-        e.preventDefault();
-        if (i < currentBits.length) {
-            currentBits[i] = currentBits[i] === "1" ? "0" : "1";
-            calculateMath(i);
-        }
     } else if (e.key === "Tab") {
         return;
     } else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -102,20 +79,6 @@ function handleInputChange(input, i) {
     }
 }
 
-function handleCellWheel(e, i) {
-    e.preventDefault();
-    setBitAt(i, e.deltaY < 0 ? "1" : "0");
-}
-
-let paramsBound = false;
-function handleParamWheel(e, input) {
-    e.preventDefault();
-    const current = parseFloat(input.value) || 0;
-    const step = e.deltaY < 0 ? 1 : -1;
-    input.value = String(current + step);
-    calculateMath();
-}
-
 function handlePaste(e) {
     e.preventDefault();
     const clip = (e.clipboardData || window.clipboardData)?.getData("text") || "";
@@ -130,11 +93,6 @@ export function initChromoView() {
     currentBits = [];
     if (refs.inXmin) refs.inXmin.value = "";
     if (refs.inXmax) refs.inXmax.value = "";
-    if (!paramsBound) {
-        if (refs.inXmin) refs.inXmin.addEventListener("wheel", (e) => handleParamWheel(e, refs.inXmin), { passive: false });
-        if (refs.inXmax) refs.inXmax.addEventListener("wheel", (e) => handleParamWheel(e, refs.inXmax), { passive: false });
-        paramsBound = true;
-    }
     calculateMath(0);
 }
 
@@ -168,10 +126,8 @@ export function calculateMath(focusIdx) {
         const cellCount = n < MAX_BITS ? n + 1 : MAX_BITS;
         for (let i = 0; i < cellCount; i++) {
             const input = makeEl("input", "chromo-cell chromo-cell-input");
-            input.type = "number";
-            input.min = "0";
-            input.max = "1";
-            input.step = "1";
+            input.type = "text";
+            input.maxLength = 1;
             input.setAttribute("inputmode", "numeric");
             input.setAttribute("autocomplete", "off");
             input.setAttribute("spellcheck", "false");
@@ -180,7 +136,6 @@ export function calculateMath(focusIdx) {
             input.value = i < n ? currentBits[i] : "";
             input.addEventListener("keydown", (e) => handleInputKey(e, i));
             input.addEventListener("input", () => handleInputChange(input, i));
-            input.addEventListener("wheel", (e) => handleCellWheel(e, i), { passive: false });
             input.addEventListener("paste", handlePaste);
             input.addEventListener("focus", () => {
                 try {
