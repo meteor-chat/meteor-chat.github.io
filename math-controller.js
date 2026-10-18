@@ -6,6 +6,7 @@ import { bindMathRefs, FORM_COUNT } from "./math-refs.js";
 import { bindMathInputs } from "./math-inputs.js";
 import { loadForm, hasForm } from "./math-modules.js";
 import { FORMULA_NAMES } from "./math-formula-names.js";
+import { getFormulaUrl } from "./math-routes.js";
 
 let ready = false;
 let openToken = 0;
@@ -16,7 +17,7 @@ function setup() {
     bindMathInputs();
     for (let i = 1; i <= FORM_COUNT; i++) {
         const back = document.getElementById(i === 1 ? "btn-math-calc-back" : `btn-math-calc-back-${i}`);
-        if (back) back.addEventListener("click", closeForm);
+        if (back) back.addEventListener("click", () => closeForm());
     }
     ready = true;
 }
@@ -44,7 +45,7 @@ export function prefetchForm(n) {
     loadForm(n).catch(() => {});
 }
 
-export async function openForm(n, card) {
+export async function openForm(n, card, options = {}) {
     if (!hasForm(n)) return;
     setup();
     const token = ++openToken;
@@ -56,6 +57,14 @@ export async function openForm(n, card) {
         showForm(n);
         renderFormula(n);
         form.open();
+        const url = getFormulaUrl(n);
+        if (options.pushHistory !== false) {
+            if (window.location.pathname !== url) {
+                history.pushState({ formulaId: n }, "", url);
+            }
+        } else if (!history.state || history.state.formulaId !== n) {
+            history.replaceState({ formulaId: n }, "", url);
+        }
     } catch (e) {
         showError(`Kalkulator gagal dimuat: ${e.message}`);
     } finally {
@@ -63,10 +72,15 @@ export async function openForm(n, card) {
     }
 }
 
-export function closeForm() {
+export function closeForm(options = {}) {
     openToken++;
     refs.mathCalc.classList.add("hidden");
     refs.mathMenu.classList.remove("hidden");
     state.currentView = "math-menu";
     document.title = "Math - Meteor";
+    if (options.pushHistory !== false) {
+        if (window.location.pathname !== "/math" && window.location.pathname !== "/math/") {
+            history.pushState({ formulaId: null }, "", "/math");
+        }
+    }
 }

@@ -1,9 +1,11 @@
 import { initFilters } from "./math-filter.js";
+import { parseFormulaUrl } from "./math-routes.js";
 
 const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
 const CALC_CSS_HREF = new URL("./math.css", import.meta.url).href;
 const CONTROLLER_GRAPH = [
     "./math-controller.js",
+    "./math-routes.js",
     "./dom-refs.js",
     "./app-state.js",
     "./error-view.js",
@@ -87,7 +89,31 @@ function bindGrid(grid) {
     });
 }
 
+function handleRoute() {
+    const route = parseFormulaUrl(window.location.pathname);
+    if (route) {
+        loadController()
+            .then((controller) => controller.openForm(route.id, null, { pushHistory: false }))
+            .catch(reportError);
+    }
+}
+
 initFilters();
 const grid = document.querySelector(".math-grid");
 if (grid) bindGrid(grid);
 prefetchWhenIdle();
+handleRoute();
+window.addEventListener("popstate", (e) => {
+    const formulaId = e.state?.formulaId;
+    loadController()
+        .then((controller) => {
+            if (formulaId) {
+                controller.openForm(formulaId, null, { pushHistory: false });
+            } else {
+                const route = parseFormulaUrl(window.location.pathname);
+                if (route) controller.openForm(route.id, null, { pushHistory: false });
+                else controller.closeForm({ pushHistory: false });
+            }
+        })
+        .catch(reportError);
+});

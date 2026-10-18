@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Halaman Tidak Ditemukan - Meteor</title>
+<base href="/">
+<script type="module">
+import { parseFormulaUrl, getFormulaUrl } from "./math-routes.js";
+const route = parseFormulaUrl(window.location.pathname);
+if (route) {
+    window.location.replace(getFormulaUrl(route.id));
+} else if (window.location.pathname.startsWith("/math")) {
+    window.location.replace("/math");
+} else {
+    window.location.replace("/");
+}
+</script>
+<style>
+body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+a { color: #38bdf8; text-decoration: none; }
+</style>
+</head>
+<body>
+<div>
+<p>Mengalihkan...</p>
+<p><a href="/math">&larr; Kembali ke Math</a></p>
+</div>
+</body>
+</html>

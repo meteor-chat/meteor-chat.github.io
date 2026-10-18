@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write .",
-    "build:math": "node scripts/build-math.mjs",
+    "build:math": "node scripts/build-math.mjs && node scripts/generate-math-routes.mjs",
     "test": "vitest"
   },
   "repository": {
