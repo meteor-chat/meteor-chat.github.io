@@ -89,7 +89,7 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     } else {
         zeroMath.textContent = "d = 0 => x = xmin";
     }
-    const zeroStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Pasti bernilai x_min");
+    const zeroStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-ok", "✓ Pasti bernilai x_min");
     badgeZero.appendChild(zeroTitle);
     badgeZero.appendChild(zeroMath);
     badgeZero.appendChild(zeroStatus);
@@ -115,7 +115,7 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     } else {
         oneMath.textContent = "d = 2^n - 1 => x = xmax";
     }
-    const oneStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Pasti bernilai x_max");
+    const oneStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-ok", "✓ Pasti bernilai x_max");
     badgeOne.appendChild(oneTitle);
     badgeOne.appendChild(oneMath);
     badgeOne.appendChild(oneStatus);

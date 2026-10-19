@@ -25,7 +25,7 @@ function makeMathRowLabel(prefix, mathTex) {
         mathSpan.textContent = mathTex;
     }
     label.appendChild(mathSpan);
-    label.appendChild(makeEl("span", "", " →"));
+    label.appendChild(makeEl("span", "", ":"));
     return label;
 }
 
@@ -46,7 +46,7 @@ function makeCellRow(label, cells, extraEl = null) {
 export function renderChromoTable(container, n, currentBits, powers, cleans, d, row1Cells, maxBits) {
     container.textContent = "";
     const table = makeEl("div", "chromo-table");
-    table.appendChild(makeCellRow("kromosom biner →", row1Cells));
+    table.appendChild(makeCellRow("kromosom biner:", row1Cells));
 
     if (n > 0) {
         table.appendChild(makeArrowRow(n));
@@ -59,9 +59,8 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
         }
 
         const nTag = makeEl("div", n < maxBits ? "chromo-n-tag chromo-n-tag-offset" : "chromo-n-tag");
-        nTag.appendChild(makeEl("span", "chromo-n-arrow", "→ "));
         const nMath = makeEl("span", "chromo-n-math");
-        katex.render(`n = \\htmlClass{chromo-token-n}{${n}}`, nMath, { throwOnError: false, trust: true });
+        katex.render(`(n = \\htmlClass{chromo-token-n}{${n}})`, nMath, { throwOnError: false, trust: true });
         nTag.appendChild(nMath);
         table.appendChild(makeCellRow(makeMathRowLabel("posisi gen", "(i)"), row2Cells, nTag));
         table.appendChild(makeArrowRow(n));
@@ -89,7 +88,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
             katex.render(String(p.pVal), cell, { throwOnError: false });
             return cell;
         });
-        table.appendChild(makeCellRow("nilai bobot →", row4Cells));
+        table.appendChild(makeCellRow("nilai bobot:", row4Cells));
         table.appendChild(makeArrowRow(n));
 
         const row5Cells = powers.map((p, idx) => {
@@ -102,7 +101,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
             katex.render(`${p.pVal} \\times ${bit}`, cell, { throwOnError: false });
             return cell;
         });
-        table.appendChild(makeCellRow("perkalian bobot × gen →", row5Cells));
+        table.appendChild(makeCellRow("perkalian bobot × gen:", row5Cells));
         table.appendChild(makeArrowRow(n));
 
         const row6Cells = cleans.map((c) => {
@@ -110,12 +109,12 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
             katex.render(String(c), cell, { throwOnError: false });
             return cell;
         });
-        table.appendChild(makeCellRow("nilai desimal gen →", row6Cells));
+        table.appendChild(makeCellRow("nilai desimal gen:", row6Cells));
 
         const cellBlockWidth = n * 56 - 8;
 
         const sumRow = makeEl("div", "chromo-row");
-        sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan nilai desimal →"));
+        sumRow.appendChild(makeEl("div", "chromo-row-label", "penjumlahan nilai desimal:"));
         const sumContent = makeEl("div", "chromo-sum-content");
         katex.render(cleans.join(" + "), sumContent, { throwOnError: false });
         sumContent.style.width = `${cellBlockWidth}px`;
@@ -131,7 +130,7 @@ export function renderChromoTable(container, n, currentBits, powers, cleans, d, 
         table.appendChild(braceRow);
 
         const finalRow = makeEl("div", "chromo-row");
-        finalRow.appendChild(makeEl("div", "chromo-row-label", "nilai desimal (d) →"));
+        finalRow.appendChild(makeEl("div", "chromo-row-label", "nilai desimal (d):"));
         const finalContent = makeEl("div", "chromo-final-content");
         finalContent.style.width = `${cellBlockWidth}px`;
         const finalMath = makeEl("span", "chromo-final-math");
