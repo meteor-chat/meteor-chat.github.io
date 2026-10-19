@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getFormulaUrl } from "../math-routes.js";
@@ -10,6 +10,17 @@ const mathHtml = readFileSync(join(root, "math.html"), "utf8");
 
 mkdirSync(join(root, "math"), { recursive: true });
 writeFileSync(join(root, "math", "index.html"), mathHtml);
+
+const staleDirs = [
+    "math/14", "math/21", "math/22",
+    "math/pt/10", "math/pt/11", "math/pt/12", "math/pt/13",
+    "math/cal/15", "math/cal/16", "math/cal/17", "math/cal/18",
+    "math/dm/19", "math/vm/20", "math/g/23", "math/g/24"
+];
+for (const dir of staleDirs) {
+    const full = join(root, dir);
+    if (existsSync(full)) rmSync(full, { recursive: true, force: true });
+}
 
 let count = 0;
 for (let id = 1; id <= 24; id++) {

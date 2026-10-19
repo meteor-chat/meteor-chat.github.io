@@ -45,35 +45,88 @@ export const FORMULA_CATEGORIES = [
     "Bangun Ruang"
 ];
 
+export const FORMULA_URLS = [
+    null,
+    "/math/ai/1",
+    "/math/ai/2",
+    "/math/ai/3",
+    "/math/ai/4",
+    "/math/ai/5",
+    "/math/ai/6",
+    "/math/ai/7",
+    "/math/ai/8",
+    "/math/ai/9",
+    "/math/pt/1",
+    "/math/pt/2",
+    "/math/pt/3",
+    "/math/pt/4",
+    "/math/1",
+    "/math/cal/1",
+    "/math/cal/2",
+    "/math/cal/3",
+    "/math/cal/4",
+    "/math/dm/1",
+    "/math/vm/1",
+    "/math/2",
+    "/math/3",
+    "/math/g/1",
+    "/math/g/2"
+];
+
+const URL_TO_ID = {
+    "/math/ai/1": 1,
+    "/math/ai/2": 2,
+    "/math/ai/3": 3,
+    "/math/ai/4": 4,
+    "/math/ai/5": 5,
+    "/math/ai/6": 6,
+    "/math/ai/7": 7,
+    "/math/ai/8": 8,
+    "/math/ai/9": 9,
+    "/math/pt/1": 10,
+    "/math/pt/2": 11,
+    "/math/pt/3": 12,
+    "/math/pt/4": 13,
+    "/math/1": 14,
+    "/math/cal/1": 15,
+    "/math/cal/2": 16,
+    "/math/cal/3": 17,
+    "/math/cal/4": 18,
+    "/math/dm/1": 19,
+    "/math/vm/1": 20,
+    "/math/2": 21,
+    "/math/3": 22,
+    "/math/g/1": 23,
+    "/math/g/2": 24,
+    "/math/pt/10": 10,
+    "/math/pt/11": 11,
+    "/math/pt/12": 12,
+    "/math/pt/13": 13,
+    "/math/14": 14,
+    "/math/cal/15": 15,
+    "/math/cal/16": 16,
+    "/math/cal/17": 17,
+    "/math/cal/18": 18,
+    "/math/dm/19": 19,
+    "/math/vm/20": 20,
+    "/math/21": 21,
+    "/math/22": 22,
+    "/math/g/23": 23,
+    "/math/g/24": 24
+};
+
 export function getFormulaUrl(id) {
     const num = Number(id);
-    if (!num || num < 1 || num >= FORMULA_CATEGORIES.length) return "/math";
-    const cat = FORMULA_CATEGORIES[num];
-    const slug = CATEGORY_SLUGS[cat];
-    return slug ? `/math/${slug}/${num}` : `/math/${num}`;
+    if (!num || num < 1 || num >= FORMULA_URLS.length) return "/math";
+    return FORMULA_URLS[num];
 }
 
 export function parseFormulaUrl(pathname) {
     if (!pathname) return null;
     const clean = pathname.replace(/\/+$/, "");
-    const parts = clean.split("/").filter(Boolean);
-    if (parts.length < 2 || parts[0] !== "math") return null;
-    if (parts.length === 2) {
-        const id = Number(parts[1]);
-        if (!isNaN(id) && id >= 1 && id < FORMULA_CATEGORIES.length) {
-            const cat = FORMULA_CATEGORIES[id];
-            if (CATEGORY_SLUGS[cat] === "") return { id, category: cat };
-        }
-        return null;
-    }
-    if (parts.length === 3) {
-        const slug = parts[1];
-        const id = Number(parts[2]);
-        if (!isNaN(id) && id >= 1 && id < FORMULA_CATEGORIES.length) {
-            const cat = FORMULA_CATEGORIES[id];
-            if (CATEGORY_SLUGS[cat] === slug) return { id, category: cat };
-        }
-        return null;
+    const id = URL_TO_ID[clean];
+    if (id) {
+        return { id, category: FORMULA_CATEGORIES[id] };
     }
     return null;
 }
