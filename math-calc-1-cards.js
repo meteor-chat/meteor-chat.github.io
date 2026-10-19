@@ -88,7 +88,7 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         katex.render(tex2, topMath, { throwOnError: false, trust: true, displayMode: true });
         card2.appendChild(topMath);
         const subnote2 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\Delta R = ${formatCBP4(xMax)} - (${formatCBP4(xMin)}) = ${formatCBP4(deltaX)} \\text{ (rentang domain fenotipe)}`, subnote2, { throwOnError: false, trust: true });
+        katex.render(`\\Delta R = ${formatCBP4(xMax)} - (${formatCBP4(xMin)}) = ${formatCBP4(deltaX)} \\text{ (jarak dari } x_{\\min} \\text{ ke } x_{\\max}\\text{)}`, subnote2, { throwOnError: false, trust: true });
         card2.appendChild(subnote2);
     }
 
@@ -110,8 +110,8 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
             }
         }
         const noteTex = weightStr
-            ? `\\text{Prinsip Tiang Pagar: } 2^{${n}} - 1 = \\sum \\text{bobot} = ${weightStr} = ${den}`
-            : `\\text{Prinsip Tiang Pagar: } 2^{${n}} - 1 = ${den}`;
+            ? `\\text{Total semua bobot } (2^{${n}} - 1) = ${weightStr} = ${den}`
+            : `\\text{Total semua bobot } (2^{${n}} - 1) = ${den}`;
         katex.render(noteTex, subnote, { throwOnError: false, trust: true });
         card3.appendChild(subnote);
     }
@@ -126,7 +126,7 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         katex.render(tex4, topMath, { throwOnError: false, trust: true, displayMode: true });
         card4.appendChild(topMath);
         const subnote4 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\Delta x = \\frac{${formatCBP4(deltaX)}}{${den}} = ${stepFmt} \\text{ (resolusi kisi / step size)}`, subnote4, { throwOnError: false, trust: true });
+        katex.render(`\\Delta x = \\frac{${formatCBP4(deltaX)}}{${den}} = ${stepFmt} \\text{ (nilai tiap 1 langkah)}`, subnote4, { throwOnError: false, trust: true });
         card4.appendChild(subnote4);
     }
 
@@ -145,13 +145,13 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         katex.render(tex5, topMath, { throwOnError: false, trust: true, displayMode: true });
         card5.appendChild(topMath);
         const subnote5 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\text{Pergeseran } = \\Delta x \\cdot d = ${formatCBP4(stepSize)} \\times ${d} = ${formatCBP4(contrib)}`, subnote5, { throwOnError: false, trust: true });
+        katex.render(`\\text{Nilai tambahan} = \\Delta x \\times d = ${formatCBP4(stepSize)} \\times ${d} = ${formatCBP4(contrib)}`, subnote5, { throwOnError: false, trust: true });
         card5.appendChild(subnote5);
     }
 
     if (card6) {
         card6.textContent = "";
-        const topTag = makeEl("div", "chromo-result-label", "Nilai Fenotipe Riil (x)");
+        const topTag = makeEl("div", "chromo-result-label", "Hasil Nilai x");
         card6.appendChild(topTag);
         const mathEl = makeEl("div");
         const isExact = Number.isInteger(finalX) || parseFloat(finalX.toFixed(4)) === finalX;
@@ -161,7 +161,7 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         card6.appendChild(mathEl);
         const pctPos = den > 0 ? (d / den) * 100 : 0;
         const subnote6 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\text{Posisi Domain: } ${pctPos.toFixed(2)}\\% \\text{ (Standar CBP 1: 4 Desimal)}`, subnote6, { throwOnError: false, trust: true });
+        katex.render(`\\text{Posisi: } ${pctPos.toFixed(2)}\\% \\text{ di antara } x_{\\min} \\text{ dan } x_{\\max}`, subnote6, { throwOnError: false, trust: true });
         card6.appendChild(subnote6);
     }
 

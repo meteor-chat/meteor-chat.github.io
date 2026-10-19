@@ -58,8 +58,8 @@ export function renderChromoInsights(n, d, xMin, xMax, currentBits) {
     const wrap = makeEl("div", "chromo-insights-wrap");
 
     const header = makeEl("div", "chromo-insights-header");
-    const title = makeEl("h3", "chromo-insights-title", "Panel Intelijen Genetik & Analisis Metaheuristik");
-    const subtitle = makeEl("p", "chromo-insights-subtitle", "Dekomposisi resolusi kisi, batas galat kuantisasi, dan evaluasi topologi ruang pencarian");
+    const title = makeEl("h3", "chromo-insights-title", "Penjelasan & Fakta Penting");
+    const subtitle = makeEl("p", "chromo-insights-subtitle", "Keterangan ukuran langkah, ketelitian, dan sifat angka biner");
     header.appendChild(title);
     header.appendChild(subtitle);
     wrap.appendChild(header);
@@ -68,42 +68,42 @@ export function renderChromoInsights(n, d, xMin, xMax, currentBits) {
 
     const card1 = makeEl("div", "chromo-insight-card");
     const c1Head = makeEl("div", "chromo-insight-card-head");
-    c1Head.appendChild(makeEl("span", "chromo-insight-tag", "Kuantisasi"));
-    c1Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Resolusi Kisi & Batas Galat"));
+    c1Head.appendChild(makeEl("span", "chromo-insight-tag", "Ketelitian"));
+    c1Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Ukuran Langkah & Batas Ralat"));
     card1.appendChild(c1Head);
     const c1Body = makeEl("div", "chromo-insight-card-body");
     const c1Math1 = makeEl("div", "chromo-insight-math-row");
     if (typeof katex !== "undefined") {
-        katex.render(`\\Delta x = \\frac{${formatCBP4(deltaR)}}{${den}} \\approx ${formatCBP4(stepSize)}`, c1Math1, { throwOnError: false });
+        katex.render(`\\Delta x = \\frac{${formatCBP4(deltaR)}}{${den}} \\approx ${formatCBP4(stepSize)} \\text{ (tiap 1 langkah)}`, c1Math1, { throwOnError: false });
     } else {
         c1Math1.textContent = `Δx = ${formatCBP4(stepSize)}`;
     }
     c1Body.appendChild(c1Math1);
     const c1Math2 = makeEl("div", "chromo-insight-math-row");
     if (typeof katex !== "undefined") {
-        katex.render(`\\epsilon_{\\max} = \\pm\\frac{\\Delta x}{2} \\approx \\pm ${formatCBP4(errorBound)}`, c1Math2, { throwOnError: false });
+        katex.render(`\\text{Batas Ralat} = \\pm\\frac{\\Delta x}{2} \\approx \\pm ${formatCBP4(errorBound)}`, c1Math2, { throwOnError: false });
     } else {
-        c1Math2.textContent = `ε_max = ±${formatCBP4(errorBound)}`;
+        c1Math2.textContent = `Batas Ralat = ±${formatCBP4(errorBound)}`;
     }
     c1Body.appendChild(c1Math2);
-    const c1Desc = makeEl("p", "chromo-insight-desc", `Ruang pencarian terdiri dari tepat 2ⁿ = ${powVal.toLocaleString()} keadaan diskrit. Menambah 1 bit akan melipatgandakan ruang pencarian sekaligus memotong ukuran langkah (Δx) menjadi separuh.`);
+    const c1Desc = makeEl("p", "chromo-insight-desc", `Ada ${powVal.toLocaleString()} kemungkinan nilai. Tiap naik 1 desimal, nilai x bertambah ${formatCBP4(stepSize)}. Jika gen ditambah 1 bit, jarak langkah menjadi 2 kali lebih rapat (lebih teliti).`);
     c1Body.appendChild(c1Desc);
     card1.appendChild(c1Body);
     grid.appendChild(card1);
 
     const card2 = makeEl("div", "chromo-insight-card");
     const c2Head = makeEl("div", "chromo-insight-card-head");
-    c2Head.appendChild(makeEl("span", hasCliff ? "chromo-insight-tag chromo-tag-warn" : "chromo-insight-tag chromo-tag-ok", hasCliff ? "Hamming Cliff" : "Topologi Mulus"));
-    c2Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Pemeriksaan Tebing Hamming"));
+    c2Head.appendChild(makeEl("span", hasCliff ? "chromo-insight-tag chromo-tag-warn" : "chromo-insight-tag chromo-tag-ok", hasCliff ? "Tebing Hamming" : "Mulus"));
+    c2Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Perubahan Bit ke Angka Sebelah"));
     card2.appendChild(c2Head);
     const c2Body = makeEl("div", "chromo-insight-card-body");
     const c2Info = makeEl("div", "chromo-insight-cliff-info");
     if (prevDist !== null) {
-        const rowP = makeEl("div", "chromo-cliff-row", `Tetangga d-1 (${d - 1}): ${prevBin} → Jarak: ${prevDist} bit`);
+        const rowP = makeEl("div", "chromo-cliff-row", `Angka ${d - 1} (${prevBin}): beda ${prevDist} bit`);
         c2Info.appendChild(rowP);
     }
     if (nextDist !== null) {
-        const rowN = makeEl("div", "chromo-cliff-row", `Tetangga d+1 (${d + 1}): ${nextBin} → Jarak: ${nextDist} bit`);
+        const rowN = makeEl("div", "chromo-cliff-row", `Angka ${d + 1} (${nextBin}): beda ${nextDist} bit`);
         c2Info.appendChild(rowN);
     }
     c2Body.appendChild(c2Info);
@@ -111,8 +111,8 @@ export function renderChromoInsights(n, d, xMin, xMax, currentBits) {
         "div",
         hasCliff ? "chromo-cliff-alert chromo-alert-danger" : "chromo-cliff-alert chromo-alert-success",
         hasCliff
-            ? "⚠️ Hamming Cliff: Perpindahan ke tetangga integer terdekat memerlukan lebih dari 1 bit flip. Satu mutasi titik acak tidak dapat menjangkau tetangga ini secara langsung."
-            : "✓ Topologi Mulus: Transisi ke tetangga terdekat hanya memerlukan 1 bit flip."
+            ? "⚠️ Ada Tebing Hamming: Untuk pindah ke angka sebelah, harus mengubah lebih dari 1 bit sekaligus. Mutasi 1 bit biasa tidak bisa langsung sampai ke angka ini."
+            : "✓ Mulus: Untuk pindah ke angka sebelah, cukup mengubah 1 bit saja."
     );
     c2Body.appendChild(c2Status);
     card2.appendChild(c2Body);
@@ -120,40 +120,40 @@ export function renderChromoInsights(n, d, xMin, xMax, currentBits) {
 
     const card3 = makeEl("div", "chromo-insight-card");
     const c3Head = makeEl("div", "chromo-insight-card-head");
-    c3Head.appendChild(makeEl("span", "chromo-insight-tag", "Gray Code"));
-    c3Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Ekuivalen Refleksi Gray Code"));
+    c3Head.appendChild(makeEl("span", "chromo-insight-tag", "Kode Gray"));
+    c3Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Bentuk Kode Gray (Tanpa Tebing)"));
     card3.appendChild(c3Head);
     const c3Body = makeEl("div", "chromo-insight-card-body");
     const c3CodeRow = makeEl("div", "chromo-insight-code-compare");
     const binerBox = makeEl("div", "chromo-code-box");
-    binerBox.appendChild(makeEl("span", "chromo-code-lbl", "Biner Standar:"));
+    binerBox.appendChild(makeEl("span", "chromo-code-lbl", "Biner:"));
     binerBox.appendChild(makeEl("code", "chromo-code-val", curBin));
     const grayBox = makeEl("div", "chromo-code-box");
-    grayBox.appendChild(makeEl("span", "chromo-code-lbl", "Gray Code:"));
+    grayBox.appendChild(makeEl("span", "chromo-code-lbl", "Kode Gray:"));
     grayBox.appendChild(makeEl("code", "chromo-code-val chromo-val-highlight", curGray));
     c3CodeRow.appendChild(binerBox);
     c3CodeRow.appendChild(grayBox);
     c3Body.appendChild(c3CodeRow);
-    const c3Desc = makeEl("p", "chromo-insight-desc", "Pada representasi Gray Code (g = b ⊕ (b ≫ 1)), setiap pasangan integer yang bersebelahan selalu berbeda tepat 1 bit. Ini menghapus fenomena Hamming Cliff secara permanen.");
+    const c3Desc = makeEl("p", "chromo-insight-desc", "Pada Kode Gray, dua angka yang bersebelahan selalu hanya berbeda 1 bit saja. Tidak ada tebing, sehingga mutasi 1 bit selalu bisa pindah ke angka terdekat.");
     c3Body.appendChild(c3Desc);
     card3.appendChild(c3Body);
     grid.appendChild(card3);
 
     const card4 = makeEl("div", "chromo-insight-card");
     const c4Head = makeEl("div", "chromo-insight-card-head");
-    c4Head.appendChild(makeEl("span", "chromo-insight-tag chromo-tag-warn", "Ujian CBP 1"));
-    c4Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Fencepost Problem: Mengapa 2ⁿ - 1?"));
+    c4Head.appendChild(makeEl("span", "chromo-insight-tag chromo-tag-warn", "Penting"));
+    c4Head.appendChild(makeEl("h4", "chromo-insight-card-title", "Kenapa Harus Dibagi (2ⁿ - 1)?"));
     card4.appendChild(c4Head);
     const c4Body = makeEl("div", "chromo-insight-card-body");
     const missingGap = deltaR / powVal;
     const c4Math = makeEl("div", "chromo-insight-math-row");
     if (typeof katex !== "undefined") {
-        katex.render(`\\text{Gap Hilang} = \\frac{\\Delta R}{2^n} = \\frac{${formatCBP4(deltaR)}}{${powVal}} = ${formatCBP4(missingGap)}`, c4Math, { throwOnError: false });
+        katex.render(`\\text{Jika salah dibagi } 2^n \\implies x \\text{ hanya sampai } ${formatCBP4(xMax - missingGap)}`, c4Math, { throwOnError: false });
     } else {
-        c4Math.textContent = `Gap Hilang = ΔR / 2^n = ${formatCBP4(missingGap)}`;
+        c4Math.textContent = `Jika salah dibagi 2^n => x hanya sampai ${formatCBP4(xMax - missingGap)}`;
     }
     c4Body.appendChild(c4Math);
-    const c4Desc = makeEl("p", "chromo-insight-desc", `Jika rumus dibagi dengan 2ⁿ (${powVal}), kromosom all-1 hanya akan mencapai x = ${formatCBP4(xMax - missingGap)} dan tidak akan pernah menyentuh xₘₐₓ. Sebanyak 2ⁿ titik diskrit membentuk tepat 2ⁿ - 1 interval segmen seragam.`);
+    const c4Desc = makeEl("p", "chromo-insight-desc", `Ibarat ${powVal} tiang pagar hanya memiliki ${den} celah. Jika dibagi ${powVal}, nilai x saat semua bit 1 tidak akan pernah sampai ke batas atas (${formatCBP4(xMax)}). Karena itu, pembaginya harus ${den} agar pas mencapai batas atas.`);
     c4Body.appendChild(c4Desc);
     card4.appendChild(c4Body);
     grid.appendChild(card4);

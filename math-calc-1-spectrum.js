@@ -23,8 +23,8 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     const wrap = makeEl("div", "chromo-spectrum-wrap");
 
     const header = makeEl("div", "chromo-spectrum-header");
-    const title = makeEl("h3", "chromo-spectrum-title", "Spektrum Ruang Fenotipe Kontinu");
-    const subtitle = makeEl("p", "chromo-spectrum-subtitle", "Pemetaan dari ruang diskrit {0,1}ⁿ ke interval kompak [xₘᵢₙ, xₘₐₓ]");
+    const title = makeEl("h3", "chromo-spectrum-title", "Garis Posisi Nilai x");
+    const subtitle = makeEl("p", "chromo-spectrum-subtitle", "Melihat letak nilai x di antara x_min dan x_max");
     header.appendChild(title);
     header.appendChild(subtitle);
     wrap.appendChild(header);
@@ -69,8 +69,8 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
         rightBound.textContent = `xmax = ${formatCBP4(xMax)}`;
     }
 
-    const leftTag = makeEl("span", "chromo-spectrum-bound-tag", "All-0 (d = 0)");
-    const rightTag = makeEl("span", "chromo-spectrum-bound-tag", `All-1 (d = ${maxD})`);
+    const leftTag = makeEl("span", "chromo-spectrum-bound-tag", "Semua 0 (d = 0)");
+    const rightTag = makeEl("span", "chromo-spectrum-bound-tag", `Semua 1 (d = ${maxD})`);
     leftBound.appendChild(leftTag);
     rightBound.appendChild(rightTag);
 
@@ -82,40 +82,40 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     const badgeGrid = makeEl("div", "chromo-spectrum-badges");
 
     const badgeZero = makeEl("div", "chromo-spectrum-badge");
-    const zeroTitle = makeEl("div", "chromo-spectrum-badge-title", "Kondisi Batas Minimum (All-0)");
+    const zeroTitle = makeEl("div", "chromo-spectrum-badge-title", "Jika Semua Gen 0");
     const zeroMath = makeEl("div", "chromo-spectrum-badge-math");
     if (typeof katex !== "undefined") {
         katex.render(`d = 0 \\implies x = x_{\\min}`, zeroMath, { throwOnError: false });
     } else {
         zeroMath.textContent = "d = 0 => x = xmin";
     }
-    const zeroStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Terverifikasi Eksak");
+    const zeroStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Pasti bernilai x_min");
     badgeZero.appendChild(zeroTitle);
     badgeZero.appendChild(zeroMath);
     badgeZero.appendChild(zeroStatus);
 
     const badgePos = makeEl("div", "chromo-spectrum-badge");
-    const posTitle = makeEl("div", "chromo-spectrum-badge-title", "Posisi Fenotipe Saat Ini");
+    const posTitle = makeEl("div", "chromo-spectrum-badge-title", "Posisi Saat Ini");
     const posMath = makeEl("div", "chromo-spectrum-badge-math");
     if (typeof katex !== "undefined") {
         katex.render(`\\frac{d}{2^n - 1} = \\frac{${d}}{${maxD}} = ${(ratio * 100).toFixed(2)}\\%`, posMath, { throwOnError: false });
     } else {
         posMath.textContent = `d/(2^n - 1) = ${(ratio * 100).toFixed(2)}%`;
     }
-    const posStatus = makeEl("div", "chromo-spectrum-badge-status", `Offset: +${formatCBP4(ratio * deltaR)}`);
+    const posStatus = makeEl("div", "chromo-spectrum-badge-status", `+${formatCBP4(ratio * deltaR)} dari x_min`);
     badgePos.appendChild(posTitle);
     badgePos.appendChild(posMath);
     badgePos.appendChild(posStatus);
 
     const badgeOne = makeEl("div", "chromo-spectrum-badge");
-    const oneTitle = makeEl("div", "chromo-spectrum-badge-title", "Kondisi Batas Maksimum (All-1)");
+    const oneTitle = makeEl("div", "chromo-spectrum-badge-title", "Jika Semua Gen 1");
     const oneMath = makeEl("div", "chromo-spectrum-badge-math");
     if (typeof katex !== "undefined") {
         katex.render(`d = 2^n - 1 \\implies x = x_{\\max}`, oneMath, { throwOnError: false });
     } else {
         oneMath.textContent = "d = 2^n - 1 => x = xmax";
     }
-    const oneStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Terverifikasi Eksak");
+    const oneStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-valid", "✓ Pasti bernilai x_max");
     badgeOne.appendChild(oneTitle);
     badgeOne.appendChild(oneMath);
     badgeOne.appendChild(oneStatus);
