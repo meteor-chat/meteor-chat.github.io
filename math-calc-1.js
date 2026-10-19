@@ -2,8 +2,10 @@ import { refs } from "./dom-refs.js";
 import { makeEl } from "./math-calc-1-tokens.js";
 import { renderChromoTable } from "./math-calc-1-table.js";
 import { renderParamLabels, renderChromoCards } from "./math-calc-1-cards.js";
+import { renderChromoSpectrum } from "./math-calc-1-spectrum.js";
+import { renderChromoInsights } from "./math-calc-1-insights.js";
 
-const MAX_BITS = 10;
+const MAX_BITS = 16;
 let currentBits = [];
 
 function focusCell(idx) {
@@ -26,7 +28,17 @@ function handleInputKey(e, i) {
             currentBits.push(e.key);
             calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
         }
-    } else if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === " ") {
+    } else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        const cur = i < currentBits.length ? currentBits[i] : "0";
+        const next = cur === "1" ? "0" : "1";
+        if (i < currentBits.length) {
+            currentBits[i] = next;
+        } else if (currentBits.length < MAX_BITS) {
+            currentBits.push(next);
+        }
+        calculateMath(i);
+    } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         e.preventDefault();
     } else if (e.key === "Backspace") {
         e.preventDefault();
@@ -145,6 +157,8 @@ export function calculateMath(focusIdx) {
     }
 
     renderChromoCards(n, d, xMin, xMax, powers);
+    renderChromoSpectrum(n, d, xMin, xMax);
+    renderChromoInsights(n, d, xMin, xMax, currentBits);
 
     if (typeof focusIdx === "number") {
         requestAnimationFrame(() => focusCell(focusIdx));
