@@ -1,4 +1,4 @@
-import { formatCBP4 } from "./math-format.js";
+import { formatMax3 } from "./math-format.js";
 import { makeEl, bindTokenHover } from "./math-calc-1-tokens.js";
 
 export function renderTopFormula() {
@@ -45,11 +45,11 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     const card1 = document.getElementById("chromo-card-step1");
     if (card1) {
         card1.textContent = "";
-        const partXmin = xMin !== null ? `\\htmlClass{chromo-token-xmin}{${formatCBP4(xMin)}}` : "\\htmlClass{chromo-token-xmin}{?}";
+        const partXmin = xMin !== null ? `\\htmlClass{chromo-token-xmin}{${formatMax3(xMin)}}` : "\\htmlClass{chromo-token-xmin}{?}";
         const partXminFmt = xMin !== null
-            ? (xMin < 0 ? `(\\htmlClass{chromo-token-xmin}{${formatCBP4(xMin)}})` : `\\htmlClass{chromo-token-xmin}{${formatCBP4(xMin)}}`)
+            ? (xMin < 0 ? `(\\htmlClass{chromo-token-xmin}{${formatMax3(xMin)}})` : `\\htmlClass{chromo-token-xmin}{${formatMax3(xMin)}}`)
             : "\\htmlClass{chromo-token-xmin}{?}";
-        const partXmax = xMax !== null ? `\\htmlClass{chromo-token-xmax}{${formatCBP4(xMax)}}` : "\\htmlClass{chromo-token-xmax}{?}";
+        const partXmax = xMax !== null ? `\\htmlClass{chromo-token-xmax}{${formatMax3(xMax)}}` : "\\htmlClass{chromo-token-xmax}{?}";
         const partN = n > 0 ? `\\htmlClass{chromo-token-n}{${n}}` : "\\htmlClass{chromo-token-n}{?}";
         const partD = n > 0 ? `\\htmlClass{chromo-token-d}{${d}}` : "\\htmlClass{chromo-token-d}{?}";
         const tex1 = `x = ${partXmin} + \\frac{${partXmax} - ${partXminFmt}}{2^{${partN}} - 1} \\cdot ${partD}`;
@@ -77,18 +77,18 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     const stepSize = deltaX / den;
     const contrib = stepSize * d;
     const finalX = xMin + contrib;
-    const partXmin = `\\htmlClass{chromo-token-xmin}{${formatCBP4(xMin)}}`;
+    const partXmin = `\\htmlClass{chromo-token-xmin}{${formatMax3(xMin)}}`;
     const tokenD = `\\htmlClass{chromo-token-d}{${d}}`;
 
     const card2 = document.getElementById("chromo-card-step2");
     if (card2) {
         card2.textContent = "";
         const topMath = makeEl("div");
-        const tex2 = `x = ${partXmin} + \\frac{${formatCBP4(deltaX)}}{${powVal} - 1} \\cdot ${tokenD}`;
+        const tex2 = `x = ${partXmin} + \\frac{${formatMax3(deltaX)}}{${powVal} - 1} \\cdot ${tokenD}`;
         katex.render(tex2, topMath, { throwOnError: false, trust: true, displayMode: true });
         card2.appendChild(topMath);
         const subnote2 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\Delta R = ${formatCBP4(xMax)} - (${formatCBP4(xMin)}) = ${formatCBP4(deltaX)} \\text{ (jarak dari } x_{\\min} \\text{ ke } x_{\\max}\\text{)}`, subnote2, { throwOnError: false, trust: true });
+        katex.render(`\\Delta R = ${formatMax3(xMax)} - (${formatMax3(xMin)}) = ${formatMax3(deltaX)} \\text{ (jarak dari } x_{\\min} \\text{ ke } x_{\\max}\\text{)}`, subnote2, { throwOnError: false, trust: true });
         card2.appendChild(subnote2);
     }
 
@@ -96,7 +96,7 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     if (card3) {
         card3.textContent = "";
         const topMath = makeEl("div");
-        const tex3 = `x = ${partXmin} + \\frac{${formatCBP4(deltaX)}}{${den}} \\cdot ${tokenD}`;
+        const tex3 = `x = ${partXmin} + \\frac{${formatMax3(deltaX)}}{${den}} \\cdot ${tokenD}`;
         katex.render(tex3, topMath, { throwOnError: false, trust: true, displayMode: true });
         card3.appendChild(topMath);
 
@@ -119,14 +119,14 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
     const card4 = document.getElementById("chromo-card-step4");
     if (card4) {
         card4.textContent = "";
-        const stepFmt = formatCBP4(stepSize);
+        const stepFmt = formatMax3(stepSize);
         const stepFmtWrap = stepSize < 0 ? `(${stepFmt})` : stepFmt;
         const topMath = makeEl("div");
         const tex4 = `x = ${partXmin} + (${stepFmtWrap} \\cdot ${tokenD})`;
         katex.render(tex4, topMath, { throwOnError: false, trust: true, displayMode: true });
         card4.appendChild(topMath);
         const subnote4 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\Delta x = \\frac{${formatCBP4(deltaX)}}{${den}} = ${stepFmt} \\text{ (nilai tiap 1 langkah)}`, subnote4, { throwOnError: false, trust: true });
+        katex.render(`\\Delta x = \\frac{${formatMax3(deltaX)}}{${den}} = ${stepFmt} \\text{ (nilai tiap 1 langkah)}`, subnote4, { throwOnError: false, trust: true });
         card4.appendChild(subnote4);
     }
 
@@ -138,30 +138,28 @@ export function renderChromoCards(n, d, xMin, xMax, powers = []) {
         if (d === 0) {
             tex5 = `x = ${partXmin} + 0`;
         } else if (contrib < 0) {
-            tex5 = `x = ${partXmin} - ${formatCBP4(Math.abs(contrib))}`;
+            tex5 = `x = ${partXmin} - ${formatMax3(Math.abs(contrib))}`;
         } else {
-            tex5 = `x = ${partXmin} + ${formatCBP4(contrib)}`;
+            tex5 = `x = ${partXmin} + ${formatMax3(contrib)}`;
         }
         katex.render(tex5, topMath, { throwOnError: false, trust: true, displayMode: true });
         card5.appendChild(topMath);
         const subnote5 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\text{Nilai tambahan} = \\Delta x \\times d = ${formatCBP4(stepSize)} \\times ${d} = ${formatCBP4(contrib)}`, subnote5, { throwOnError: false, trust: true });
+        katex.render(`\\text{Nilai tambahan} = \\Delta x \\times d = ${formatMax3(stepSize)} \\times ${d} = ${formatMax3(contrib)}`, subnote5, { throwOnError: false, trust: true });
         card5.appendChild(subnote5);
     }
 
     if (card6) {
         card6.textContent = "";
-        const topTag = makeEl("div", "chromo-result-label", "Hasil Nilai x");
-        card6.appendChild(topTag);
         const mathEl = makeEl("div");
-        const isExact = Number.isInteger(finalX) || parseFloat(finalX.toFixed(4)) === finalX;
+        const isExact = Number.isInteger(finalX) || parseFloat(finalX.toFixed(3)) === finalX;
         const sym = isExact ? "=" : "\\approx";
-        const tex6 = `x ${sym} ${formatCBP4(finalX)}`;
+        const tex6 = `x ${sym} ${formatMax3(finalX)}`;
         katex.render(tex6, mathEl, { throwOnError: false, trust: true, displayMode: true });
         card6.appendChild(mathEl);
         const pctPos = den > 0 ? (d / den) * 100 : 0;
         const subnote6 = makeEl("div", "chromo-card-subnote");
-        katex.render(`\\text{Posisi: } ${pctPos.toFixed(2)}\\% \\text{ di antara } x_{\\min} \\text{ dan } x_{\\max}`, subnote6, { throwOnError: false, trust: true });
+        katex.render(`\\text{Posisi: } ${formatMax3(pctPos)}\\% \\text{ di antara } x_{\\min} \\text{ dan } x_{\\max}`, subnote6, { throwOnError: false, trust: true });
         card6.appendChild(subnote6);
     }
 
