@@ -152,11 +152,12 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chromo-spectrum-header { text-align: center; }
 .chromo-spectrum-title { font-size: 18px; font-weight: 600; color: #ffffff; margin: 0 0 6px; letter-spacing: 0.5px; }
 .chromo-spectrum-subtitle { font-size: 13px; color: #94a3b8; margin: 0; }
-.chromo-spectrum-track-box { position: relative; width: 100%; padding: 36px 0 10px; box-sizing: border-box; }
+.chromo-spectrum-track-box { position: relative; width: 100%; padding: 34px 0 10px; box-sizing: border-box; }
 .chromo-spectrum-pin { position: absolute; top: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; pointer-events: none; transition: left 0.25s ease-out; }
+.chromo-spectrum-pin-box { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .chromo-spectrum-pin-label { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; border-radius: 6px; padding: 2px 8px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3); }
-.chromo-spectrum-pin-pct { font-size: 11px; color: #fbbf24; font-weight: 600; margin-top: 2px; }
-.chromo-spectrum-pin-arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #38bdf8; margin-top: -1px; }
+.chromo-spectrum-pin-pct { background: #1e293b; color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.6); border-radius: 6px; padding: 2px 6px; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.2); margin: 0; }
+.chromo-spectrum-pin-arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #38bdf8; margin-top: 2px; }
 .chromo-spectrum-bar { width: 100%; height: 10px; border-radius: 5px; background: #222222; border: 1px solid #444444; overflow: hidden; position: relative; }
 .chromo-spectrum-fill { height: 100%; background: linear-gradient(90deg, #fbbf24 0%, #38bdf8 50%, #34d399 100%); transition: width 0.25s ease-out; border-radius: 5px; }
 .chromo-spectrum-bounds { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 14px; }

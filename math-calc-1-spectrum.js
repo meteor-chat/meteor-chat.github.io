@@ -34,6 +34,7 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     const pin = makeEl("div", "chromo-spectrum-pin");
     pin.style.left = `${pct}%`;
 
+    const pinBox = makeEl("div", "chromo-spectrum-pin-box");
     const pinLabel = makeEl("div", "chromo-spectrum-pin-label");
     if (typeof katex !== "undefined") {
         katex.render(`x \\approx ${formatCBP4(curX)}`, pinLabel, { throwOnError: false });
@@ -41,8 +42,10 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
         pinLabel.textContent = `x = ${formatCBP4(curX)}`;
     }
     const pinPct = makeEl("div", "chromo-spectrum-pin-pct", `${pct.toFixed(2)}%`);
-    pin.appendChild(pinLabel);
-    pin.appendChild(pinPct);
+    pinBox.appendChild(pinLabel);
+    pinBox.appendChild(pinPct);
+    pin.appendChild(pinBox);
+
     const pinPointer = makeEl("div", "chromo-spectrum-pin-arrow");
     pin.appendChild(pinPointer);
     trackContainer.appendChild(pin);
