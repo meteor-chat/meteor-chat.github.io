@@ -39,6 +39,9 @@ export function loadScript(src) {
 }
 
 export function loadStylesheet(href) {
+    if (document.getElementById("math-theme-css") || document.querySelector(`link[href="${href}"]`)) {
+        return Promise.resolve();
+    }
     return once(href, () => new Promise((resolve, reject) => {
         const el = document.createElement("link");
         el.rel = "stylesheet";

@@ -2,7 +2,6 @@ import { initFilters } from "./math-filter.js";
 import { parseFormulaUrl } from "./math-routes.js";
 
 const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
-const CALC_CSS_HREF = new URL("./math.css", import.meta.url).href;
 const CONTROLLER_GRAPH = [
     "./math-controller.js",
     "./math-routes.js",
@@ -52,7 +51,6 @@ function prefetchWhenIdle() {
     const run = () => {
         CONTROLLER_GRAPH.forEach((path) => addHint("modulepreload", new URL(path, import.meta.url).href));
         addHint("prefetch", KATEX_HREF, "script");
-        addHint("prefetch", CALC_CSS_HREF, "style");
     };
     const schedule = () => {
         if ("requestIdleCallback" in window) {
