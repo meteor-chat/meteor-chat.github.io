@@ -89,11 +89,31 @@ function bindGrid(grid) {
 
 function handleRoute() {
     const route = parseFormulaUrl(window.location.pathname);
-    if (route) {
+    if (!route) return;
+    let initialized = false;
+    const init = () => {
+        if (initialized) return;
+        initialized = true;
         loadController()
             .then((controller) => controller.openForm(route.id, null, { pushHistory: false }))
             .catch(reportError);
+    };
+    const form = document.getElementById(`math-calc-form-${route.id}`);
+    if (form && !form.classList.contains("hidden")) {
+        const events = ["pointerdown", "keydown", "focusin", "touchstart"];
+        const trigger = () => {
+            events.forEach((ev) => form.removeEventListener(ev, trigger));
+            init();
+        };
+        events.forEach((ev) => form.addEventListener(ev, trigger, { passive: true, once: true }));
+        if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(init, { timeout: 2500 });
+        } else {
+            setTimeout(init, 1200);
+        }
+        return;
     }
+    init();
 }
 
 initFilters();
