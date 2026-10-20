@@ -76,10 +76,10 @@
 .chromo-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
 .chromo-col-left { display: flex; flex-direction: column; align-items: center; gap: 16px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
 .chromo-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
-.chromo-top-formula { margin: 0 auto; text-align: center; }
+.chromo-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
 .chromo-top-input-wrap { display: flex; align-items: center; justify-content: center; gap: 12px; }
 .chromo-top-label { font-size: 16px; color: #ffffff; font-weight: 500; }
-.chromo-diagram { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 8px 0 16px; box-sizing: border-box; }
+.chromo-diagram { width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding: 8px 0 16px; box-sizing: border-box; min-height: 68px; }
 .chromo-diagram::-webkit-scrollbar { height: 6px; }
 .chromo-diagram::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.04); border-radius: 4px; }
 .chromo-diagram::-webkit-scrollbar-thumb { background: #444444; border-radius: 4px; }
@@ -101,9 +101,9 @@
 .chromo-cell-fit-md .katex { font-size: 0.82em; }
 .chromo-cell-fit-sm .katex { font-size: 0.74em; }
 .chromo-cell-fit-xs .katex { font-size: 0.65em; }
-.chromo-cell-interactive { cursor: pointer; transition: background 0.15s, border-color 0.15s; font-family: inherit; font-size: 16px; }
+.chromo-cell-interactive { cursor: pointer; font-family: inherit; font-size: 16px; }
 .chromo-cell-interactive:hover { border-color: #888888; background: rgba(255, 255, 255, 0.08); }
-.chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; transition: border-color 0.15s, background 0.15s; caret-color: #38bdf8; padding: 0; }
+.chromo-cell-input { text-align: center; font-size: 16px; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; cursor: text; caret-color: #38bdf8; padding: 0; }
 .chromo-cell-input:focus { border-color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
 .chromo-cell-input:hover:not(:focus) { border-color: #888888; }
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -124,7 +124,7 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chromo-param-label { display: flex; align-items: center; gap: 4px; font-size: 15px; color: #ffffff; font-weight: 400; white-space: nowrap; cursor: pointer; }
 .chromo-param-text { font-family: var(--font-stack); }
 .chromo-param-math .katex { font-size: 1em; }
-.chromo-param-input { background: transparent; border: 1px solid #555555; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 10px; width: 64px; text-align: center; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.chromo-param-input { background: transparent; border: 1px solid #555555; border-radius: 6px; color: #ffffff; font-size: 15px; padding: 4px 10px; width: 64px; text-align: center; font-family: KaTeX_Main, "Times New Roman", serif; outline: none; }
 .chromo-param-input:focus { border-color: #38bdf8; }
 .chromo-input-xmin:focus { border-color: #fbbf24; }
 .chromo-input-xmax:focus { border-color: #34d399; }
@@ -132,16 +132,16 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .chromo-curved-arrows-svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .chromo-card { background: transparent; color: #ffffff; display: flex; align-items: center; justify-content: center; text-align: center; padding: 7px 16px; width: 100%; max-width: 340px; box-sizing: border-box; }
 .chromo-card .katex-display { margin: 0.25em 0; }
-.chromo-card-rounded { border: 1px solid #333333; border-radius: 10px; }
+.chromo-card-rounded { border: 1px solid #333333; border-radius: 10px; min-height: 60px; }
 .chromo-card-rect { border: 1px solid #444444; border-radius: 4px; flex-direction: column; }
-.chromo-card-result { border: 1px solid #444444; border-radius: 4px; width: auto; min-width: 140px; flex-direction: column; padding: 8px 18px; }
+.chromo-card-result { border: 1px solid #444444; border-radius: 4px; width: auto; min-width: 140px; flex-direction: column; padding: 8px 18px; min-height: 62px; }
 .chromo-card-subnote { font-size: 12px; color: #94a3b8; margin-top: 2px; line-height: 1.2; text-align: center; }
 .chromo-card-subnote .katex { font-size: 0.88em; }
 .chromo-step-arrow { color: #ffffff; font-size: 16px; text-align: center; line-height: 1; user-select: none; }
-.chromo-token-xmin { color: #fbbf24 !important; transition: color 0.2s, text-shadow 0.2s; cursor: default; }
-.chromo-token-xmax { color: #34d399 !important; transition: color 0.2s, text-shadow 0.2s; cursor: default; }
-.chromo-token-d { color: #38bdf8 !important; transition: color 0.2s, text-shadow 0.2s; cursor: default; }
-.chromo-token-n { color: #c084fc !important; transition: color 0.2s, text-shadow 0.2s; cursor: default; }
+.chromo-token-xmin { color: #fbbf24 !important; cursor: default; }
+.chromo-token-xmax { color: #34d399 !important; cursor: default; }
+.chromo-token-d { color: #38bdf8 !important; cursor: default; }
+.chromo-token-n { color: #c084fc !important; cursor: default; }
 .chromo-token-xmin:hover, .chromo-token-xmin.chromo-glow-xmin { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
 .chromo-token-xmax:hover, .chromo-token-xmax.chromo-glow-xmax { color: #a7f3d0 !important; text-shadow: 0 0 12px rgba(52, 211, 153, 0.95); }
 .chromo-token-d:hover, .chromo-token-d.chromo-glow-d { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }

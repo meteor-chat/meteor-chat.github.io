@@ -87,12 +87,13 @@ function handleInputChange(input, i) {
 }
 
 function handlePaste(e) {
-    e.preventDefault();
     const clip = (e.clipboardData || window.clipboardData)?.getData("text") || "";
     const clean = clip.replace(/[^01]/g, "").slice(0, MAX_BITS);
     if (clean.length > 0) {
         currentBits = clean.split("");
-        calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
+        setTimeout(() => {
+            calculateMath(currentBits.length < MAX_BITS ? currentBits.length : MAX_BITS - 1);
+        }, 0);
     }
 }
 
