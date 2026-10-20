@@ -81,19 +81,6 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
 
     const badgeGrid = makeEl("div", "chromo-spectrum-badges");
 
-    const badgeZero = makeEl("div", "chromo-spectrum-badge");
-    const zeroTitle = makeEl("div", "chromo-spectrum-badge-title", "Jika Semua Gen 0");
-    const zeroMath = makeEl("div", "chromo-spectrum-badge-math");
-    if (typeof katex !== "undefined") {
-        katex.render(`d = 0 \\implies x = x_{\\min}`, zeroMath, { throwOnError: false });
-    } else {
-        zeroMath.textContent = "d = 0 => x = xmin";
-    }
-    const zeroStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-ok", "✓ Pasti bernilai x_min");
-    badgeZero.appendChild(zeroTitle);
-    badgeZero.appendChild(zeroMath);
-    badgeZero.appendChild(zeroStatus);
-
     const badgePos = makeEl("div", "chromo-spectrum-badge");
     const posTitle = makeEl("div", "chromo-spectrum-badge-title", "Posisi Saat Ini");
     const posMath = makeEl("div", "chromo-spectrum-badge-math");
@@ -107,22 +94,7 @@ export function renderChromoSpectrum(n, d, xMin, xMax) {
     badgePos.appendChild(posMath);
     badgePos.appendChild(posStatus);
 
-    const badgeOne = makeEl("div", "chromo-spectrum-badge");
-    const oneTitle = makeEl("div", "chromo-spectrum-badge-title", "Jika Semua Gen 1");
-    const oneMath = makeEl("div", "chromo-spectrum-badge-math");
-    if (typeof katex !== "undefined") {
-        katex.render(`d = 2^n - 1 \\implies x = x_{\\max}`, oneMath, { throwOnError: false });
-    } else {
-        oneMath.textContent = "d = 2^n - 1 => x = xmax";
-    }
-    const oneStatus = makeEl("div", "chromo-spectrum-badge-status chromo-status-ok", "✓ Pasti bernilai x_max");
-    badgeOne.appendChild(oneTitle);
-    badgeOne.appendChild(oneMath);
-    badgeOne.appendChild(oneStatus);
-
-    badgeGrid.appendChild(badgeZero);
     badgeGrid.appendChild(badgePos);
-    badgeGrid.appendChild(badgeOne);
     wrap.appendChild(badgeGrid);
 
     container.appendChild(wrap);

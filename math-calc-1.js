@@ -3,7 +3,6 @@ import { makeEl } from "./math-calc-1-tokens.js";
 import { renderChromoTable } from "./math-calc-1-table.js";
 import { renderParamLabels, renderChromoCards } from "./math-calc-1-cards.js";
 import { renderChromoSpectrum } from "./math-calc-1-spectrum.js";
-import { renderChromoInsights } from "./math-calc-1-insights.js";
 
 const MAX_BITS = 16;
 let currentBits = [];
@@ -158,7 +157,6 @@ export function calculateMath(focusIdx) {
 
     renderChromoCards(n, d, xMin, xMax, powers);
     renderChromoSpectrum(n, d, xMin, xMax);
-    renderChromoInsights(n, d, xMin, xMax, currentBits);
 
     if (typeof focusIdx === "number") {
         requestAnimationFrame(() => focusCell(focusIdx));
