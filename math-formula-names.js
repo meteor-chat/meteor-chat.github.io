@@ -23,8 +23,5 @@ export const FORMULA_NAMES = [
     "Digit Pi",
     "Bilangan Prima",
     "Geometri Kubus",
-    "Geometri Kerucut",
-    "Earned Value Management",
-    "Estimasi Biaya Perangkat Lunak",
-    "Prinsip Finansial Biaya Proyek"
+    "Geometri Kerucut"
 ];

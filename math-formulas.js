@@ -23,8 +23,5 @@ export const FORMULAS = [
     "\\pi",
     "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}",
     "V = s^3",
-    "V = \\frac{1}{3} \\pi r^2 t",
-    "\\text{CPI} = \\frac{\\text{EV}}{\\text{AC}}, \\; \\text{SPI} = \\frac{\\text{EV}}{\\text{PV}}, \\; \\text{EAC} = \\frac{\\text{BAC}}{\\text{CPI}}",
-    "\\text{Effort} = 3.13 \\times (\\text{KSLOC})^{1.072}",
-    "P = R - E, \\; \\text{Margin} = \\frac{P}{R}"
+    "V = \\frac{1}{3} \\pi r^2 t"
 ];

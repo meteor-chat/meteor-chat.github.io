@@ -20,10 +20,7 @@ const INPUTS = {
     21: ["m21InD"],
     22: ["m22InN"],
     23: ["cubeInSisi"],
-    24: ["coneInA", "coneInB"],
-    25: ["m25InBac", "m25InPlannedPct", "m25InActualPct", "m25InAc", "m25InTime"],
-    26: ["m26InEi", "m26InEif", "m26InEo", "m26InEq", "m26InIlf", "m26InLang", "m26InRate"],
-    27: ["m27InRev", "m27InExp", "m27InDev", "m27InSupport", "m27InEst", "m27InAct"]
+    24: ["coneInA", "coneInB"]
 };
 
 function recalc(n) {
