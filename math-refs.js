@@ -83,10 +83,31 @@ const IDS = {
     coneInB: "cone-in-b",
     coneLabelA: "cone-label-a",
     coneLabelB: "cone-label-b",
-    coneCanvas: "cone-canvas"
+    coneCanvas: "cone-canvas",
+    m25InBac: "math25-in-bac",
+    m25InPlannedPct: "math25-in-planned-pct",
+    m25InActualPct: "math25-in-actual-pct",
+    m25InAc: "math25-in-ac",
+    m25InTime: "math25-in-time",
+    m25Steps: "math25-steps-container",
+    m26InEi: "math26-in-ei",
+    m26InEif: "math26-in-eif",
+    m26InEo: "math26-in-eo",
+    m26InEq: "math26-in-eq",
+    m26InIlf: "math26-in-ilf",
+    m26InLang: "math26-in-lang",
+    m26InRate: "math26-in-rate",
+    m26Steps: "math26-steps-container",
+    m27InRev: "math27-in-rev",
+    m27InExp: "math27-in-exp",
+    m27InDev: "math27-in-dev",
+    m27InSupport: "math27-in-support",
+    m27InEst: "math27-in-est",
+    m27InAct: "math27-in-act",
+    m27Steps: "math27-steps-container"
 };
 
-export const FORM_COUNT = 24;
+export const FORM_COUNT = 27;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");
