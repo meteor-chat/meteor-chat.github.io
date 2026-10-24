@@ -1,9 +1,0 @@
-dengan aturan:
-
-1. hapus **semua** komentar! sisakan **hanya** kode saja!
-
-2. tidak boleh ada file raksasa **(maksimal 300 baris kode dalam 1 file)**, tapi aku mau semuanya modular! **WAJIB** pisah-pisah dan pecah-pecah file sesuai fungsinya masing-masing!
-
-3. gunakan **metode** atau **tech stack** yang terbaik atau **best practice** dalam mengerjakan tugas ini!
-
-4. langsung push ke branch main!
