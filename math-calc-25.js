@@ -62,15 +62,6 @@ export function calculateMath25() {
         status = "behind";
     }
 
-    const infoCard = createDiv("pm-step-card");
-    const infoTitle = createDiv("pm-step-title", "Diketahui Parameter:");
-    infoCard.appendChild(infoTitle);
-    const infoA = createDiv("pm-param-item", `• Kemajuan Pekerjaan Aktual (Actual) = ${formatMax3(actual)}%`);
-    infoCard.appendChild(infoA);
-    const infoP = createDiv("pm-param-item", `• Rencana Kemajuan Pekerjaan (Planned) = ${formatMax3(planned)}%`);
-    infoCard.appendChild(infoP);
-    refs.m25Steps.appendChild(infoCard);
-
     const fSub = `RP = \\frac{\\text{Actual Work Completed}}{\\text{Planned Work Completed}} \\times 100\\% = \\frac{${formatMax3(actual)}}{${formatMax3(planned)}} \\times 100\\%`;
     renderTexStep(refs.m25Steps, fSub);
 
@@ -79,21 +70,6 @@ export function calculateMath25() {
 
     const fDec = `\\text{Nilai Desimal: } RP = \\frac{${formatMax3(actual)}}{${formatMax3(planned)}} = ${formatMax3(ratio)}`;
     renderTexStep(refs.m25Steps, fDec);
-
-    const evalCard = createDiv("pm-step-card pm-step-highlight");
-    const resTitle = createDiv("pm-result-header", `Hasil Akhir: RP = ${formatMax3(rpPercent)}% (${formatMax3(ratio)})`);
-    evalCard.appendChild(resTitle);
-
-    const resDesc = createDiv("pm-eval-desc");
-    if (status === "ahead") {
-        resDesc.textContent = `Evaluasi: Proyek berjalan lebih cepat dari target yang direncanakan (Ahead of Schedule). Kemajuan fisik aktual melampaui target jadwal sebesar +${formatMax3(devPercent)}%.`;
-    } else if (status === "on-track") {
-        resDesc.textContent = "Evaluasi: Proyek berjalan tepat sesuai dengan jadwal yang direncanakan (On Schedule / On Track 100%).";
-    } else {
-        resDesc.textContent = `Evaluasi: Proyek mengalami keterlambatan dari jadwal yang direncanakan (Behind Schedule). Kemajuan fisik aktual berada di bawah target jadwal sebesar ${formatMax3(devPercent)}%.`;
-    }
-    evalCard.appendChild(resDesc);
-    refs.m25Steps.appendChild(evalCard);
 
     drawPerformanceMeter(actual, planned, rpPercent, ratio, devPercent, status);
 }

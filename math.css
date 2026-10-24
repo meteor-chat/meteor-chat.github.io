@@ -163,13 +163,8 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .pm-canvas { width: 100%; max-width: 380px; height: auto; aspect-ratio: 400 / 360; display: block; border-radius: 8px; }
 .pm-steps { display: flex; flex-direction: column; gap: 14px; width: 100%; align-items: stretch; }
 .pm-step-card { border: 1px solid #333333; border-radius: 12px; padding: 14px 18px; background: rgba(255, 255, 255, 0.02); color: var(--text-main); width: 100%; box-sizing: border-box; }
-.pm-step-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 600; margin-bottom: 8px; }
-.pm-param-item { font-size: 14px; color: #e2e8f0; margin-bottom: 4px; }
 .pm-step-math { overflow-x: auto; padding: 4px 0; text-align: center; }
 .pm-step-math .katex { font-size: 1.15em; }
-.pm-step-highlight { border-color: #555555; background: rgba(255, 255, 255, 0.04); }
-.pm-result-header { font-size: 15px; font-weight: 600; color: #ffffff; margin-bottom: 6px; }
-.pm-eval-desc { font-size: 13.5px; line-height: 1.5; color: #cbd5e1; }
 .pm-step-error { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.05); }
 @media (max-width: 960px) {
     .chromo-two-col-layout { flex-direction: column; align-items: center; gap: 36px; }
