@@ -83,10 +83,14 @@ const IDS = {
     coneInB: "cone-in-b",
     coneLabelA: "cone-label-a",
     coneLabelB: "cone-label-b",
-    coneCanvas: "cone-canvas"
+    coneCanvas: "cone-canvas",
+    m25InActual: "math25-in-actual",
+    m25InPlanned: "math25-in-planned",
+    m25Steps: "math25-steps-container",
+    m25Canvas: "math25-canvas"
 };
 
-export const FORM_COUNT = 24;
+export const FORM_COUNT = 25;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

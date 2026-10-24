@@ -23,5 +23,6 @@ export const FORMULAS = [
     "\\pi",
     "\\mathbb{P} = \\{2, 3, 5, 7, \\dots\\}",
     "V = s^3",
-    "V = \\frac{1}{3} \\pi r^2 t"
+    "V = \\frac{1}{3} \\pi r^2 t",
+    "RP = \\frac{\\text{Actual Work Completed}}{\\text{Planned Work Completed}} \\times 100\\%"
 ];

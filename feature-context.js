@@ -18,14 +18,14 @@ const MANIFESTS = {
 
     math: [
         "Fitur: Interactive STEM Laboratory (/math)",
-        "- 24 modul komputasi matematika dan kalkulator sains interaktif.",
-        "- Topik: Kecerdasan Artifisial (Genetika), Teori Peluang (Bayes, Distribusi Normal), Kalkulus (Integral Riemann), Matriks & Vektor, serta Simulasi 3D Kerucut & Kubus berputar.",
+        "- 25 modul komputasi matematika dan kalkulator sains interaktif.",
+        "- Topik: Kecerdasan Artifisial (Genetika), Teori Peluang (Bayes, Distribusi Normal), Kalkulus (Integral Riemann), Matriks & Vektor, Manajemen Proyek (Rate of Performance), serta Simulasi 3D Kerucut & Kubus berputar.",
         "- Arahkan pengguna dengan tautan markdown: [Buka Math Laboratory](/math)"
     ].join("\n"),
 
     ecosystem: [
         "Ekosistem Web Meteor:",
-        "- [Math Lab](/math): 24 kalkulator STEM interaktif & simulasi 3D.",
+        "- [Math Lab](/math): 25 kalkulator STEM interaktif & simulasi 3D.",
         "- [Sort Visualizer](/sort): Visualisasi 6 algoritma sorting (Bar & Lingkaran 360 derajat).",
         "- [Pathfinding Arena](/search): Simulasi interaktif pencarian rute BFS, DFS, Dijkstra pada arena labirin.",
         "- Arahkan pengguna dengan tautan markdown ke halaman yang relevan."
@@ -35,7 +35,7 @@ const MANIFESTS = {
 const PATTERNS = {
     search: /\b(search|pathfinding|rute|labirin|maze|bfs|dfs|dijkstra|jalur\s+terpendek|arena)\b/i,
     sort: /\b(sort|sorting|pengurutan|mengurutkan|bubble\s*sort|quicksort|quick\s*sort|merge\s*sort|shaker\s*sort|insertion\s*sort|selection\s*sort)\b/i,
-    math: /\b(math|matematika|kalkulator|rumus|bayes|riemann|integral|determinan|matriks|vektor|kubus|kerucut|genetika|kromosom)\b/i,
+    math: /\b(math|matematika|kalkulator|rumus|bayes|riemann|integral|determinan|matriks|vektor|kubus|kerucut|genetika|kromosom|manajemen\s*proyek|performance)\b/i,
     ecosystem: /\b(fitur|menu|halaman|bisa\s+apa|kemampuan|fasilitas|website\s+ini|web\s+ini|aplikasi\s+ini|navigation|navigasi)\b/i
 };
 
