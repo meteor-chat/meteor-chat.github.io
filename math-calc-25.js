@@ -2,20 +2,22 @@ import { refs } from "./dom-refs.js";
 import { formatMax3 } from "./math-format.js";
 import { drawPerformanceMeter, clearVisual25 } from "./math-visual-25.js";
 
-function createBox(className, text) {
+function createDiv(className, text) {
     const div = document.createElement("div");
     div.className = className;
     if (text) div.textContent = text;
     return div;
 }
 
-function renderTexStep(container, tex, boxClass = "math-step-box math-step-valid") {
-    const box = createBox(boxClass);
+function renderTexStep(container, tex, extraClass = "") {
+    const box = createDiv(`pm-step-card ${extraClass}`.trim());
+    const mathBox = createDiv("pm-step-math");
     if (typeof katex !== "undefined") {
-        katex.render(tex, box, { throwOnError: false, displayMode: true });
+        katex.render(tex, mathBox, { throwOnError: false, displayMode: true });
     } else {
-        box.textContent = tex;
+        mathBox.textContent = tex;
     }
+    box.appendChild(mathBox);
     container.appendChild(box);
 }
 
@@ -35,17 +37,17 @@ export function calculateMath25() {
     const planned = parseFloat(rawPlanned);
 
     if (isNaN(actual) || isNaN(planned)) {
-        refs.m25Steps.appendChild(createBox("math-step-box math-step-error", "❌ Error: Input kemajuan pekerjaan harus berupa angka valid."));
+        refs.m25Steps.appendChild(createDiv("pm-step-card pm-step-error", "Input kemajuan pekerjaan harus berupa angka valid."));
         return;
     }
 
     if (actual < 0 || planned < 0) {
-        refs.m25Steps.appendChild(createBox("math-step-box math-step-error", "❌ Error: Nilai kemajuan pekerjaan tidak boleh negatif."));
+        refs.m25Steps.appendChild(createDiv("pm-step-card pm-step-error", "Nilai kemajuan pekerjaan tidak boleh negatif."));
         return;
     }
 
     if (planned === 0) {
-        refs.m25Steps.appendChild(createBox("math-step-box math-step-error", "❌ Error: Planned Work Completed tidak boleh bernilai 0 (mencegah pembagian dengan nol)."));
+        refs.m25Steps.appendChild(createDiv("pm-step-card pm-step-error", "Planned Work Completed tidak boleh bernilai 0 (mencegah pembagian dengan nol)."));
         return;
     }
 
@@ -60,39 +62,29 @@ export function calculateMath25() {
         status = "behind";
     }
 
-    const stepContainer = createBox("math-step");
-
-    const infoBox = createBox("math-step-box math-step-selected");
-    const infoTitle = document.createElement("strong");
-    infoTitle.textContent = "Diketahui Parameter:";
-    infoBox.appendChild(infoTitle);
-    infoBox.appendChild(document.createElement("br"));
-    const infoA = document.createElement("span");
-    infoA.textContent = `• Kemajuan Pekerjaan Aktual (Actual) = ${formatMax3(actual)}%`;
-    infoBox.appendChild(infoA);
-    infoBox.appendChild(document.createElement("br"));
-    const infoP = document.createElement("span");
-    infoP.textContent = `• Rencana Kemajuan Pekerjaan (Planned) = ${formatMax3(planned)}%`;
-    infoBox.appendChild(infoP);
-    stepContainer.appendChild(infoBox);
+    const infoCard = createDiv("pm-step-card");
+    const infoTitle = createDiv("pm-step-title", "Diketahui Parameter:");
+    infoCard.appendChild(infoTitle);
+    const infoA = createDiv("pm-param-item", `• Kemajuan Pekerjaan Aktual (Actual) = ${formatMax3(actual)}%`);
+    infoCard.appendChild(infoA);
+    const infoP = createDiv("pm-param-item", `• Rencana Kemajuan Pekerjaan (Planned) = ${formatMax3(planned)}%`);
+    infoCard.appendChild(infoP);
+    refs.m25Steps.appendChild(infoCard);
 
     const fSub = `RP = \\frac{\\text{Actual Work Completed}}{\\text{Planned Work Completed}} \\times 100\\% = \\frac{${formatMax3(actual)}}{${formatMax3(planned)}} \\times 100\\%`;
-    renderTexStep(stepContainer, fSub, "math-step-box math-step-valid math-mt-15");
+    renderTexStep(refs.m25Steps, fSub);
 
     const fCalc = `RP = ${formatMax3(ratio)} \\times 100\\% = ${formatMax3(rpPercent)}\\%`;
-    renderTexStep(stepContainer, fCalc);
+    renderTexStep(refs.m25Steps, fCalc);
 
     const fDec = `\\text{Nilai Desimal: } RP = \\frac{${formatMax3(actual)}}{${formatMax3(planned)}} = ${formatMax3(ratio)}`;
-    renderTexStep(stepContainer, fDec);
+    renderTexStep(refs.m25Steps, fDec);
 
-    const highlightBox = createBox("math-step-box math-step-valid math-result-highlight");
-    const resTitle = document.createElement("div");
-    resTitle.className = "m10-td-bold";
-    resTitle.textContent = `Hasil Akhir: RP = ${formatMax3(rpPercent)}% (${formatMax3(ratio)})`;
-    highlightBox.appendChild(resTitle);
+    const evalCard = createDiv("pm-step-card pm-step-highlight");
+    const resTitle = createDiv("pm-result-header", `Hasil Akhir: RP = ${formatMax3(rpPercent)}% (${formatMax3(ratio)})`);
+    evalCard.appendChild(resTitle);
 
-    const resDesc = document.createElement("div");
-    resDesc.className = "math-mt-15";
+    const resDesc = createDiv("pm-eval-desc");
     if (status === "ahead") {
         resDesc.textContent = `Evaluasi: Proyek berjalan lebih cepat dari target yang direncanakan (Ahead of Schedule). Kemajuan fisik aktual melampaui target jadwal sebesar +${formatMax3(devPercent)}%.`;
     } else if (status === "on-track") {
@@ -100,9 +92,8 @@ export function calculateMath25() {
     } else {
         resDesc.textContent = `Evaluasi: Proyek mengalami keterlambatan dari jadwal yang direncanakan (Behind Schedule). Kemajuan fisik aktual berada di bawah target jadwal sebesar ${formatMax3(devPercent)}%.`;
     }
-    highlightBox.appendChild(resDesc);
-    stepContainer.appendChild(highlightBox);
+    evalCard.appendChild(resDesc);
+    refs.m25Steps.appendChild(evalCard);
 
-    refs.m25Steps.appendChild(stepContainer);
     drawPerformanceMeter(actual, planned, rpPercent, ratio, devPercent, status);
 }

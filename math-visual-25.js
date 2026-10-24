@@ -63,9 +63,9 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
     }
 
     const cx = W / 2;
-    const cy = 145;
-    const outerR = 95;
-    const innerR = 75;
+    const cy = 120;
+    const outerR = 85;
+    const innerR = 67;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -107,7 +107,7 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 26px sans-serif";
+    ctx.font = "bold 24px sans-serif";
     ctx.fillText(`${formatMax3(rpPercent)}%`, cx, cy - 15);
 
     ctx.font = "12px sans-serif";
@@ -118,11 +118,11 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
     ctx.fillStyle = themeColor;
     ctx.fillText(`Nilai Rasio = ${formatMax3(ratio)}`, cx, cy + 24);
 
-    const barX = 40;
-    const barW = W - 80;
+    const barX = 30;
+    const barW = W - 60;
     const barH = 14;
 
-    const plannedY = 240;
+    const plannedY = 205;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
@@ -142,7 +142,7 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
         ctx.fill();
     }
 
-    const actualY = 286;
+    const actualY = 252;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
@@ -162,7 +162,7 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
         ctx.fill();
     }
 
-    const badgeY = 336;
+    const badgeY = 300;
     const badgeH = 34;
     const badgeW = barW;
     roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
