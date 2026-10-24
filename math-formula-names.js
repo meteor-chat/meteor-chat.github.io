@@ -23,5 +23,6 @@ export const FORMULA_NAMES = [
     "Digit Pi",
     "Bilangan Prima",
     "Geometri Kubus",
-    "Geometri Kerucut"
+    "Geometri Kerucut",
+    "Earned Value Management"
 ];
