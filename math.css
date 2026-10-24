@@ -173,21 +173,3 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .chromo-card { font-size: 14px; padding: 6px 8px; }
     .chromo-card-subnote { font-size: 11px; }
 }
-.evm-token-bac { color: #fbbf24 !important; }
-.evm-token-pv { color: #38bdf8 !important; }
-.evm-token-ev { color: #34d399 !important; }
-.evm-token-ac { color: #f87171 !important; }
-.evm-token-cpi { color: #a78bfa !important; }
-.evm-token-spi { color: #f472b6 !important; }
-.evm-bars-container { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid #333; border-radius: 8px; padding: 12px 14px; box-sizing: border-box; }
-.evm-bar-row { display: flex; align-items: center; gap: 12px; width: 100%; font-size: 14px; }
-.evm-bar-label { width: 140px; color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
-.evm-bar-track { flex: 1; height: 10px; background: #222; border-radius: 5px; overflow: hidden; position: relative; }
-.evm-bar-fill { height: 100%; border-radius: 5px; transition: width 0.3s ease; }
-.evm-bar-val { width: 70px; text-align: right; color: var(--text-main); font-weight: 500; font-size: 13px; flex-shrink: 0; }
-@media (max-width: 480px) {
-    .evm-bar-row { flex-wrap: wrap; gap: 4px; }
-    .evm-bar-label { width: 100%; }
-    .evm-bar-val { width: auto; }
-}
-
