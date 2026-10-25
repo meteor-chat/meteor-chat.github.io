@@ -27,5 +27,6 @@ export const FORMULA_NAMES = [
     "Rate of Performance (RP)",
     "Planned Value (PV)",
     "Earned Value (EV)",
-    "Actual Cost (AC)"
+    "Actual Cost (AC)",
+    "Cost Variance (CV)"
 ];

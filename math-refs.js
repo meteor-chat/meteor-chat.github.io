@@ -99,10 +99,14 @@ const IDS = {
     m28InDirect: "math28-in-direct",
     m28InIndirect: "math28-in-indirect",
     m28Steps: "math28-steps-container",
-    m28Canvas: "math28-canvas"
+    m28Canvas: "math28-canvas",
+    m29InEv: "math29-in-ev",
+    m29InAc: "math29-in-ac",
+    m29Steps: "math29-steps-container",
+    m29Canvas: "math29-canvas"
 };
 
-export const FORM_COUNT = 28;
+export const FORM_COUNT = 29;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");
