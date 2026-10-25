@@ -31,7 +31,8 @@ const FORMS = {
     23: { file: "math-calc-23", calc: "calculateMath23", open: "initCubeView" },
     24: { file: "math-calc-24", calc: "calculateMath24", open: "initConeView" },
     25: { file: "math-calc-25", calc: "calculateMath25" },
-    26: { file: "math-calc-26", calc: "calculateMath26" }
+    26: { file: "math-calc-26", calc: "calculateMath26" },
+    27: { file: "math-calc-27", calc: "calculateMath27" }
 };
 
 const pending = new Map();

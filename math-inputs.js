@@ -22,7 +22,8 @@ const INPUTS = {
     23: ["cubeInSisi"],
     24: ["coneInA", "coneInB"],
     25: ["m25InActual", "m25InPlanned"],
-    26: ["m26InBac", "m26InPlanned"]
+    26: ["m26InBac", "m26InPlanned"],
+    27: ["m27InBac", "m27InActual"]
 };
 
 function recalc(n) {

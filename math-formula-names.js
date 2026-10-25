@@ -25,5 +25,6 @@ export const FORMULA_NAMES = [
     "Geometri Kubus",
     "Geometri Kerucut",
     "Rate of Performance (RP)",
-    "Planned Value (PV)"
+    "Planned Value (PV)",
+    "Earned Value (EV)"
 ];
