@@ -26,5 +26,6 @@ export const FORMULA_NAMES = [
     "Geometri Kerucut",
     "Rate of Performance (RP)",
     "Planned Value (PV)",
-    "Earned Value (EV)"
+    "Earned Value (EV)",
+    "Actual Cost (AC)"
 ];
