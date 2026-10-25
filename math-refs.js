@@ -87,10 +87,14 @@ const IDS = {
     m25InActual: "math25-in-actual",
     m25InPlanned: "math25-in-planned",
     m25Steps: "math25-steps-container",
-    m25Canvas: "math25-canvas"
+    m25Canvas: "math25-canvas",
+    m26InBac: "math26-in-bac",
+    m26InPlanned: "math26-in-planned",
+    m26Steps: "math26-steps-container",
+    m26Canvas: "math26-canvas"
 };
 
-export const FORM_COUNT = 25;
+export const FORM_COUNT = 26;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

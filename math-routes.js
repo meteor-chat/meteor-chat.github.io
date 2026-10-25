@@ -45,6 +45,7 @@ export const FORMULA_CATEGORIES = [
     "Matematika Dasar",
     "Bangun Ruang",
     "Bangun Ruang",
+    "Manajemen Proyek",
     "Manajemen Proyek"
 ];
 
@@ -74,7 +75,8 @@ export const FORMULA_URLS = [
     "/math/3",
     "/math/g/1",
     "/math/g/2",
-    "/math/pm/1"
+    "/math/pm/1",
+    "/math/pm/2"
 ];
 
 const URL_TO_ID = {
@@ -103,6 +105,7 @@ const URL_TO_ID = {
     "/math/g/1": 23,
     "/math/g/2": 24,
     "/math/pm/1": 25,
+    "/math/pm/2": 26,
     "/math/pt/10": 10,
     "/math/pt/11": 11,
     "/math/pt/12": 12,
@@ -118,7 +121,8 @@ const URL_TO_ID = {
     "/math/22": 22,
     "/math/g/23": 23,
     "/math/g/24": 24,
-    "/math/pm/25": 25
+    "/math/pm/25": 25,
+    "/math/pm/26": 26
 };
 
 export function getFormulaUrl(id) {

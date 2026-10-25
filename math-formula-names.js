@@ -24,5 +24,6 @@ export const FORMULA_NAMES = [
     "Bilangan Prima",
     "Geometri Kubus",
     "Geometri Kerucut",
-    "Rate of Performance (RP)"
+    "Rate of Performance (RP)",
+    "Planned Value (PV)"
 ];
