@@ -36,8 +36,8 @@ export function updatePm5Lines() {
 
     const x1Ac = acRect.right - cRect.left;
     const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
-    const x2Ac = tAcRect.left - cRect.left - 4;
-    const y2Ac = tAcRect.top + tAcRect.height / 2 - cRect.top;
+    const x2Ac = tAcRect.left + tAcRect.width / 2 - cRect.left;
+    const y2Ac = tAcRect.bottom - cRect.top + 5;
 
     if (x2Ev > x1Ev + 10) {
         const dxEv = (x2Ev - x1Ev) * 0.55;
@@ -48,8 +48,8 @@ export function updatePm5Lines() {
     }
 
     if (x2Ac > x1Ac + 10) {
-        const dxAc = (x2Ac - x1Ac) * 0.55;
-        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + dxAc} ${y1Ac}, ${x2Ac - dxAc} ${y2Ac}, ${x2Ac} ${y2Ac}`);
+        const yClear = Math.max(y1Ac, tEvRect.bottom - cRect.top, tAcRect.bottom - cRect.top) + 14;
+        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + (x2Ac - x1Ac) * 0.45} ${yClear}, ${x2Ac} ${yClear}, ${x2Ac} ${y2Ac}`);
         pathAc.style.display = "";
     } else {
         pathAc.style.display = "none";

@@ -98,12 +98,8 @@ export function drawAcMeter(direct, indirect, ac, directRatio, indirectRatio) {
     ctx.fillText("Actual Cost (ACWP)", cx, cy + 6);
 
     ctx.font = "11px monospace";
-    ctx.fillStyle = directColor;
-    ctx.fillText(`${formatMax3(directRatio * 100)}% Direct`, cx - 45, cy + 24);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-    ctx.fillText("|", cx, cy + 24);
-    ctx.fillStyle = indirectColor;
-    ctx.fillText(`${formatMax3(indirectRatio * 100)}% Indirect`, cx + 45, cy + 24);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+    ctx.fillText(`${Math.round(directRatio * 100)}% Direct | ${Math.round(indirectRatio * 100)}% Indirect`, cx, cy + 24);
 
     const barX = 30;
     const barW = W - 60;

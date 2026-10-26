@@ -37,8 +37,8 @@ export function updatePm2Lines() {
 
     const x1Plan = planRect.right - cRect.left;
     const y1Plan = planRect.top + planRect.height / 2 - cRect.top;
-    const x2Plan = tPlanRect.left - cRect.left - 4;
-    const y2Plan = tPlanRect.top + tPlanRect.height / 2 - cRect.top;
+    const x2Plan = tPlanRect.left + tPlanRect.width / 2 - cRect.left;
+    const y2Plan = tPlanRect.bottom - cRect.top + 5;
 
     if (x2Bac > x1Bac + 10) {
         const dxBac = (x2Bac - x1Bac) * 0.55;
@@ -49,8 +49,8 @@ export function updatePm2Lines() {
     }
 
     if (x2Plan > x1Plan + 10) {
-        const dxPlan = (x2Plan - x1Plan) * 0.55;
-        pathPlanned.setAttribute("d", `M ${x1Plan} ${y1Plan} C ${x1Plan + dxPlan} ${y1Plan}, ${x2Plan - dxPlan} ${y2Plan}, ${x2Plan} ${y2Plan}`);
+        const yClear = Math.max(y1Plan, tBacRect.bottom - cRect.top, tPlanRect.bottom - cRect.top) + 14;
+        pathPlanned.setAttribute("d", `M ${x1Plan} ${y1Plan} C ${x1Plan + (x2Plan - x1Plan) * 0.45} ${yClear}, ${x2Plan} ${yClear}, ${x2Plan} ${y2Plan}`);
         pathPlanned.style.display = "";
     } else {
         pathPlanned.style.display = "none";

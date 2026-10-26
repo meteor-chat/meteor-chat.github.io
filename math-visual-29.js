@@ -44,7 +44,7 @@ export function drawCvMeter(ev, ac, cv) {
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "ON BUDGET ($0)";
+    let statusText = "ON BUDGET";
     let cvDisplay = "$0";
 
     if (cv < 0) {
@@ -52,13 +52,13 @@ export function drawCvMeter(ev, ac, cv) {
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
         const absVal = Math.abs(cv);
-        statusText = `OVER BUDGET (-${formatCurrency(absVal)})`;
+        statusText = "OVER BUDGET";
         cvDisplay = `-${formatCurrency(absVal)}`;
     } else if (cv > 0) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = `UNDER BUDGET (+${formatCurrency(cv)})`;
+        statusText = "UNDER BUDGET";
         cvDisplay = `+${formatCurrency(cv)}`;
     }
 
@@ -112,7 +112,7 @@ export function drawCvMeter(ev, ac, cv) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Neutral (0)", cx, cy - outerR - 10);
+    ctx.fillText("0", cx, cy - outerR - 10);
     ctx.fillText("Over Budget", cx - outerR, cy + 18);
     ctx.fillText("Under Budget", cx + outerR, cy + 18);
 

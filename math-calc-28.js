@@ -36,8 +36,8 @@ export function updatePm4Lines() {
 
     const x1Ind = indRect.right - cRect.left;
     const y1Ind = indRect.top + indRect.height / 2 - cRect.top;
-    const x2Ind = tIndRect.left - cRect.left - 4;
-    const y2Ind = tIndRect.top + tIndRect.height / 2 - cRect.top;
+    const x2Ind = tIndRect.left + tIndRect.width / 2 - cRect.left;
+    const y2Ind = tIndRect.bottom - cRect.top + 5;
 
     if (x2Dir > x1Dir + 10) {
         const dxDir = (x2Dir - x1Dir) * 0.55;
@@ -48,8 +48,8 @@ export function updatePm4Lines() {
     }
 
     if (x2Ind > x1Ind + 10) {
-        const dxInd = (x2Ind - x1Ind) * 0.55;
-        pathIndirect.setAttribute("d", `M ${x1Ind} ${y1Ind} C ${x1Ind + dxInd} ${y1Ind}, ${x2Ind - dxInd} ${y2Ind}, ${x2Ind} ${y2Ind}`);
+        const yClear = Math.max(y1Ind, tDirRect.bottom - cRect.top, tIndRect.bottom - cRect.top) + 14;
+        pathIndirect.setAttribute("d", `M ${x1Ind} ${y1Ind} C ${x1Ind + (x2Ind - x1Ind) * 0.45} ${yClear}, ${x2Ind} ${yClear}, ${x2Ind} ${y2Ind}`);
         pathIndirect.style.display = "";
     } else {
         pathIndirect.style.display = "none";

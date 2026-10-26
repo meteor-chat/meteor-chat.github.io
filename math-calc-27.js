@@ -37,8 +37,8 @@ export function updatePm3Lines() {
 
     const x1Act = actRect.right - cRect.left;
     const y1Act = actRect.top + actRect.height / 2 - cRect.top;
-    const x2Act = tActRect.left - cRect.left - 4;
-    const y2Act = tActRect.top + tActRect.height / 2 - cRect.top;
+    const x2Act = tActRect.left + tActRect.width / 2 - cRect.left;
+    const y2Act = tActRect.bottom - cRect.top + 5;
 
     if (x2Bac > x1Bac + 10) {
         const dxBac = (x2Bac - x1Bac) * 0.55;
@@ -49,8 +49,8 @@ export function updatePm3Lines() {
     }
 
     if (x2Act > x1Act + 10) {
-        const dxAct = (x2Act - x1Act) * 0.55;
-        pathActual.setAttribute("d", `M ${x1Act} ${y1Act} C ${x1Act + dxAct} ${y1Act}, ${x2Act - dxAct} ${y2Act}, ${x2Act} ${y2Act}`);
+        const yClear = Math.max(y1Act, tBacRect.bottom - cRect.top, tActRect.bottom - cRect.top) + 14;
+        pathActual.setAttribute("d", `M ${x1Act} ${y1Act} C ${x1Act + (x2Act - x1Act) * 0.45} ${yClear}, ${x2Act} ${yClear}, ${x2Act} ${y2Act}`);
         pathActual.style.display = "";
     } else {
         pathActual.style.display = "none";
