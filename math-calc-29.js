@@ -4,7 +4,7 @@ import { drawCvMeter, clearVisual29 } from "./math-visual-29.js";
 let resizeBound = false;
 
 function formatCurrency(n) {
-    return "$" + Number(n).toLocaleString("id-ID");
+    return "\\$" + Number(n).toLocaleString("id-ID");
 }
 
 export function updatePm5Lines() {

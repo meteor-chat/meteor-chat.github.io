@@ -5,7 +5,7 @@ import { drawPvMeter, clearVisual26 } from "./math-visual-26.js";
 let resizeBound = false;
 
 function formatCurrency(n) {
-    return "$" + Number(n).toLocaleString("id-ID");
+    return "\\$" + Number(n).toLocaleString("id-ID");
 }
 
 export function updatePm2Lines() {

@@ -5,7 +5,7 @@ import { drawEvMeter, clearVisual27 } from "./math-visual-27.js";
 let resizeBound = false;
 
 function formatCurrency(n) {
-    return "$" + Number(n).toLocaleString("id-ID");
+    return "\\$" + Number(n).toLocaleString("id-ID");
 }
 
 export function updatePm3Lines() {

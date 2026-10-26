@@ -4,7 +4,7 @@ import { drawAcMeter, clearVisual28 } from "./math-visual-28.js";
 let resizeBound = false;
 
 function formatCurrency(n) {
-    return "$" + Number(n).toLocaleString("id-ID");
+    return "\\$" + Number(n).toLocaleString("id-ID");
 }
 
 export function updatePm4Lines() {
