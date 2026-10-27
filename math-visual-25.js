@@ -13,6 +13,9 @@ export function clearVisual25() {
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
+    if (radius * 2 > width) radius = width / 2;
+    if (radius * 2 > height) radius = height / 2;
+    if (radius < 0) radius = 0;
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -30,7 +33,7 @@ function formatMax3(n) {
     return Number(n.toFixed(3)).toLocaleString("id-ID", { maximumFractionDigits: 3 });
 }
 
-export function drawRpMeter(actual, planned, rpPercent) {
+export function drawPerformanceMeter(actual, planned, rpPercent) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -183,3 +186,5 @@ export function drawRpMeter(actual, planned, rpPercent) {
     ctx.fillStyle = themeColor;
     ctx.fillText(statusText, cx, badgeY + 23);
 }
+
+export const drawRpMeter = drawPerformanceMeter;

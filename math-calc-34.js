@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawEtcMeter, clearVisual34 } from "./math-visual-34.js";
+import { drawEtcMeter, clearVisual34 } from "./math-visual-34.js?v=13";
 
 let resizeBound = false;
 

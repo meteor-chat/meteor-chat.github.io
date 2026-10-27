@@ -1,6 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { formatMax3 } from "./math-format.js";
-import { drawEvMeter, clearVisual27 } from "./math-visual-27.js";
+import { drawEvMeter, clearVisual27 } from "./math-visual-27.js?v=13";
 
 let resizeBound = false;
 

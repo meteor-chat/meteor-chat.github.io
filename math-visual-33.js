@@ -13,6 +13,9 @@ export function clearVisual33() {
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
+    if (radius * 2 > width) radius = width / 2;
+    if (radius * 2 > height) radius = height / 2;
+    if (radius < 0) radius = 0;
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);

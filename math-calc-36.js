@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawVacMeter, clearVisual36 } from "./math-visual-36.js";
+import { drawVacMeter, clearVisual36 } from "./math-visual-36.js?v=13";
 
 let resizeBound = false;
 

@@ -13,6 +13,9 @@ export function clearVisual34() {
 }
 
 function roundRect(ctx, x, y, width, height, radius) {
+    if (radius * 2 > width) radius = width / 2;
+    if (radius * 2 > height) radius = height / 2;
+    if (radius < 0) radius = 0;
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
@@ -30,7 +33,7 @@ function formatDuration(n) {
     return Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " bulan";
 }
 
-export function drawEstimatedTimeMeter(ote, spi, etc) {
+export function drawEtcMeter(ote, spi, etc) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -192,3 +195,5 @@ export function drawEstimatedTimeMeter(ote, spi, etc) {
     ctx.fillStyle = themeColor;
     ctx.fillText(badgeText, cx, badgeY + 23);
 }
+
+export const drawEstimatedTimeMeter = drawEtcMeter;

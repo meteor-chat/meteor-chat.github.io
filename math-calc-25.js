@@ -1,6 +1,6 @@
 import { refs } from "./dom-refs.js";
 import { formatMax3 } from "./math-format.js";
-import { drawPerformanceMeter, clearVisual25 } from "./math-visual-25.js";
+import { drawPerformanceMeter, clearVisual25 } from "./math-visual-25.js?v=13";
 
 let resizeBound = false;
 
