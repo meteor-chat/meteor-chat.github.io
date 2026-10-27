@@ -14,6 +14,7 @@ export function getCubeSisiValue() {
 }
 
 export function updateCubeLines() {
+    if (window.innerWidth <= 768) return;
     const layout = document.getElementById("cube-calc-layout");
     const svg = document.getElementById("cube-lines-svg");
     const leftPanel = document.getElementById("cube-left-panel");
@@ -100,11 +101,17 @@ function onCubeInputBlur() {
 
 export function calculateMath23() {
     if (!refs.cubeInSisi) return;
-    requestAnimationFrame(updateCubeLines);
     const raw = refs.cubeInSisi.value.trim();
     const metrics = computeCubeMetrics(raw);
     if (!metrics.valid) return;
     refs.cubeInSisi.placeholder = metrics.sisiText;
+    if (window.innerWidth <= 768) {
+        displayedSisi = metrics.sisiText;
+        renderCube();
+        applyCubeResultsToDOM(metrics);
+        return;
+    }
+    requestAnimationFrame(updateCubeLines);
     const seq = ++pulseSequence;
 
     triggerCubeAnimation({

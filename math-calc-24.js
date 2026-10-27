@@ -38,6 +38,7 @@ function syncModeLabels() {
 }
 
 export function updateConeLines() {
+    if (window.innerWidth <= 768) return;
     const layout = document.getElementById("cone-calc-layout");
     const svg = document.getElementById("cone-lines-svg");
     const leftPanel = document.getElementById("cone-left-panel");
@@ -128,8 +129,13 @@ function syncDisplayedDims(metrics) {
 export function calculateMath24() {
     if (!refs.coneInA || !refs.coneInB) return;
     const metrics = readMetrics();
+    if (window.innerWidth <= 768) {
+        syncDisplayedDims(metrics);
+        renderCone();
+        applyConeResultsToDOM(metrics);
+        return;
+    }
     const seq = ++pulseSequence;
-
     requestAnimationFrame(updateConeLines);
 
     triggerConeAnimation({
