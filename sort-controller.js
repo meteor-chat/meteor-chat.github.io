@@ -1,4 +1,4 @@
-import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=12";
+import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=13";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
@@ -53,6 +53,12 @@ export function setBarTemp(index, isTemp) {
     }
 }
 
+export function setBarCompare(index, isCompare) {
+    if (domBars[index]) {
+        domBars[index].classList.toggle("compare", isCompare);
+    }
+}
+
 export function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -80,6 +86,9 @@ function finishSort() {
     isSorting = false;
     setControlsDisabled(false);
     clearActive();
+    domBars.forEach((bar) => {
+        bar.classList.remove("temp", "compare");
+    });
 }
 
 function isBarSorted() {
@@ -90,13 +99,13 @@ async function startBarSort(type) {
     if (isBarSorted()) {
         initArray();
         renderBars();
-        await sleep(500);
+        await sleep(350);
     }
     const sort = await loadAlgorithm(type);
     if (sort) {
-        await sort(arr, domBars, updateBarPosition, setBarTemp, sleep);
+        await sort(arr, domBars, updateBarPosition, setBarTemp, sleep, setBarCompare);
     } else {
-        await sleep(500);
+        await sleep(350);
     }
 }
 

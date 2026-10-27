@@ -1,4 +1,4 @@
-import { animateShiftInsert } from "./sort-animator.js?v=11";
+import { animateShiftInsert } from "./sort-animator.js?v=13";
 
 export async function mergeSort(arr, domBars, updatePos, setTemp, sleep) {
     await mergeSortHelper(arr, 0, arr.length - 1, domBars, updatePos, setTemp, sleep);
@@ -22,7 +22,7 @@ async function merge(arr, left, mid, right, domBars, updatePos, setTemp, sleep) 
     while (i <= mid && j <= right) {
         setTemp(i, true);
         setTemp(j, true);
-        await sleep(250);
+        await sleep(170);
         
         if (arr[i] <= arr[j]) {
             setTemp(i, false);
@@ -30,7 +30,7 @@ async function merge(arr, left, mid, right, domBars, updatePos, setTemp, sleep) 
             i++;
         } else {
             await animateShiftInsert(arr, domBars, j, i);
-            await sleep(100);
+            await sleep(80);
             
             setTemp(i, false);
             setTemp(i + 1, false);

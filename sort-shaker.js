@@ -1,4 +1,4 @@
-import { animateSwap } from "./sort-animator.js?v=11";
+import { animateSwap } from "./sort-animator.js?v=13";
 
 export async function shakerSort(arr, domBars, updatePos, setTemp, sleep) {
     let swapped = true;
@@ -11,12 +11,12 @@ export async function shakerSort(arr, domBars, updatePos, setTemp, sleep) {
         for (let i = start; i < end; i++) {
             setTemp(i, true);
             setTemp(i + 1, true);
-            await sleep(250);
+            await sleep(170);
             
             if (arr[i] > arr[i + 1]) {
                 await animateSwap(arr, domBars, i, i + 1);
                 swapped = true;
-                await sleep(150);
+                await sleep(100);
             }
             
             setTemp(i, false);
@@ -31,12 +31,12 @@ export async function shakerSort(arr, domBars, updatePos, setTemp, sleep) {
         for (let i = end - 1; i >= start; i--) {
             setTemp(i, true);
             setTemp(i + 1, true);
-            await sleep(250);
+            await sleep(170);
             
             if (arr[i] > arr[i + 1]) {
                 await animateSwap(arr, domBars, i, i + 1);
                 swapped = true;
-                await sleep(150);
+                await sleep(100);
             }
             
             setTemp(i, false);

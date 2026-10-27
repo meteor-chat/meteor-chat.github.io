@@ -1,23 +1,23 @@
-import { animateSwap } from "./sort-animator.js?v=11";
+import { animateSwap } from "./sort-animator.js?v=13";
 
 async function partition(arr, low, high, domBars, updatePos, setTemp, sleep) {
     let pivot = arr[high];
     setTemp(high, true);
-    await sleep(250);
+    await sleep(160);
     
     let i = low - 1;
     
     for (let j = low; j < high; j++) {
         setTemp(j, true);
-        await sleep(250);
+        await sleep(160);
         
         if (arr[j] < pivot) {
             i++;
             if (i !== j) {
                 setTemp(i, true);
-                await sleep(150);
-                await animateSwap(arr, domBars, i, j);
                 await sleep(100);
+                await animateSwap(arr, domBars, i, j);
+                await sleep(80);
                 setTemp(i, false);
             }
         }
@@ -26,9 +26,9 @@ async function partition(arr, low, high, domBars, updatePos, setTemp, sleep) {
     
     if (i + 1 !== high) {
         setTemp(i + 1, true);
-        await sleep(150);
-        await animateSwap(arr, domBars, i + 1, high);
         await sleep(100);
+        await animateSwap(arr, domBars, i + 1, high);
+        await sleep(80);
         setTemp(i + 1, false);
         setTemp(high, false);
     } else {

@@ -23,7 +23,7 @@ export function animateSwap(arr, domBars, indexA, indexB) {
         
         const distance = Math.abs(indexB - indexA);
         const arcHeight = Math.min(45 + (distance - 1) * 8, 85);
-        const duration = Math.min(380 + (distance - 1) * 30, 540);
+        const duration = Math.min(260 + (distance - 1) * 20, 380);
         
         barA.style.zIndex = "20";
         barB.style.zIndex = "5";
@@ -95,7 +95,7 @@ export function animateShiftInsert(arr, domBars, fromIndex, toIndex) {
         const targetXFrom = toIndex * 90;
         const distance = fromIndex - toIndex;
         const arcHeight = Math.min(50 + (distance - 1) * 7, 85);
-        const duration = Math.min(400 + (distance - 1) * 30, 560);
+        const duration = Math.min(280 + (distance - 1) * 20, 400);
         
         barFrom.style.zIndex = "25";
         barFrom.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.6)";
