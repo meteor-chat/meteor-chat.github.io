@@ -89,13 +89,23 @@ export function applyCubeResultsToDOM(metrics) {
     flashResultRows();
 }
 
-export function calculateMath23() {
+function onCubeInputBlur() {
     if (!refs.cubeInSisi) return;
     const raw = refs.cubeInSisi.value.trim();
-    const metrics = computeCubeMetrics(raw);
-    const seq = ++pulseSequence;
+    const s = parseFloat(raw);
+    if (isNaN(s) || s <= 0) {
+        refs.cubeInSisi.value = displayedSisi;
+    }
+}
 
+export function calculateMath23() {
+    if (!refs.cubeInSisi) return;
     requestAnimationFrame(updateCubeLines);
+    const raw = refs.cubeInSisi.value.trim();
+    const metrics = computeCubeMetrics(raw);
+    if (!metrics.valid) return;
+    refs.cubeInSisi.placeholder = metrics.sisiText;
+    const seq = ++pulseSequence;
 
     triggerCubeAnimation({
         payload: {
@@ -124,11 +134,18 @@ export function initCubeView() {
         initCube(refs.cubeCanvas, getCubeSisiValue);
         initCubeAnimation();
         window.addEventListener("resize", updateCubeLines);
+        if (refs.cubeInSisi) {
+            refs.cubeInSisi.addEventListener("blur", onCubeInputBlur);
+        }
         cubeInitialized = true;
     }
     const raw = refs.cubeInSisi ? refs.cubeInSisi.value.trim() : "12";
-    const initialVal = raw === "" ? "12" : raw;
+    const s = parseFloat(raw);
+    const initialVal = isNaN(s) || s <= 0 ? "12" : raw;
     displayedSisi = initialVal;
+    if (refs.cubeInSisi) {
+        refs.cubeInSisi.placeholder = initialVal;
+    }
     const metrics = computeCubeMetrics(initialVal);
     applyCubeResultsToDOM(metrics);
     renderCube();
