@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive Labs on Meteor - Explore Boids collective intelligence flocking simulation and Caesar cryptographic cipher wheel.">
+<title>Lab - Meteor</title>
+<link rel="icon" href="./icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root { --bg-main: black; --text-main: white; --font-stack: 'Google Sans', sans-serif; --space-lg: 20px; }
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); }
+#lab-menu-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; padding: 60px var(--space-lg); width: 100%; }
+.lab-header { text-align: center; margin-bottom: 40px; }
+.lab-title { font-size: 32px; font-weight: 400; margin-bottom: 8px; }
+.lab-desc { font-size: 14px; color: #888; max-width: 480px; line-height: 1.5; }
+.lab-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 580px; margin-bottom: 40px; }
+.lab-card { display: flex; flex-direction: column; gap: 8px; background: #0c0f14; border: 1px solid #1e293b; border-radius: 16px; padding: 20px 24px; text-decoration: none; transition: all 0.2s ease; position: relative; overflow: hidden; }
+.lab-card:hover { border-color: #38bdf8; transform: translateY(-2px); background: #111827; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.1); }
+.lab-card-header { display: flex; justify-content: space-between; align-items: center; }
+.lab-card-title { font-size: 18px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 10px; }
+.lab-card-title span.arrow { color: #38bdf8; font-size: 16px; transition: transform 0.2s ease; }
+.lab-card:hover .lab-card-title span.arrow { transform: translateX(4px); }
+.lab-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+.lab-badge-lean { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.lab-card-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
+.lab-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.lab-tag { font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.03); border: 1px solid #1e293b; padding: 2px 8px; border-radius: 4px; }
+.lab-back-link { font-size: 13px; color: #64748b; text-decoration: none; padding: 8px 20px; border-radius: 20px; border: 1px solid #222; transition: all 0.2s ease; }
+.lab-back-link:hover { color: #fff; border-color: #444; background: rgba(255, 255, 255, 0.05); }
+@media (max-width: 480px) {
+    .lab-title { font-size: 26px; }
+    .lab-card { padding: 16px 18px; }
+    .lab-card-title { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<main id="lab-menu-view">
+    <div class="lab-header">
+        <h1 class="lab-title">Lab</h1>
+        <p class="lab-desc">Eksperimen komputasi, simulasi kecerdasan kolektif, dan laboratorium kriptografi interaktif.</p>
+    </div>
+    <div class="lab-grid">
+        <a href="/boids" class="lab-card">
+            <div class="lab-card-header">
+                <div class="lab-card-title">Boids Simulation <span class="arrow">→</span></div>
+                <span class="lab-badge lab-badge-lean">Lean 4 Verified ✓</span>
+            </div>
+            <p class="lab-card-desc">Simulasi kecerdasan kolektif dan perilaku munculan (emergent intelligence) berbasis 3 aturan Reynolds 60 FPS.</p>
+            <div class="lab-card-tags">
+                <span class="lab-tag">Flocking</span>
+                <span class="lab-tag">Emergence</span>
+                <span class="lab-tag">Swarm</span>
+                <span class="lab-tag">Lean 4</span>
+            </div>
+        </a>
+        <a href="/cipher" class="lab-card">
+            <div class="lab-card-header">
+                <div class="lab-card-title">Caesar Cipher <span class="arrow">→</span></div>
+                <span class="lab-badge lab-badge-lean">Lean 4 Verified ✓</span>
+            </div>
+            <p class="lab-card-desc">Laboratorium kriptografi interaktif dengan roda sandi 60 FPS, brute-force rotor, dan pembuktian aritmatika modular.</p>
+            <div class="lab-card-tags">
+                <span class="lab-tag">Cryptography</span>
+                <span class="lab-tag">Modular Math</span>
+                <span class="lab-tag">Brute-force</span>
+                <span class="lab-tag">Lean 4</span>
+            </div>
+        </a>
+    </div>
+    <a href="/" class="lab-back-link">← Kembali ke Beranda</a>
+</main>
+</body>
+</html>
