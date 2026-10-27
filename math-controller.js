@@ -6,7 +6,8 @@ import { bindMathRefs, FORM_COUNT } from "./math-refs.js";
 import { bindMathInputs } from "./math-inputs.js";
 import { loadForm, hasForm } from "./math-modules.js";
 import { FORMULA_NAMES } from "./math-formula-names.js";
-import { getFormulaUrl } from "./math-routes.js";
+import { getFormulaUrl, getCategoryUrl } from "./math-routes.js";
+import { getActiveFilter } from "./math-filter.js";
 
 let ready = false;
 let openToken = 0;
@@ -77,10 +78,12 @@ export function closeForm(options = {}) {
     refs.mathCalc.classList.add("hidden");
     refs.mathMenu.classList.remove("hidden");
     state.currentView = "math-menu";
-    document.title = "Math - Meteor";
+    const active = getActiveFilter();
+    document.title = active ? `${active} - Meteor` : "Math - Meteor";
     if (options.pushHistory !== false) {
-        if (window.location.pathname !== "/math" && window.location.pathname !== "/math/") {
-            history.pushState({ formulaId: null }, "", "/math");
+        const targetUrl = active ? getCategoryUrl(active) : "/math";
+        if (window.location.pathname !== targetUrl && window.location.pathname !== targetUrl + "/") {
+            history.pushState({ formulaId: null, category: active }, "", targetUrl);
         }
     }
 }

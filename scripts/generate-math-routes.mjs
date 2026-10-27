@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getFormulaUrl } from "../math-routes.js";
+import { getFormulaUrl, CATEGORY_SLUGS } from "../math-routes.js";
 import { FORMULA_NAMES } from "../math-formula-names.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -20,6 +20,36 @@ const staleDirs = [
 for (const dir of staleDirs) {
     const full = join(root, dir);
     if (existsSync(full)) rmSync(full, { recursive: true, force: true });
+}
+
+let catCount = 0;
+for (const [category, slug] of Object.entries(CATEGORY_SLUGS)) {
+    if (!slug) continue;
+    const outDir = join(root, "math", slug);
+    mkdirSync(outDir, { recursive: true });
+
+    let html = mathHtml.replace(/<title>[\s\S]*?<\/title>/, `<title>${category} - Meteor</title>`);
+    const oldBtn = `<button type="button" class="math-filter-btn" data-filter="${category}" aria-pressed="false">`;
+    const newBtn = `<button type="button" class="math-filter-btn active" data-filter="${category}" aria-pressed="true">`;
+    html = html.replace(oldBtn, newBtn);
+
+    html = html.replace(/<button\b([^>]*\bdata-category="([^"]+)"[^>]*)>/g, (match, attrs, cat) => {
+        if (cat !== category) {
+            return `<button${attrs.replace('class="math-card active"', 'class="math-card active math-hidden"')}>`;
+        }
+        return match;
+    });
+    html = html.replace(/class="math-card disabled"/g, 'class="math-card disabled math-hidden"');
+
+    writeFileSync(join(outDir, "index.html"), html);
+    catCount++;
+
+    if (slug === "bm") {
+        const mdDir = join(root, "math", "md");
+        mkdirSync(mdDir, { recursive: true });
+        writeFileSync(join(mdDir, "index.html"), html);
+        catCount++;
+    }
 }
 
 let count = 0;
@@ -41,4 +71,4 @@ for (let id = 1; id <= 36; id++) {
     count++;
 }
 
-console.log(`Generated math/index.html and ${count} formula static routes.`);
+console.log(`Generated math/index.html, ${catCount} category routes, and ${count} formula static routes.`);

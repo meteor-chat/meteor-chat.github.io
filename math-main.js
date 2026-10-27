@@ -1,5 +1,5 @@
-import { initFilters } from "./math-filter.js";
-import { parseFormulaUrl } from "./math-routes.js";
+import { initFilters, applyFilter } from "./math-filter.js";
+import { parseFormulaUrl, parseCategoryUrl } from "./math-routes.js";
 
 const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
 const CONTROLLER_GRAPH = [
@@ -89,31 +89,37 @@ function bindGrid(grid) {
 
 function handleRoute() {
     const route = parseFormulaUrl(window.location.pathname);
-    if (!route) return;
-    let initialized = false;
-    const init = () => {
-        if (initialized) return;
-        initialized = true;
-        loadController()
-            .then((controller) => controller.openForm(route.id, null, { pushHistory: false }))
-            .catch(reportError);
-    };
-    const form = document.getElementById(`math-calc-form-${route.id}`);
-    if (form && !form.classList.contains("hidden")) {
-        const events = ["pointerdown", "keydown", "focusin", "touchstart"];
-        const trigger = () => {
-            events.forEach((ev) => form.removeEventListener(ev, trigger));
-            init();
+    if (route) {
+        let initialized = false;
+        const init = () => {
+            if (initialized) return;
+            initialized = true;
+            loadController()
+                .then((controller) => controller.openForm(route.id, null, { pushHistory: false }))
+                .catch(reportError);
         };
-        events.forEach((ev) => form.addEventListener(ev, trigger, { passive: true, once: true }));
-        if ("requestIdleCallback" in window) {
-            window.requestIdleCallback(init, { timeout: 2500 });
-        } else {
-            setTimeout(init, 1200);
+        const form = document.getElementById(`math-calc-form-${route.id}`);
+        if (form && !form.classList.contains("hidden")) {
+            const events = ["pointerdown", "keydown", "focusin", "touchstart"];
+            const trigger = () => {
+                events.forEach((ev) => form.removeEventListener(ev, trigger));
+                init();
+            };
+            events.forEach((ev) => form.addEventListener(ev, trigger, { passive: true, once: true }));
+            if ("requestIdleCallback" in window) {
+                window.requestIdleCallback(init, { timeout: 2500 });
+            } else {
+                setTimeout(init, 1200);
+            }
+            return;
         }
+        init();
         return;
     }
-    init();
+    const catRoute = parseCategoryUrl(window.location.pathname);
+    if (catRoute) {
+        applyFilter(catRoute.category, { pushHistory: false });
+    }
 }
 
 initFilters();
@@ -129,8 +135,13 @@ window.addEventListener("popstate", (e) => {
                 controller.openForm(formulaId, null, { pushHistory: false });
             } else {
                 const route = parseFormulaUrl(window.location.pathname);
-                if (route) controller.openForm(route.id, null, { pushHistory: false });
-                else controller.closeForm({ pushHistory: false });
+                if (route) {
+                    controller.openForm(route.id, null, { pushHistory: false });
+                } else {
+                    controller.closeForm({ pushHistory: false });
+                    const catRoute = parseCategoryUrl(window.location.pathname);
+                    applyFilter(catRoute ? catRoute.category : null, { pushHistory: false });
+                }
             }
         })
         .catch(reportError);

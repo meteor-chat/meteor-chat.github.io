@@ -1,7 +1,7 @@
 export const CATEGORY_SLUGS = {
     "Kecerdasan Artifisial": "ai",
     "Teori Peluang": "pt",
-    "Matematika Dasar": "",
+    "Matematika Dasar": "bm",
     "Kalkulus": "cal",
     "Matematika Diskrit": "dm",
     "Matriks Vektor": "vm",
@@ -12,6 +12,8 @@ export const CATEGORY_SLUGS = {
 export const SLUG_TO_CATEGORY = {
     ai: "Kecerdasan Artifisial",
     pt: "Teori Peluang",
+    bm: "Matematika Dasar",
+    md: "Matematika Dasar",
     cal: "Kalkulus",
     dm: "Matematika Diskrit",
     vm: "Matriks Vektor",
@@ -181,8 +183,27 @@ export function parseFormulaUrl(pathname) {
     return null;
 }
 
+export function getCategoryUrl(category) {
+    const slug = CATEGORY_SLUGS[category];
+    return slug ? `/math/${slug}` : "/math";
+}
+
+export function parseCategoryUrl(pathname) {
+    if (!pathname) return null;
+    const clean = pathname.replace(/\/+$/, "");
+    const parts = clean.split("/").filter(Boolean);
+    if (parts.length === 2 && parts[0] === "math") {
+        const cat = SLUG_TO_CATEGORY[parts[1]];
+        if (cat) {
+            return { category: cat, slug: parts[1] };
+        }
+    }
+    return null;
+}
+
 export function isMathMenuUrl(pathname) {
     if (!pathname) return false;
     const clean = pathname.replace(/\/+$/, "");
-    return clean === "/math" || clean === "/math.html" || clean === "math" || clean === "math.html";
+    if (clean === "/math" || clean === "/math.html" || clean === "math" || clean === "math.html") return true;
+    return parseCategoryUrl(clean) !== null;
 }
