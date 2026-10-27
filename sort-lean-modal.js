@@ -101,6 +101,29 @@ function createModalDOM() {
 
     card.appendChild(header);
     card.appendChild(guaranteesList);
+
+    if (LEAN_METADATA.tips) {
+        const tipsContainer = document.createElement("div");
+        tipsContainer.className = "lean-proof-tips";
+        LEAN_METADATA.tips.forEach((t) => {
+            const item = document.createElement("div");
+            item.className = "lean-tip-item";
+
+            const itemTitle = document.createElement("div");
+            itemTitle.className = "lean-tip-title";
+            itemTitle.textContent = t.name;
+
+            const itemDesc = document.createElement("div");
+            itemDesc.className = "lean-tip-desc";
+            itemDesc.textContent = t.desc;
+
+            item.appendChild(itemTitle);
+            item.appendChild(itemDesc);
+            tipsContainer.appendChild(item);
+        });
+        card.appendChild(tipsContainer);
+    }
+
     card.appendChild(codeBox);
     card.appendChild(actions);
 

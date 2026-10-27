@@ -11,12 +11,16 @@ def insertionSort : List Nat → List Nat
   | x :: xs => orderedInsert x (insertionSort xs)
 
 theorem insertionSort_is_sorted (l : List Nat) :
-    (l.insertionSort (· ≤ ·)).Pairwise (· ≤ ·) :=
-  pairwise_insertionSort (· ≤ ·) l
+    (l.insertionSort (· ≤ ·)).Pairwise (· ≤ ·) := by
+  exact pairwise_insertionSort (· ≤ ·) l
 
 theorem insertionSort_is_perm (l : List Nat) :
-    (l.insertionSort (· ≤ ·)).Perm l :=
-  perm_insertionSort (· ≤ ·) l
+    (l.insertionSort (· ≤ ·)).Perm l := by
+  exact perm_insertionSort (· ≤ ·) l
+
+#check insertionSort_is_sorted
+#check insertionSort_is_perm
+#eval insertionSort [9, 3, 7, 1, 5, 4]
 `;
 
 export function getLeanPlaygroundUrl() {
@@ -35,6 +39,16 @@ export const LEAN_METADATA = {
         {
             name: "Kekekalan Elemen (Permutation Invariance)",
             desc: "Terbukti bahwa himpunan elemen luaran adalah permutasi eksak dari elemen masukan; tidak ada nilai yang hilang, terduplikasi, atau termutasi."
+        }
+    ],
+    tips: [
+        {
+            name: "1. Tanda Pembuktian Sukses di Lean 4",
+            desc: "Di Lean 4, panel kanan (Infoview) mencetak tipe teorema #check dan hasil komputasi #eval tanpa pesan error merah ('No messages / 0 errors'). Jika kursor diklik pada kata 'by', Lean menampilkan 'Goals accomplished 🎉'."
+        },
+        {
+            name: "2. Verifikasi Independen",
+            desc: "Di bilah menu kanan atas Lean Web, Anda bisa mengklik tombol 'Can I Trust This Proof?' untuk audit otomatis oleh kernel Lean bahwa pembuktian bebas dari aksioma palsu atau jalan pintas."
         }
     ]
 };

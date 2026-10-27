@@ -10,15 +10,14 @@ def insertionSort : List Nat → List Nat
   | [] => []
   | x :: xs => orderedInsert x (insertionSort xs)
 
-theorem mathlib_insertionSort_sorted (l : List Nat) :
-    (l.insertionSort (· ≤ ·)).Pairwise (· ≤ ·) :=
-  pairwise_insertionSort (· ≤ ·) l
+theorem insertionSort_is_sorted (l : List Nat) :
+    (l.insertionSort (· ≤ ·)).Pairwise (· ≤ ·) := by
+  exact pairwise_insertionSort (· ≤ ·) l
 
-theorem mathlib_insertionSort_perm (l : List Nat) :
-    (l.insertionSort (· ≤ ·)).Perm l :=
-  perm_insertionSort (· ≤ ·) l
+theorem insertionSort_is_perm (l : List Nat) :
+    (l.insertionSort (· ≤ ·)).Perm l := by
+  exact perm_insertionSort (· ≤ ·) l
 
-theorem insertionSort_nil : insertionSort [] = [] := rfl
-
-theorem insertionSort_cons (x : Nat) (xs : List Nat) :
-    insertionSort (x :: xs) = orderedInsert x (insertionSort xs) := rfl
+#check insertionSort_is_sorted
+#check insertionSort_is_perm
+#eval insertionSort [9, 3, 7, 1, 5, 4]
