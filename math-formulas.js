@@ -30,5 +30,6 @@ export const FORMULAS = [
     "AC = \\sum (\\text{Biaya Langsung} + \\text{Biaya Tidak Langsung})",
     "CV = EV - AC",
     "SV = EV - PV",
-    "CPI = \\frac{EV}{AC}"
+    "CPI = \\frac{EV}{AC}",
+    "SPI = \\frac{EV}{PV}"
 ];

@@ -15,7 +15,7 @@ const staleDirs = [
     "math/14", "math/21", "math/22",
     "math/pt/10", "math/pt/11", "math/pt/12", "math/pt/13",
     "math/cal/15", "math/cal/16", "math/cal/17", "math/cal/18",
-    "math/dm/19", "math/vm/20", "math/g/23", "math/g/24", "math/pm/25", "math/pm/26", "math/pm/27", "math/pm/28", "math/pm/29", "math/pm/30", "math/pm/31"
+    "math/dm/19", "math/vm/20", "math/g/23", "math/g/24", "math/pm/25", "math/pm/26", "math/pm/27", "math/pm/28", "math/pm/29", "math/pm/30", "math/pm/31", "math/pm/32"
 ];
 for (const dir of staleDirs) {
     const full = join(root, dir);
@@ -23,7 +23,7 @@ for (const dir of staleDirs) {
 }
 
 let count = 0;
-for (let id = 1; id <= 31; id++) {
+for (let id = 1; id <= 32; id++) {
     const url = getFormulaUrl(id);
     const relDir = url.replace(/^\/+/, "");
     const outDir = join(root, relDir);
