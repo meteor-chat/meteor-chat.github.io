@@ -70,6 +70,7 @@ function isBusy() {
 
 function clearActive() {
     buttons.forEach((b) => b.classList.remove("active"));
+    updateLeanBadge(null);
 }
 
 function setControlsDisabled(disabled) {
@@ -156,12 +157,30 @@ function setMode(mode) {
 if (btnModeBar) btnModeBar.addEventListener("click", () => setMode("bar"));
 if (btnModeColor) btnModeColor.addEventListener("click", () => setMode("color"));
 
+const btnLeanVerify = document.getElementById("btn-lean-verify");
+
+function updateLeanBadge(type) {
+    if (btnLeanVerify) {
+        btnLeanVerify.classList.toggle("highlight", type === "insertion");
+    }
+}
+
+if (btnLeanVerify) {
+    btnLeanVerify.addEventListener("click", () => {
+        import("./sort-lean-modal.js?v=13")
+            .then((m) => m.openLeanModal())
+            .catch(() => {});
+    });
+}
+
 buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
         if (isBusy()) return;
         clearActive();
         btn.classList.add("active");
-        startSort(btn.getAttribute("data-sort"));
+        const type = btn.getAttribute("data-sort");
+        updateLeanBadge(type);
+        startSort(type);
     });
 });
 

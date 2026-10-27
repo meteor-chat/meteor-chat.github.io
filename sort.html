@@ -38,10 +38,33 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .sort-bar { position: absolute; bottom: 0; width: 80px; background-color: #fff; transition: background-color 0.15s ease; will-change: transform; }
 .sort-bar.temp { background-color: #4CAF50; }
 .sort-bar.compare { background-color: #FFEB3B; }
-.sort-action-container { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 40px; width: 100%; }
+.sort-action-container { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 20px; width: 100%; }
 .btn-sort-action { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 24px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .btn-sort-action:hover:not(:disabled) { border-color: #888; background: rgba(255, 255, 255, 0.05); }
 .btn-sort-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.sort-lean-container { display: flex; justify-content: center; padding-bottom: 40px; width: 100%; }
+.btn-lean-verify { display: inline-flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); color: #4ade80; padding: 7px 18px; border-radius: 20px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
+.btn-lean-verify:hover { background: rgba(34, 197, 94, 0.18); border-color: #4ade80; transform: translateY(-1px); }
+.btn-lean-verify.highlight { border-color: #4ade80; box-shadow: 0 0 12px rgba(74, 222, 128, 0.35); }
+.lean-check { font-weight: 700; color: #4ade80; }
+.lean-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.lean-modal-card { background: #121212; border: 1px solid #333; border-radius: 16px; width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7); display: flex; flex-direction: column; gap: 16px; }
+.lean-modal-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #222; padding-bottom: 14px; }
+.lean-modal-title { font-size: 18px; font-weight: 600; color: #fff; }
+.lean-modal-subtitle { font-size: 12px; color: #4ade80; margin-top: 4px; }
+.lean-modal-close { background: transparent; border: none; font-size: 24px; line-height: 1; color: #888; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: color 0.15s; }
+.lean-modal-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.lean-proof-guarantees { display: flex; flex-direction: column; gap: 8px; }
+.lean-guarantee-item { background: rgba(255, 255, 255, 0.03); border: 1px solid #262626; border-radius: 10px; padding: 10px 14px; }
+.lean-guarantee-title { font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 2px; }
+.lean-guarantee-desc { font-size: 12px; color: #bbb; line-height: 1.4; }
+.lean-code-container { position: relative; background: #080808; border: 1px solid #222; border-radius: 10px; padding: 14px; overflow-x: auto; font-family: monospace; font-size: 12px; color: #e5e5e5; line-height: 1.5; }
+.lean-code-container pre { margin: 0; white-space: pre; }
+.lean-modal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 6px; padding-top: 14px; border-top: 1px solid #222; }
+.btn-lean-action { background: transparent; border: 1px solid #444; color: #e5e5e5; padding: 8px 16px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: all 0.15s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn-lean-action:hover { border-color: #888; background: rgba(255, 255, 255, 0.05); }
+.btn-lean-action.primary { background: #22c55e; border-color: #22c55e; color: #000; font-weight: 600; }
+.btn-lean-action.primary:hover { background: #16a34a; border-color: #16a34a; }
 @media (max-width: 650px) {
     .sort-visualizer-wrapper { margin-top: 30px; }
     .sort-visualizer { transform: scale(0.7); transform-origin: top center; }
@@ -75,7 +98,13 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
         <button id="btn-randomize" class="btn-sort-action">Randomize</button>
         <button id="btn-worst" class="btn-sort-action">Worst</button>
     </div>
+    <div id="sort-lean-container" class="sort-lean-container">
+        <button id="btn-lean-verify" class="btn-lean-verify" aria-haspopup="dialog">
+            <span class="lean-check">✓</span>
+            <span class="lean-text">Insertion Sort: Formally Verified in Lean 4</span>
+        </button>
+    </div>
 </main>
-<script type="module" src="sort-controller.js?v=13"></script>
+<script type="module" src="sort-controller.js?v=14"></script>
 </body>
 </html>
