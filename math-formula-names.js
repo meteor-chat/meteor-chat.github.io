@@ -33,5 +33,6 @@ export const FORMULA_NAMES = [
     "Cost Performance Index (CPI)",
     "Schedule Performance Index (SPI)",
     "Estimate at Completion (EAC)",
-    "Estimated Time to Complete"
+    "Estimated Time to Complete",
+    "Estimate to Complete (ETC)"
 ];
