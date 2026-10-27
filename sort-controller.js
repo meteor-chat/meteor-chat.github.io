@@ -189,7 +189,7 @@ function updateLeanBadge(type) {
 
 if (btnLeanVerify) {
     btnLeanVerify.addEventListener("click", () => {
-        import("./sort-lean-modal.js?v=14")
+        import("./sort-lean-modal.js?v=15")
             .then((m) => m.openLeanModal(activeAlgorithmType || "bubble"))
             .catch(() => {});
     });

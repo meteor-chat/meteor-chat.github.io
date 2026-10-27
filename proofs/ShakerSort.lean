@@ -29,9 +29,21 @@ def shakerSortAux : Nat → List Nat → List Nat
 def shakerSort (xs : List Nat) : List Nat :=
   shakerSortAux xs.length xs
 
+theorem bubbleForward_length : ∀ (l : List Nat), (bubbleForward l).length = l.length
+  | [] => rfl
+  | [x] => rfl
+  | x :: y :: ys => by
+    dsimp [bubbleForward]
+    split
+    · dsimp
+      rw [bubbleForward_length (y :: ys)]
+    · dsimp
+      rw [bubbleForward_length (x :: ys)]
+
 theorem shakerPass_nil : shakerPass [] = [] := rfl
 
 theorem shakerSort_nil : shakerSort [] = [] := rfl
 
 #check shakerSort
+#check bubbleForward_length
 #eval shakerSort [9, 3, 7, 1, 5, 4]

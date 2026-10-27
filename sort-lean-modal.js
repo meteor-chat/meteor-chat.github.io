@@ -1,9 +1,10 @@
-import { LEAN_ALGORITHMS, getLeanSortData, getLeanPlaygroundUrl, LEAN_SHARED_TIPS } from "./sort-lean-data.js?v=14";
+import { LEAN_ALGORITHMS, getLeanSortData, getLeanPlaygroundUrl, LEAN_SHARED_TIPS } from "./sort-lean-data.js?v=15";
 
 let modalBackdrop = null;
 let lastActiveElement = null;
 let activeSortType = "bubble";
 let titleEl = null;
+let tierBadgeEl = null;
 let subtitleEl = null;
 let guaranteesEl = null;
 let codeEl = null;
@@ -16,6 +17,10 @@ function updateModalContent(type) {
     activeSortType = type;
     const data = getLeanSortData(type);
     if (titleEl) titleEl.textContent = data.title;
+    if (tierBadgeEl) {
+        tierBadgeEl.textContent = data.tier;
+        tierBadgeEl.className = "lean-tier-badge " + (data.tierClass || "tier-3");
+    }
     if (subtitleEl) subtitleEl.textContent = data.framework;
     if (codeEl) codeEl.textContent = data.code;
     if (linkRepoEl) linkRepoEl.href = data.repoUrl;
@@ -64,10 +69,14 @@ function createModalDOM() {
     titleEl.id = "lean-modal-title";
     titleEl.className = "lean-modal-title";
 
+    tierBadgeEl = document.createElement("span");
+    tierBadgeEl.className = "lean-tier-badge";
+
     subtitleEl = document.createElement("div");
     subtitleEl.className = "lean-modal-subtitle";
 
     titleBox.appendChild(titleEl);
+    titleBox.appendChild(tierBadgeEl);
     titleBox.appendChild(subtitleEl);
 
     const btnClose = document.createElement("button");

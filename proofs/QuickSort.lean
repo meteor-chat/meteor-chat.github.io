@@ -11,5 +11,10 @@ def quickSort (xs : List Nat) : List Nat :=
 
 theorem quickSort_nil : quickSort [] = [] := rfl
 
+def qsortCore (arr : Array Nat) : Array Nat :=
+  arr.qsort
+
 #check quickSort
+#check qsortCore
 #eval quickSort [9, 3, 7, 1, 5, 4]
+#eval qsortCore #[9, 3, 7, 1, 5, 4]
