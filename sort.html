@@ -38,10 +38,12 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .sort-bar { position: absolute; bottom: 0; width: 80px; background-color: #fff; transition: background-color 0.15s ease; will-change: transform; }
 .sort-bar.temp { background-color: #4CAF50; }
 .sort-bar.compare { background-color: #FFEB3B; }
-.sort-action-container { display: flex; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 20px; width: 100%; }
+.sort-action-container { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 20px; padding-bottom: 20px; width: 100%; }
 .btn-sort-action { background: transparent; border: 1px solid #555; color: var(--text-main); padding: 8px 24px; border-radius: 20px; font-size: 14px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
 .btn-sort-action:hover:not(:disabled) { border-color: #888; background: rgba(255, 255, 255, 0.05); }
 .btn-sort-action:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-run-action { background: var(--text-main); color: var(--bg-main); font-weight: 500; border-color: var(--text-main); }
+.btn-run-action:hover:not(:disabled) { background: #e5e5e5; border-color: #ffffff; color: #000000; }
 .sort-lean-container { display: flex; justify-content: center; padding-bottom: 40px; width: 100%; }
 .btn-lean-verify { display: inline-flex; align-items: center; gap: 8px; background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.3); color: #4ade80; padding: 7px 18px; border-radius: 20px; font-size: 13px; font-family: inherit; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }
 .btn-lean-verify:hover { background: rgba(34, 197, 94, 0.18); border-color: #4ade80; transform: translateY(-1px); }
@@ -91,7 +93,7 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 <main id="sort-menu-view">
     <h2 class="sort-title">Sort</h2>
     <div id="sort-filter-container" class="sort-filter-container">
-        <button class="sort-filter-btn" data-sort="bubble">Bubble Sort</button>
+        <button class="sort-filter-btn active" data-sort="bubble">Bubble Sort</button>
         <button class="sort-filter-btn" data-sort="selection">Selection Sort</button>
         <button class="sort-filter-btn" data-sort="insertion">Insertion Sort</button>
         <button class="sort-filter-btn" data-sort="quick">Quick Sort</button>
@@ -107,6 +109,7 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
         <canvas id="sort-canvas" class="sort-canvas sort-hidden" width="800" height="450"></canvas>
     </div>
     <div class="sort-action-container">
+        <button id="btn-run" class="btn-sort-action btn-run-action">Run</button>
         <button id="btn-randomize" class="btn-sort-action">Randomize</button>
         <button id="btn-worst" class="btn-sort-action">Worst</button>
     </div>
@@ -117,6 +120,6 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
         </button>
     </div>
 </main>
-<script type="module" src="sort-controller.js?v=15"></script>
+<script type="module" src="sort-controller.js?v=16"></script>
 </body>
 </html>

@@ -3,14 +3,26 @@ import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./s
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
 const buttons = document.querySelectorAll(".sort-filter-btn");
+const btnRun = document.getElementById("btn-run");
 const btnRandomize = document.getElementById("btn-randomize");
 const btnWorst = document.getElementById("btn-worst");
 const btnModeBar = document.getElementById("btn-mode-bar");
 const btnModeColor = document.getElementById("btn-mode-color");
+const btnLeanVerify = document.getElementById("btn-lean-verify");
+const leanBadgeText = document.getElementById("lean-badge-text");
 
 const SORTED_REF = [1, 1.5, 2, 2.5, 3, 3.5, 4];
+const SORT_LABELS = {
+    bubble: "Bubble Sort",
+    selection: "Selection Sort",
+    insertion: "Insertion Sort",
+    quick: "Quick Sort",
+    merge: "Merge Sort",
+    shaker: "Shaker Sort"
+};
 
 let currentMode = "bar";
+let currentAlgorithm = "bubble";
 let arr = [];
 let domBars = [];
 let isSorting = false;
@@ -68,15 +80,24 @@ function isBusy() {
     return isSorting || (circle ? circle.isCircleSortingActive() : false);
 }
 
-function clearActive() {
-    buttons.forEach((b) => b.classList.remove("active"));
-    updateLeanBadge(null);
+function updateLeanBadge(type) {
+    if (btnLeanVerify) {
+        btnLeanVerify.classList.toggle("highlight", Boolean(type));
+    }
+    if (leanBadgeText) {
+        if (type && SORT_LABELS[type]) {
+            leanBadgeText.textContent = `${SORT_LABELS[type]}: Formally Verified in Lean 4`;
+        } else {
+            leanBadgeText.textContent = "All 6 Sorting Algorithms: Formally Verified in Lean 4";
+        }
+    }
 }
 
 function setControlsDisabled(disabled) {
     buttons.forEach((btn) => {
         btn.style.pointerEvents = disabled ? "none" : "auto";
     });
+    if (btnRun) btnRun.disabled = disabled;
     if (btnRandomize) btnRandomize.disabled = disabled;
     if (btnWorst) btnWorst.disabled = disabled;
     if (btnModeBar) btnModeBar.disabled = disabled;
@@ -86,7 +107,6 @@ function setControlsDisabled(disabled) {
 function finishSort() {
     isSorting = false;
     setControlsDisabled(false);
-    clearActive();
     domBars.forEach((bar) => {
         bar.classList.remove("temp", "compare");
     });
@@ -140,7 +160,6 @@ function drawCircle(reset) {
 function setMode(mode) {
     if (isBusy() || mode === currentMode) return;
     currentMode = mode;
-    clearActive();
     const isBar = mode === "bar";
     if (btnModeBar) btnModeBar.classList.toggle("active", isBar);
     if (btnModeColor) btnModeColor.classList.toggle("active", !isBar);
@@ -157,40 +176,10 @@ function setMode(mode) {
 if (btnModeBar) btnModeBar.addEventListener("click", () => setMode("bar"));
 if (btnModeColor) btnModeColor.addEventListener("click", () => setMode("color"));
 
-const btnLeanVerify = document.getElementById("btn-lean-verify");
-const leanBadgeText = document.getElementById("lean-badge-text");
-
-const SORT_LABELS = {
-    bubble: "Bubble Sort",
-    selection: "Selection Sort",
-    insertion: "Insertion Sort",
-    quick: "Quick Sort",
-    merge: "Merge Sort",
-    shaker: "Shaker Sort"
-};
-
-let activeAlgorithmType = null;
-
-function updateLeanBadge(type) {
-    if (type) {
-        activeAlgorithmType = type;
-    }
-    if (btnLeanVerify) {
-        btnLeanVerify.classList.toggle("highlight", Boolean(type));
-    }
-    if (leanBadgeText) {
-        if (type && SORT_LABELS[type]) {
-            leanBadgeText.textContent = `${SORT_LABELS[type]}: Formally Verified in Lean 4`;
-        } else {
-            leanBadgeText.textContent = "All 6 Sorting Algorithms: Formally Verified in Lean 4";
-        }
-    }
-}
-
 if (btnLeanVerify) {
     btnLeanVerify.addEventListener("click", () => {
         import("./sort-lean-modal.js?v=15")
-            .then((m) => m.openLeanModal(activeAlgorithmType || "bubble"))
+            .then((m) => m.openLeanModal(currentAlgorithm || "bubble"))
             .catch(() => {});
     });
 }
@@ -198,18 +187,23 @@ if (btnLeanVerify) {
 buttons.forEach((btn) => {
     btn.addEventListener("click", () => {
         if (isBusy()) return;
-        clearActive();
+        buttons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        const type = btn.getAttribute("data-sort");
-        updateLeanBadge(type);
-        startSort(type);
+        currentAlgorithm = btn.getAttribute("data-sort");
+        updateLeanBadge(currentAlgorithm);
     });
 });
+
+if (btnRun) {
+    btnRun.addEventListener("click", () => {
+        if (isBusy()) return;
+        startSort(currentAlgorithm);
+    });
+}
 
 if (btnRandomize) {
     btnRandomize.addEventListener("click", () => {
         if (isBusy()) return;
-        clearActive();
         if (currentMode === "bar") {
             initArray();
             renderBars();
@@ -222,7 +216,6 @@ if (btnRandomize) {
 if (btnWorst) {
     btnWorst.addEventListener("click", () => {
         if (isBusy() || currentMode !== "bar") return;
-        clearActive();
         setWorstArray();
         renderBars();
     });
@@ -237,4 +230,5 @@ window.addEventListener("resize", () => {
 
 initArray();
 renderBars();
+updateLeanBadge(currentAlgorithm);
 preloadWhenIdle();
