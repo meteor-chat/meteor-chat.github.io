@@ -1,19 +1,13 @@
 import {
   LEAN_BUBBLE_CODE,
-  LEAN_SELECTION_CODE,
   LEAN_INSERTION_CODE,
-  LEAN_QUICK_CODE,
-  LEAN_MERGE_CODE,
-  LEAN_SHAKER_CODE
+  LEAN_MERGE_CODE
 } from "./sort-lean-sources.js?v=15";
 
 export const LEAN_ALGORITHMS = [
   { id: "bubble", name: "Bubble Sort" },
-  { id: "selection", name: "Selection Sort" },
   { id: "insertion", name: "Insertion Sort" },
-  { id: "quick", name: "Quick Sort" },
-  { id: "merge", name: "Merge Sort" },
-  { id: "shaker", name: "Shaker Sort" }
+  { id: "merge", name: "Merge Sort" }
 ];
 
 export const LEAN_SORT_DATA = {
@@ -36,25 +30,6 @@ export const LEAN_SORT_DATA = {
       }
     ]
   },
-  selection: {
-    title: "Selection Sort",
-    tier: "Tier 3: Verified Inductive Invariant Model",
-    tierClass: "tier-3",
-    framework: "Lean 4 Theorem Prover • Core",
-    repoUrl: "https://github.com/meteor-chat/meteor-chat.github.io/blob/main/proofs/SelectionSort.lean",
-    project: "lean",
-    code: LEAN_SELECTION_CODE,
-    guarantees: [
-      {
-        name: "Preservasi Ukuran Sisa Ekstraksi (selectMin_length)",
-        desc: "Teorema induktif membuktikan ukuran remainder selalu presisi xs.length saat elemen minimum diekstraksi."
-      },
-      {
-        name: "Terminasi & Basis Invarian",
-        desc: "Batas fuel berkurang monoton pada setiap ekstraksi nilai, menjamin penyelesaian algoritma dalam kedalaman berhingga."
-      }
-    ]
-  },
   insertion: {
     title: "Insertion Sort",
     tier: "Tier 1: Mathlib Certified End-to-End Proof",
@@ -74,25 +49,6 @@ export const LEAN_SORT_DATA = {
       }
     ]
   },
-  quick: {
-    title: "Quick Sort",
-    tier: "Tier 2: Lean 4 Core Standard Library",
-    tierClass: "tier-2",
-    framework: "Lean 4 Theorem Prover • Init.Data.Array.QSort",
-    repoUrl: "https://github.com/meteor-chat/meteor-chat.github.io/blob/main/proofs/QuickSort.lean",
-    project: "lean",
-    code: LEAN_QUICK_CODE,
-    guarantees: [
-      {
-        name: "Standar Pustaka Resmi Lean 4 (Array.qsort)",
-        desc: "Menggunakan implementasi bawaan compiler Lean 4 dengan optimasi mutasi in-place fungsional (FBIP) berkecepatan tinggi."
-      },
-      {
-        name: "Model Partisi Fungsional Terpisah (Divide & Conquer)",
-        desc: "Model fungsional membuktikan partisi deterministik antara sublist (· ≤ x) dan (· > x) di sekitar pivot x."
-      }
-    ]
-  },
   merge: {
     title: "Merge Sort",
     tier: "Tier 1: Mathlib Certified End-to-End Proof",
@@ -109,25 +65,6 @@ export const LEAN_SORT_DATA = {
       {
         name: "Preservasi Multiset (mergeSort_perm)",
         desc: "Teorema membuktikan himpunan luaran adalah permutasi eksak dari himpunan masukan."
-      }
-    ]
-  },
-  shaker: {
-    title: "Shaker Sort",
-    tier: "Tier 3: Verified Inductive Invariant Model",
-    tierClass: "tier-3",
-    framework: "Lean 4 Theorem Prover • Core",
-    repoUrl: "https://github.com/meteor-chat/meteor-chat.github.io/blob/main/proofs/ShakerSort.lean",
-    project: "lean",
-    code: LEAN_SHAKER_CODE,
-    guarantees: [
-      {
-        name: "Preservasi Ukuran Pass Maju (bubbleForward_length)",
-        desc: "Teorema induktif membuktikan pass maju melestarikan jumlah elemen saat memindahkan nilai terbesar ke posisi akhir."
-      },
-      {
-        name: "Konvergensi Dua Arah & Terminasi Fuel",
-        desc: "Kombinasi siklus bubbleForward dan bubbleBackward dibatasi fuel hingga konvergen deterministik pada list terurut."
       }
     ]
   }

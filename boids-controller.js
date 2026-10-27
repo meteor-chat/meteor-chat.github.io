@@ -27,8 +27,6 @@ const btnMouseNone = document.getElementById("btn-mouse-none");
 const btnMousePredator = document.getElementById("btn-mouse-predator");
 const btnMouseAttractor = document.getElementById("btn-mouse-attractor");
 
-const btnLeanVerify = document.getElementById("btn-lean-verify");
-
 let width = 0;
 let height = 0;
 
@@ -168,14 +166,6 @@ if (canvas) {
 
     canvas.addEventListener("touchend", () => {
         engine.mousePos.active = false;
-    });
-}
-
-if (btnLeanVerify) {
-    btnLeanVerify.addEventListener("click", () => {
-        import("./boids-lean-modal.js?v=1")
-            .then((m) => m.openLeanBoidsModal())
-            .catch(() => {});
     });
 }
 

@@ -20,6 +20,11 @@ const SORT_LABELS = {
     merge: "Merge Sort",
     shaker: "Shaker Sort"
 };
+const VERIFIED_ALGORITHMS = {
+    bubble: "Bubble Sort",
+    insertion: "Insertion Sort",
+    merge: "Merge Sort"
+};
 
 let currentMode = "bar";
 let currentAlgorithm = "bubble";
@@ -81,14 +86,15 @@ function isBusy() {
 }
 
 function updateLeanBadge(type) {
+    const isVerified = Boolean(type && VERIFIED_ALGORITHMS[type]);
     if (btnLeanVerify) {
-        btnLeanVerify.classList.toggle("highlight", Boolean(type));
+        btnLeanVerify.classList.toggle("highlight", isVerified);
     }
     if (leanBadgeText) {
-        if (type && SORT_LABELS[type]) {
-            leanBadgeText.textContent = `${SORT_LABELS[type]}: Formally Verified in Lean 4`;
+        if (isVerified) {
+            leanBadgeText.textContent = `${VERIFIED_ALGORITHMS[type]}: Formally Verified in Lean 4`;
         } else {
-            leanBadgeText.textContent = "All 6 Sorting Algorithms: Formally Verified in Lean 4";
+            leanBadgeText.textContent = "Verified in Lean 4: Bubble, Insertion & Merge Sort";
         }
     }
 }
@@ -179,7 +185,10 @@ if (btnModeColor) btnModeColor.addEventListener("click", () => setMode("color"))
 if (btnLeanVerify) {
     btnLeanVerify.addEventListener("click", () => {
         import("./sort-lean-modal.js?v=15")
-            .then((m) => m.openLeanModal(currentAlgorithm || "bubble"))
+            .then((m) => {
+                const target = VERIFIED_ALGORITHMS[currentAlgorithm] ? currentAlgorithm : "bubble";
+                m.openLeanModal(target);
+            })
             .catch(() => {});
     });
 }
