@@ -1,5 +1,6 @@
 import { initFilters, applyFilter } from "./math-filter.js";
 import { parseFormulaUrl, parseCategoryUrl } from "./math-routes.js";
+import { initCubeThumbnail } from "./cube-thumb.js";
 
 const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
 const CONTROLLER_GRAPH = [
@@ -123,6 +124,7 @@ function handleRoute() {
 }
 
 initFilters();
+initCubeThumbnail();
 const grid = document.querySelector(".math-grid");
 if (grid) bindGrid(grid);
 prefetchWhenIdle();
