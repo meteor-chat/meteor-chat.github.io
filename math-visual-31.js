@@ -33,7 +33,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawCpiMeter(ev, ac, cpi) {
+export function drawSpiMeter(ev, pv, spi) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,29 +42,29 @@ export function drawCpiMeter(ev, ac, cpi) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(ev) || isNaN(ac) || isNaN(cpi) || ev < 0 || ac <= 0) return;
+    if (isNaN(ev) || isNaN(pv) || isNaN(spi) || ev < 0 || pv <= 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "ON BUDGET";
-    let badgeText = "CPI 1,0000: SESUAI ANGGARAN (ON BUDGET)";
+    let statusText = "ON SCHEDULE";
+    let badgeText = "SPI 1,0000: TEPAT WAKTU (ON SCHEDULE)";
 
-    const cpiStr = Number(cpi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-    const pctStr = (cpi * 100).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+    const spiStr = Number(spi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    const pctStr = (spi * 100).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
 
-    if (cpi < 0.999) {
+    if (spi < 0.999) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
-        statusText = "OVER BUDGET";
-        badgeText = `CPI ${cpiStr}: PENGELUARAN BOROS (OVER BUDGET)`;
-    } else if (cpi > 1.001) {
+        statusText = "BEHIND SCHEDULE";
+        badgeText = `SPI ${spiStr}: TERLAMBAT DARI JADWAL (BEHIND)`;
+    } else if (spi > 1.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = "UNDER BUDGET";
-        badgeText = `CPI ${cpiStr}: PENGELUARAN HEMAT (UNDER BUDGET)`;
+        statusText = "AHEAD OF SCHEDULE";
+        badgeText = `SPI ${spiStr}: LEBIH CEPAT DARI JADWAL (AHEAD)`;
     }
 
     const cx = W / 2;
@@ -79,7 +79,7 @@ export function drawCpiMeter(ev, ac, cpi) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const clampedRatio = Math.min(Math.max(cpi, 0), 2);
+    const clampedRatio = Math.min(Math.max(spi, 0), 2);
     const fraction = clampedRatio / 2;
 
     if (fraction > 0.005) {
@@ -115,12 +115,12 @@ export function drawCpiMeter(ev, ac, cpi) {
 
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = cpiStr.length > 8 ? "bold 20px sans-serif" : "bold 24px sans-serif";
-    ctx.fillText(cpiStr, cx, cy - 14);
+    ctx.font = spiStr.length > 8 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(spiStr, cx, cy - 14);
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Cost Performance Index", cx, cy + 4);
+    ctx.fillText("Schedule Performance Index", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
@@ -129,7 +129,7 @@ export function drawCpiMeter(ev, ac, cpi) {
     const barX = 24;
     const barW = W - 48;
     const barH = 12;
-    const maxBase = Math.max(ev, ac, 1);
+    const maxBase = Math.max(ev, pv, 1);
 
     const evY = 202;
     ctx.textAlign = "left";
@@ -151,24 +151,24 @@ export function drawCpiMeter(ev, ac, cpi) {
         ctx.fill();
     }
 
-    const acY = 250;
-    const acColor = ac > ev ? "#f87171" : (ac < ev ? "#4ade80" : "#38bdf8");
+    const pvY = 250;
+    const pvColor = pv > ev ? "#f87171" : (pv < ev ? "#4ade80" : "#38bdf8");
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Actual Cost (AC)", barX, acY - 8);
+    ctx.fillText("Planned Value (PV)", barX, pvY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = acColor;
-    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
+    ctx.fillStyle = pvColor;
+    ctx.fillText(formatCurrency(pv), barX + barW, pvY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, acY, barW, barH, 6);
+    roundRect(ctx, barX, pvY, barW, barH, 6);
     ctx.fill();
 
-    const acFillW = (ac / maxBase) * barW;
-    if (acFillW > 0) {
-        ctx.fillStyle = acColor;
-        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
+    const pvFillW = (pv / maxBase) * barW;
+    if (pvFillW > 0) {
+        ctx.fillStyle = pvColor;
+        roundRect(ctx, barX, pvY, Math.min(pvFillW, barW), barH, 6);
         ctx.fill();
     }
 

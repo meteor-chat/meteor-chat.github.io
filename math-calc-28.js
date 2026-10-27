@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawAcMeter, clearVisual28 } from "./math-visual-28.js";
+import { drawCvMeter, clearVisual28 } from "./math-visual-28.js";
 
 let resizeBound = false;
 
@@ -10,49 +10,49 @@ function formatCurrency(n) {
 export function updatePm4Lines() {
     const container = document.getElementById("pm4-flow-container");
     const svg = document.getElementById("pm4-flow-svg");
-    const inDirect = refs.m28InDirect || document.getElementById("math28-in-direct");
-    const inIndirect = refs.m28InIndirect || document.getElementById("math28-in-indirect");
-    const targetDirect = document.getElementById("pm4-direct");
-    const targetIndirect = document.getElementById("pm4-indirect");
-    const pathDirect = document.getElementById("pm4-path-direct");
-    const pathIndirect = document.getElementById("pm4-path-indirect");
+    const inEv = refs.m28InEv || document.getElementById("math28-in-ev");
+    const inAc = refs.m28InAc || document.getElementById("math28-in-ac");
+    const targetEv = document.getElementById("pm4-ev");
+    const targetAc = document.getElementById("pm4-ac");
+    const pathEv = document.getElementById("pm4-path-ev");
+    const pathAc = document.getElementById("pm4-path-ac");
 
-    if (!container || !svg || !inDirect || !inIndirect || !targetDirect || !targetIndirect || !pathDirect || !pathIndirect) return;
+    if (!container || !svg || !inEv || !inAc || !targetEv || !targetAc || !pathEv || !pathAc) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
 
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
-    const dirRect = inDirect.getBoundingClientRect();
-    const indRect = inIndirect.getBoundingClientRect();
-    const tDirRect = targetDirect.getBoundingClientRect();
-    const tIndRect = targetIndirect.getBoundingClientRect();
+    const evRect = inEv.getBoundingClientRect();
+    const acRect = inAc.getBoundingClientRect();
+    const tEvRect = targetEv.getBoundingClientRect();
+    const tAcRect = targetAc.getBoundingClientRect();
 
-    const x1Dir = dirRect.right - cRect.left;
-    const y1Dir = dirRect.top + dirRect.height / 2 - cRect.top;
-    const x2Dir = tDirRect.left - cRect.left - 4;
-    const y2Dir = tDirRect.top + tDirRect.height / 2 - cRect.top;
+    const x1Ev = evRect.right - cRect.left;
+    const y1Ev = evRect.top + evRect.height / 2 - cRect.top;
+    const x2Ev = tEvRect.left - cRect.left - 4;
+    const y2Ev = tEvRect.top + tEvRect.height / 2 - cRect.top;
 
-    const x1Ind = indRect.right - cRect.left;
-    const y1Ind = indRect.top + indRect.height / 2 - cRect.top;
-    const x2Ind = tIndRect.left + tIndRect.width / 2 - cRect.left;
-    const y2Ind = tIndRect.bottom - cRect.top + 5;
+    const x1Ac = acRect.right - cRect.left;
+    const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
+    const x2Ac = tAcRect.left + tAcRect.width / 2 - cRect.left;
+    const y2Ac = tAcRect.bottom - cRect.top + 5;
 
-    if (x2Dir > x1Dir + 10) {
-        const dxDir = (x2Dir - x1Dir) * 0.55;
-        pathDirect.setAttribute("d", `M ${x1Dir} ${y1Dir} C ${x1Dir + dxDir} ${y1Dir}, ${x2Dir - dxDir} ${y2Dir}, ${x2Dir} ${y2Dir}`);
-        pathDirect.style.display = "";
+    if (x2Ev > x1Ev + 10) {
+        const dxEv = (x2Ev - x1Ev) * 0.55;
+        pathEv.setAttribute("d", `M ${x1Ev} ${y1Ev} C ${x1Ev + dxEv} ${y1Ev}, ${x2Ev - dxEv} ${y2Ev}, ${x2Ev} ${y2Ev}`);
+        pathEv.style.display = "";
     } else {
-        pathDirect.style.display = "none";
+        pathEv.style.display = "none";
     }
 
-    if (x2Ind > x1Ind + 10) {
-        const yClear = Math.max(y1Ind, tDirRect.bottom - cRect.top, tIndRect.bottom - cRect.top) + 14;
-        pathIndirect.setAttribute("d", `M ${x1Ind} ${y1Ind} C ${x1Ind + (x2Ind - x1Ind) * 0.45} ${yClear}, ${x2Ind} ${yClear}, ${x2Ind} ${y2Ind}`);
-        pathIndirect.style.display = "";
+    if (x2Ac > x1Ac + 10) {
+        const yClear = Math.max(y1Ac, tEvRect.bottom - cRect.top, tAcRect.bottom - cRect.top) + 14;
+        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + (x2Ac - x1Ac) * 0.45} ${yClear}, ${x2Ac} ${yClear}, ${x2Ac} ${y2Ac}`);
+        pathAc.style.display = "";
     } else {
-        pathIndirect.style.display = "none";
+        pathAc.style.display = "none";
     }
 }
 
@@ -67,33 +67,33 @@ function bindResize() {
 export function calculateMath28() {
     bindResize();
     const errEl = document.getElementById("pm4-error-msg");
-    const pathDirect = document.getElementById("pm4-path-direct");
-    const pathIndirect = document.getElementById("pm4-path-indirect");
+    const pathEv = document.getElementById("pm4-path-ev");
+    const pathAc = document.getElementById("pm4-path-ac");
 
     if (!refs.m28Steps) return;
-    if (!refs.m28InDirect || !refs.m28InIndirect) return;
+    if (!refs.m28InEv || !refs.m28InAc) return;
 
-    const rawDirect = refs.m28InDirect.value.trim();
-    const rawIndirect = refs.m28InIndirect.value.trim();
+    const rawEv = refs.m28InEv.value.trim();
+    const rawAc = refs.m28InAc.value.trim();
 
-    if (rawDirect === "" || rawIndirect === "") {
+    if (rawEv === "" || rawAc === "") {
         refs.m28Steps.textContent = "";
-        if (pathDirect) pathDirect.style.display = "none";
-        if (pathIndirect) pathIndirect.style.display = "none";
+        if (pathEv) pathEv.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual28();
         return;
     }
 
-    const direct = parseFloat(rawDirect);
-    const indirect = parseFloat(rawIndirect);
+    const ev = parseFloat(rawEv);
+    const ac = parseFloat(rawAc);
 
-    if (isNaN(direct) || isNaN(indirect) || direct < 0 || indirect < 0) {
+    if (isNaN(ev) || isNaN(ac) || ev < 0 || ac < 0) {
         refs.m28Steps.textContent = "";
-        if (pathDirect) pathDirect.style.display = "none";
-        if (pathIndirect) pathIndirect.style.display = "none";
+        if (pathEv) pathEv.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input biaya harus berupa angka positif yang valid.";
+            errEl.textContent = "Input EV dan AC harus berupa angka positif yang valid.";
             errEl.classList.remove("hidden");
         }
         clearVisual28();
@@ -102,11 +102,17 @@ export function calculateMath28() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const ac = direct + indirect;
-    const directRatio = ac > 0 ? direct / ac : 0;
-    const indirectRatio = ac > 0 ? indirect / ac : 0;
+    const cv = ev - ac;
+    let cvStr;
+    if (cv < 0) {
+        cvStr = `-\\text{${formatCurrency(Math.abs(cv))}}`;
+    } else if (cv > 0) {
+        cvStr = `+\\text{${formatCurrency(cv)}}`;
+    } else {
+        cvStr = `\\text{${formatCurrency(0)}}`;
+    }
 
-    const tex = `\\htmlId{pm4-direct}{\\text{${formatCurrency(direct)}}} + \\htmlId{pm4-indirect}{\\text{${formatCurrency(indirect)}}} \\; \\longrightarrow \\; \\mathbf{\\text{${formatCurrency(ac)}}}`;
+    const tex = `\\htmlId{pm4-ev}{\\text{${formatCurrency(ev)}}} - \\htmlId{pm4-ac}{\\text{${formatCurrency(ac)}}} = \\mathbf{${cvStr}}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m28Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -116,5 +122,5 @@ export function calculateMath28() {
 
     updatePm4Lines();
     requestAnimationFrame(updatePm4Lines);
-    drawAcMeter(direct, indirect, ac, directRatio, indirectRatio);
+    drawCvMeter(ev, ac, cv);
 }

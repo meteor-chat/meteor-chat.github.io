@@ -1,58 +1,54 @@
 import { refs } from "./dom-refs.js";
-import { drawEacMeter, clearVisual33 } from "./math-visual-33.js";
+import { drawEtcMeter, clearVisual33 } from "./math-visual-33.js?v=13";
 
 let resizeBound = false;
-
-function formatCurrency(n) {
-    return "\\$" + Number(n).toLocaleString("id-ID");
-}
 
 export function updatePm9Lines() {
     const container = document.getElementById("pm9-flow-container");
     const svg = document.getElementById("pm9-flow-svg");
-    const inBac = refs.m33InBac || document.getElementById("math33-in-bac");
-    const inCpi = refs.m33InCpi || document.getElementById("math33-in-cpi");
-    const targetBac = document.getElementById("pm9-bac");
-    const targetCpi = document.getElementById("pm9-cpi");
-    const pathBac = document.getElementById("pm9-path-bac");
-    const pathCpi = document.getElementById("pm9-path-cpi");
+    const inOte = refs.m33InOte || document.getElementById("math33-in-ote");
+    const inSpi = refs.m33InSpi || document.getElementById("math33-in-spi");
+    const targetOte = document.getElementById("pm9-ote");
+    const targetSpi = document.getElementById("pm9-spi");
+    const pathOte = document.getElementById("pm9-path-ote");
+    const pathSpi = document.getElementById("pm9-path-spi");
 
-    if (!container || !svg || !inBac || !inCpi || !targetBac || !targetCpi || !pathBac || !pathCpi) return;
+    if (!container || !svg || !inOte || !inSpi || !targetOte || !targetSpi || !pathOte || !pathSpi) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
 
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
-    const bacRect = inBac.getBoundingClientRect();
-    const cpiRect = inCpi.getBoundingClientRect();
-    const tBacRect = targetBac.getBoundingClientRect();
-    const tCpiRect = targetCpi.getBoundingClientRect();
+    const oteRect = inOte.getBoundingClientRect();
+    const spiRect = inSpi.getBoundingClientRect();
+    const tOteRect = targetOte.getBoundingClientRect();
+    const tSpiRect = targetSpi.getBoundingClientRect();
 
-    const x1Bac = bacRect.right - cRect.left;
-    const y1Bac = bacRect.top + bacRect.height / 2 - cRect.top;
-    const x2Bac = tBacRect.left - cRect.left - 4;
-    const y2Bac = tBacRect.top + tBacRect.height / 2 - cRect.top;
+    const x1Ote = oteRect.right - cRect.left;
+    const y1Ote = oteRect.top + oteRect.height / 2 - cRect.top;
+    const x2Ote = tOteRect.left - cRect.left - 4;
+    const y2Ote = tOteRect.top + tOteRect.height / 2 - cRect.top;
 
-    const x1Cpi = cpiRect.right - cRect.left;
-    const y1Cpi = cpiRect.top + cpiRect.height / 2 - cRect.top;
-    const x2Cpi = tCpiRect.left - cRect.left - 4;
-    const y2Cpi = tCpiRect.top + tCpiRect.height / 2 - cRect.top;
+    const x1Spi = spiRect.right - cRect.left;
+    const y1Spi = spiRect.top + spiRect.height / 2 - cRect.top;
+    const x2Spi = tSpiRect.left - cRect.left - 4;
+    const y2Spi = tSpiRect.top + tSpiRect.height / 2 - cRect.top;
 
-    if (x2Bac > x1Bac + 10) {
-        const dxBac = (x2Bac - x1Bac) * 0.55;
-        pathBac.setAttribute("d", `M ${x1Bac} ${y1Bac} C ${x1Bac + dxBac} ${y1Bac}, ${x2Bac - dxBac} ${y2Bac}, ${x2Bac} ${y2Bac}`);
-        pathBac.style.display = "";
+    if (x2Ote > x1Ote + 10) {
+        const dxOte = (x2Ote - x1Ote) * 0.55;
+        pathOte.setAttribute("d", `M ${x1Ote} ${y1Ote} C ${x1Ote + dxOte} ${y1Ote}, ${x2Ote - dxOte} ${y2Ote}, ${x2Ote} ${y2Ote}`);
+        pathOte.style.display = "";
     } else {
-        pathBac.style.display = "none";
+        pathOte.style.display = "none";
     }
 
-    if (x2Cpi > x1Cpi + 10) {
-        const dxCpi = (x2Cpi - x1Cpi) * 0.55;
-        pathCpi.setAttribute("d", `M ${x1Cpi} ${y1Cpi} C ${x1Cpi + dxCpi} ${y1Cpi}, ${x2Cpi - dxCpi} ${y2Cpi}, ${x2Cpi} ${y2Cpi}`);
-        pathCpi.style.display = "";
+    if (x2Spi > x1Spi + 10) {
+        const dxSpi = (x2Spi - x1Spi) * 0.55;
+        pathSpi.setAttribute("d", `M ${x1Spi} ${y1Spi} C ${x1Spi + dxSpi} ${y1Spi}, ${x2Spi - dxSpi} ${y2Spi}, ${x2Spi} ${y2Spi}`);
+        pathSpi.style.display = "";
     } else {
-        pathCpi.style.display = "none";
+        pathSpi.style.display = "none";
     }
 }
 
@@ -67,45 +63,45 @@ function bindResize() {
 export function calculateMath33() {
     bindResize();
     const errEl = document.getElementById("pm9-error-msg");
-    const pathBac = document.getElementById("pm9-path-bac");
-    const pathCpi = document.getElementById("pm9-path-cpi");
+    const pathOte = document.getElementById("pm9-path-ote");
+    const pathSpi = document.getElementById("pm9-path-spi");
 
     if (!refs.m33Steps) return;
-    if (!refs.m33InBac || !refs.m33InCpi) return;
+    if (!refs.m33InOte || !refs.m33InSpi) return;
 
-    const rawBac = refs.m33InBac.value.trim();
-    const rawCpi = refs.m33InCpi.value.trim();
+    const rawOte = refs.m33InOte.value.trim();
+    const rawSpi = refs.m33InSpi.value.trim();
 
-    if (rawBac === "" || rawCpi === "") {
+    if (rawOte === "" || rawSpi === "") {
         refs.m33Steps.textContent = "";
-        if (pathBac) pathBac.style.display = "none";
-        if (pathCpi) pathCpi.style.display = "none";
+        if (pathOte) pathOte.style.display = "none";
+        if (pathSpi) pathSpi.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual33();
         return;
     }
 
-    const bac = parseFloat(rawBac);
-    const cpi = parseFloat(rawCpi);
+    const ote = parseFloat(rawOte);
+    const spi = parseFloat(rawSpi);
 
-    if (isNaN(bac) || isNaN(cpi) || bac < 0 || cpi < 0) {
+    if (isNaN(ote) || isNaN(spi) || ote < 0 || spi < 0) {
         refs.m33Steps.textContent = "";
-        if (pathBac) pathBac.style.display = "none";
-        if (pathCpi) pathCpi.style.display = "none";
+        if (pathOte) pathOte.style.display = "none";
+        if (pathSpi) pathSpi.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input BAC dan CPI harus berupa angka positif yang valid.";
+            errEl.textContent = "Input Estimasi Durasi Awal dan SPI harus berupa angka positif yang valid.";
             errEl.classList.remove("hidden");
         }
         clearVisual33();
         return;
     }
 
-    if (cpi === 0) {
+    if (spi === 0) {
         refs.m33Steps.textContent = "";
-        if (pathBac) pathBac.style.display = "none";
-        if (pathCpi) pathCpi.style.display = "none";
+        if (pathOte) pathOte.style.display = "none";
+        if (pathSpi) pathSpi.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Nilai CPI harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
+            errEl.textContent = "Nilai SPI harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
             errEl.classList.remove("hidden");
         }
         clearVisual33();
@@ -114,15 +110,16 @@ export function calculateMath33() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const eac = bac / cpi;
-    const eacNumStr = Number(eac.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const eacTexStr = `\\text{\\$${eacNumStr.replace(/,/g, "{,}")}}`;
-    const cpiStr = cpi.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 4 }).replace(/,/g, "{,}");
+    const etc = ote / spi;
+    const etcNumStr = Number(etc.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const etcTexStr = etcNumStr.replace(/,/g, "{,}");
+    const spiStr = spi.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 4 }).replace(/,/g, "{,}");
+    const oteStr = Number(ote).toLocaleString("id-ID");
 
-    const isApprox = Math.abs(eac - Math.round(eac * 100) / 100) > 1e-6;
+    const isApprox = Math.abs(etc - Math.round(etc * 100) / 100) > 1e-6;
     const eqSymbol = isApprox ? "\\approx" : "=";
 
-    const tex = `\\frac{\\htmlId{pm9-bac}{\\text{${formatCurrency(bac)}}}}{\\htmlId{pm9-cpi}{${cpiStr}}} ${eqSymbol} \\mathbf{${eacTexStr}}`;
+    const tex = `\\frac{\\htmlId{pm9-ote}{${oteStr}}}{\\htmlId{pm9-spi}{${spiStr}}} ${eqSymbol} \\mathbf{${etcTexStr}\\text{ bulan}}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m33Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -132,5 +129,5 @@ export function calculateMath33() {
 
     updatePm9Lines();
     requestAnimationFrame(updatePm9Lines);
-    drawEacMeter(bac, cpi, eac);
+    drawEtcMeter(ote, spi, etc);
 }

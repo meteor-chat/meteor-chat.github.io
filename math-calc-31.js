@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawCpiMeter, clearVisual31 } from "./math-visual-31.js";
+import { drawSpiMeter, clearVisual31 } from "./math-visual-31.js";
 
 let resizeBound = false;
 
@@ -11,13 +11,13 @@ export function updatePm7Lines() {
     const container = document.getElementById("pm7-flow-container");
     const svg = document.getElementById("pm7-flow-svg");
     const inEv = refs.m31InEv || document.getElementById("math31-in-ev");
-    const inAc = refs.m31InAc || document.getElementById("math31-in-ac");
+    const inPv = refs.m31InPv || document.getElementById("math31-in-pv");
     const targetEv = document.getElementById("pm7-ev");
-    const targetAc = document.getElementById("pm7-ac");
+    const targetPv = document.getElementById("pm7-pv");
     const pathEv = document.getElementById("pm7-path-ev");
-    const pathAc = document.getElementById("pm7-path-ac");
+    const pathPv = document.getElementById("pm7-path-pv");
 
-    if (!container || !svg || !inEv || !inAc || !targetEv || !targetAc || !pathEv || !pathAc) return;
+    if (!container || !svg || !inEv || !inPv || !targetEv || !targetPv || !pathEv || !pathPv) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
@@ -25,19 +25,19 @@ export function updatePm7Lines() {
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
     const evRect = inEv.getBoundingClientRect();
-    const acRect = inAc.getBoundingClientRect();
+    const pvRect = inPv.getBoundingClientRect();
     const tEvRect = targetEv.getBoundingClientRect();
-    const tAcRect = targetAc.getBoundingClientRect();
+    const tPvRect = targetPv.getBoundingClientRect();
 
     const x1Ev = evRect.right - cRect.left;
     const y1Ev = evRect.top + evRect.height / 2 - cRect.top;
     const x2Ev = tEvRect.left - cRect.left - 4;
     const y2Ev = tEvRect.top + tEvRect.height / 2 - cRect.top;
 
-    const x1Ac = acRect.right - cRect.left;
-    const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
-    const x2Ac = tAcRect.left - cRect.left - 4;
-    const y2Ac = tAcRect.top + tAcRect.height / 2 - cRect.top;
+    const x1Pv = pvRect.right - cRect.left;
+    const y1Pv = pvRect.top + pvRect.height / 2 - cRect.top;
+    const x2Pv = tPvRect.left - cRect.left - 4;
+    const y2Pv = tPvRect.top + tPvRect.height / 2 - cRect.top;
 
     if (x2Ev > x1Ev + 10) {
         const dxEv = (x2Ev - x1Ev) * 0.55;
@@ -47,12 +47,12 @@ export function updatePm7Lines() {
         pathEv.style.display = "none";
     }
 
-    if (x2Ac > x1Ac + 10) {
-        const dxAc = (x2Ac - x1Ac) * 0.55;
-        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + dxAc} ${y1Ac}, ${x2Ac - dxAc} ${y2Ac}, ${x2Ac} ${y2Ac}`);
-        pathAc.style.display = "";
+    if (x2Pv > x1Pv + 10) {
+        const dxPv = (x2Pv - x1Pv) * 0.55;
+        pathPv.setAttribute("d", `M ${x1Pv} ${y1Pv} C ${x1Pv + dxPv} ${y1Pv}, ${x2Pv - dxPv} ${y2Pv}, ${x2Pv} ${y2Pv}`);
+        pathPv.style.display = "";
     } else {
-        pathAc.style.display = "none";
+        pathPv.style.display = "none";
     }
 }
 
@@ -68,44 +68,44 @@ export function calculateMath31() {
     bindResize();
     const errEl = document.getElementById("pm7-error-msg");
     const pathEv = document.getElementById("pm7-path-ev");
-    const pathAc = document.getElementById("pm7-path-ac");
+    const pathPv = document.getElementById("pm7-path-pv");
 
     if (!refs.m31Steps) return;
-    if (!refs.m31InEv || !refs.m31InAc) return;
+    if (!refs.m31InEv || !refs.m31InPv) return;
 
     const rawEv = refs.m31InEv.value.trim();
-    const rawAc = refs.m31InAc.value.trim();
+    const rawPv = refs.m31InPv.value.trim();
 
-    if (rawEv === "" || rawAc === "") {
+    if (rawEv === "" || rawPv === "") {
         refs.m31Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathAc) pathAc.style.display = "none";
+        if (pathPv) pathPv.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual31();
         return;
     }
 
     const ev = parseFloat(rawEv);
-    const ac = parseFloat(rawAc);
+    const pv = parseFloat(rawPv);
 
-    if (isNaN(ev) || isNaN(ac) || ev < 0 || ac < 0) {
+    if (isNaN(ev) || isNaN(pv) || ev < 0 || pv < 0) {
         refs.m31Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathAc) pathAc.style.display = "none";
+        if (pathPv) pathPv.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input EV dan AC harus berupa angka positif yang valid.";
+            errEl.textContent = "Input EV dan PV harus berupa angka positif yang valid.";
             errEl.classList.remove("hidden");
         }
         clearVisual31();
         return;
     }
 
-    if (ac === 0) {
+    if (pv === 0) {
         refs.m31Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathAc) pathAc.style.display = "none";
+        if (pathPv) pathPv.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Biaya aktual (AC) harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
+            errEl.textContent = "Planned Value (PV) harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
             errEl.classList.remove("hidden");
         }
         clearVisual31();
@@ -114,15 +114,15 @@ export function calculateMath31() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const cpi = ev / ac;
-    const cpiNumStr = Number(cpi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 4 });
-    const cpiTexStr = cpiNumStr.replace(/,/g, "{,}");
-    const pctStr = (cpi * 100).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/,/g, "{,}") + "\\%";
+    const spi = ev / pv;
+    const spiNumStr = Number(spi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    const spiTexStr = spiNumStr.replace(/,/g, "{,}");
+    const pctStr = (spi * 100).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/,/g, "{,}") + "\\%";
 
-    const isApprox = Math.abs(cpi - Math.round(cpi)) > 1e-6;
+    const isApprox = Math.abs(spi - Math.round(spi * 100) / 100) > 1e-6;
     const eqSymbol = isApprox ? "\\approx" : "=";
 
-    const tex = `\\frac{\\htmlId{pm7-ev}{\\text{${formatCurrency(ev)}}}}{\\htmlId{pm7-ac}{\\text{${formatCurrency(ac)}}}} ${eqSymbol} \\mathbf{${cpiTexStr}} \\text{ (atau } ${pctStr}\\text{)}`;
+    const tex = `\\frac{\\htmlId{pm7-ev}{\\text{${formatCurrency(ev)}}}}{\\htmlId{pm7-pv}{\\text{${formatCurrency(pv)}}}} ${eqSymbol} \\mathbf{${spiTexStr}} \\text{ (atau } ${pctStr}\\text{)}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m31Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -132,5 +132,5 @@ export function calculateMath31() {
 
     updatePm7Lines();
     requestAnimationFrame(updatePm7Lines);
-    drawCpiMeter(ev, ac, cpi);
+    drawSpiMeter(ev, pv, spi);
 }

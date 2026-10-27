@@ -33,7 +33,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawCvMeter(ev, ac, cv) {
+export function drawSvMeter(ev, pv, sv) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,30 +42,30 @@ export function drawCvMeter(ev, ac, cv) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(ev) || isNaN(ac) || isNaN(cv) || ev < 0 || ac < 0) return;
+    if (isNaN(ev) || isNaN(pv) || isNaN(sv) || ev < 0 || pv < 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "ON BUDGET";
-    let cvDisplay = "$0";
-    let badgeText = "VARIANS BIAYA: $0 (SESUAI ANGGARAN)";
+    let statusText = "ON SCHEDULE";
+    let svDisplay = "$0";
+    let badgeText = "VARIANS JADWAL: $0 (ON SCHEDULE)";
 
-    if (cv < -0.001) {
+    if (sv < -0.001) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
-        const absVal = Math.abs(cv);
-        statusText = "OVER BUDGET";
-        cvDisplay = `-${formatCurrency(absVal)}`;
-        badgeText = `VARIANS BIAYA: -${formatCurrency(absVal)} (OVER BUDGET)`;
-    } else if (cv > 0.001) {
+        const absVal = Math.abs(sv);
+        statusText = "BEHIND SCHEDULE";
+        svDisplay = `-${formatCurrency(absVal)}`;
+        badgeText = `VARIANS JADWAL: -${formatCurrency(absVal)} (BEHIND SCHEDULE)`;
+    } else if (sv > 0.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = "UNDER BUDGET";
-        cvDisplay = `+${formatCurrency(cv)}`;
-        badgeText = `VARIANS BIAYA: +${formatCurrency(cv)} (UNDER BUDGET)`;
+        statusText = "AHEAD OF SCHEDULE";
+        svDisplay = `+${formatCurrency(sv)}`;
+        badgeText = `VARIANS JADWAL: +${formatCurrency(sv)} (AHEAD OF SCHEDULE)`;
     }
 
     const cx = W / 2;
@@ -80,10 +80,10 @@ export function drawCvMeter(ev, ac, cv) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const maxBase = Math.max(ev, ac, 1);
-    const fraction = Math.min(Math.abs(cv) / maxBase, 1);
+    const maxBase = Math.max(ev, pv, 1);
+    const fraction = Math.min(Math.abs(sv) / maxBase, 1);
 
-    if (cv < -0.001 && fraction > 0.005) {
+    if (sv < -0.001 && fraction > 0.005) {
         const startA = 1.5 * Math.PI - fraction * 0.5 * Math.PI;
         const endA = 1.5 * Math.PI;
         ctx.beginPath();
@@ -92,7 +92,7 @@ export function drawCvMeter(ev, ac, cv) {
         ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
         ctx.stroke();
-    } else if (cv > 0.001 && fraction > 0.005) {
+    } else if (sv > 0.001 && fraction > 0.005) {
         const startA = 1.5 * Math.PI;
         const endA = 1.5 * Math.PI + fraction * 0.5 * Math.PI;
         ctx.beginPath();
@@ -122,17 +122,17 @@ export function drawCvMeter(ev, ac, cv) {
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillText("Over Budget", cx - outerR, cy + 15);
-    ctx.fillText("Under Budget", cx + outerR, cy + 15);
+    ctx.fillText("Behind", cx - outerR, cy + 15);
+    ctx.fillText("Ahead", cx + outerR, cy + 15);
 
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = cvDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
-    ctx.fillText(cvDisplay, cx, cy - 14);
+    ctx.font = svDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(svDisplay, cx, cy - 14);
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Cost Variance (CV)", cx, cy + 4);
+    ctx.fillText("Schedule Variance (SV)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
@@ -162,24 +162,24 @@ export function drawCvMeter(ev, ac, cv) {
         ctx.fill();
     }
 
-    const acY = 250;
-    const acColor = ac > ev ? "#f87171" : "#4ade80";
+    const pvY = 250;
+    const pvColor = pv > ev ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Actual Cost (AC)", barX, acY - 8);
+    ctx.fillText("Planned Value (PV)", barX, pvY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = acColor;
-    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
+    ctx.fillStyle = pvColor;
+    ctx.fillText(formatCurrency(pv), barX + barW, pvY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, acY, barW, barH, 6);
+    roundRect(ctx, barX, pvY, barW, barH, 6);
     ctx.fill();
 
-    const acFillW = (ac / maxBase) * barW;
-    if (acFillW > 0) {
-        ctx.fillStyle = acColor;
-        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
+    const pvFillW = (pv / maxBase) * barW;
+    if (pvFillW > 0) {
+        ctx.fillStyle = pvColor;
+        roundRect(ctx, barX, pvY, Math.min(pvFillW, barW), barH, 6);
         ctx.fill();
     }
 

@@ -24,15 +24,14 @@ const INPUTS = {
     25: ["m25InActual", "m25InPlanned"],
     26: ["m26InBac", "m26InPlanned"],
     27: ["m27InBac", "m27InActual"],
-    28: ["m28InDirect", "m28InIndirect"],
-    29: ["m29InEv", "m29InAc"],
-    30: ["m30InEv", "m30InPv"],
-    31: ["m31InEv", "m31InAc"],
-    32: ["m32InEv", "m32InPv"],
-    33: ["m33InBac", "m33InCpi"],
-    34: ["m34InOte", "m34InSpi"],
-    35: ["m35InEac", "m35InAc"],
-    36: ["m36InBac", "m36InEac"]
+    28: ["m28InEv", "m28InAc"],
+    29: ["m29InEv", "m29InPv"],
+    30: ["m30InEv", "m30InAc"],
+    31: ["m31InEv", "m31InPv"],
+    32: ["m32InBac", "m32InCpi"],
+    33: ["m33InOte", "m33InSpi"],
+    34: ["m34InEac", "m34InAc"],
+    35: ["m35InBac", "m35InEac"]
 };
 
 function recalc(n) {

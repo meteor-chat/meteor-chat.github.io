@@ -1,54 +1,58 @@
 import { refs } from "./dom-refs.js";
-import { drawEtcMeter, clearVisual34 } from "./math-visual-34.js?v=13";
+import { drawEtcCostMeter, clearVisual34 } from "./math-visual-34.js";
 
 let resizeBound = false;
+
+function formatCurrency(n) {
+    return "\\$" + Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
 
 export function updatePm10Lines() {
     const container = document.getElementById("pm10-flow-container");
     const svg = document.getElementById("pm10-flow-svg");
-    const inOte = refs.m34InOte || document.getElementById("math34-in-ote");
-    const inSpi = refs.m34InSpi || document.getElementById("math34-in-spi");
-    const targetOte = document.getElementById("pm10-ote");
-    const targetSpi = document.getElementById("pm10-spi");
-    const pathOte = document.getElementById("pm10-path-ote");
-    const pathSpi = document.getElementById("pm10-path-spi");
+    const inEac = refs.m34InEac || document.getElementById("math34-in-eac");
+    const inAc = refs.m34InAc || document.getElementById("math34-in-ac");
+    const targetEac = document.getElementById("pm10-eac");
+    const targetAc = document.getElementById("pm10-ac");
+    const pathEac = document.getElementById("pm10-path-eac");
+    const pathAc = document.getElementById("pm10-path-ac");
 
-    if (!container || !svg || !inOte || !inSpi || !targetOte || !targetSpi || !pathOte || !pathSpi) return;
+    if (!container || !svg || !inEac || !inAc || !targetEac || !targetAc || !pathEac || !pathAc) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
 
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
-    const oteRect = inOte.getBoundingClientRect();
-    const spiRect = inSpi.getBoundingClientRect();
-    const tOteRect = targetOte.getBoundingClientRect();
-    const tSpiRect = targetSpi.getBoundingClientRect();
+    const eacRect = inEac.getBoundingClientRect();
+    const acRect = inAc.getBoundingClientRect();
+    const tEacRect = targetEac.getBoundingClientRect();
+    const tAcRect = targetAc.getBoundingClientRect();
 
-    const x1Ote = oteRect.right - cRect.left;
-    const y1Ote = oteRect.top + oteRect.height / 2 - cRect.top;
-    const x2Ote = tOteRect.left - cRect.left - 4;
-    const y2Ote = tOteRect.top + tOteRect.height / 2 - cRect.top;
+    const x1Eac = eacRect.right - cRect.left;
+    const y1Eac = eacRect.top + eacRect.height / 2 - cRect.top;
+    const x2Eac = tEacRect.left - cRect.left - 4;
+    const y2Eac = tEacRect.top + tEacRect.height / 2 - cRect.top;
 
-    const x1Spi = spiRect.right - cRect.left;
-    const y1Spi = spiRect.top + spiRect.height / 2 - cRect.top;
-    const x2Spi = tSpiRect.left - cRect.left - 4;
-    const y2Spi = tSpiRect.top + tSpiRect.height / 2 - cRect.top;
+    const x1Ac = acRect.right - cRect.left;
+    const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
+    const x2Ac = tAcRect.left + tAcRect.width / 2 - cRect.left;
+    const y2Ac = tAcRect.bottom - cRect.top + 5;
 
-    if (x2Ote > x1Ote + 10) {
-        const dxOte = (x2Ote - x1Ote) * 0.55;
-        pathOte.setAttribute("d", `M ${x1Ote} ${y1Ote} C ${x1Ote + dxOte} ${y1Ote}, ${x2Ote - dxOte} ${y2Ote}, ${x2Ote} ${y2Ote}`);
-        pathOte.style.display = "";
+    if (x2Eac > x1Eac + 10) {
+        const dxEac = (x2Eac - x1Eac) * 0.55;
+        pathEac.setAttribute("d", `M ${x1Eac} ${y1Eac} C ${x1Eac + dxEac} ${y1Eac}, ${x2Eac - dxEac} ${y2Eac}, ${x2Eac} ${y2Eac}`);
+        pathEac.style.display = "";
     } else {
-        pathOte.style.display = "none";
+        pathEac.style.display = "none";
     }
 
-    if (x2Spi > x1Spi + 10) {
-        const dxSpi = (x2Spi - x1Spi) * 0.55;
-        pathSpi.setAttribute("d", `M ${x1Spi} ${y1Spi} C ${x1Spi + dxSpi} ${y1Spi}, ${x2Spi - dxSpi} ${y2Spi}, ${x2Spi} ${y2Spi}`);
-        pathSpi.style.display = "";
+    if (x2Ac > x1Ac + 10) {
+        const yClear = Math.max(y1Ac, tEacRect.bottom - cRect.top, tAcRect.bottom - cRect.top) + 14;
+        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + (x2Ac - x1Ac) * 0.45} ${yClear}, ${x2Ac} ${yClear}, ${x2Ac} ${y2Ac}`);
+        pathAc.style.display = "";
     } else {
-        pathSpi.style.display = "none";
+        pathAc.style.display = "none";
     }
 }
 
@@ -63,45 +67,33 @@ function bindResize() {
 export function calculateMath34() {
     bindResize();
     const errEl = document.getElementById("pm10-error-msg");
-    const pathOte = document.getElementById("pm10-path-ote");
-    const pathSpi = document.getElementById("pm10-path-spi");
+    const pathEac = document.getElementById("pm10-path-eac");
+    const pathAc = document.getElementById("pm10-path-ac");
 
     if (!refs.m34Steps) return;
-    if (!refs.m34InOte || !refs.m34InSpi) return;
+    if (!refs.m34InEac || !refs.m34InAc) return;
 
-    const rawOte = refs.m34InOte.value.trim();
-    const rawSpi = refs.m34InSpi.value.trim();
+    const rawEac = refs.m34InEac.value.trim();
+    const rawAc = refs.m34InAc.value.trim();
 
-    if (rawOte === "" || rawSpi === "") {
+    if (rawEac === "" || rawAc === "") {
         refs.m34Steps.textContent = "";
-        if (pathOte) pathOte.style.display = "none";
-        if (pathSpi) pathSpi.style.display = "none";
+        if (pathEac) pathEac.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual34();
         return;
     }
 
-    const ote = parseFloat(rawOte);
-    const spi = parseFloat(rawSpi);
+    const eac = parseFloat(rawEac);
+    const ac = parseFloat(rawAc);
 
-    if (isNaN(ote) || isNaN(spi) || ote < 0 || spi < 0) {
+    if (isNaN(eac) || isNaN(ac) || eac < 0 || ac < 0) {
         refs.m34Steps.textContent = "";
-        if (pathOte) pathOte.style.display = "none";
-        if (pathSpi) pathSpi.style.display = "none";
+        if (pathEac) pathEac.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input Estimasi Durasi Awal dan SPI harus berupa angka positif yang valid.";
-            errEl.classList.remove("hidden");
-        }
-        clearVisual34();
-        return;
-    }
-
-    if (spi === 0) {
-        refs.m34Steps.textContent = "";
-        if (pathOte) pathOte.style.display = "none";
-        if (pathSpi) pathSpi.style.display = "none";
-        if (errEl) {
-            errEl.textContent = "Nilai SPI harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
+            errEl.textContent = "Input EAC dan AC harus berupa angka positif yang valid.";
             errEl.classList.remove("hidden");
         }
         clearVisual34();
@@ -110,16 +102,17 @@ export function calculateMath34() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const etc = ote / spi;
+    const etc = eac - ac;
     const etcNumStr = Number(etc.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    const etcTexStr = etcNumStr.replace(/,/g, "{,}");
-    const spiStr = spi.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 4 }).replace(/,/g, "{,}");
-    const oteStr = Number(ote).toLocaleString("id-ID");
+    const etcTexStr = etc < 0 ? `-\\text{\\$${Math.abs(etc).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/,/g, "{,}")}}` : `\\text{\\$${etcNumStr.replace(/,/g, "{,}")}}`;
 
-    const isApprox = Math.abs(etc - Math.round(etc * 100) / 100) > 1e-6;
-    const eqSymbol = isApprox ? "\\approx" : "=";
+    const eacNumStr = Number(eac.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const eacTexStr = `\\text{\\$${eacNumStr.replace(/,/g, "{,}")}}`;
 
-    const tex = `\\frac{\\htmlId{pm10-ote}{${oteStr}}}{\\htmlId{pm10-spi}{${spiStr}}} ${eqSymbol} \\mathbf{${etcTexStr}\\text{ bulan}}`;
+    const acNumStr = Number(ac.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const acTexStr = `\\text{\\$${acNumStr.replace(/,/g, "{,}")}}`;
+
+    const tex = `\\htmlId{pm10-eac}{${eacTexStr}} - \\htmlId{pm10-ac}{${acTexStr}} = \\mathbf{${etcTexStr}}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m34Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -129,5 +122,5 @@ export function calculateMath34() {
 
     updatePm10Lines();
     requestAnimationFrame(updatePm10Lines);
-    drawEtcMeter(ote, spi, etc);
+    drawEtcCostMeter(eac, ac, etc);
 }

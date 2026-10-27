@@ -29,11 +29,11 @@ function roundRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
 }
 
-function formatDuration(n) {
-    return Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " bulan";
+function formatCurrency(n) {
+    return "$" + Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
-export function drawEtcMeter(ote, spi, etc) {
+export function drawEtcCostMeter(eac, ac, etc) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,30 +42,23 @@ export function drawEtcMeter(ote, spi, etc) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(ote) || isNaN(spi) || isNaN(etc) || ote < 0 || spi <= 0) return;
+    if (isNaN(eac) || isNaN(ac) || isNaN(etc) || eac < 0 || ac < 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "SESUAI JADWAL";
-    let badgeText = "ESTIMASI DURASI: TEPAT SESUAI JADWAL";
+    let badgeText = `SISA BIAYA (ETC): ${formatCurrency(etc)}`;
 
-    const spiFormatted = Number(spi.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-
-    if (etc > ote + 0.01) {
-        themeColor = "#f59e0b";
-        bgBadge = "rgba(245, 158, 11, 0.15)";
-        borderBadge = "#f59e0b";
-        statusText = "DURASI BERTAMBAH";
-        const diff = Number((etc - ote).toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        badgeText = `ESTIMASI DURASI: BERTAMBAH (+${diff} BULAN)`;
-    } else if (etc < ote - 0.01) {
+    if (etc < -0.01) {
+        themeColor = "#f87171";
+        bgBadge = "rgba(248, 113, 113, 0.15)";
+        borderBadge = "#f87171";
+        badgeText = "PERINGATAN: BIAYA MELEBIHI ESTIMASI TOTAL";
+    } else if (etc > 0.01) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = "DURASI LEBIH CEPAT";
-        const diff = Number((ote - etc).toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        badgeText = `ESTIMASI DURASI: LEBIH CEPAT (-${diff} BULAN)`;
+        badgeText = `SISA BIAYA (ETC): ${formatCurrency(etc)}`;
     }
 
     const cx = W / 2;
@@ -80,13 +73,12 @@ export function drawEtcMeter(ote, spi, etc) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const ratio = ote > 0 ? etc / ote : 1;
-    const clampedRatio = Math.min(Math.max(ratio, 0), 2);
-    const fraction = clampedRatio / 2;
+    const spentRatio = eac > 0 ? Math.min(Math.max(ac / eac, 0), 1) : 0;
+    const remainRatio = eac > 0 ? Math.min(Math.max(etc / eac, 0), 1) : 0;
 
-    if (fraction > 0.005) {
+    if (remainRatio > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + fraction * Math.PI, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + remainRatio * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
@@ -108,14 +100,14 @@ export function drawEtcMeter(ote, spi, etc) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("100% Durasi", cx, cy - outerR - 8);
+    ctx.fillText("50%", cx, cy - outerR - 8);
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.fillText("0%", cx - outerR, cy + 15);
-    ctx.fillText("200%+", cx + outerR, cy + 15);
+    ctx.fillText("100%", cx + outerR, cy + 15);
 
-    const etcDisplay = formatDuration(etc);
+    const etcDisplay = formatCurrency(etc);
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
     ctx.font = etcDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
@@ -123,52 +115,53 @@ export function drawEtcMeter(ote, spi, etc) {
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Estimated Time to Complete", cx, cy + 4);
+    ctx.fillText("Estimate to Complete (ETC)", cx, cy + 4);
 
+    const spentPct = eac > 0 ? (ac / eac) * 100 : 0;
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`SPI: ${spiFormatted} • ${statusText}`, cx, cy + 34);
+    ctx.fillText(`Terpakai: ${spentPct.toFixed(1)}% dari EAC`, cx, cy + 34);
 
     const barX = 24;
     const barW = W - 48;
     const barH = 12;
-    const maxBase = Math.max(ote, etc, 1);
+    const maxBase = Math.max(eac, ac + Math.max(etc, 0), 1);
 
-    const oteY = 202;
+    const acY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Original Time Estimate (Durasi Awal)", barX, oteY - 8);
+    ctx.fillText("Actual Cost (Biaya Terpakai)", barX, acY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatDuration(ote), barX + barW, oteY - 8);
+    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, oteY, barW, barH, 6);
+    roundRect(ctx, barX, acY, barW, barH, 6);
     ctx.fill();
 
-    const oteFillW = (ote / maxBase) * barW;
-    if (oteFillW > 0) {
+    const acFillW = (ac / maxBase) * barW;
+    if (acFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, oteY, Math.min(oteFillW, barW), barH, 6);
+        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
         ctx.fill();
     }
 
     const etcY = 250;
-    const etcColor = etc > ote ? "#f87171" : "#4ade80";
+    const etcColor = etc >= 0 ? "#4ade80" : "#f87171";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Estimated Time to Complete (Proyeksi)", barX, etcY - 8);
+    ctx.fillText("Estimate to Complete (Sisa Biaya)", barX, etcY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = etcColor;
-    ctx.fillText(formatDuration(etc), barX + barW, etcY - 8);
+    ctx.fillText(formatCurrency(etc), barX + barW, etcY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
     roundRect(ctx, barX, etcY, barW, barH, 6);
     ctx.fill();
 
-    const etcFillW = (etc / maxBase) * barW;
+    const etcFillW = Math.max(etc, 0) / maxBase * barW;
     if (etcFillW > 0) {
         ctx.fillStyle = etcColor;
         roundRect(ctx, barX, etcY, Math.min(etcFillW, barW), barH, 6);
@@ -195,5 +188,3 @@ export function drawEtcMeter(ote, spi, etc) {
     ctx.fillStyle = themeColor;
     ctx.fillText(badgeText, cx, badgeY + 23);
 }
-
-export const drawEstimatedTimeMeter = drawEtcMeter;

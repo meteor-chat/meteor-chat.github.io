@@ -33,7 +33,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawSvMeter(ev, pv, sv) {
+export function drawCpiMeter(ev, ac, cpi) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,30 +42,29 @@ export function drawSvMeter(ev, pv, sv) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(ev) || isNaN(pv) || isNaN(sv) || ev < 0 || pv < 0) return;
+    if (isNaN(ev) || isNaN(ac) || isNaN(cpi) || ev < 0 || ac <= 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "ON SCHEDULE";
-    let svDisplay = "$0";
-    let badgeText = "VARIANS JADWAL: $0 (ON SCHEDULE)";
+    let statusText = "ON BUDGET";
+    let badgeText = "CPI 1,0000: SESUAI ANGGARAN (ON BUDGET)";
 
-    if (sv < -0.001) {
+    const cpiStr = Number(cpi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    const pctStr = (cpi * 100).toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+
+    if (cpi < 0.999) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
-        const absVal = Math.abs(sv);
-        statusText = "BEHIND SCHEDULE";
-        svDisplay = `-${formatCurrency(absVal)}`;
-        badgeText = `VARIANS JADWAL: -${formatCurrency(absVal)} (BEHIND SCHEDULE)`;
-    } else if (sv > 0.001) {
+        statusText = "OVER BUDGET";
+        badgeText = `CPI ${cpiStr}: PENGELUARAN BOROS (OVER BUDGET)`;
+    } else if (cpi > 1.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = "AHEAD OF SCHEDULE";
-        svDisplay = `+${formatCurrency(sv)}`;
-        badgeText = `VARIANS JADWAL: +${formatCurrency(sv)} (AHEAD OF SCHEDULE)`;
+        statusText = "UNDER BUDGET";
+        badgeText = `CPI ${cpiStr}: PENGELUARAN HEMAT (UNDER BUDGET)`;
     }
 
     const cx = W / 2;
@@ -80,67 +79,57 @@ export function drawSvMeter(ev, pv, sv) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const maxBase = Math.max(ev, pv, 1);
-    const fraction = Math.min(Math.abs(sv) / maxBase, 1);
+    const clampedRatio = Math.min(Math.max(cpi, 0), 2);
+    const fraction = clampedRatio / 2;
 
-    if (sv < -0.001 && fraction > 0.005) {
-        const startA = 1.5 * Math.PI - fraction * 0.5 * Math.PI;
-        const endA = 1.5 * Math.PI;
+    if (fraction > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
-        ctx.lineWidth = outerR - innerR;
-        ctx.strokeStyle = themeColor;
-        ctx.lineCap = "butt";
-        ctx.stroke();
-    } else if (sv > 0.001 && fraction > 0.005) {
-        const startA = 1.5 * Math.PI;
-        const endA = 1.5 * Math.PI + fraction * 0.5 * Math.PI;
-        ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + fraction * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
         ctx.stroke();
     }
 
-    const markAngle = 1.5 * Math.PI;
-    const mx1 = cx + (innerR - 6) * Math.cos(markAngle);
-    const my1 = cy + (innerR - 6) * Math.sin(markAngle);
-    const mx2 = cx + (outerR + 6) * Math.cos(markAngle);
-    const my2 = cy + (outerR + 6) * Math.sin(markAngle);
+    const targetAngle = 1.5 * Math.PI;
+    const mx1 = cx + (innerR - 6) * Math.cos(targetAngle);
+    const my1 = cy + (innerR - 6) * Math.sin(targetAngle);
+    const mx2 = cx + (outerR + 6) * Math.cos(targetAngle);
+    const my2 = cy + (outerR + 6) * Math.sin(targetAngle);
     ctx.beginPath();
     ctx.moveTo(mx1, my1);
     ctx.lineTo(mx2, my2);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("0", cx, cy - outerR - 8);
+    ctx.fillText("1.0 (Target)", cx, cy - outerR - 8);
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillText("Behind", cx - outerR, cy + 15);
-    ctx.fillText("Ahead", cx + outerR, cy + 15);
+    ctx.fillText("0.0", cx - outerR, cy + 15);
+    ctx.fillText("2.0+", cx + outerR, cy + 15);
 
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = svDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
-    ctx.fillText(svDisplay, cx, cy - 14);
+    ctx.font = cpiStr.length > 8 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(cpiStr, cx, cy - 14);
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Schedule Variance (SV)", cx, cy + 4);
+    ctx.fillText("Cost Performance Index", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(statusText, cx, cy + 34);
+    ctx.fillText(`Efisiensi: ${pctStr} • ${statusText}`, cx, cy + 34);
 
     const barX = 24;
     const barW = W - 48;
     const barH = 12;
+    const maxBase = Math.max(ev, ac, 1);
 
     const evY = 202;
     ctx.textAlign = "left";
@@ -162,24 +151,24 @@ export function drawSvMeter(ev, pv, sv) {
         ctx.fill();
     }
 
-    const pvY = 250;
-    const pvColor = pv > ev ? "#f87171" : "#4ade80";
+    const acY = 250;
+    const acColor = ac > ev ? "#f87171" : (ac < ev ? "#4ade80" : "#38bdf8");
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Planned Value (PV)", barX, pvY - 8);
+    ctx.fillText("Actual Cost (AC)", barX, acY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = pvColor;
-    ctx.fillText(formatCurrency(pv), barX + barW, pvY - 8);
+    ctx.fillStyle = acColor;
+    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, pvY, barW, barH, 6);
+    roundRect(ctx, barX, acY, barW, barH, 6);
     ctx.fill();
 
-    const pvFillW = (pv / maxBase) * barW;
-    if (pvFillW > 0) {
-        ctx.fillStyle = pvColor;
-        roundRect(ctx, barX, pvY, Math.min(pvFillW, barW), barH, 6);
+    const acFillW = (ac / maxBase) * barW;
+    if (acFillW > 0) {
+        ctx.fillStyle = acColor;
+        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
         ctx.fill();
     }
 

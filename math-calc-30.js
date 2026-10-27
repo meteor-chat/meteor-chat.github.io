@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawSvMeter, clearVisual30 } from "./math-visual-30.js";
+import { drawCpiMeter, clearVisual30 } from "./math-visual-30.js";
 
 let resizeBound = false;
 
@@ -11,13 +11,13 @@ export function updatePm6Lines() {
     const container = document.getElementById("pm6-flow-container");
     const svg = document.getElementById("pm6-flow-svg");
     const inEv = refs.m30InEv || document.getElementById("math30-in-ev");
-    const inPv = refs.m30InPv || document.getElementById("math30-in-pv");
+    const inAc = refs.m30InAc || document.getElementById("math30-in-ac");
     const targetEv = document.getElementById("pm6-ev");
-    const targetPv = document.getElementById("pm6-pv");
+    const targetAc = document.getElementById("pm6-ac");
     const pathEv = document.getElementById("pm6-path-ev");
-    const pathPv = document.getElementById("pm6-path-pv");
+    const pathAc = document.getElementById("pm6-path-ac");
 
-    if (!container || !svg || !inEv || !inPv || !targetEv || !targetPv || !pathEv || !pathPv) return;
+    if (!container || !svg || !inEv || !inAc || !targetEv || !targetAc || !pathEv || !pathAc) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
@@ -25,19 +25,19 @@ export function updatePm6Lines() {
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
     const evRect = inEv.getBoundingClientRect();
-    const pvRect = inPv.getBoundingClientRect();
+    const acRect = inAc.getBoundingClientRect();
     const tEvRect = targetEv.getBoundingClientRect();
-    const tPvRect = targetPv.getBoundingClientRect();
+    const tAcRect = targetAc.getBoundingClientRect();
 
     const x1Ev = evRect.right - cRect.left;
     const y1Ev = evRect.top + evRect.height / 2 - cRect.top;
     const x2Ev = tEvRect.left - cRect.left - 4;
     const y2Ev = tEvRect.top + tEvRect.height / 2 - cRect.top;
 
-    const x1Pv = pvRect.right - cRect.left;
-    const y1Pv = pvRect.top + pvRect.height / 2 - cRect.top;
-    const x2Pv = tPvRect.left + tPvRect.width / 2 - cRect.left;
-    const y2Pv = tPvRect.bottom - cRect.top + 5;
+    const x1Ac = acRect.right - cRect.left;
+    const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
+    const x2Ac = tAcRect.left - cRect.left - 4;
+    const y2Ac = tAcRect.top + tAcRect.height / 2 - cRect.top;
 
     if (x2Ev > x1Ev + 10) {
         const dxEv = (x2Ev - x1Ev) * 0.55;
@@ -47,12 +47,12 @@ export function updatePm6Lines() {
         pathEv.style.display = "none";
     }
 
-    if (x2Pv > x1Pv + 10) {
-        const yClear = Math.max(y1Pv, tEvRect.bottom - cRect.top, tPvRect.bottom - cRect.top) + 14;
-        pathPv.setAttribute("d", `M ${x1Pv} ${y1Pv} C ${x1Pv + (x2Pv - x1Pv) * 0.45} ${yClear}, ${x2Pv} ${yClear}, ${x2Pv} ${y2Pv}`);
-        pathPv.style.display = "";
+    if (x2Ac > x1Ac + 10) {
+        const dxAc = (x2Ac - x1Ac) * 0.55;
+        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + dxAc} ${y1Ac}, ${x2Ac - dxAc} ${y2Ac}, ${x2Ac} ${y2Ac}`);
+        pathAc.style.display = "";
     } else {
-        pathPv.style.display = "none";
+        pathAc.style.display = "none";
     }
 }
 
@@ -68,32 +68,44 @@ export function calculateMath30() {
     bindResize();
     const errEl = document.getElementById("pm6-error-msg");
     const pathEv = document.getElementById("pm6-path-ev");
-    const pathPv = document.getElementById("pm6-path-pv");
+    const pathAc = document.getElementById("pm6-path-ac");
 
     if (!refs.m30Steps) return;
-    if (!refs.m30InEv || !refs.m30InPv) return;
+    if (!refs.m30InEv || !refs.m30InAc) return;
 
     const rawEv = refs.m30InEv.value.trim();
-    const rawPv = refs.m30InPv.value.trim();
+    const rawAc = refs.m30InAc.value.trim();
 
-    if (rawEv === "" || rawPv === "") {
+    if (rawEv === "" || rawAc === "") {
         refs.m30Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathPv) pathPv.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual30();
         return;
     }
 
     const ev = parseFloat(rawEv);
-    const pv = parseFloat(rawPv);
+    const ac = parseFloat(rawAc);
 
-    if (isNaN(ev) || isNaN(pv) || ev < 0 || pv < 0) {
+    if (isNaN(ev) || isNaN(ac) || ev < 0 || ac < 0) {
         refs.m30Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathPv) pathPv.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input EV dan PV harus berupa angka positif yang valid.";
+            errEl.textContent = "Input EV dan AC harus berupa angka positif yang valid.";
+            errEl.classList.remove("hidden");
+        }
+        clearVisual30();
+        return;
+    }
+
+    if (ac === 0) {
+        refs.m30Steps.textContent = "";
+        if (pathEv) pathEv.style.display = "none";
+        if (pathAc) pathAc.style.display = "none";
+        if (errEl) {
+            errEl.textContent = "Biaya aktual (AC) harus lebih besar dari 0 agar tidak terjadi pembagian dengan nol.";
             errEl.classList.remove("hidden");
         }
         clearVisual30();
@@ -102,17 +114,15 @@ export function calculateMath30() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const sv = ev - pv;
-    let svStr;
-    if (sv < 0) {
-        svStr = `-\\text{${formatCurrency(Math.abs(sv))}}`;
-    } else if (sv > 0) {
-        svStr = `+\\text{${formatCurrency(sv)}}`;
-    } else {
-        svStr = `\\text{${formatCurrency(0)}}`;
-    }
+    const cpi = ev / ac;
+    const cpiNumStr = Number(cpi.toFixed(4)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+    const cpiTexStr = cpiNumStr.replace(/,/g, "{,}");
+    const pctStr = (cpi * 100).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 }).replace(/,/g, "{,}") + "\\%";
 
-    const tex = `\\htmlId{pm6-ev}{\\text{${formatCurrency(ev)}}} - \\htmlId{pm6-pv}{\\text{${formatCurrency(pv)}}} = \\mathbf{${svStr}}`;
+    const isApprox = Math.abs(cpi - Math.round(cpi)) > 1e-6;
+    const eqSymbol = isApprox ? "\\approx" : "=";
+
+    const tex = `\\frac{\\htmlId{pm6-ev}{\\text{${formatCurrency(ev)}}}}{\\htmlId{pm6-ac}{\\text{${formatCurrency(ac)}}}} ${eqSymbol} \\mathbf{${cpiTexStr}} \\text{ (atau } ${pctStr}\\text{)}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m30Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -122,5 +132,5 @@ export function calculateMath30() {
 
     updatePm6Lines();
     requestAnimationFrame(updatePm6Lines);
-    drawSvMeter(ev, pv, sv);
+    drawCpiMeter(ev, ac, cpi);
 }

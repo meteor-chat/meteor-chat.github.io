@@ -27,7 +27,6 @@ export const FORMULAS = [
     "RP = \\frac{\\text{Actual Work Completed}}{\\text{Planned Work Completed}} \\times 100\\%",
     "PV = BAC \\times \\text{Planned Complete (\\%)}",
     "EV = BAC \\times \\text{Actual Complete (\\%)}",
-    "AC = \\sum (\\text{Biaya Langsung} + \\text{Biaya Tidak Langsung})",
     "CV = EV - AC",
     "SV = EV - PV",
     "CPI = \\frac{EV}{AC}",

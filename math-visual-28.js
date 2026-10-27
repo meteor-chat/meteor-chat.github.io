@@ -33,7 +33,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawAcMeter(direct, indirect, ac) {
+export function drawCvMeter(ev, ac, cv) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,11 +42,31 @@ export function drawAcMeter(direct, indirect, ac) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(direct) || isNaN(indirect) || isNaN(ac) || direct < 0 || indirect < 0) return;
+    if (isNaN(ev) || isNaN(ac) || isNaN(cv) || ev < 0 || ac < 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
+    let statusText = "ON BUDGET";
+    let cvDisplay = "$0";
+    let badgeText = "VARIANS BIAYA: $0 (SESUAI ANGGARAN)";
+
+    if (cv < -0.001) {
+        themeColor = "#f87171";
+        bgBadge = "rgba(248, 113, 113, 0.15)";
+        borderBadge = "#f87171";
+        const absVal = Math.abs(cv);
+        statusText = "OVER BUDGET";
+        cvDisplay = `-${formatCurrency(absVal)}`;
+        badgeText = `VARIANS BIAYA: -${formatCurrency(absVal)} (OVER BUDGET)`;
+    } else if (cv > 0.001) {
+        themeColor = "#4ade80";
+        bgBadge = "rgba(74, 222, 128, 0.15)";
+        borderBadge = "#4ade80";
+        statusText = "UNDER BUDGET";
+        cvDisplay = `+${formatCurrency(cv)}`;
+        badgeText = `VARIANS BIAYA: +${formatCurrency(cv)} (UNDER BUDGET)`;
+    }
 
     const cx = W / 2;
     const cy = 115;
@@ -60,92 +80,106 @@ export function drawAcMeter(direct, indirect, ac) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const directRatio = ac > 0 ? direct / ac : 0.5;
+    const maxBase = Math.max(ev, ac, 1);
+    const fraction = Math.min(Math.abs(cv) / maxBase, 1);
 
-    if (directRatio > 0.005) {
+    if (cv < -0.001 && fraction > 0.005) {
+        const startA = 1.5 * Math.PI - fraction * 0.5 * Math.PI;
+        const endA = 1.5 * Math.PI;
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + directRatio * Math.PI, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
         ctx.lineWidth = outerR - innerR;
-        ctx.strokeStyle = "#38bdf8";
+        ctx.strokeStyle = themeColor;
+        ctx.lineCap = "butt";
+        ctx.stroke();
+    } else if (cv > 0.001 && fraction > 0.005) {
+        const startA = 1.5 * Math.PI;
+        const endA = 1.5 * Math.PI + fraction * 0.5 * Math.PI;
+        ctx.beginPath();
+        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
+        ctx.lineWidth = outerR - innerR;
+        ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
         ctx.stroke();
     }
 
-    if (directRatio < 0.995) {
-        ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI + directRatio * Math.PI, 2 * Math.PI, false);
-        ctx.lineWidth = outerR - innerR;
-        ctx.strokeStyle = "#a855f7";
-        ctx.lineCap = "butt";
-        ctx.stroke();
-    }
+    const markAngle = 1.5 * Math.PI;
+    const mx1 = cx + (innerR - 6) * Math.cos(markAngle);
+    const my1 = cy + (innerR - 6) * Math.sin(markAngle);
+    const mx2 = cx + (outerR + 6) * Math.cos(markAngle);
+    const my2 = cy + (outerR + 6) * Math.sin(markAngle);
+    ctx.beginPath();
+    ctx.moveTo(mx1, my1);
+    ctx.lineTo(mx2, my2);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Direct / Indirect Ratio", cx, cy - outerR - 8);
+    ctx.fillText("0", cx, cy - outerR - 8);
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillText("0%", cx - outerR, cy + 15);
-    ctx.fillText("100%", cx + outerR, cy + 15);
+    ctx.fillText("Over Budget", cx - outerR, cy + 15);
+    ctx.fillText("Under Budget", cx + outerR, cy + 15);
 
-    const acDisplay = formatCurrency(ac);
     ctx.textAlign = "center";
-    ctx.fillStyle = "#ffffff";
-    ctx.font = acDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
-    ctx.fillText(acDisplay, cx, cy - 14);
+    ctx.fillStyle = themeColor;
+    ctx.font = cvDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(cvDisplay, cx, cy - 14);
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Actual Cost (ACWP)", cx, cy + 4);
+    ctx.fillText("Cost Variance (CV)", cx, cy + 4);
 
-    const dirPct = Math.round(directRatio * 100);
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`${dirPct}% Langsung • ${100 - dirPct}% Tdk Langsung`, cx, cy + 34);
+    ctx.fillText(statusText, cx, cy + 34);
 
     const barX = 24;
     const barW = W - 48;
     const barH = 12;
 
-    const directY = 202;
+    const evY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Biaya Langsung (Direct Cost)", barX, directY - 8);
+    ctx.fillText("Earned Value (EV)", barX, evY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(`${formatCurrency(direct)} (${dirPct}%)`, barX + barW, directY - 8);
+    ctx.fillText(formatCurrency(ev), barX + barW, evY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, directY, barW, barH, 6);
+    roundRect(ctx, barX, evY, barW, barH, 6);
     ctx.fill();
 
-    const directFillW = directRatio * barW;
-    if (directFillW > 0) {
+    const evFillW = (ev / maxBase) * barW;
+    if (evFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, directY, directFillW, barH, 6);
+        roundRect(ctx, barX, evY, Math.min(evFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const indirectY = 250;
+    const acY = 250;
+    const acColor = ac > ev ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Biaya Tidak Langsung (Indirect Cost)", barX, indirectY - 8);
+    ctx.fillText("Actual Cost (AC)", barX, acY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = "#a855f7";
-    ctx.fillText(`${formatCurrency(indirect)} (${100 - dirPct}%)`, barX + barW, indirectY - 8);
+    ctx.fillStyle = acColor;
+    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, indirectY, barW, barH, 6);
+    roundRect(ctx, barX, acY, barW, barH, 6);
     ctx.fill();
 
-    const indirectFillW = (1 - directRatio) * barW;
-    if (indirectFillW > 0) {
-        ctx.fillStyle = "#a855f7";
-        roundRect(ctx, barX, indirectY, indirectFillW, barH, 6);
+    const acFillW = (ac / maxBase) * barW;
+    if (acFillW > 0) {
+        ctx.fillStyle = acColor;
+        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
         ctx.fill();
     }
 
@@ -159,7 +193,6 @@ export function drawAcMeter(direct, indirect, ac) {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    const badgeText = `TOTAL ACTUAL COST: ${formatCurrency(ac)}`;
     ctx.textAlign = "center";
     let fSize = 12;
     ctx.font = `bold ${fSize}px sans-serif`;

@@ -1,5 +1,5 @@
 import { refs } from "./dom-refs.js";
-import { drawCvMeter, clearVisual29 } from "./math-visual-29.js";
+import { drawSvMeter, clearVisual29 } from "./math-visual-29.js";
 
 let resizeBound = false;
 
@@ -11,13 +11,13 @@ export function updatePm5Lines() {
     const container = document.getElementById("pm5-flow-container");
     const svg = document.getElementById("pm5-flow-svg");
     const inEv = refs.m29InEv || document.getElementById("math29-in-ev");
-    const inAc = refs.m29InAc || document.getElementById("math29-in-ac");
+    const inPv = refs.m29InPv || document.getElementById("math29-in-pv");
     const targetEv = document.getElementById("pm5-ev");
-    const targetAc = document.getElementById("pm5-ac");
+    const targetPv = document.getElementById("pm5-pv");
     const pathEv = document.getElementById("pm5-path-ev");
-    const pathAc = document.getElementById("pm5-path-ac");
+    const pathPv = document.getElementById("pm5-path-pv");
 
-    if (!container || !svg || !inEv || !inAc || !targetEv || !targetAc || !pathEv || !pathAc) return;
+    if (!container || !svg || !inEv || !inPv || !targetEv || !targetPv || !pathEv || !pathPv) return;
 
     const cRect = container.getBoundingClientRect();
     if (cRect.width === 0 || cRect.height === 0) return;
@@ -25,19 +25,19 @@ export function updatePm5Lines() {
     svg.setAttribute("viewBox", `0 0 ${cRect.width} ${cRect.height}`);
 
     const evRect = inEv.getBoundingClientRect();
-    const acRect = inAc.getBoundingClientRect();
+    const pvRect = inPv.getBoundingClientRect();
     const tEvRect = targetEv.getBoundingClientRect();
-    const tAcRect = targetAc.getBoundingClientRect();
+    const tPvRect = targetPv.getBoundingClientRect();
 
     const x1Ev = evRect.right - cRect.left;
     const y1Ev = evRect.top + evRect.height / 2 - cRect.top;
     const x2Ev = tEvRect.left - cRect.left - 4;
     const y2Ev = tEvRect.top + tEvRect.height / 2 - cRect.top;
 
-    const x1Ac = acRect.right - cRect.left;
-    const y1Ac = acRect.top + acRect.height / 2 - cRect.top;
-    const x2Ac = tAcRect.left + tAcRect.width / 2 - cRect.left;
-    const y2Ac = tAcRect.bottom - cRect.top + 5;
+    const x1Pv = pvRect.right - cRect.left;
+    const y1Pv = pvRect.top + pvRect.height / 2 - cRect.top;
+    const x2Pv = tPvRect.left + tPvRect.width / 2 - cRect.left;
+    const y2Pv = tPvRect.bottom - cRect.top + 5;
 
     if (x2Ev > x1Ev + 10) {
         const dxEv = (x2Ev - x1Ev) * 0.55;
@@ -47,12 +47,12 @@ export function updatePm5Lines() {
         pathEv.style.display = "none";
     }
 
-    if (x2Ac > x1Ac + 10) {
-        const yClear = Math.max(y1Ac, tEvRect.bottom - cRect.top, tAcRect.bottom - cRect.top) + 14;
-        pathAc.setAttribute("d", `M ${x1Ac} ${y1Ac} C ${x1Ac + (x2Ac - x1Ac) * 0.45} ${yClear}, ${x2Ac} ${yClear}, ${x2Ac} ${y2Ac}`);
-        pathAc.style.display = "";
+    if (x2Pv > x1Pv + 10) {
+        const yClear = Math.max(y1Pv, tEvRect.bottom - cRect.top, tPvRect.bottom - cRect.top) + 14;
+        pathPv.setAttribute("d", `M ${x1Pv} ${y1Pv} C ${x1Pv + (x2Pv - x1Pv) * 0.45} ${yClear}, ${x2Pv} ${yClear}, ${x2Pv} ${y2Pv}`);
+        pathPv.style.display = "";
     } else {
-        pathAc.style.display = "none";
+        pathPv.style.display = "none";
     }
 }
 
@@ -68,32 +68,32 @@ export function calculateMath29() {
     bindResize();
     const errEl = document.getElementById("pm5-error-msg");
     const pathEv = document.getElementById("pm5-path-ev");
-    const pathAc = document.getElementById("pm5-path-ac");
+    const pathPv = document.getElementById("pm5-path-pv");
 
     if (!refs.m29Steps) return;
-    if (!refs.m29InEv || !refs.m29InAc) return;
+    if (!refs.m29InEv || !refs.m29InPv) return;
 
     const rawEv = refs.m29InEv.value.trim();
-    const rawAc = refs.m29InAc.value.trim();
+    const rawPv = refs.m29InPv.value.trim();
 
-    if (rawEv === "" || rawAc === "") {
+    if (rawEv === "" || rawPv === "") {
         refs.m29Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathAc) pathAc.style.display = "none";
+        if (pathPv) pathPv.style.display = "none";
         if (errEl) errEl.classList.add("hidden");
         clearVisual29();
         return;
     }
 
     const ev = parseFloat(rawEv);
-    const ac = parseFloat(rawAc);
+    const pv = parseFloat(rawPv);
 
-    if (isNaN(ev) || isNaN(ac) || ev < 0 || ac < 0) {
+    if (isNaN(ev) || isNaN(pv) || ev < 0 || pv < 0) {
         refs.m29Steps.textContent = "";
         if (pathEv) pathEv.style.display = "none";
-        if (pathAc) pathAc.style.display = "none";
+        if (pathPv) pathPv.style.display = "none";
         if (errEl) {
-            errEl.textContent = "Input EV dan AC harus berupa angka positif yang valid.";
+            errEl.textContent = "Input EV dan PV harus berupa angka positif yang valid.";
             errEl.classList.remove("hidden");
         }
         clearVisual29();
@@ -102,17 +102,17 @@ export function calculateMath29() {
 
     if (errEl) errEl.classList.add("hidden");
 
-    const cv = ev - ac;
-    let cvStr;
-    if (cv < 0) {
-        cvStr = `-\\text{${formatCurrency(Math.abs(cv))}}`;
-    } else if (cv > 0) {
-        cvStr = `+\\text{${formatCurrency(cv)}}`;
+    const sv = ev - pv;
+    let svStr;
+    if (sv < 0) {
+        svStr = `-\\text{${formatCurrency(Math.abs(sv))}}`;
+    } else if (sv > 0) {
+        svStr = `+\\text{${formatCurrency(sv)}}`;
     } else {
-        cvStr = `\\text{${formatCurrency(0)}}`;
+        svStr = `\\text{${formatCurrency(0)}}`;
     }
 
-    const tex = `\\htmlId{pm5-ev}{\\text{${formatCurrency(ev)}}} - \\htmlId{pm5-ac}{\\text{${formatCurrency(ac)}}} = \\mathbf{${cvStr}}`;
+    const tex = `\\htmlId{pm5-ev}{\\text{${formatCurrency(ev)}}} - \\htmlId{pm5-pv}{\\text{${formatCurrency(pv)}}} = \\mathbf{${svStr}}`;
 
     if (typeof katex !== "undefined") {
         katex.render(tex, refs.m29Steps, { throwOnError: false, trust: true, displayMode: false });
@@ -122,5 +122,5 @@ export function calculateMath29() {
 
     updatePm5Lines();
     requestAnimationFrame(updatePm5Lines);
-    drawCvMeter(ev, ac, cv);
+    drawSvMeter(ev, pv, sv);
 }

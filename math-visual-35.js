@@ -33,7 +33,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
-export function drawEtcCostMeter(eac, ac, etc) {
+export function drawVacMeter(bac, eac, vac) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -42,23 +42,30 @@ export function drawEtcCostMeter(eac, ac, etc) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(eac) || isNaN(ac) || isNaN(etc) || eac < 0 || ac < 0) return;
+    if (isNaN(bac) || isNaN(eac) || isNaN(vac) || bac < 0 || eac < 0) return;
 
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let badgeText = `SISA BIAYA (ETC): ${formatCurrency(etc)}`;
+    let statusText = "SESUAI ANGGARAN";
+    let vacDisplay = "$0";
+    let badgeText = "VARIANS: TEPAT ANGGARAN $0";
 
-    if (etc < -0.01) {
+    if (vac < -0.001) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
-        badgeText = "PERINGATAN: BIAYA MELEBIHI ESTIMASI TOTAL";
-    } else if (etc > 0.01) {
+        const absVal = Math.abs(vac);
+        statusText = "DEFISIT / OVER BUDGET";
+        vacDisplay = `-${formatCurrency(absVal)}`;
+        badgeText = `VARIANS: DEFISIT ANGGARAN -${formatCurrency(absVal)}`;
+    } else if (vac > 0.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        badgeText = `SISA BIAYA (ETC): ${formatCurrency(etc)}`;
+        statusText = "SURPLUS / UNDER BUDGET";
+        vacDisplay = `+${formatCurrency(vac)}`;
+        badgeText = `VARIANS: SURPLUS ANGGARAN +${formatCurrency(vac)}`;
     }
 
     const cx = W / 2;
@@ -73,98 +80,106 @@ export function drawEtcCostMeter(eac, ac, etc) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const spentRatio = eac > 0 ? Math.min(Math.max(ac / eac, 0), 1) : 0;
-    const remainRatio = eac > 0 ? Math.min(Math.max(etc / eac, 0), 1) : 0;
+    const maxBase = Math.max(bac, eac, 1);
+    const fraction = Math.min(Math.abs(vac) / maxBase, 1);
 
-    if (remainRatio > 0.005) {
+    if (vac < -0.001 && fraction > 0.005) {
+        const startA = 1.5 * Math.PI - fraction * 0.5 * Math.PI;
+        const endA = 1.5 * Math.PI;
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + remainRatio * Math.PI, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
+        ctx.lineWidth = outerR - innerR;
+        ctx.strokeStyle = themeColor;
+        ctx.lineCap = "butt";
+        ctx.stroke();
+    } else if (vac > 0.001 && fraction > 0.005) {
+        const startA = 1.5 * Math.PI;
+        const endA = 1.5 * Math.PI + fraction * 0.5 * Math.PI;
+        ctx.beginPath();
+        ctx.arc(cx, cy, (outerR + innerR) / 2, startA, endA, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
         ctx.stroke();
     }
 
-    const targetAngle = 1.5 * Math.PI;
-    const mx1 = cx + (innerR - 6) * Math.cos(targetAngle);
-    const my1 = cy + (innerR - 6) * Math.sin(targetAngle);
-    const mx2 = cx + (outerR + 6) * Math.cos(targetAngle);
-    const my2 = cy + (outerR + 6) * Math.sin(targetAngle);
+    const markAngle = 1.5 * Math.PI;
+    const mx1 = cx + (innerR - 6) * Math.cos(markAngle);
+    const my1 = cy + (innerR - 6) * Math.sin(markAngle);
+    const mx2 = cx + (outerR + 6) * Math.cos(markAngle);
+    const my2 = cy + (outerR + 6) * Math.sin(markAngle);
     ctx.beginPath();
     ctx.moveTo(mx1, my1);
     ctx.lineTo(mx2, my2);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("50%", cx, cy - outerR - 8);
+    ctx.fillText("0", cx, cy - outerR - 8);
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillText("0%", cx - outerR, cy + 15);
-    ctx.fillText("100%", cx + outerR, cy + 15);
+    ctx.fillText("Defisit", cx - outerR, cy + 15);
+    ctx.fillText("Surplus", cx + outerR, cy + 15);
 
-    const etcDisplay = formatCurrency(etc);
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = etcDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
-    ctx.fillText(etcDisplay, cx, cy - 14);
+    ctx.font = vacDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(vacDisplay, cx, cy - 14);
 
     ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Estimate to Complete (ETC)", cx, cy + 4);
+    ctx.fillText("Variance at Completion (VAC)", cx, cy + 4);
 
-    const spentPct = eac > 0 ? (ac / eac) * 100 : 0;
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`Terpakai: ${spentPct.toFixed(1)}% dari EAC`, cx, cy + 34);
+    ctx.fillText(statusText, cx, cy + 34);
 
     const barX = 24;
     const barW = W - 48;
     const barH = 12;
-    const maxBase = Math.max(eac, ac + Math.max(etc, 0), 1);
 
-    const acY = 202;
+    const bacY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Actual Cost (Biaya Terpakai)", barX, acY - 8);
+    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
+    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, acY, barW, barH, 6);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
-    const acFillW = (ac / maxBase) * barW;
-    if (acFillW > 0) {
+    const bacFillW = (bac / maxBase) * barW;
+    if (bacFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
+        roundRect(ctx, barX, bacY, Math.min(bacFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const etcY = 250;
-    const etcColor = etc >= 0 ? "#4ade80" : "#f87171";
+    const eacY = 250;
+    const eacColor = eac > bac ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Estimate to Complete (Sisa Biaya)", barX, etcY - 8);
+    ctx.fillText("Estimate at Completion (EAC)", barX, eacY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = etcColor;
-    ctx.fillText(formatCurrency(etc), barX + barW, etcY - 8);
+    ctx.fillStyle = eacColor;
+    ctx.fillText(formatCurrency(eac), barX + barW, eacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, etcY, barW, barH, 6);
+    roundRect(ctx, barX, eacY, barW, barH, 6);
     ctx.fill();
 
-    const etcFillW = Math.max(etc, 0) / maxBase * barW;
-    if (etcFillW > 0) {
-        ctx.fillStyle = etcColor;
-        roundRect(ctx, barX, etcY, Math.min(etcFillW, barW), barH, 6);
+    const eacFillW = (eac / maxBase) * barW;
+    if (eacFillW > 0) {
+        ctx.fillStyle = eacColor;
+        roundRect(ctx, barX, eacY, Math.min(eacFillW, barW), barH, 6);
         ctx.fill();
     }
 
