@@ -28,5 +28,6 @@ export const FORMULA_NAMES = [
     "Planned Value (PV)",
     "Earned Value (EV)",
     "Actual Cost (AC)",
-    "Cost Variance (CV)"
+    "Cost Variance (CV)",
+    "Schedule Variance (SV)"
 ];

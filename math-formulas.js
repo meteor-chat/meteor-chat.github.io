@@ -28,5 +28,6 @@ export const FORMULAS = [
     "PV = BAC \\times \\text{Planned Complete (\\%)}",
     "EV = BAC \\times \\text{Actual Complete (\\%)}",
     "AC = \\sum (\\text{Biaya Langsung} + \\text{Biaya Tidak Langsung})",
-    "CV = EV - AC"
+    "CV = EV - AC",
+    "SV = EV - PV"
 ];
