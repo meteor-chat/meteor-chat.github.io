@@ -31,5 +31,6 @@ export const FORMULAS = [
     "CV = EV - AC",
     "SV = EV - PV",
     "CPI = \\frac{EV}{AC}",
-    "SPI = \\frac{EV}{PV}"
+    "SPI = \\frac{EV}{PV}",
+    "EAC = \\frac{BAC}{CPI}"
 ];

@@ -37,7 +37,8 @@ const FORMS = {
     29: { file: "math-calc-29", calc: "calculateMath29" },
     30: { file: "math-calc-30", calc: "calculateMath30" },
     31: { file: "math-calc-31", calc: "calculateMath31" },
-    32: { file: "math-calc-32", calc: "calculateMath32" }
+    32: { file: "math-calc-32", calc: "calculateMath32" },
+    33: { file: "math-calc-33", calc: "calculateMath33" }
 };
 
 const pending = new Map();
