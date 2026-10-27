@@ -1,7 +1,49 @@
-import { LEAN_SOURCE_CODE, getLeanPlaygroundUrl, LEAN_METADATA } from "./sort-lean-data.js?v=13";
+import { LEAN_ALGORITHMS, getLeanSortData, getLeanPlaygroundUrl, LEAN_SHARED_TIPS } from "./sort-lean-data.js?v=14";
 
 let modalBackdrop = null;
 let lastActiveElement = null;
+let activeSortType = "bubble";
+let titleEl = null;
+let subtitleEl = null;
+let guaranteesEl = null;
+let codeEl = null;
+let linkRepoEl = null;
+let linkPlaygroundEl = null;
+let btnCopyEl = null;
+let tabElements = [];
+
+function updateModalContent(type) {
+    activeSortType = type;
+    const data = getLeanSortData(type);
+    if (titleEl) titleEl.textContent = data.title;
+    if (subtitleEl) subtitleEl.textContent = data.framework;
+    if (codeEl) codeEl.textContent = data.code;
+    if (linkRepoEl) linkRepoEl.href = data.repoUrl;
+    if (linkPlaygroundEl) linkPlaygroundEl.href = getLeanPlaygroundUrl(type);
+
+    if (guaranteesEl) {
+        guaranteesEl.textContent = "";
+        data.guarantees.forEach((g) => {
+            const item = document.createElement("div");
+            item.className = "lean-guarantee-item";
+            const itemTitle = document.createElement("div");
+            itemTitle.className = "lean-guarantee-title";
+            itemTitle.textContent = g.name;
+            const itemDesc = document.createElement("div");
+            itemDesc.className = "lean-guarantee-desc";
+            itemDesc.textContent = g.desc;
+            item.appendChild(itemTitle);
+            item.appendChild(itemDesc);
+            guaranteesEl.appendChild(item);
+        });
+    }
+
+    tabElements.forEach((btn) => {
+        const isActive = btn.getAttribute("data-lean-sort") === type;
+        btn.classList.toggle("active", isActive);
+        btn.setAttribute("aria-selected", isActive ? "true" : "false");
+    });
+}
 
 function createModalDOM() {
     modalBackdrop = document.createElement("div");
@@ -18,17 +60,15 @@ function createModalDOM() {
     header.className = "lean-modal-header";
 
     const titleBox = document.createElement("div");
-    const title = document.createElement("h3");
-    title.id = "lean-modal-title";
-    title.className = "lean-modal-title";
-    title.textContent = LEAN_METADATA.title;
+    titleEl = document.createElement("h3");
+    titleEl.id = "lean-modal-title";
+    titleEl.className = "lean-modal-title";
 
-    const subtitle = document.createElement("div");
-    subtitle.className = "lean-modal-subtitle";
-    subtitle.textContent = LEAN_METADATA.framework;
+    subtitleEl = document.createElement("div");
+    subtitleEl.className = "lean-modal-subtitle";
 
-    titleBox.appendChild(title);
-    titleBox.appendChild(subtitle);
+    titleBox.appendChild(titleEl);
+    titleBox.appendChild(subtitleEl);
 
     const btnClose = document.createElement("button");
     btnClose.className = "lean-modal-close";
@@ -39,91 +79,84 @@ function createModalDOM() {
     header.appendChild(titleBox);
     header.appendChild(btnClose);
 
-    const guaranteesList = document.createElement("div");
-    guaranteesList.className = "lean-proof-guarantees";
+    const tabsNav = document.createElement("div");
+    tabsNav.className = "lean-modal-tabs";
+    tabsNav.setAttribute("role", "tablist");
+    tabsNav.setAttribute("aria-label", "Pilihan Algoritma Sorting");
 
-    LEAN_METADATA.guarantees.forEach((g) => {
-        const item = document.createElement("div");
-        item.className = "lean-guarantee-item";
-
-        const itemTitle = document.createElement("div");
-        itemTitle.className = "lean-guarantee-title";
-        itemTitle.textContent = g.name;
-
-        const itemDesc = document.createElement("div");
-        itemDesc.className = "lean-guarantee-desc";
-        itemDesc.textContent = g.desc;
-
-        item.appendChild(itemTitle);
-        item.appendChild(itemDesc);
-        guaranteesList.appendChild(item);
+    tabElements = [];
+    LEAN_ALGORITHMS.forEach((algo) => {
+        const tabBtn = document.createElement("button");
+        tabBtn.className = "lean-tab-btn";
+        tabBtn.setAttribute("role", "tab");
+        tabBtn.setAttribute("data-lean-sort", algo.id);
+        tabBtn.textContent = algo.name;
+        tabBtn.addEventListener("click", () => updateModalContent(algo.id));
+        tabsNav.appendChild(tabBtn);
+        tabElements.push(tabBtn);
     });
+
+    guaranteesEl = document.createElement("div");
+    guaranteesEl.className = "lean-proof-guarantees";
 
     const codeBox = document.createElement("div");
     codeBox.className = "lean-code-container";
-    const pre = document.createElement("pre");
-    pre.textContent = LEAN_SOURCE_CODE;
-    codeBox.appendChild(pre);
+    codeEl = document.createElement("pre");
+    codeBox.appendChild(codeEl);
+
+    const tipsContainer = document.createElement("div");
+    tipsContainer.className = "lean-proof-tips";
+    LEAN_SHARED_TIPS.forEach((t) => {
+        const item = document.createElement("div");
+        item.className = "lean-tip-item";
+        const itemTitle = document.createElement("div");
+        itemTitle.className = "lean-tip-title";
+        itemTitle.textContent = t.name;
+        const itemDesc = document.createElement("div");
+        itemDesc.className = "lean-tip-desc";
+        itemDesc.textContent = t.desc;
+        item.appendChild(itemTitle);
+        item.appendChild(itemDesc);
+        tipsContainer.appendChild(item);
+    });
 
     const actions = document.createElement("div");
     actions.className = "lean-modal-actions";
 
-    const btnCopy = document.createElement("button");
-    btnCopy.className = "btn-lean-action";
-    btnCopy.textContent = "Salin Kode Lean 4";
-    btnCopy.addEventListener("click", () => {
-        navigator.clipboard.writeText(LEAN_SOURCE_CODE).then(() => {
-            const originalText = btnCopy.textContent;
-            btnCopy.textContent = "Tersalin!";
+    btnCopyEl = document.createElement("button");
+    btnCopyEl.className = "btn-lean-action";
+    btnCopyEl.textContent = "Salin Kode Lean 4";
+    btnCopyEl.addEventListener("click", () => {
+        const data = getLeanSortData(activeSortType);
+        navigator.clipboard.writeText(data.code).then(() => {
+            const originalText = btnCopyEl.textContent;
+            btnCopyEl.textContent = "Tersalin!";
             setTimeout(() => {
-                btnCopy.textContent = originalText;
+                btnCopyEl.textContent = originalText;
             }, 2000);
         }).catch(() => {});
     });
 
-    const linkRepo = document.createElement("a");
-    linkRepo.className = "btn-lean-action";
-    linkRepo.href = LEAN_METADATA.repoUrl;
-    linkRepo.target = "_blank";
-    linkRepo.rel = "noopener noreferrer";
-    linkRepo.textContent = "Lihat Source File ↗";
+    linkRepoEl = document.createElement("a");
+    linkRepoEl.className = "btn-lean-action";
+    linkRepoEl.target = "_blank";
+    linkRepoEl.rel = "noopener noreferrer";
+    linkRepoEl.textContent = "Lihat Source File ↗";
 
-    const linkPlayground = document.createElement("a");
-    linkPlayground.className = "btn-lean-action primary";
-    linkPlayground.href = getLeanPlaygroundUrl();
-    linkPlayground.target = "_blank";
-    linkPlayground.rel = "noopener noreferrer";
-    linkPlayground.textContent = "Uji Live di Lean 4 Web ↗";
+    linkPlaygroundEl = document.createElement("a");
+    linkPlaygroundEl.className = "btn-lean-action primary";
+    linkPlaygroundEl.target = "_blank";
+    linkPlaygroundEl.rel = "noopener noreferrer";
+    linkPlaygroundEl.textContent = "Uji Live di Lean 4 Web ↗";
 
-    actions.appendChild(btnCopy);
-    actions.appendChild(linkRepo);
-    actions.appendChild(linkPlayground);
+    actions.appendChild(btnCopyEl);
+    actions.appendChild(linkRepoEl);
+    actions.appendChild(linkPlaygroundEl);
 
     card.appendChild(header);
-    card.appendChild(guaranteesList);
-
-    if (LEAN_METADATA.tips) {
-        const tipsContainer = document.createElement("div");
-        tipsContainer.className = "lean-proof-tips";
-        LEAN_METADATA.tips.forEach((t) => {
-            const item = document.createElement("div");
-            item.className = "lean-tip-item";
-
-            const itemTitle = document.createElement("div");
-            itemTitle.className = "lean-tip-title";
-            itemTitle.textContent = t.name;
-
-            const itemDesc = document.createElement("div");
-            itemDesc.className = "lean-tip-desc";
-            itemDesc.textContent = t.desc;
-
-            item.appendChild(itemTitle);
-            item.appendChild(itemDesc);
-            tipsContainer.appendChild(item);
-        });
-        card.appendChild(tipsContainer);
-    }
-
+    card.appendChild(tabsNav);
+    card.appendChild(guaranteesEl);
+    card.appendChild(tipsContainer);
     card.appendChild(codeBox);
     card.appendChild(actions);
 
@@ -143,10 +176,11 @@ function createModalDOM() {
     });
 }
 
-export function openLeanModal() {
+export function openLeanModal(type = "bubble") {
     if (!modalBackdrop) {
         createModalDOM();
     }
+    updateModalContent(type || "bubble");
     lastActiveElement = document.activeElement;
     modalBackdrop.classList.remove("sort-hidden");
     const closeBtn = modalBackdrop.querySelector(".lean-modal-close");

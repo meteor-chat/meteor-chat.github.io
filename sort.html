@@ -54,6 +54,10 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .lean-modal-subtitle { font-size: 12px; color: #4ade80; margin-top: 4px; }
 .lean-modal-close { background: transparent; border: none; font-size: 24px; line-height: 1; color: #888; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: color 0.15s; }
 .lean-modal-close:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.lean-modal-tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid #222; padding-bottom: 12px; }
+.lean-tab-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid #2a2a2a; color: #aaa; padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s ease; font-family: inherit; }
+.lean-tab-btn:hover { background: rgba(255, 255, 255, 0.08); color: #fff; border-color: #444; }
+.lean-tab-btn.active { background: #22c55e; color: #000; font-weight: 600; border-color: #22c55e; }
 .lean-proof-guarantees { display: flex; flex-direction: column; gap: 8px; }
 .lean-guarantee-item { background: rgba(255, 255, 255, 0.03); border: 1px solid #262626; border-radius: 10px; padding: 10px 14px; }
 .lean-guarantee-title { font-size: 13px; font-weight: 600; color: #38bdf8; margin-bottom: 2px; }
@@ -105,10 +109,10 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
     <div id="sort-lean-container" class="sort-lean-container">
         <button id="btn-lean-verify" class="btn-lean-verify" aria-haspopup="dialog">
             <span class="lean-check">✓</span>
-            <span class="lean-text">Insertion Sort: Formally Verified in Lean 4</span>
+            <span class="lean-text" id="lean-badge-text">All 6 Sorting Algorithms: Formally Verified in Lean 4</span>
         </button>
     </div>
 </main>
-<script type="module" src="sort-controller.js?v=14"></script>
+<script type="module" src="sort-controller.js?v=15"></script>
 </body>
 </html>

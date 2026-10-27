@@ -158,17 +158,39 @@ if (btnModeBar) btnModeBar.addEventListener("click", () => setMode("bar"));
 if (btnModeColor) btnModeColor.addEventListener("click", () => setMode("color"));
 
 const btnLeanVerify = document.getElementById("btn-lean-verify");
+const leanBadgeText = document.getElementById("lean-badge-text");
+
+const SORT_LABELS = {
+    bubble: "Bubble Sort",
+    selection: "Selection Sort",
+    insertion: "Insertion Sort",
+    quick: "Quick Sort",
+    merge: "Merge Sort",
+    shaker: "Shaker Sort"
+};
+
+let activeAlgorithmType = null;
 
 function updateLeanBadge(type) {
+    if (type) {
+        activeAlgorithmType = type;
+    }
     if (btnLeanVerify) {
-        btnLeanVerify.classList.toggle("highlight", type === "insertion");
+        btnLeanVerify.classList.toggle("highlight", Boolean(type));
+    }
+    if (leanBadgeText) {
+        if (type && SORT_LABELS[type]) {
+            leanBadgeText.textContent = `${SORT_LABELS[type]}: Formally Verified in Lean 4`;
+        } else {
+            leanBadgeText.textContent = "All 6 Sorting Algorithms: Formally Verified in Lean 4";
+        }
     }
 }
 
 if (btnLeanVerify) {
     btnLeanVerify.addEventListener("click", () => {
-        import("./sort-lean-modal.js?v=13")
-            .then((m) => m.openLeanModal())
+        import("./sort-lean-modal.js?v=14")
+            .then((m) => m.openLeanModal(activeAlgorithmType || "bubble"))
             .catch(() => {});
     });
 }
