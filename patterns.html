@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive 100-Number Grid Pattern Visualizer - Explore Prime Numbers, Fibonacci Numbers, Multiples, Even, Odd, and Square Numbers with instant 60 FPS highlighting.">
+<title>Number Patterns - Meteor</title>
+<link rel="icon" href="./icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root {
+    --bg-main: #000000;
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --font-stack: 'Google Sans', -apple-system, sans-serif;
+    --border-dark: #1e2638;
+}
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a, button, input { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
+.hidden { display: none !important; }
+#patterns-app {
+    width: 100%;
+    max-width: 580px;
+    padding: 32px 16px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+.patterns-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+.btn-back-lab {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid #222;
+    transition: all 0.2s ease;
+}
+.btn-back-lab:hover {
+    color: #fff;
+    border-color: #444;
+    background: rgba(255, 255, 255, 0.05);
+}
+.patterns-hub-tag {
+    font-size: 12px;
+    color: #f59e0b;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.patterns-filter-scroll {
+    width: 100%;
+    overflow-x: auto;
+    padding: 4px 2px 10px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.patterns-filter-scroll::-webkit-scrollbar { display: none; }
+.patterns-filter-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    width: max-content;
+}
+.pattern-filter-btn {
+    background: #0f131a;
+    border: 1px solid #1e2638;
+    color: #cbd5e1;
+    padding: 7px 16px;
+    border-radius: 20px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.pattern-filter-btn:hover {
+    border-color: #475569;
+    color: #ffffff;
+    background: #182030;
+}
+.pattern-filter-btn.active {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+}
+.custom-mult-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #0f131a;
+    border: 1px solid #1e2638;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+.custom-mult-wrap label { font-size: 13px; color: #94a3b8; }
+.custom-mult-input {
+    width: 44px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+.custom-mult-input:focus { border-color: #f97316; }
+.pattern-title-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    margin: 4px 0 8px;
+}
+.pattern-dynamic-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    transition: color 0.3s ease;
+}
+.pattern-count-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 12px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.4);
+}
+.patterns-grid-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+}
+.patterns-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 420px;
+    background: #090c10;
+    padding: 6px;
+    border: 1px solid #1e2638;
+    border-radius: 14px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+}
+.pattern-cell {
+    aspect-ratio: 1;
+    background: #0c0f16;
+    border: 1px solid #182030;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.pattern-cell:hover {
+    border-color: #38bdf8;
+    transform: scale(1.08);
+    z-index: 2;
+}
+.pattern-cell.is-active {
+    background: var(--cell-bg, #f97316);
+    color: var(--cell-text, #ffffff);
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.pattern-cell.is-inspected {
+    outline: 2px solid #ffffff;
+    outline-offset: 1px;
+    z-index: 3;
+}
+.pattern-detail-panel {
+    width: 100%;
+    max-width: 420px;
+    background: #0c0f16;
+    border: 1px solid #1e2638;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.detail-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+}
+.detail-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.pattern-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+.tag-prime { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.tag-fib { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
+.tag-sq { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.tag-eo { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+.detail-factors {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+@media (max-width: 440px) {
+    #patterns-app { padding: 24px 10px 40px; }
+    .pattern-dynamic-title { font-size: 24px; }
+    .patterns-grid { gap: 2px; padding: 4px; max-width: 100%; }
+    .pattern-cell { font-size: 12px; border-radius: 4px; }
+}
+</style>
+</head>
+<body>
+<main id="patterns-app">
+    <div class="patterns-header">
+        <a href="/lab" class="btn-back-lab">&larr; Kembali ke Lab</a>
+        <span class="patterns-hub-tag">Interactive Grid</span>
+    </div>
+    <div class="patterns-filter-scroll">
+        <div class="patterns-filter-bar" role="toolbar" aria-label="Filter Pola Bilangan">
+            <button type="button" class="pattern-filter-btn" data-filter="mult-7">Kelipatan 7</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-3">Kelipatan 3</button>
+            <button type="button" class="pattern-filter-btn" data-filter="prime">Bilangan Prima</button>
+            <button type="button" class="pattern-filter-btn" data-filter="fibonacci">Fibonacci</button>
+            <button type="button" class="pattern-filter-btn" data-filter="even">Genap</button>
+            <button type="button" class="pattern-filter-btn" data-filter="odd">Ganjil</button>
+            <button type="button" class="pattern-filter-btn" data-filter="square">Kuadrat</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-4">Kelipatan 4</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-5">Kelipatan 5</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-6">Kelipatan 6</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-8">Kelipatan 8</button>
+            <button type="button" class="pattern-filter-btn" data-filter="mult-9">Kelipatan 9</button>
+            <div class="custom-mult-wrap">
+                <label for="pattern-custom-input">Kelipatan:</label>
+                <input type="number" id="pattern-custom-input" class="custom-mult-input" min="1" max="100" value="7">
+            </div>
+            <button type="button" class="pattern-filter-btn" data-filter="all">Reset</button>
+        </div>
+    </div>
+    <div class="pattern-title-wrap">
+        <h1 id="pattern-title" class="pattern-dynamic-title">Multiples of 7</h1>
+        <span id="pattern-count" class="pattern-count-badge">14 angka (14%)</span>
+    </div>
+    <div class="patterns-grid-container">
+        <div id="patterns-grid" class="patterns-grid" role="region" aria-label="Grid 100 Angka"></div>
+    </div>
+    <div id="pattern-detail" class="pattern-detail-panel hidden"></div>
+</main>
+<script type="module" src="patterns-controller.js"></script>
+</body>
+</html>
