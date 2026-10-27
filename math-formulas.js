@@ -32,5 +32,6 @@ export const FORMULAS = [
     "SV = EV - PV",
     "CPI = \\frac{EV}{AC}",
     "SPI = \\frac{EV}{PV}",
-    "EAC = \\frac{BAC}{CPI}"
+    "EAC = \\frac{BAC}{CPI}",
+    "\\text{Estimated Time to Complete} = \\frac{\\text{Original Time Estimate}}{SPI}"
 ];

@@ -120,10 +120,14 @@ const IDS = {
     m33InBac: "math33-in-bac",
     m33InCpi: "math33-in-cpi",
     m33Steps: "math33-steps-container",
-    m33Canvas: "math33-canvas"
+    m33Canvas: "math33-canvas",
+    m34InOte: "math34-in-ote",
+    m34InSpi: "math34-in-spi",
+    m34Steps: "math34-steps-container",
+    m34Canvas: "math34-canvas"
 };
 
-export const FORM_COUNT = 33;
+export const FORM_COUNT = 34;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

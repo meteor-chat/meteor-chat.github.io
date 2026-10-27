@@ -32,5 +32,6 @@ export const FORMULA_NAMES = [
     "Schedule Variance (SV)",
     "Cost Performance Index (CPI)",
     "Schedule Performance Index (SPI)",
-    "Estimate at Completion (EAC)"
+    "Estimate at Completion (EAC)",
+    "Estimated Time to Complete"
 ];

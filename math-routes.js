@@ -53,6 +53,7 @@ export const FORMULA_CATEGORIES = [
     "Manajemen Proyek",
     "Manajemen Proyek",
     "Manajemen Proyek",
+    "Manajemen Proyek",
     "Manajemen Proyek"
 ];
 
@@ -90,7 +91,8 @@ export const FORMULA_URLS = [
     "/math/pm/6",
     "/math/pm/7",
     "/math/pm/8",
-    "/math/pm/9"
+    "/math/pm/9",
+    "/math/pm/10"
 ];
 
 const URL_TO_ID = {
@@ -114,19 +116,20 @@ const URL_TO_ID = {
     "/math/cal/4": 18,
     "/math/dm/19": 19,
     "/math/vm/20": 20,
-    "/math/2": 21,
-    "/math/3": 22,
-    "/math/g/1": 23,
-    "/math/g/2": 24,
-    "/math/pm/1": 25,
-    "/math/pm/2": 26,
-    "/math/pm/3": 27,
-    "/math/pm/4": 28,
-    "/math/pm/5": 29,
-    "/math/pm/6": 30,
-    "/math/pm/7": 31,
-    "/math/pm/8": 32,
-    "/math/pm/9": 33,
+    "/math/21": 21,
+    "/math/22": 22,
+    "/math/g/23": 23,
+    "/math/g/24": 24,
+    "/math/pm/25": 25,
+    "/math/pm/26": 26,
+    "/math/pm/27": 27,
+    "/math/pm/28": 28,
+    "/math/pm/29": 29,
+    "/math/pm/30": 30,
+    "/math/pm/31": 31,
+    "/math/pm/32": 32,
+    "/math/pm/33": 33,
+    "/math/pm/34": 34,
     "/math/pt/10": 10,
     "/math/pt/11": 11,
     "/math/pt/12": 12,
@@ -150,7 +153,9 @@ const URL_TO_ID = {
     "/math/pm/30": 30,
     "/math/pm/31": 31,
     "/math/pm/32": 32,
-    "/math/pm/33": 33
+    "/math/pm/33": 33,
+    "/math/pm/10": 34,
+    "/math/pm/34": 34
 };
 
 export function getFormulaUrl(id) {
