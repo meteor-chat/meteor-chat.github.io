@@ -1,5 +1,3 @@
-import { formatMax3 } from "./math-format.js";
-
 function getCanvasContext() {
     const canvas = document.getElementById("math26-canvas");
     if (!canvas) return null;
@@ -32,7 +30,11 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawPvMeter(bac, planned, pv, plannedFraction) {
+function formatMax3(n) {
+    return Number(n.toFixed(3)).toLocaleString("id-ID", { maximumFractionDigits: 3 });
+}
+
+export function drawPvMeter(bac, planned, pv) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -47,20 +49,10 @@ export function drawPvMeter(bac, planned, pv, plannedFraction) {
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
 
-    if (planned >= 100) {
-        themeColor = "#4ade80";
-        bgBadge = "rgba(74, 222, 128, 0.15)";
-        borderBadge = "#4ade80";
-    } else if (planned < 50) {
-        themeColor = "#f59e0b";
-        bgBadge = "rgba(245, 158, 11, 0.15)";
-        borderBadge = "#f59e0b";
-    }
-
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -69,15 +61,15 @@ export function drawPvMeter(bac, planned, pv, plannedFraction) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const gaugeFraction = Math.max(0, Math.min(planned / 100, 1));
-    const currentAngle = Math.PI + gaugeFraction * Math.PI;
+    const plannedFraction = planned / 100;
+    const clampedFraction = Math.min(Math.max(plannedFraction, 0), 1);
 
-    if (gaugeFraction > 0.005) {
+    if (clampedFraction > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, currentAngle, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + clampedFraction * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
-        ctx.lineCap = "round";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
@@ -96,76 +88,86 @@ export function drawPvMeter(bac, planned, pv, plannedFraction) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("50%", cx, cy - outerR - 10);
-    ctx.fillText("0%", cx - outerR, cy + 18);
-    ctx.fillText("100%+", cx + outerR, cy + 18);
+    ctx.fillText("50%", cx, cy - outerR - 8);
 
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("0%", cx - outerR, cy + 15);
+    ctx.fillText("100%+", cx + outerR, cy + 15);
+
+    const pvDisplay = formatCurrency(pv);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(formatCurrency(pv), cx, cy - 15);
+    ctx.font = pvDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(pvDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Planned Value (PV)", cx, cy + 6);
+    ctx.fillText("Planned Value (PV)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`${formatMax3(planned)}% of BAC (${formatCurrency(bac)})`, cx, cy + 24);
+    ctx.fillText(`Target: ${formatMax3(planned)}% dari BAC`, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const bacY = 205;
+    const bacY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 6);
+    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 6);
+    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
     ctx.fillStyle = "#38bdf8";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
-    const pvY = 252;
+    const pvY = 250;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Planned Value (PV)", barX, pvY - 6);
+    ctx.fillText("Planned Value (PV)", barX, pvY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = themeColor;
-    ctx.fillText(formatCurrency(pv), barX + barW, pvY - 6);
+    ctx.fillText(formatCurrency(pv), barX + barW, pvY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, pvY, barW, barH, 7);
+    roundRect(ctx, barX, pvY, barW, barH, 6);
     ctx.fill();
 
     const pvFillW = Math.max(0, Math.min(plannedFraction, 1)) * barW;
     if (pvFillW > 0) {
         ctx.fillStyle = themeColor;
-        roundRect(ctx, barX, pvY, pvFillW, barH, 7);
+        roundRect(ctx, barX, pvY, pvFillW, barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    const badgeText = `PLANNED VALUE: ${formatCurrency(pv)} (${formatMax3(planned)}% DARI BAC)`;
     ctx.textAlign = "center";
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
+    }
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText(`PLANNED VALUE: ${formatCurrency(pv)} (${formatMax3(planned)}% OF BAC)`, cx, badgeY + 22);
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }

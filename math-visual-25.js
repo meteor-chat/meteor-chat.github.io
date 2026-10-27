@@ -1,5 +1,3 @@
-import { formatMax3 } from "./math-format.js";
-
 function getCanvasContext() {
     const canvas = document.getElementById("math25-canvas");
     if (!canvas) return null;
@@ -28,7 +26,11 @@ function roundRect(ctx, x, y, width, height, radius) {
     ctx.closePath();
 }
 
-export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPercent, status) {
+function formatMax3(n) {
+    return Number(n.toFixed(3)).toLocaleString("id-ID", { maximumFractionDigits: 3 });
+}
+
+export function drawRpMeter(actual, planned, rpPercent) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -37,35 +39,29 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(actual) || isNaN(planned) || isNaN(rpPercent) || planned <= 0) return;
+    if (isNaN(actual) || isNaN(planned) || isNaN(rpPercent) || actual < 0 || planned <= 0) return;
 
-    let themeColor = "#4ade80";
-    let bgBadge = "rgba(74, 222, 128, 0.15)";
-    let borderBadge = "#4ade80";
-    let statusText = `AHEAD OF SCHEDULE (+${formatMax3(devPercent)}%)`;
+    let themeColor = "#38bdf8";
+    let bgBadge = "rgba(56, 189, 248, 0.15)";
+    let borderBadge = "#38bdf8";
+    let statusText = "KINERJA SESUAI TARGET";
 
-    if (status === "on-track") {
-        themeColor = "#38bdf8";
-        bgBadge = "rgba(56, 189, 248, 0.15)";
-        borderBadge = "#38bdf8";
-        statusText = "ON SCHEDULE (100%)";
-    } else if (status === "behind") {
-        if (rpPercent >= 85) {
-            themeColor = "#f59e0b";
-            bgBadge = "rgba(245, 158, 11, 0.15)";
-            borderBadge = "#f59e0b";
-        } else {
-            themeColor = "#f87171";
-            bgBadge = "rgba(248, 113, 113, 0.15)";
-            borderBadge = "#f87171";
-        }
-        statusText = `BEHIND SCHEDULE (${formatMax3(devPercent)}%)`;
+    if (rpPercent >= 100) {
+        themeColor = "#4ade80";
+        bgBadge = "rgba(74, 222, 128, 0.15)";
+        borderBadge = "#4ade80";
+        statusText = "KINERJA BAIK: PROGRES MELEBIHI / SESUAI RENCANA";
+    } else {
+        themeColor = "#f87171";
+        bgBadge = "rgba(248, 113, 113, 0.15)";
+        borderBadge = "#f87171";
+        statusText = "KINERJA RENDAH: PROGRES DI BAWAH TARGET";
     }
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -74,15 +70,16 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const gaugeFraction = Math.max(0, Math.min(rpPercent / 200, 1));
-    const currentAngle = Math.PI + gaugeFraction * Math.PI;
+    const ratio = planned > 0 ? actual / planned : 0;
+    const clampedRatio = Math.min(Math.max(ratio, 0), 2);
+    const fraction = clampedRatio / 2;
 
-    if (gaugeFraction > 0.005) {
+    if (fraction > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, currentAngle, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + fraction * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
-        ctx.lineCap = "round";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
@@ -101,71 +98,75 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("100%", cx, cy - outerR - 10);
-    ctx.fillText("0%", cx - outerR, cy + 18);
-    ctx.fillText("200%+", cx + outerR, cy + 18);
+    ctx.fillText("100%", cx, cy - outerR - 8);
 
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("0%", cx - outerR, cy + 15);
+    ctx.fillText("200%+", cx + outerR, cy + 15);
+
+    const rpDisplay = `${formatMax3(rpPercent)}%`;
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(`${formatMax3(rpPercent)}%`, cx, cy - 15);
+    ctx.font = rpDisplay.length > 8 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(rpDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Rate of Performance", cx, cy + 6);
+    ctx.fillText("Rate of Performance", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`Nilai Rasio = ${formatMax3(ratio)}`, cx, cy + 24);
+    ctx.fillText(`Nilai Rasio = ${formatMax3(ratio)}`, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const plannedY = 205;
+    const plannedY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Planned Work Completed", barX, plannedY - 6);
+    ctx.fillText("Planned Work Completed", barX, plannedY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(`${formatMax3(planned)}%`, barX + barW, plannedY - 6);
+    ctx.fillText(`${formatMax3(planned)}%`, barX + barW, plannedY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, plannedY, barW, barH, 7);
+    roundRect(ctx, barX, plannedY, barW, barH, 6);
     ctx.fill();
 
     const plannedFillW = Math.max(0, Math.min(planned / 100, 1)) * barW;
     if (plannedFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, plannedY, plannedFillW, barH, 7);
+        roundRect(ctx, barX, plannedY, plannedFillW, barH, 6);
         ctx.fill();
     }
 
-    const actualY = 252;
+    const actualY = 250;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Actual Work Completed", barX, actualY - 6);
+    ctx.fillText("Actual Work Completed", barX, actualY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`${formatMax3(actual)}%`, barX + barW, actualY - 6);
+    ctx.fillText(`${formatMax3(actual)}%`, barX + barW, actualY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, actualY, barW, barH, 7);
+    roundRect(ctx, barX, actualY, barW, barH, 6);
     ctx.fill();
 
     const actualFillW = Math.max(0, Math.min(actual / 100, 1)) * barW;
     if (actualFillW > 0) {
         ctx.fillStyle = themeColor;
-        roundRect(ctx, barX, actualY, actualFillW, barH, 7);
+        roundRect(ctx, barX, actualY, actualFillW, barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
@@ -173,7 +174,12 @@ export function drawPerformanceMeter(actual, planned, rpPercent, ratio, devPerce
     ctx.stroke();
 
     ctx.textAlign = "center";
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(statusText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
+    }
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText(statusText, cx, badgeY + 22);
+    ctx.fillText(statusText, cx, badgeY + 23);
 }

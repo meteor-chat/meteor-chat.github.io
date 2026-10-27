@@ -1,5 +1,3 @@
-import { formatMax3 } from "./math-format.js";
-
 function getCanvasContext() {
     const canvas = document.getElementById("math28-canvas");
     if (!canvas) return null;
@@ -32,7 +30,7 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawAcMeter(direct, indirect, ac, directRatio, indirectRatio) {
+export function drawAcMeter(direct, indirect, ac) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -41,15 +39,16 @@ export function drawAcMeter(direct, indirect, ac, directRatio, indirectRatio) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(direct) || isNaN(indirect) || isNaN(ac) || direct < 0 || indirect < 0 || ac <= 0) return;
+    if (isNaN(direct) || isNaN(indirect) || isNaN(ac) || direct < 0 || indirect < 0) return;
 
-    const directColor = "#38bdf8";
-    const indirectColor = "#a855f7";
+    let themeColor = "#38bdf8";
+    let bgBadge = "rgba(56, 189, 248, 0.15)";
+    let borderBadge = "#38bdf8";
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -58,105 +57,113 @@ export function drawAcMeter(direct, indirect, ac, directRatio, indirectRatio) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const dFrac = Math.max(0, Math.min(directRatio, 1));
-    const iFrac = Math.max(0, Math.min(indirectRatio, 1));
+    const directRatio = ac > 0 ? direct / ac : 0.5;
 
-    const splitAngle = Math.PI + dFrac * Math.PI;
-
-    if (dFrac > 0.005) {
+    if (directRatio > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, splitAngle, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + directRatio * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
-        ctx.strokeStyle = directColor;
-        ctx.lineCap = iFrac > 0.005 ? "butt" : "round";
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
-    if (iFrac > 0.005) {
+    if (directRatio < 0.995) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, splitAngle, 2 * Math.PI, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI + directRatio * Math.PI, 2 * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
-        ctx.strokeStyle = indirectColor;
-        ctx.lineCap = dFrac > 0.005 ? "butt" : "round";
+        ctx.strokeStyle = "#a855f7";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Direct / Indirect Ratio", cx, cy - outerR - 10);
-    ctx.fillText("0%", cx - outerR, cy + 18);
-    ctx.fillText("100%", cx + outerR, cy + 18);
+    ctx.fillText("Direct / Indirect Ratio", cx, cy - outerR - 8);
 
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("0%", cx - outerR, cy + 15);
+    ctx.fillText("100%", cx + outerR, cy + 15);
+
+    const acDisplay = formatCurrency(ac);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(formatCurrency(ac), cx, cy - 15);
+    ctx.font = acDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(acDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Actual Cost (ACWP)", cx, cy + 6);
+    ctx.fillText("Actual Cost (ACWP)", cx, cy + 4);
 
+    const dirPct = Math.round(directRatio * 100);
     ctx.font = "11px monospace";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText(`${Math.round(directRatio * 100)}% Direct | ${Math.round(indirectRatio * 100)}% Indirect`, cx, cy + 24);
+    ctx.fillStyle = themeColor;
+    ctx.fillText(`${dirPct}% Langsung • ${100 - dirPct}% Tdk Langsung`, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const directY = 205;
+    const directY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Biaya Langsung (Direct Cost)", barX, directY - 6);
+    ctx.fillText("Biaya Langsung (Direct Cost)", barX, directY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = directColor;
-    ctx.fillText(`${formatCurrency(direct)} (${formatMax3(directRatio * 100)}%)`, barX + barW, directY - 6);
+    ctx.fillStyle = "#38bdf8";
+    ctx.fillText(`${formatCurrency(direct)} (${dirPct}%)`, barX + barW, directY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, directY, barW, barH, 7);
+    roundRect(ctx, barX, directY, barW, barH, 6);
     ctx.fill();
 
-    const directFillW = dFrac * barW;
+    const directFillW = directRatio * barW;
     if (directFillW > 0) {
-        ctx.fillStyle = directColor;
-        roundRect(ctx, barX, directY, directFillW, barH, 7);
+        ctx.fillStyle = "#38bdf8";
+        roundRect(ctx, barX, directY, directFillW, barH, 6);
         ctx.fill();
     }
 
-    const indirectY = 252;
+    const indirectY = 250;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Biaya Tidak Langsung (Indirect Cost)", barX, indirectY - 6);
+    ctx.fillText("Biaya Tidak Langsung (Indirect Cost)", barX, indirectY - 8);
     ctx.textAlign = "right";
-    ctx.fillStyle = indirectColor;
-    ctx.fillText(`${formatCurrency(indirect)} (${formatMax3(indirectRatio * 100)}%)`, barX + barW, indirectY - 6);
+    ctx.fillStyle = "#a855f7";
+    ctx.fillText(`${formatCurrency(indirect)} (${100 - dirPct}%)`, barX + barW, indirectY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, indirectY, barW, barH, 7);
+    roundRect(ctx, barX, indirectY, barW, barH, 6);
     ctx.fill();
 
-    const indirectFillW = iFrac * barW;
+    const indirectFillW = (1 - directRatio) * barW;
     if (indirectFillW > 0) {
-        ctx.fillStyle = indirectColor;
-        roundRect(ctx, barX, indirectY, indirectFillW, barH, 7);
+        ctx.fillStyle = "#a855f7";
+        roundRect(ctx, barX, indirectY, indirectFillW, barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
-    ctx.fillStyle = "rgba(56, 189, 248, 0.15)";
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
+    ctx.fillStyle = bgBadge;
     ctx.fill();
-    ctx.strokeStyle = "#38bdf8";
+    ctx.strokeStyle = borderBadge;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    const badgeText = `TOTAL ACTUAL COST: ${formatCurrency(ac)}`;
     ctx.textAlign = "center";
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText(`TOTAL ACTUAL COST: ${formatCurrency(ac)} (ACWP)`, cx, badgeY + 22);
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
+    }
+    ctx.fillStyle = themeColor;
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }

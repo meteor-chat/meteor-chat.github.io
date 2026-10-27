@@ -46,26 +46,29 @@ export function drawCvMeter(ev, ac, cv) {
     let borderBadge = "#38bdf8";
     let statusText = "ON BUDGET";
     let cvDisplay = "$0";
+    let badgeText = "VARIANS BIAYA: $0 (SESUAI ANGGARAN)";
 
-    if (cv < 0) {
+    if (cv < -0.001) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
         const absVal = Math.abs(cv);
         statusText = "OVER BUDGET";
         cvDisplay = `-${formatCurrency(absVal)}`;
-    } else if (cv > 0) {
+        badgeText = `VARIANS BIAYA: -${formatCurrency(absVal)} (OVER BUDGET)`;
+    } else if (cv > 0.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
         statusText = "UNDER BUDGET";
         cvDisplay = `+${formatCurrency(cv)}`;
+        badgeText = `VARIANS BIAYA: +${formatCurrency(cv)} (UNDER BUDGET)`;
     }
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -77,7 +80,7 @@ export function drawCvMeter(ev, ac, cv) {
     const maxBase = Math.max(ev, ac, 1);
     const fraction = Math.min(Math.abs(cv) / maxBase, 1);
 
-    if (cv < 0 && fraction > 0.005) {
+    if (cv < -0.001 && fraction > 0.005) {
         const startA = 1.5 * Math.PI - fraction * 0.5 * Math.PI;
         const endA = 1.5 * Math.PI;
         ctx.beginPath();
@@ -86,7 +89,7 @@ export function drawCvMeter(ev, ac, cv) {
         ctx.strokeStyle = themeColor;
         ctx.lineCap = "butt";
         ctx.stroke();
-    } else if (cv > 0 && fraction > 0.005) {
+    } else if (cv > 0.001 && fraction > 0.005) {
         const startA = 1.5 * Math.PI;
         const endA = 1.5 * Math.PI + fraction * 0.5 * Math.PI;
         ctx.beginPath();
@@ -112,72 +115,75 @@ export function drawCvMeter(ev, ac, cv) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("0", cx, cy - outerR - 10);
-    ctx.fillText("Over Budget", cx - outerR, cy + 18);
-    ctx.fillText("Under Budget", cx + outerR, cy + 18);
+    ctx.fillText("0", cx, cy - outerR - 8);
+
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("Over Budget", cx - outerR, cy + 15);
+    ctx.fillText("Under Budget", cx + outerR, cy + 15);
 
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(cvDisplay, cx, cy - 15);
+    ctx.font = cvDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(cvDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Cost Variance (CV)", cx, cy + 6);
+    ctx.fillText("Cost Variance (CV)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(statusText, cx, cy + 24);
+    ctx.fillText(statusText, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const evY = 205;
+    const evY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Earned Value (EV)", barX, evY - 6);
+    ctx.fillText("Earned Value (EV)", barX, evY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(ev), barX + barW, evY - 6);
+    ctx.fillText(formatCurrency(ev), barX + barW, evY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, evY, barW, barH, 7);
+    roundRect(ctx, barX, evY, barW, barH, 6);
     ctx.fill();
 
     const evFillW = (ev / maxBase) * barW;
     if (evFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, evY, Math.min(evFillW, barW), barH, 7);
+        roundRect(ctx, barX, evY, Math.min(evFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const acY = 252;
+    const acY = 250;
     const acColor = ac > ev ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Actual Cost (AC)", barX, acY - 6);
+    ctx.fillText("Actual Cost (AC)", barX, acY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = acColor;
-    ctx.fillText(formatCurrency(ac), barX + barW, acY - 6);
+    ctx.fillText(formatCurrency(ac), barX + barW, acY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, acY, barW, barH, 7);
+    roundRect(ctx, barX, acY, barW, barH, 6);
     ctx.fill();
 
     const acFillW = (ac / maxBase) * barW;
     if (acFillW > 0) {
         ctx.fillStyle = acColor;
-        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 7);
+        roundRect(ctx, barX, acY, Math.min(acFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
@@ -185,13 +191,12 @@ export function drawCvMeter(ev, ac, cv) {
     ctx.stroke();
 
     ctx.textAlign = "center";
-    ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    if (cv < 0) {
-        ctx.fillText(`VARIANS BIAYA: -${formatCurrency(Math.abs(cv))} (OVER BUDGET)`, cx, badgeY + 22);
-    } else if (cv > 0) {
-        ctx.fillText(`VARIANS BIAYA: +${formatCurrency(cv)} (UNDER BUDGET)`, cx, badgeY + 22);
-    } else {
-        ctx.fillText("VARIANS BIAYA: $0 (SESUAI ANGGARAN)", cx, badgeY + 22);
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
     }
+    ctx.fillStyle = themeColor;
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }

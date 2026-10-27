@@ -1,5 +1,3 @@
-import { formatMax3 } from "./math-format.js";
-
 function getCanvasContext() {
     const canvas = document.getElementById("math27-canvas");
     if (!canvas) return null;
@@ -18,7 +16,7 @@ function roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + width, y + height - radius);
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + radius, y + height);
@@ -32,7 +30,11 @@ function formatCurrency(n) {
     return "$" + Number(n).toLocaleString("id-ID");
 }
 
-export function drawEvMeter(bac, actual, ev, actualFraction) {
+function formatMax3(n) {
+    return Number(n.toFixed(3)).toLocaleString("id-ID", { maximumFractionDigits: 3 });
+}
+
+export function drawEvMeter(bac, actual, ev) {
     const bundle = getCanvasContext();
     if (!bundle) return;
     const { canvas, ctx } = bundle;
@@ -43,24 +45,14 @@ export function drawEvMeter(bac, actual, ev, actualFraction) {
 
     if (isNaN(bac) || isNaN(actual) || isNaN(ev) || bac < 0 || actual < 0) return;
 
-    let themeColor = "#f59e0b";
-    let bgBadge = "rgba(245, 158, 11, 0.15)";
-    let borderBadge = "#f59e0b";
-
-    if (actual >= 100) {
-        themeColor = "#4ade80";
-        bgBadge = "rgba(74, 222, 128, 0.15)";
-        borderBadge = "#4ade80";
-    } else if (actual >= 50) {
-        themeColor = "#38bdf8";
-        bgBadge = "rgba(56, 189, 248, 0.15)";
-        borderBadge = "#38bdf8";
-    }
+    let themeColor = "#38bdf8";
+    let bgBadge = "rgba(56, 189, 248, 0.15)";
+    let borderBadge = "#38bdf8";
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -69,15 +61,15 @@ export function drawEvMeter(bac, actual, ev, actualFraction) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const gaugeFraction = Math.max(0, Math.min(actual / 100, 1));
-    const currentAngle = Math.PI + gaugeFraction * Math.PI;
+    const actualFraction = actual / 100;
+    const clampedFraction = Math.min(Math.max(actualFraction, 0), 1);
 
-    if (gaugeFraction > 0.005) {
+    if (clampedFraction > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, currentAngle, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + clampedFraction * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
-        ctx.lineCap = "round";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
@@ -96,76 +88,86 @@ export function drawEvMeter(bac, actual, ev, actualFraction) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("50%", cx, cy - outerR - 10);
-    ctx.fillText("0%", cx - outerR, cy + 18);
-    ctx.fillText("100%+", cx + outerR, cy + 18);
+    ctx.fillText("50%", cx, cy - outerR - 8);
 
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("0%", cx - outerR, cy + 15);
+    ctx.fillText("100%+", cx + outerR, cy + 15);
+
+    const evDisplay = formatCurrency(ev);
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(formatCurrency(ev), cx, cy - 15);
+    ctx.font = evDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(evDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Earned Value (EV)", cx, cy + 6);
+    ctx.fillText("Earned Value (EV)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`${formatMax3(actual)}% of BAC (${formatCurrency(bac)})`, cx, cy + 24);
+    ctx.fillText(`Realisasi: ${formatMax3(actual)}% dari BAC`, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const bacY = 205;
+    const bacY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 6);
+    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 6);
+    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
     ctx.fillStyle = "#38bdf8";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
-    const evY = 252;
+    const evY = 250;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Earned Value (EV)", barX, evY - 6);
+    ctx.fillText("Earned Value (EV)", barX, evY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = themeColor;
-    ctx.fillText(formatCurrency(ev), barX + barW, evY - 6);
+    ctx.fillText(formatCurrency(ev), barX + barW, evY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, evY, barW, barH, 7);
+    roundRect(ctx, barX, evY, barW, barH, 6);
     ctx.fill();
 
     const evFillW = Math.max(0, Math.min(actualFraction, 1)) * barW;
     if (evFillW > 0) {
         ctx.fillStyle = themeColor;
-        roundRect(ctx, barX, evY, evFillW, barH, 7);
+        roundRect(ctx, barX, evY, evFillW, barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
+    const badgeText = `EARNED VALUE: ${formatCurrency(ev)} (${formatMax3(actual)}% HASIL KERJA)`;
     ctx.textAlign = "center";
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
+    }
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText(`EARNED VALUE: ${formatCurrency(ev)} (${formatMax3(actual)}% OF BAC)`, cx, badgeY + 22);
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }

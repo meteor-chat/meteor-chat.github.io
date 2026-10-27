@@ -16,7 +16,7 @@ function roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + width, y + height - radius);
     ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
     ctx.lineTo(x + radius, y + height);
@@ -46,6 +46,7 @@ export function drawVacMeter(bac, eac, vac) {
     let borderBadge = "#38bdf8";
     let statusText = "SESUAI ANGGARAN";
     let vacDisplay = "$0";
+    let badgeText = "VARIANS: TEPAT ANGGARAN $0";
 
     if (vac < -0.001) {
         themeColor = "#f87171";
@@ -54,18 +55,20 @@ export function drawVacMeter(bac, eac, vac) {
         const absVal = Math.abs(vac);
         statusText = "DEFISIT / OVER BUDGET";
         vacDisplay = `-${formatCurrency(absVal)}`;
+        badgeText = `VARIANS: DEFISIT ANGGARAN -${formatCurrency(absVal)}`;
     } else if (vac > 0.001) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
         statusText = "SURPLUS / UNDER BUDGET";
         vacDisplay = `+${formatCurrency(vac)}`;
+        badgeText = `VARIANS: SURPLUS ANGGARAN +${formatCurrency(vac)}`;
     }
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -112,72 +115,75 @@ export function drawVacMeter(bac, eac, vac) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("0", cx, cy - outerR - 10);
-    ctx.fillText("Defisit (Over Budget)", cx - outerR, cy + 18);
-    ctx.fillText("Surplus (Under Budget)", cx + outerR, cy + 18);
+    ctx.fillText("0", cx, cy - outerR - 8);
+
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("Defisit", cx - outerR, cy + 15);
+    ctx.fillText("Surplus", cx + outerR, cy + 15);
 
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 22px sans-serif";
-    ctx.fillText(vacDisplay, cx, cy - 15);
+    ctx.font = vacDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(vacDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Variance at Completion (VAC)", cx, cy + 6);
+    ctx.fillText("Variance at Completion (VAC)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(statusText, cx, cy + 24);
+    ctx.fillText(statusText, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
 
-    const bacY = 205;
+    const bacY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 6);
+    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 6);
+    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
     const bacFillW = (bac / maxBase) * barW;
     if (bacFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, bacY, Math.min(bacFillW, barW), barH, 7);
+        roundRect(ctx, barX, bacY, Math.min(bacFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const eacY = 252;
+    const eacY = 250;
     const eacColor = eac > bac ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Estimate at Completion (EAC)", barX, eacY - 6);
+    ctx.fillText("Estimate at Completion (EAC)", barX, eacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = eacColor;
-    ctx.fillText(formatCurrency(eac), barX + barW, eacY - 6);
+    ctx.fillText(formatCurrency(eac), barX + barW, eacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, eacY, barW, barH, 7);
+    roundRect(ctx, barX, eacY, barW, barH, 6);
     ctx.fill();
 
     const eacFillW = (eac / maxBase) * barW;
     if (eacFillW > 0) {
         ctx.fillStyle = eacColor;
-        roundRect(ctx, barX, eacY, Math.min(eacFillW, barW), barH, 7);
+        roundRect(ctx, barX, eacY, Math.min(eacFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
@@ -185,13 +191,12 @@ export function drawVacMeter(bac, eac, vac) {
     ctx.stroke();
 
     ctx.textAlign = "center";
-    ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    if (vac < -0.001) {
-        ctx.fillText(`STATUS: DEFISIT ANGGARAN -${formatCurrency(Math.abs(vac))} (OVER BUDGET)`, cx, badgeY + 22);
-    } else if (vac > 0.001) {
-        ctx.fillText(`STATUS: SURPLUS ANGGARAN +${formatCurrency(vac)} (UNDER BUDGET)`, cx, badgeY + 22);
-    } else {
-        ctx.fillText("STATUS: TEPAT ANGGARAN $0", cx, badgeY + 22);
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
     }
+    ctx.fillStyle = themeColor;
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }

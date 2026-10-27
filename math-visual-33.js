@@ -41,37 +41,32 @@ export function drawEacMeter(bac, cpi, eac) {
 
     if (isNaN(bac) || isNaN(cpi) || isNaN(eac) || bac < 0 || cpi <= 0) return;
 
-    const vac = bac - eac;
     let themeColor = "#38bdf8";
     let bgBadge = "rgba(56, 189, 248, 0.15)";
     let borderBadge = "#38bdf8";
-    let statusText = "ON BUDGET (100% SESUAI ANGGARAN)";
-    let badgeText = "ON BUDGET: ESTIMASI BIAYA AKHIR SESUAI ANGGARAN BAC";
+    let statusText = "ON BUDGET";
+    let badgeText = "BIAYA AKHIR: ON BUDGET (SESUAI BAC)";
 
-    if (cpi < 0.85) {
+    const cpiFormatted = Number(cpi.toFixed(2)).toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+    if (eac > bac + 0.01) {
         themeColor = "#f87171";
         bgBadge = "rgba(248, 113, 113, 0.15)";
         borderBadge = "#f87171";
-        statusText = "OVER BUDGET (BIAYA AKHIR MEMBENGKAK)";
-        badgeText = `OVER BUDGET: BIAYA AKHIR MEMBENGKAK (+${formatCurrency(Math.abs(vac))})`;
-    } else if (cpi < 0.999) {
-        themeColor = "#f59e0b";
-        bgBadge = "rgba(245, 158, 11, 0.15)";
-        borderBadge = "#f59e0b";
-        statusText = "OVER BUDGET (PERINGATAN BIAYA)";
-        badgeText = `OVER BUDGET: PROYEKSI MEMBENGKAK (+${formatCurrency(Math.abs(vac))})`;
-    } else if (cpi > 1.001) {
+        statusText = "OVER BUDGET";
+        badgeText = `BIAYA AKHIR: OVER BUDGET (+${formatCurrency(eac - bac)})`;
+    } else if (eac < bac - 0.01) {
         themeColor = "#4ade80";
         bgBadge = "rgba(74, 222, 128, 0.15)";
         borderBadge = "#4ade80";
-        statusText = "UNDER BUDGET (LEBIH HEMAT DARI ANGGARAN)";
-        badgeText = `UNDER BUDGET: BIAYA AKHIR LEBIH HEMAT (-${formatCurrency(Math.abs(vac))})`;
+        statusText = "UNDER BUDGET";
+        badgeText = `BIAYA AKHIR: UNDER BUDGET (-${formatCurrency(bac - eac)})`;
     }
 
     const cx = W / 2;
-    const cy = 120;
-    const outerR = 85;
-    const innerR = 67;
+    const cy = 115;
+    const outerR = 80;
+    const innerR = 64;
 
     ctx.beginPath();
     ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, 2 * Math.PI, false);
@@ -80,24 +75,24 @@ export function drawEacMeter(bac, cpi, eac) {
     ctx.lineCap = "round";
     ctx.stroke();
 
-    const expansionRatio = bac > 0 ? eac / bac : 1;
-    const gaugeFraction = Math.max(0, Math.min(expansionRatio / 2, 1));
-    const currentAngle = Math.PI + gaugeFraction * Math.PI;
+    const ratio = bac > 0 ? eac / bac : 1;
+    const clampedRatio = Math.min(Math.max(ratio, 0), 2);
+    const fraction = clampedRatio / 2;
 
-    if (gaugeFraction > 0.005) {
+    if (fraction > 0.005) {
         ctx.beginPath();
-        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, currentAngle, false);
+        ctx.arc(cx, cy, (outerR + innerR) / 2, Math.PI, Math.PI + fraction * Math.PI, false);
         ctx.lineWidth = outerR - innerR;
         ctx.strokeStyle = themeColor;
-        ctx.lineCap = "round";
+        ctx.lineCap = "butt";
         ctx.stroke();
     }
 
-    const markAngle = 1.5 * Math.PI;
-    const mx1 = cx + (innerR - 6) * Math.cos(markAngle);
-    const my1 = cy + (innerR - 6) * Math.sin(markAngle);
-    const mx2 = cx + (outerR + 6) * Math.cos(markAngle);
-    const my2 = cy + (outerR + 6) * Math.sin(markAngle);
+    const targetAngle = 1.5 * Math.PI;
+    const mx1 = cx + (innerR - 6) * Math.cos(targetAngle);
+    const my1 = cy + (innerR - 6) * Math.sin(targetAngle);
+    const mx2 = cx + (outerR + 6) * Math.cos(targetAngle);
+    const my2 = cy + (outerR + 6) * Math.sin(targetAngle);
     ctx.beginPath();
     ctx.moveTo(mx1, my1);
     ctx.lineTo(mx2, my2);
@@ -108,75 +103,77 @@ export function drawEacMeter(bac, cpi, eac) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.font = "11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("100% BAC", cx, cy - outerR - 10);
-    ctx.fillText("0%", cx - outerR, cy + 18);
-    ctx.fillText("200%+", cx + outerR, cy + 18);
+    ctx.fillText("100% BAC", cx, cy - outerR - 8);
 
-    const cpiFormatted = cpi.toLocaleString("id-ID", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    ctx.font = "10px sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.fillText("0%", cx - outerR, cy + 15);
+    ctx.fillText("200%+", cx + outerR, cy + 15);
 
+    const eacDisplay = formatCurrency(eac);
     ctx.textAlign = "center";
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 24px sans-serif";
-    ctx.fillText(formatCurrency(eac), cx, cy - 15);
+    ctx.font = eacDisplay.length > 9 ? "bold 20px sans-serif" : "bold 24px sans-serif";
+    ctx.fillText(eacDisplay, cx, cy - 14);
 
-    ctx.font = "12px sans-serif";
+    ctx.font = "11px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-    ctx.fillText("Estimate at Completion", cx, cy + 6);
+    ctx.fillText("Estimate at Completion (EAC)", cx, cy + 4);
 
     ctx.font = "11px monospace";
     ctx.fillStyle = themeColor;
-    ctx.fillText(`CPI: ${cpiFormatted} • ${statusText}`, cx, cy + 24);
+    ctx.fillText(`CPI: ${cpiFormatted} • ${statusText}`, cx, cy + 34);
 
-    const barX = 30;
-    const barW = W - 60;
-    const barH = 14;
+    const barX = 24;
+    const barW = W - 48;
+    const barH = 12;
     const maxBase = Math.max(bac, eac, 1);
 
-    const bacY = 205;
+    const bacY = 202;
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 6);
+    ctx.fillText("Budget at Completion (BAC)", barX, bacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = "#38bdf8";
-    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 6);
+    ctx.fillText(formatCurrency(bac), barX + barW, bacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, bacY, barW, barH, 7);
+    roundRect(ctx, barX, bacY, barW, barH, 6);
     ctx.fill();
 
     const bacFillW = (bac / maxBase) * barW;
     if (bacFillW > 0) {
         ctx.fillStyle = "#38bdf8";
-        roundRect(ctx, barX, bacY, Math.min(bacFillW, barW), barH, 7);
+        roundRect(ctx, barX, bacY, Math.min(bacFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const eacY = 252;
-    const eacColor = eac > bac ? "#f87171" : (eac < bac ? "#4ade80" : "#38bdf8");
+    const eacY = 250;
+    const eacColor = eac > bac ? "#f87171" : "#4ade80";
     ctx.textAlign = "left";
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-    ctx.fillText("Estimate at Completion (EAC)", barX, eacY - 6);
+    ctx.fillText("Estimate at Completion (EAC)", barX, eacY - 8);
     ctx.textAlign = "right";
     ctx.fillStyle = eacColor;
-    ctx.fillText(formatCurrency(eac), barX + barW, eacY - 6);
+    ctx.fillText(formatCurrency(eac), barX + barW, eacY - 8);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    roundRect(ctx, barX, eacY, barW, barH, 7);
+    roundRect(ctx, barX, eacY, barW, barH, 6);
     ctx.fill();
 
     const eacFillW = (eac / maxBase) * barW;
     if (eacFillW > 0) {
         ctx.fillStyle = eacColor;
-        roundRect(ctx, barX, eacY, Math.min(eacFillW, barW), barH, 7);
+        roundRect(ctx, barX, eacY, Math.min(eacFillW, barW), barH, 6);
         ctx.fill();
     }
 
-    const badgeY = 300;
-    const badgeH = 34;
+    const badgeY = 296;
+    const badgeH = 36;
     const badgeW = barW;
-    roundRect(ctx, barX, badgeY, badgeW, badgeH, 8);
+    roundRect(ctx, barX, badgeY, badgeW, badgeH, 10);
     ctx.fillStyle = bgBadge;
     ctx.fill();
     ctx.strokeStyle = borderBadge;
@@ -184,7 +181,12 @@ export function drawEacMeter(bac, cpi, eac) {
     ctx.stroke();
 
     ctx.textAlign = "center";
+    let fSize = 12;
+    ctx.font = `bold ${fSize}px sans-serif`;
+    while (ctx.measureText(badgeText).width > badgeW - 24 && fSize > 8) {
+        fSize -= 0.5;
+        ctx.font = `bold ${fSize}px sans-serif`;
+    }
     ctx.fillStyle = themeColor;
-    ctx.font = "bold 13px sans-serif";
-    ctx.fillText(badgeText, cx, badgeY + 22);
+    ctx.fillText(badgeText, cx, badgeY + 23);
 }
