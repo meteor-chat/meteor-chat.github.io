@@ -1,6 +1,6 @@
 import { initFilters, applyFilter } from "./math-filter.js";
 import { parseFormulaUrl, parseCategoryUrl } from "./math-routes.js";
-import { initCubeThumbnail } from "./cube-thumb.js";
+import { initCubeThumbnail } from "./cube-thumb.js?v=2";
 
 const KATEX_HREF = new URL("./vendor/katex/katex.min.js", import.meta.url).href;
 const CONTROLLER_GRAPH = [

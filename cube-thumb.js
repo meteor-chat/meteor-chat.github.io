@@ -121,7 +121,9 @@ export function initCubeThumbnail() {
     currentCtx = canvas.getContext("2d");
     if (!currentCtx) return;
 
+    isVisible = true;
     renderFrame();
+    if (!animId) animId = requestAnimationFrame(loop);
 
     const card = canvas.closest(".math-card") || canvas;
 
