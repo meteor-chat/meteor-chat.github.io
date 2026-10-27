@@ -68,6 +68,7 @@ const IDS = {
     m19InN: "math19-in-n",
     m19InR: "math19-in-r",
     m19Steps: "math19-steps-container",
+    20: "math20-steps-container",
     m20InA: "math20-in-a",
     m20InB: "math20-in-b",
     m20Steps: "math20-steps-container",
@@ -107,10 +108,14 @@ const IDS = {
     m30InEv: "math30-in-ev",
     m30InPv: "math30-in-pv",
     m30Steps: "math30-steps-container",
-    m30Canvas: "math30-canvas"
+    m30Canvas: "math30-canvas",
+    m31InEv: "math31-in-ev",
+    m31InAc: "math31-in-ac",
+    m31Steps: "math31-steps-container",
+    m31Canvas: "math31-canvas"
 };
 
-export const FORM_COUNT = 30;
+export const FORM_COUNT = 31;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

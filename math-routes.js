@@ -50,6 +50,7 @@ export const FORMULA_CATEGORIES = [
     "Manajemen Proyek",
     "Manajemen Proyek",
     "Manajemen Proyek",
+    "Manajemen Proyek",
     "Manajemen Proyek"
 ];
 
@@ -84,7 +85,8 @@ export const FORMULA_URLS = [
     "/math/pm/3",
     "/math/pm/4",
     "/math/pm/5",
-    "/math/pm/6"
+    "/math/pm/6",
+    "/math/pm/7"
 ];
 
 const URL_TO_ID = {
@@ -118,6 +120,7 @@ const URL_TO_ID = {
     "/math/pm/4": 28,
     "/math/pm/5": 29,
     "/math/pm/6": 30,
+    "/math/pm/7": 31,
     "/math/pt/10": 10,
     "/math/pt/11": 11,
     "/math/pt/12": 12,
@@ -138,7 +141,8 @@ const URL_TO_ID = {
     "/math/pm/27": 27,
     "/math/pm/28": 28,
     "/math/pm/29": 29,
-    "/math/pm/30": 30
+    "/math/pm/30": 30,
+    "/math/pm/31": 31
 };
 
 export function getFormulaUrl(id) {

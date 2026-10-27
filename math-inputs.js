@@ -26,7 +26,8 @@ const INPUTS = {
     27: ["m27InBac", "m27InActual"],
     28: ["m28InDirect", "m28InIndirect"],
     29: ["m29InEv", "m29InAc"],
-    30: ["m30InEv", "m30InPv"]
+    30: ["m30InEv", "m30InPv"],
+    31: ["m31InEv", "m31InAc"]
 };
 
 function recalc(n) {

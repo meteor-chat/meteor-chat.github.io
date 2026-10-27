@@ -29,5 +29,6 @@ export const FORMULAS = [
     "EV = BAC \\times \\text{Actual Complete (\\%)}",
     "AC = \\sum (\\text{Biaya Langsung} + \\text{Biaya Tidak Langsung})",
     "CV = EV - AC",
-    "SV = EV - PV"
+    "SV = EV - PV",
+    "CPI = \\frac{EV}{AC}"
 ];
