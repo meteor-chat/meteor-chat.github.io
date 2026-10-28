@@ -259,20 +259,39 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .cube-out-name, .cube-out-colon, .cube-out-val { font-size: 14px; }
     .cube-out-row { grid-template-columns: 115px 12px 1fr; }
 }
-.obj-page, .fit-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
-.obj-two-col-layout, .fit-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
-.obj-col-left, .fit-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
-.obj-col-right, .fit-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
-.obj-top-formula, .fit-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
-.obj-canvas-wrap, .fit-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
-.obj-canvas, .fit-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
+.obj-page, .fit-page, .sel-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+.obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.obj-col-left, .fit-col-left, .sel-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
+.obj-col-right, .fit-col-right, .sel-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
+.obj-top-formula, .fit-top-formula, .sel-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
+.obj-canvas-wrap, .fit-canvas-wrap, .sel-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative; }
+.obj-canvas, .fit-canvas, .sel-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
 .obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
-.obj-token-x1, .fit-token-h { color: #38bdf8 !important; cursor: default; }
-.obj-token-x2, .fit-token-a { color: #fbbf24 !important; cursor: default; }
-.obj-token-h, .fit-token-f { color: #4ade80 !important; cursor: default; }
+.obj-token-x1, .fit-token-h, .sel-token-fi { color: #38bdf8 !important; cursor: default; }
+.obj-token-x2, .fit-token-a, .sel-token-sumf { color: #c084fc !important; cursor: default; }
+.obj-token-h, .fit-token-f, .sel-token-pi { color: #4ade80 !important; cursor: default; }
 .obj-token-x1:hover, .obj-token-x1.obj-glow-x1, .fit-token-h:hover, .fit-token-h.fit-glow-h { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
 .obj-token-x2:hover, .obj-token-x2.obj-glow-x2, .fit-token-a:hover, .fit-token-a.fit-glow-a { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
-@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
+.sel-inputs-box { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
+.sel-pop-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.sel-pop-title { font-size: 13px; font-weight: 500; color: #a1a1aa; }
+.sel-pop-actions { display: flex; gap: 6px; }
+.sel-btn-pop { background: #27272a; border: 1px solid #3f3f46; color: #ffffff; border-radius: 6px; width: 26px; height: 26px; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+.sel-btn-pop:hover { background: #3f3f46; border-color: #71717a; }
+.sel-pop-list { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.sel-pop-row { display: flex; align-items: center; gap: 8px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 4px 8px; transition: border-color 0.15s, background-color 0.15s; }
+.sel-pop-row:hover, .sel-pop-row.sel-row-active { border-color: #52525b; background-color: #202024; }
+.sel-badge-ind { font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; min-width: 28px; text-align: center; border: 1px solid transparent; }
+.sel-input-fit { flex: 1; background: transparent; border: none; border-bottom: 1px solid #3f3f46; color: #ffffff; font-family: monospace; font-size: 14px; padding: 2px 4px; outline: none; }
+.sel-input-fit:focus { border-bottom-color: #38bdf8; }
+.sel-prob-text { font-size: 12px; font-family: monospace; color: #a1a1aa; min-width: 58px; text-align: right; }
+.sel-glow-0 { color: #7dd3fc !important; text-shadow: 0 0 10px rgba(56, 189, 248, 0.95); font-weight: bold; }
+.sel-glow-1 { color: #fde68a !important; text-shadow: 0 0 10px rgba(251, 191, 36, 0.95); font-weight: bold; }
+.sel-glow-2 { color: #6ee7b7 !important; text-shadow: 0 0 10px rgba(52, 211, 153, 0.95); font-weight: bold; }
+.sel-glow-3 { color: #fda4af !important; text-shadow: 0 0 10px rgba(244, 63, 94, 0.95); font-weight: bold; }
+.sel-glow-4 { color: #c4b5fd !important; text-shadow: 0 0 10px rgba(167, 139, 250, 0.95); font-weight: bold; }
+.sel-glow-5 { color: #fed7aa !important; text-shadow: 0 0 10px rgba(251, 146, 60, 0.95); font-weight: bold; }
+@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right, .sel-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
 </style>
 <link rel="modulepreload" href="./src/math/math-main.js?v=13">
 <link rel="modulepreload" href="./math-filter.js">
@@ -515,10 +534,47 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
         </div>
       </div>
         
-      <div id="math-calc-form-4" class="math-calc-container "><div class="math-calc-header"><button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Probabilitas Seleksi</h1></div>
-        <div class="math-calc-left"><div id="math-calc-formula-display-4" class="math-formula-box"></div><div class="math-inputs"><div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><canvas id="math4-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps" id="math4-steps-container"></div>
+      <div id="math-calc-form-4" class="math-calc-container sel-page "><div class="math-calc-header chromo-header"><button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title chromo-title">Probabilitas Seleksi</h1></div>
+        <div class="sel-two-col-layout">
+          <div class="sel-col-left">
+            <div id="math-calc-formula-display-4" class="math-formula-box sel-top-formula"></div>
+            <div class="sel-canvas-wrap">
+              <canvas id="math4-canvas" class="sel-canvas" width="340" height="340"></canvas>
+            </div>
+          </div>
+          <div class="sel-col-right">
+            <div class="sel-inputs-box">
+              <div class="sel-pop-header">
+                <span class="sel-pop-title">Populasi Kebugaran (Fitness)</span>
+                <div class="sel-pop-actions">
+                  <button type="button" id="sel-btn-add" class="sel-btn-pop" aria-label="Tambah Individu">+</button>
+                  <button type="button" id="sel-btn-del" class="sel-btn-pop" aria-label="Hapus Individu">&minus;</button>
+                </div>
+              </div>
+              <div id="math4-dynamic-inputs" class="sel-pop-list"></div>
+            </div>
+            <div class="chromo-curved-arrows-box">
+              <svg class="chromo-curved-arrows-svg" viewBox="0 0 380 60" preserveAspectRatio="none">
+                <defs>
+                  <marker id="sel-curved-arrowhead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#ffffff" />
+                  </marker>
+                </defs>
+                <path d="M 80 5 C 80 32, 140 46, 160 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#sel-curved-arrowhead)" />
+                <path d="M 300 5 C 300 32, 240 46, 220 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#sel-curved-arrowhead)" />
+              </svg>
+            </div>
+            <div id="sel-card-step1" class="chromo-card chromo-card-rounded"></div>
+            <div id="sel-arrow-1" class="chromo-step-arrow">&darr;</div>
+            <div id="sel-card-step2" class="chromo-card chromo-card-rect"></div>
+            <div id="sel-arrow-2" class="chromo-step-arrow">&darr;</div>
+            <div id="sel-card-step3" class="chromo-card chromo-card-rect"></div>
+            <div id="sel-arrow-3" class="chromo-step-arrow">&darr;</div>
+            <div id="sel-card-step4" class="chromo-card chromo-card-result"></div>
+            <div id="math4-steps-container" class="hidden"></div>
+          </div>
         </div>
-    </div>
+      </div>
     
       <div id="math-calc-form-5" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-5" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Probabilitas Kumulatif</h1></div>
         <div class="math-calc-left"><div id="math-calc-formula-display-5" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">

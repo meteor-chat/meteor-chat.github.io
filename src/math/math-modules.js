@@ -9,7 +9,7 @@ const FORMS = {
     1: { file: "math-calc-1", calc: "calculateMath", open: "initChromoView" },
     2: { file: "math-calc-1-3", calc: "calculateMath2" },
     3: { file: "math-calc-1-3", calc: "calculateMath3" },
-    4: { file: "math-calc-4-6", calc: "calculateMath4", add: "addM4Input", box: "m4DynamicInputs" },
+    4: { file: "math-calc-4", calc: "calculateMath4", open: "initMath4" },
     5: { file: "math-calc-4-6", calc: "calculateMath5", add: "addM5Input", box: "m5DynamicInputs" },
     6: { file: "math-calc-4-6", calc: "calculateMath6", add: "addM6Input", box: "m6DynamicInputs" },
     7: { file: "math-calc-7-8", calc: "calculateMath7" },

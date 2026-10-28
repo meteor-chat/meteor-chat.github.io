@@ -1,30 +1,8 @@
 import { refs } from "../../core/dom-refs.js";
-import { drawRouletteWheel4, drawRouletteWheel5, clearWheel4, clearWheel5 } from "../visuals/math-visual-4-5.js";
-export function addM4Input() {
-    if (!refs.m4DynamicInputs) return;
-    const index = refs.m4DynamicInputs.children.length + 1;
-    const div = document.createElement('div');
-    div.className = 'math-input-group';
-    const label = document.createElement('label');
-    label.textContent = `Fitness Individu ${index}`;
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.step = '0.1';
-    input.className = 'm4-fitness-input';
-    input.id = `m4-fit-${index}`;
-    input.placeholder = '0';
-        input.addEventListener("input", () => {
-        const inputs = document.querySelectorAll('.m4-fitness-input');
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput.value.trim() !== '') {
-            addM4Input();
-        }
-        calculateMath4();
-    });
-    div.appendChild(label);
-    div.appendChild(input);
-    refs.m4DynamicInputs.appendChild(div);
-}
+import { drawRouletteWheel5, clearWheel5 } from "../visuals/math-visual-4-5.js";
+
+export { calculateMath4, addM4Input } from "./math-calc-4.js";
+
 export function addM5Input() {
     if (!refs.m5DynamicInputs) return;
     const index = refs.m5DynamicInputs.children.length + 1;
@@ -38,7 +16,7 @@ export function addM5Input() {
     input.className = 'm5-prob-input';
     input.id = `m5-prob-${index}`;
     input.placeholder = '0';
-        input.addEventListener("input", () => {
+    input.addEventListener("input", () => {
         const inputs = document.querySelectorAll('.m5-prob-input');
         const lastInput = inputs[inputs.length - 1];
         if (lastInput.value.trim() !== '') {
@@ -50,6 +28,7 @@ export function addM5Input() {
     div.appendChild(input);
     refs.m5DynamicInputs.appendChild(div);
 }
+
 export function addM6Input() {
     if (!refs.m6DynamicInputs) return;
     const index = refs.m6DynamicInputs.children.length + 1;
@@ -63,7 +42,7 @@ export function addM6Input() {
     input.className = 'm6-fitness-input';
     input.id = `m6-fit-${index}`;
     input.placeholder = '0';
-        input.addEventListener("input", () => {
+    input.addEventListener("input", () => {
         const inputs = document.querySelectorAll('.m6-fitness-input');
         const lastInput = inputs[inputs.length - 1];
         if (lastInput.value.trim() !== '') {
@@ -75,70 +54,16 @@ export function addM6Input() {
     div.appendChild(input);
     refs.m6DynamicInputs.appendChild(div);
 }
+
 export function gcd(a, b) {
     return b === 0 ? a : gcd(b, a % b);
 }
-export function calculateMath4() {
-    if (!refs.m4Steps) return;
-    const inputs = document.querySelectorAll('.m4-fitness-input');
-    refs.m4Steps.textContent = '';
-        const fitnessValues = [];
-    let totalFitness = 0;
-        inputs.forEach(input => {
-        if (input.value.trim() !== '') {
-            const val = parseFloat(input.value) || 0;
-            fitnessValues.push(val);
-            totalFitness += val;
-        }
-    });
-    if (fitnessValues.length === 0) {
-        clearWheel4();
-        return;
-    }
-    const totalDiv = document.createElement('div');
-    totalDiv.className = 'math-step math-step-total';
-    const strong = document.createElement('strong');
-    strong.textContent = `Total Fitness (\u03A3F) = ${totalFitness.toFixed(3)}`;
-    totalDiv.appendChild(strong);
-    refs.m4Steps.appendChild(totalDiv);
-    const table = document.createElement('table');
-    table.className = 'math-table';
-    const thead = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    ['Individu', 'Fitness (Fi)', 'Substitusi', 'Probabilitas (Pi)'].forEach(text => {
-        const th = document.createElement('th');
-        th.textContent = text;
-        headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-    const tbody = document.createElement('tbody');
-    const probabilities = [];
-    fitnessValues.forEach((f, index) => {
-        const p = totalFitness === 0 ? 0 : f / totalFitness;
-        probabilities.push(p);
-        const tr = document.createElement('tr');
-        [index + 1, parseFloat(f.toFixed(3)), `${parseFloat(f.toFixed(3))} / ${parseFloat(totalFitness.toFixed(3))}`].forEach(val => {
-            const td = document.createElement('td');
-            td.textContent = val;
-            tr.appendChild(td);
-        });
-        const tdP = document.createElement('td');
-        const strongP = document.createElement('strong');
-        strongP.textContent = p.toFixed(3);
-        tdP.appendChild(strongP);
-        tr.appendChild(tdP);
-        tbody.appendChild(tr);
-    });
-    table.appendChild(tbody);
-    refs.m4Steps.appendChild(table);
-    drawRouletteWheel4(fitnessValues, probabilities);
-}
+
 export function calculateMath5() {
     if (!refs.m5Steps) return;
     const inputs = document.querySelectorAll('.m5-prob-input');
     refs.m5Steps.textContent = '';
-        const probabilities = [];
+    const probabilities = [];
     inputs.forEach(input => {
         if (input.value.trim() !== '') {
             probabilities.push(parseFloat(input.value) || 0);
@@ -148,7 +73,7 @@ export function calculateMath5() {
         clearWheel5();
         return;
     }
-    const rInput = refs.m5InR.value;
+    const rInput = refs.m5InR ? refs.m5InR.value : "";
     const r = rInput !== "" ? parseFloat(rInput) : null;
     let cumulative = 0;
     let selectedParent = null;
@@ -227,13 +152,14 @@ export function calculateMath5() {
     }
     drawRouletteWheel5(probabilities, rows, r, selectedParent);
 }
+
 export function calculateMath6() {
     if (!refs.m6Steps) return;
     const inputs = document.querySelectorAll('.m6-fitness-input');
     refs.m6Steps.textContent = '';
-        const fitnessValues = [];
+    const fitnessValues = [];
     let totalFitness = 0;
-        inputs.forEach(input => {
+    inputs.forEach(input => {
         if (input.value.trim() !== '') {
             const val = parseFloat(input.value) || 0;
             fitnessValues.push(val);
