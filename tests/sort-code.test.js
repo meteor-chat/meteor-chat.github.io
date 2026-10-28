@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import fs from "fs";
+import path from "path";
+import process from "node:process";
 import { loadAlgorithmCode } from "../src/lab/sort/code/sort-code-registry.js";
 import {
     openCodePanel,
@@ -89,5 +92,11 @@ describe("sort-code-panel DOM operations", () => {
         clearCodeHighlight();
         const clearedLines = document.querySelectorAll(".sort-code-line.active");
         expect(clearedLines.length).toBe(0);
+    });
+
+    it("ensures no per-line horizontal scrollbars in sort.html CSS", () => {
+        const html = fs.readFileSync(path.resolve(process.cwd(), "sort.html"), "utf-8");
+        expect(html).toContain("overflow-x: hidden");
+        expect(html).not.toMatch(/\.sort-code-line-text[^{]*\{[^}]*overflow-x:\s*auto/);
     });
 });

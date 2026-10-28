@@ -30,7 +30,11 @@
 .copy-btn:hover { color: #e6edf3; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); }
 .copy-btn img { width: 13px; height: 13px; opacity: 0.85; }
 .copy-text { font-size: 12px; font-weight: 500; }
-.code-block-wrapper pre { background: transparent !important; border: none !important; border-radius: 0 !important; margin: 0 !important; padding: 14px 16px !important; overflow-x: auto; }
+.code-block-wrapper pre { background: transparent !important; border: none !important; border-radius: 0 !important; margin: 0 !important; padding: 14px 16px !important; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #30363d transparent; }
+.code-block-wrapper pre::-webkit-scrollbar { height: 4px; }
+.code-block-wrapper pre::-webkit-scrollbar-track { background: transparent; }
+.code-block-wrapper pre::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.code-block-wrapper pre::-webkit-scrollbar-thumb:hover { background: #484f58; }
 .code-block-wrapper pre code { font-family: 'Roboto Mono', monospace !important; font-size: 13.5px; line-height: 1.65; color: #e6edf3; tab-size: 4; background: transparent !important; padding: 0 !important; border: none !important; }
 .hljs { display: block; overflow-x: auto; color: #e6edf3; }
 .hljs-keyword, .hljs-operator { color: #ff7b72; font-weight: 500; }
