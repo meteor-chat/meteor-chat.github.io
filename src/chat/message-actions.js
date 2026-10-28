@@ -13,20 +13,27 @@ export async function copyCode(btn) {
     const code = pre?.querySelector("code");
     if (code) {
         const success = await writeText(code.textContent);
+        const copyText = btn.querySelector(".copy-text");
         if (success) {
-            btn.textContent = "Copied!";
+            if (copyText) copyText.textContent = "Copied!";
+            else btn.textContent = "Copied!";
         } else {
-            btn.textContent = "Failed";
+            if (copyText) copyText.textContent = "Failed";
+            else btn.textContent = "Failed";
             showError("Gagal menyalin kode.");
         }
         setTimeout(() => {
-            btn.textContent = "";
-            const img = document.createElement("img");
-            img.src = "./assets/svg/copy.svg";
-            img.alt = "Copy";
-            img.width = 16;
-            img.height = 16;
-            btn.appendChild(img);
+            if (copyText) {
+                copyText.textContent = "Copy";
+            } else {
+                btn.textContent = "";
+                const img = document.createElement("img");
+                img.src = "./assets/svg/copy.svg";
+                img.alt = "Copy";
+                img.width = 14;
+                img.height = 14;
+                btn.appendChild(img);
+            }
         }, 1500);
     }
 }

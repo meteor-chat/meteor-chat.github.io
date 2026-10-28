@@ -14,9 +14,36 @@
 .msg-assistant-content h3 { font-size: 1.1em; }
 .msg-assistant-content ul, .msg-assistant-content ol { margin-bottom: var(--space-md); padding-left: var(--space-xl); }
 .msg-assistant-content li { margin-bottom: 6px; }
-.msg-assistant-content code { background-color: var(--bg-code-inline); color: var(--text-code-inline); padding: 3px 6px; border-radius: 6px; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; }
+.msg-assistant-content code { background-color: var(--bg-code-inline); color: var(--text-code-inline); padding: 2px 6px; border-radius: 6px; font-family: 'Roboto Mono', monospace; font-size: 0.88em; border: 1px solid rgba(255, 255, 255, 0.08); }
 .msg-assistant-content pre { background-color: var(--bg-code); padding: var(--space-md); border-radius: var(--radius-md); overflow-x: auto; margin-bottom: var(--space-md); border: 1px solid var(--border-code); }
-.msg-assistant-content pre code { background-color: transparent; color: var(--text-code); padding: 0; border-radius: 0; }
+.msg-assistant-content pre code { background-color: transparent; color: var(--text-code); padding: 0; border-radius: 0; border: none; }
+.code-block-wrapper { background: #0d1117; border: 1px solid #30363d; border-radius: 10px; margin: var(--space-md) 0; overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45); max-width: 100%; width: 100%; }
+.code-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: #161b22; border-bottom: 1px solid #30363d; font-family: 'Roboto Mono', monospace; font-size: 12px; }
+.code-header-left { display: flex; align-items: center; gap: 12px; }
+.code-dots { display: flex; gap: 6px; align-items: center; }
+.code-dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.85; }
+.code-dot.red { background: #ff5f56; }
+.code-dot.yellow { background: #ffbd2e; }
+.code-dot.green { background: #27c93f; }
+.code-lang { font-size: 12px; font-weight: 500; color: #79c0ff; text-transform: lowercase; letter-spacing: 0.5px; }
+.copy-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid transparent; color: #8b949e; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-family: 'Google Sans', sans-serif; cursor: pointer; transition: all 0.15s ease; }
+.copy-btn:hover { color: #e6edf3; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.12); }
+.copy-btn img { width: 13px; height: 13px; opacity: 0.85; }
+.copy-text { font-size: 12px; font-weight: 500; }
+.code-block-wrapper pre { background: transparent !important; border: none !important; border-radius: 0 !important; margin: 0 !important; padding: 14px 16px !important; overflow-x: auto; }
+.code-block-wrapper pre code { font-family: 'Roboto Mono', monospace !important; font-size: 13.5px; line-height: 1.65; color: #e6edf3; tab-size: 4; background: transparent !important; padding: 0 !important; border: none !important; }
+.hljs { display: block; overflow-x: auto; color: #e6edf3; }
+.hljs-keyword, .hljs-operator { color: #ff7b72; font-weight: 500; }
+.hljs-built_in, .hljs-type { color: #ffa657; }
+.hljs-string, .hljs-regexp { color: #7ee787; }
+.hljs-number, .hljs-literal { color: #79c0ff; }
+.hljs-function, .hljs-title, .hljs-title\.function { color: #d2a8ff; }
+.hljs-comment, .hljs-quote { color: #8b949e; font-style: italic; }
+.hljs-variable, .hljs-template-variable { color: #ffa657; }
+.hljs-punctuation { color: #c9d1d9; }
+.hljs-attr, .hljs-attribute { color: #79c0ff; }
+.hljs-meta { color: #79c0ff; }
+.hljs-class .hljs-title { color: #f0883e; }
 .msg-assistant-content blockquote { border-left: 4px solid var(--quote-border); padding-left: var(--space-md); color: var(--text-muted); margin: var(--space-md) 0; background: var(--quote-bg); padding-top: var(--space-xs); padding-bottom: var(--space-xs); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 .msg-assistant-content table { border-collapse: collapse; width: 100%; margin: var(--space-md) 0; }
 .msg-assistant-content th, .msg-assistant-content td { border: 1px solid var(--border-code); padding: var(--space-xs); text-align: left; }
