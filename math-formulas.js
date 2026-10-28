@@ -34,5 +34,6 @@ export const FORMULAS = [
     "EAC = \\frac{BAC}{CPI}",
     "\\text{Estimated Time to Complete} = \\frac{\\text{Original Time Estimate}}{SPI}",
     "ETC = EAC - AC",
-    "VAC = BAC - EAC"
+    "VAC = BAC - EAC",
+    "\\frac{C}{5} = \\frac{R}{4} = \\frac{F - 32}{9} = \\frac{K - 273.15}{5}"
 ];

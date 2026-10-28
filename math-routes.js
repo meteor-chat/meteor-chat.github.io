@@ -6,7 +6,8 @@ export const CATEGORY_SLUGS = {
     "Matematika Diskrit": "dm",
     "Matriks Vektor": "vm",
     "Bangun Ruang": "g",
-    "Manajemen Proyek": "pm"
+    "Manajemen Proyek": "pm",
+    "Fisika": "phy"
 };
 
 export const SLUG_TO_CATEGORY = {
@@ -18,7 +19,8 @@ export const SLUG_TO_CATEGORY = {
     dm: "Matematika Diskrit",
     vm: "Matriks Vektor",
     g: "Bangun Ruang",
-    pm: "Manajemen Proyek"
+    pm: "Manajemen Proyek",
+    phy: "Fisika"
 };
 
 export const FORMULA_CATEGORIES = [
@@ -57,7 +59,8 @@ export const FORMULA_CATEGORIES = [
     "Manajemen Proyek",
     "Manajemen Proyek",
     "Manajemen Proyek",
-    "Manajemen Proyek"
+    "Manajemen Proyek",
+    "Fisika"
 ];
 
 export const FORMULA_URLS = [
@@ -96,7 +99,8 @@ export const FORMULA_URLS = [
     "/math/pm/8",
     "/math/pm/9",
     "/math/pm/10",
-    "/math/pm/11"
+    "/math/pm/11",
+    "/math/phy/1"
 ];
 
 const URL_TO_ID = {
@@ -160,7 +164,10 @@ const URL_TO_ID = {
     "/math/pm/32": 32,
     "/math/pm/33": 33,
     "/math/pm/34": 34,
-    "/math/pm/35": 35
+    "/math/pm/35": 35,
+    "/math/phy/1": 36,
+    "/math/phy/36": 36,
+    "/math/36": 36
 };
 
 export function getFormulaUrl(id) {

@@ -34,5 +34,6 @@ export const FORMULA_NAMES = [
     "Estimate at Completion (EAC)",
     "Estimated Time to Complete",
     "Estimate to Complete (ETC)",
-    "Variance at Completion (VAC)"
+    "Variance at Completion (VAC)",
+    "Konversi Suhu"
 ];
