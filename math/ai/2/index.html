@@ -259,6 +259,24 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .cube-out-name, .cube-out-colon, .cube-out-val { font-size: 14px; }
     .cube-out-row { grid-template-columns: 115px 12px 1fr; }
 }
+.obj-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+.obj-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.obj-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
+.obj-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
+.obj-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
+.obj-preset-wrap { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 4px; }
+.obj-preset-select { background: #111; border: 1px solid #444; color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 12px; }
+.obj-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+.obj-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
+.btn-obj-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+.btn-obj-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
+.obj-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
+.obj-token-x1 { color: #38bdf8 !important; cursor: default; }
+.obj-token-x2 { color: #fbbf24 !important; cursor: default; }
+.obj-token-h { color: #4ade80 !important; cursor: default; }
+.obj-token-x1:hover, .obj-token-x1.obj-glow-x1 { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
+.obj-token-x2:hover, .obj-token-x2.obj-glow-x2 { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
+@media (max-width: 900px) { .obj-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
 </style>
 <link rel="modulepreload" href="./src/math/math-main.js?v=13">
 <link rel="modulepreload" href="./math-filter.js">
@@ -415,18 +433,60 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
         </div>
       </div>
         
-      <div id="math-calc-form-2" class="math-calc-container "><div class="math-calc-header"><button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Fungsi Objektif</h1></div>
-        <div class="math-calc-left"><div id="math-calc-formula-display-2" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">
-                    <label>x1 (user input)</label>
-                    <input type="number" id="math2-in-x1" placeholder="misalnya 2" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>x2 (user input)</label>
-                    <input type="number" id="math2-in-x2" placeholder="misalnya 3" step="0.1">
-                </div></div></div><div class="math-calc-right"><canvas id="math2-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps" id="math2-table-container"></div>
+      <div id="math-calc-form-2" class="math-calc-container obj-page "><div class="math-calc-header chromo-header"><button id="btn-math-calc-back-2" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title chromo-title">Fungsi Objektif</h1></div>
+        <div class="obj-two-col-layout">
+          <div class="obj-col-left">
+            <div id="math-calc-formula-display-2" class="math-formula-box obj-top-formula"></div>
+            <div class="obj-preset-wrap">
+              <label for="obj-preset-select" class="chromo-param-label">Preset:</label>
+              <select id="obj-preset-select" class="obj-preset-select">
+                <option value="default">Silabus Kuliah (h = x₁³ + ⅓x₂²)</option>
+                <option value="sphere">Sphere Function (h = x₁² + x₂²)</option>
+                <option value="saddle">Saddle Function (h = x₁² - x₂²)</option>
+                <option value="rosenbrock">Rosenbrock Valley (h = 100(x₂ - x₁²)² + (1 - x₁)²)</option>
+              </select>
+            </div>
+            <div class="obj-canvas-wrap">
+              <canvas id="math2-canvas" class="obj-canvas" width="340" height="340"></canvas>
+            </div>
+          </div>
+          <div class="obj-col-right">
+            <button type="button" id="btn-obj-import-chromo" class="btn-obj-pipeline">&#8595; Tarik Nilai dari Rumus 1 (Dekode Kromosom)</button>
+            <div class="obj-inputs-box">
+              <div class="chromo-param-group">
+                <label for="math2-in-x1" class="chromo-param-label"><span id="obj-label-x1" class="chromo-param-math">x₁</span></label>
+                <input type="number" id="math2-in-x1" class="chromo-param-input obj-input-x1" value="2" step="0.1">
+              </div>
+              <div class="chromo-param-group">
+                <label for="math2-in-x2" class="chromo-param-label"><span id="obj-label-x2" class="chromo-param-math">x₂</span></label>
+                <input type="number" id="math2-in-x2" class="chromo-param-input obj-input-x2" value="3" step="0.1">
+              </div>
+            </div>
+            <div class="chromo-curved-arrows-box">
+              <svg class="chromo-curved-arrows-svg" viewBox="0 0 380 60" preserveAspectRatio="none">
+                <defs>
+                  <marker id="obj-curved-arrowhead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#ffffff" />
+                  </marker>
+                </defs>
+                <path d="M 80 5 C 80 32, 140 46, 160 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#obj-curved-arrowhead)" />
+                <path d="M 300 5 C 300 32, 240 46, 220 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#obj-curved-arrowhead)" />
+              </svg>
+            </div>
+            <div id="obj-card-step1" class="chromo-card chromo-card-rounded"></div>
+            <div id="obj-arrow-1" class="chromo-step-arrow">&darr;</div>
+            <div id="obj-card-step2" class="chromo-card chromo-card-rect"></div>
+            <div id="obj-arrow-2" class="chromo-step-arrow">&darr;</div>
+            <div id="obj-card-step3" class="chromo-card chromo-card-rect"></div>
+            <div id="obj-arrow-3" class="chromo-step-arrow">&darr;</div>
+            <div id="obj-card-step4" class="chromo-card chromo-card-rect"></div>
+            <div id="obj-arrow-4" class="chromo-step-arrow">&darr;</div>
+            <div id="obj-card-step5" class="chromo-card chromo-card-result"></div>
+            <div id="math2-table-container" class="hidden"></div>
+          </div>
         </div>
-    </div>
-    
+      </div>
+        
       <div id="math-calc-form-3" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Nilai Fitness</h1></div>
         <div class="math-calc-left"><div id="math-calc-formula-display-3" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">
                     <label>h (user input)</label>
