@@ -596,18 +596,71 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
         </div>
     </div>
     
-      <div id="math-calc-form-7" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Crossover Kromosom</h1></div>
-        <div class="math-calc-left"><div id="math-calc-formula-display-7" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">
-                    <label>Kromosom Parent 1 (P1)</label>
-                    <input type="text" id="math7-in-p1" placeholder="misal: 10101010">
-                </div>
-                <div class="math-input-group">
-                    <label>Kromosom Parent 2 (P2)</label>
-                    <input type="text" id="math7-in-p2" placeholder="misal: 11001100">
-                </div>
-                <div class="math-input-group"><label>Tipe Crossover</label><select id="math7-in-type"><option value="single">Single-point</option><option value="two">Two-point</option><option value="uniform">Uniform</option></select></div><div class="math-input-group" id="math7-k-container"><label>Titik Potong (k)</label><input type="number" id="math7-in-k" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-k1-container"><label>Titik Potong 1 (k1)</label><input type="number" id="math7-in-k1" placeholder="misal: 2" step="1"></div><div class="math-input-group hidden" id="math7-k2-container"><label>Titik Potong 2 (k2)</label><input type="number" id="math7-in-k2" placeholder="misal: 4" step="1"></div><div class="math-input-group hidden" id="math7-mask-container"><label>Mask (biner, 1=P2)</label><input type="text" id="math7-in-mask" placeholder="misal: 01001"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math7-steps-container"></div>
+      <div id="math-calc-form-7" class="math-calc-container cross-page hidden">
+        <div class="math-calc-header cross-header">
+          <button id="btn-math-calc-back-7" class="btn-math-back calc-back-btn">&larr; Kembali</button>
+          <h1 class="math-calc-title cross-title">Crossover Kromosom</h1>
         </div>
-    </div>
+        <div class="cross-two-col-layout">
+          <div class="cross-col-left">
+            <div id="math-calc-formula-display-7" class="math-formula-box cross-top-formula"></div>
+            <div class="cross-visual-board" id="cross-visual-board"></div>
+            <div class="cross-inputs-container">
+              <div class="cross-input-row">
+                <label for="math7-in-p1" class="cross-label">Parent 1 (P1)</label>
+                <input type="text" id="math7-in-p1" class="cross-input" value="10110010" spellcheck="false" autocomplete="off" placeholder="misal: 10110010">
+              </div>
+              <div class="cross-input-row">
+                <label for="math7-in-p2" class="cross-label">Parent 2 (P2)</label>
+                <input type="text" id="math7-in-p2" class="cross-input" value="01101101" spellcheck="false" autocomplete="off" placeholder="misal: 01101101">
+              </div>
+              <div class="cross-input-row">
+                <label for="math7-in-type" class="cross-label">Skema Crossover</label>
+                <select id="math7-in-type" class="cross-select">
+                  <option value="single" selected>Single-point</option>
+                  <option value="two">Two-point</option>
+                  <option value="uniform">Uniform</option>
+                </select>
+              </div>
+              <div class="cross-input-row" id="math7-k-container">
+                <label for="math7-in-k" class="cross-label">Titik Potong (k: 1 .. n-1)</label>
+                <div class="cross-slider-wrap">
+                  <input type="number" id="math7-in-k" class="cross-input cross-input-num" value="3" min="1" max="7" step="1">
+                  <input type="range" id="math7-in-k-slider" class="cross-range" value="3" min="1" max="7" step="1">
+                </div>
+              </div>
+              <div class="cross-input-row hidden" id="math7-k1-container">
+                <label for="math7-in-k1" class="cross-label">Titik Potong 1 (k1)</label>
+                <input type="number" id="math7-in-k1" class="cross-input cross-input-num" value="2" min="1" step="1">
+              </div>
+              <div class="cross-input-row hidden" id="math7-k2-container">
+                <label for="math7-in-k2" class="cross-label">Titik Potong 2 (k2)</label>
+                <input type="number" id="math7-in-k2" class="cross-input cross-input-num" value="5" min="2" step="1">
+              </div>
+              <div class="cross-input-row hidden" id="math7-mask-container">
+                <label for="math7-in-mask" class="cross-label">Mask Biner (1=P1, 0=P2)</label>
+                <input type="text" id="math7-in-mask" class="cross-input" value="11001010" spellcheck="false" autocomplete="off" placeholder="misal: 11001010">
+              </div>
+            </div>
+          </div>
+          <div class="cross-col-right">
+            <svg class="cross-flow-svg" viewBox="0 0 340 40" fill="none" aria-hidden="true">
+              <path d="M 60 0 C 60 25, 170 15, 170 40" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-dasharray="4 4" fill="none" />
+              <path d="M 280 0 C 280 25, 170 15, 170 40" stroke="rgba(255,255,255,0.2)" stroke-width="2" stroke-dasharray="4 4" fill="none" />
+              <polygon points="166,36 174,36 170,40" fill="rgba(255,255,255,0.4)" />
+            </svg>
+            <div class="cross-steps-container" id="math7-steps-container">
+              <div class="step-card-box cross-step-card" id="cross-card-step1"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="step-card-box cross-step-card" id="cross-card-step2"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="step-card-box cross-step-card" id="cross-card-step3"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="step-card-box cross-step-card" id="cross-card-step4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="math-calc-form-8" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-8" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Dominasi Pareto</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-8" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Objektif A (contoh: 3,45)</label><input type="text" id="math8-in-a" placeholder="misal: 3, 45"></div><div class="math-input-group"><label>Fungsi Objektif B (contoh: 5,40)</label><input type="text" id="math8-in-b" placeholder="misal: 5, 40"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math8-steps-container"></div></div></div>
       <div id="math-calc-form-9" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-9" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Non-Dominated Sorting</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-9" class="math-formula-box"></div><div class="math-inputs"><div id="math9-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps math-steps-scroll" id="math9-steps-container"></div></div></div>
       <div id="math-calc-form-10" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-10" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Standar Deviasi Populasi</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-10" class="math-formula-box"></div><div class="math-inputs"><div id="math10-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><canvas id="math10-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps math-steps-scroll" id="math10-steps-container"></div></div></div>
