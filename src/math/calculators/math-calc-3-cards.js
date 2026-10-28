@@ -38,11 +38,10 @@ export function renderFitnessCards(h, a) {
     const card2 = document.getElementById("fit-card-step2");
     const card3 = document.getElementById("fit-card-step3");
     const card4 = document.getElementById("fit-card-step4");
-    const card5 = document.getElementById("fit-card-step5");
 
     if (isNaN(h) || isNaN(a)) {
         if (card1) card1.textContent = "Masukkan nilai h dan a yang valid";
-        [card2, card3, card4, card5].forEach((c) => {
+        [card2, card3, card4].forEach((c) => {
             if (c) c.textContent = "";
         });
         return;
@@ -69,19 +68,11 @@ export function renderFitnessCards(h, a) {
     if (Math.abs(denom) < 1e-12) {
         if (card3) {
             card3.textContent = "";
-            katex.render("\\text{Fitness} = \\frac{1}{0} \\to \\pm\\infty", card3, { throwOnError: false, trust: true, displayMode: true });
+            katex.render("\\text{Fitness} = \\frac{1}{0}", card3, { throwOnError: false, trust: true, displayMode: true });
         }
         if (card4) {
             card4.textContent = "";
-            card4.innerHTML = `<span style="color:#ef4444;font-weight:600;">Singularitas: Pembagian dengan Nol!</span>`;
-        }
-        if (card5) {
-            card5.textContent = "";
-            card5.innerHTML = `
-                <div class="chromo-card-subnote" style="color:#f87171;">
-                    Penyebut bernilai 0 (h = -a). Ubah konstanta a atau nilai h untuk menghindari pembagian dengan nol.
-                </div>
-            `;
+            katex.render("\\text{Singular: } \\text{Pembagian dengan nol}", card4, { throwOnError: false, trust: true, displayMode: true });
         }
         return;
     }
@@ -99,25 +90,5 @@ export function renderFitnessCards(h, a) {
         card4.textContent = "";
         const tex4 = `\\text{Fitness} \\approx \\htmlClass{fit-token-f}{\\mathbf{${fitFmt}}}`;
         katex.render(tex4, card4, { throwOnError: false, trust: true, displayMode: true });
-    }
-
-    if (card5) {
-        card5.textContent = "";
-        const isNegative = fitVal < 0;
-        const noteTitle = isNegative
-            ? "Peringatan: Nilai Fitness Negatif!"
-            : "Evaluasi Nilai Fitness Selesai";
-        const noteDesc = isNegative
-            ? "Metode seleksi proporsional (Roulette Wheel) mensyaratkan fitness selalu positif (F &gt; 0). Naikkan konstanta a agar penyebut tetap positif."
-            : "Nilai fitness menentukan probabilitas reproduksi individu dalam seleksi Roda Roulette. Semakin kecil nilai objektif h (minimasi), semakin besar peluang bertahan hidup.";
-
-        card5.innerHTML = `
-            <div style="font-weight:600;font-size:13px;color:${isNegative ? "#f87171" : "#38bdf8"};margin-bottom:4px;">
-                ${noteTitle}
-            </div>
-            <div class="chromo-card-subnote">
-                ${noteDesc}
-            </div>
-        `;
     }
 }

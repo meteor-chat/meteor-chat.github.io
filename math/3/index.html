@@ -266,8 +266,6 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .obj-top-formula, .fit-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
 .obj-canvas-wrap, .fit-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
 .obj-canvas, .fit-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
-.btn-obj-pipeline, .btn-fit-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-.btn-obj-pipeline:hover, .btn-fit-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
 .obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
 .obj-token-x1, .fit-token-h { color: #38bdf8 !important; cursor: default; }
 .obj-token-x2, .fit-token-a { color: #fbbf24 !important; cursor: default; }
@@ -440,7 +438,6 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">‚
             </div>
           </div>
           <div class="obj-col-right">
-            <button type="button" id="btn-obj-import-chromo" class="btn-obj-pipeline">&#8595; Tarik Nilai dari Rumus 1 (Dekode Kromosom)</button>
             <div class="obj-inputs-box">
               <div class="chromo-param-group">
                 <label for="math2-in-x1" class="chromo-param-label"><span id="obj-label-x1" class="chromo-param-math">x‚ÇÅ</span></label>
@@ -485,7 +482,6 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">‚
             </div>
           </div>
           <div class="fit-col-right">
-            <button type="button" id="btn-fit-import-obj" class="btn-fit-pipeline">&#8595; Tarik Nilai h dari Rumus 2 (Fungsi Objektif)</button>
             <div class="fit-inputs-box">
               <div class="chromo-param-group">
                 <label for="math3-in-h" class="chromo-param-label"><span id="fit-label-h" class="chromo-param-math">h</span></label>
@@ -513,9 +509,7 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">‚
             <div id="fit-arrow-2" class="chromo-step-arrow">&darr;</div>
             <div id="fit-card-step3" class="chromo-card chromo-card-rect"></div>
             <div id="fit-arrow-3" class="chromo-step-arrow">&darr;</div>
-            <div id="fit-card-step4" class="chromo-card chromo-card-rect"></div>
-            <div id="fit-arrow-4" class="chromo-step-arrow">&darr;</div>
-            <div id="fit-card-step5" class="chromo-card chromo-card-result"></div>
+            <div id="fit-card-step4" class="chromo-card chromo-card-result"></div>
             <div id="math3-steps-container" class="hidden"></div>
           </div>
         </div>

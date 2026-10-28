@@ -254,8 +254,6 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .obj-top-formula, .fit-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
 .obj-canvas-wrap, .fit-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
 .obj-canvas, .fit-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
-.btn-obj-pipeline, .btn-fit-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-.btn-obj-pipeline:hover, .btn-fit-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
 .obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
 .obj-token-x1, .fit-token-h { color: #38bdf8 !important; cursor: default; }
 .obj-token-x2, .fit-token-a { color: #fbbf24 !important; cursor: default; }

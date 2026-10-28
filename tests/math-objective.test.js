@@ -18,13 +18,11 @@ describe("math-objective evaluation and cards", () => {
                 <div id="obj-label-x2"></div>
                 <input id="math2-in-x1" value="2" />
                 <input id="math2-in-x2" value="3" />
-                <button id="btn-obj-import-chromo"></button>
                 <div id="obj-card-step1"></div>
                 <div id="obj-card-step2"></div>
                 <div id="obj-card-step3"></div>
                 <div id="obj-card-step4"></div>
                 <div id="obj-card-step5"></div>
-                <div id="chromo-card-step6">x ≈ 1.85</div>
                 <canvas id="math2-canvas" width="340" height="340"></canvas>
             </div>
         `;
@@ -56,7 +54,6 @@ describe("math-objective evaluation and cards", () => {
         expect(c3.innerHTML).toContain("3");
         expect(c4.innerHTML).toContain("8 + 3");
         expect(c5.innerHTML).toContain("11");
-        expect(c5.innerHTML).toContain("Nilai evaluasi fenotipe");
     });
 
     it("evaluates negative inputs correctly", () => {
@@ -118,18 +115,11 @@ describe("math-objective evaluation and cards", () => {
         expect(c5.innerHTML).toContain("11");
     });
 
-    it("imports decoded chromosome value when import button is clicked", () => {
-        calculateMath2();
-        const btn = document.getElementById("btn-obj-import-chromo");
-        btn.click();
-        expect(refs.m2InX1.value).toBe("1.85");
-    });
-
-    it("verifies math.html contains benchmark layout without preset select", () => {
+    it("verifies math.html contains benchmark layout without pipeline button or preset select", () => {
         const html = fs.readFileSync("math.html", "utf8");
         expect(html).toContain("obj-two-col-layout");
         expect(html).not.toContain("obj-preset-select");
-        expect(html).toContain("btn-obj-import-chromo");
+        expect(html).not.toContain("btn-obj-import-chromo");
         expect(html).toContain("obj-card-step1");
         expect(html).toContain("obj-card-step5");
         expect(html).toContain("math2-canvas");

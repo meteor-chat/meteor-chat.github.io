@@ -53,28 +53,6 @@ function initObjEvents() {
     renderParamLabels2();
     bindObjTokenHover();
 
-    const btnImport = document.getElementById("btn-obj-import-chromo");
-    btnImport?.addEventListener("click", () => {
-        const chromoRes = document.getElementById("chromo-card-step6");
-        let foundVal = null;
-        if (chromoRes) {
-            const match = chromoRes.textContent.match(/x\s*≈\s*([-\d.]+)/);
-            if (match && match[1]) foundVal = parseFloat(match[1]);
-        }
-        if (foundVal === null) {
-            try {
-                const saved = typeof window !== "undefined" && window.sessionStorage ? window.sessionStorage.getItem("last_decoded_chromo_x") : null;
-                if (saved) foundVal = parseFloat(saved);
-            } catch {
-                foundVal = null;
-            }
-        }
-        if (foundVal !== null && !isNaN(foundVal)) {
-            if (refs.m2InX1) refs.m2InX1.value = String(foundVal);
-            calculateMath2();
-        }
-    });
-
     const canvas = document.getElementById("math2-canvas");
     if (!canvas) return;
 

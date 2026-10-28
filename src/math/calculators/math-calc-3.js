@@ -50,28 +50,6 @@ function initFitEvents() {
     renderParamLabels3();
     bindFitTokenHover();
 
-    const btnImport = document.getElementById("btn-fit-import-obj");
-    btnImport?.addEventListener("click", () => {
-        const objRes = document.getElementById("obj-card-step5");
-        let foundVal = null;
-        if (objRes) {
-            const match = objRes.textContent.match(/h\s*≈\s*([-\d.]+)/);
-            if (match && match[1]) foundVal = parseFloat(match[1]);
-        }
-        if (foundVal === null) {
-            try {
-                const saved = typeof window !== "undefined" && window.sessionStorage ? window.sessionStorage.getItem("last_evaluated_obj_h") : null;
-                if (saved) foundVal = parseFloat(saved);
-            } catch {
-                foundVal = null;
-            }
-        }
-        if (foundVal !== null && !isNaN(foundVal)) {
-            if (refs.m3InH) refs.m3InH.value = String(foundVal);
-            calculateMath3();
-        }
-    });
-
     const canvas = document.getElementById("math3-canvas");
     if (!canvas) return;
 

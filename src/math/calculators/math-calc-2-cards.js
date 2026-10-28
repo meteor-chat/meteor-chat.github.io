@@ -75,11 +75,6 @@ export function renderObjectiveCards(x1, x2) {
         const tex5 = `h \\approx \\htmlClass{obj-token-h}{\\mathbf{${formatMax3(total)}}}`;
         katex.render(tex5, card5, { throwOnError: false, trust: true, displayMode: true });
 
-        const sub = document.createElement("div");
-        sub.className = "chromo-card-subnote";
-        sub.textContent = "Nilai evaluasi fenotipe individu untuk seleksi algoritma genetika";
-        card5.appendChild(sub);
-
         try {
             if (typeof window !== "undefined" && window.sessionStorage) {
                 window.sessionStorage.setItem("last_evaluated_obj_h", String(total));

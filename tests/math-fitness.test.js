@@ -18,13 +18,10 @@ describe("math-fitness evaluation and cards", () => {
                 <div id="fit-label-a"></div>
                 <input id="math3-in-h" value="5" />
                 <input id="math3-in-a" value="0.1" />
-                <button id="btn-fit-import-obj"></button>
                 <div id="fit-card-step1"></div>
                 <div id="fit-card-step2"></div>
                 <div id="fit-card-step3"></div>
                 <div id="fit-card-step4"></div>
-                <div id="fit-card-step5"></div>
-                <div id="obj-card-step5">h ≈ 11</div>
                 <canvas id="math3-canvas" width="340" height="340"></canvas>
             </div>
         `;
@@ -49,30 +46,24 @@ describe("math-fitness evaluation and cards", () => {
         const c2 = document.getElementById("fit-card-step2");
         const c3 = document.getElementById("fit-card-step3");
         const c4 = document.getElementById("fit-card-step4");
-        const c5 = document.getElementById("fit-card-step5");
 
         expect(c1.innerHTML).toContain("5");
         expect(c1.innerHTML).toContain("0.1");
         expect(c2.innerHTML).toContain("5.1");
         expect(c3.innerHTML).toContain("5.1");
         expect(c4.innerHTML).toContain("0.1961");
-        expect(c5.innerHTML).toContain("Evaluasi Nilai Fitness Selesai");
     });
 
     it("handles singularity when denominator is zero", () => {
         renderFitnessCards(-0.1, 0.1);
         const c4 = document.getElementById("fit-card-step4");
-        const c5 = document.getElementById("fit-card-step5");
-        expect(c4.innerHTML).toContain("Singularitas");
-        expect(c5.innerHTML).toContain("pembagian dengan nol");
+        expect(c4.innerHTML).toContain("Singular");
     });
 
-    it("flags warning when fitness is negative", () => {
+    it("handles negative denominator correctly", () => {
         renderFitnessCards(-2, 0.1);
         const c4 = document.getElementById("fit-card-step4");
-        const c5 = document.getElementById("fit-card-step5");
         expect(c4.innerHTML).toContain("-0.5263");
-        expect(c5.innerHTML).toContain("Peringatan: Nilai Fitness Negatif!");
     });
 
     it("handles invalid inputs gracefully", () => {
@@ -119,21 +110,13 @@ describe("math-fitness evaluation and cards", () => {
         expect(c4.innerHTML).toContain("0.1961");
     });
 
-    it("imports evaluated objective h value when import button is clicked", () => {
-        calculateMath3();
-        const btn = document.getElementById("btn-fit-import-obj");
-        btn.click();
-        expect(refs.m3InH.value).toBe("11");
-        const c4 = document.getElementById("fit-card-step4");
-        expect(c4.innerHTML).toContain("0.0901");
-    });
-
-    it("verifies math.html contains benchmark layout elements for form 3", () => {
+    it("verifies math.html contains benchmark layout elements without pipeline button or card 5", () => {
         const html = fs.readFileSync("math.html", "utf8");
         expect(html).toContain("fit-two-col-layout");
-        expect(html).toContain("btn-fit-import-obj");
+        expect(html).not.toContain("btn-fit-import-obj");
         expect(html).toContain("fit-card-step1");
-        expect(html).toContain("fit-card-step5");
+        expect(html).toContain("fit-card-step4");
+        expect(html).not.toContain("fit-card-step5");
         expect(html).toContain("math3-canvas");
     });
 });
