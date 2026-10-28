@@ -1,20 +1,34 @@
-function renderKatexSafe(tex, element, isDisplay = true) {
-    if (!element) return;
+function renderCardWithSubnote(card, tex, subnoteText) {
+    if (!card) return;
+    card.textContent = "";
+    const topMath = document.createElement("div");
     if (typeof window !== "undefined" && window.katex) {
-        window.katex.render(tex, element, { displayMode: isDisplay, throwOnError: false });
+        window.katex.render(tex, topMath, { displayMode: true, throwOnError: false, trust: true, strict: false });
     } else {
-        element.textContent = tex;
+        topMath.textContent = tex;
+    }
+    card.appendChild(topMath);
+    if (subnoteText) {
+        const sub = document.createElement("div");
+        sub.className = "chromo-card-subnote";
+        sub.textContent = subnoteText;
+        card.appendChild(sub);
     }
 }
 
 export function renderTopFormula4() {
     const el = document.getElementById("math-calc-formula-display-4");
     if (!el) return;
+    el.textContent = "";
     const tex = "\\htmlClass{sel-token-pi}{P_i} = \\frac{\\htmlClass{sel-token-fi}{F_i}}{\\sum_{j=1}^{n} \\htmlClass{sel-token-fi}{F_j}} = \\frac{\\htmlClass{sel-token-fi}{F_i}}{\\htmlClass{sel-token-sumf}{\\sum F}}";
-    renderKatexSafe(tex, el, false);
+    if (typeof window !== "undefined" && window.katex) {
+        window.katex.render(tex, el, { displayMode: false, throwOnError: false, trust: true, strict: false });
+    } else {
+        el.textContent = tex;
+    }
 }
 
-export function renderSelectionCards(values) {
+export function renderSelectionCards(values, activeIndex = 0) {
     const c1 = document.getElementById("sel-card-step1");
     const c2 = document.getElementById("sel-card-step2");
     const c3 = document.getElementById("sel-card-step3");
@@ -22,10 +36,10 @@ export function renderSelectionCards(values) {
     if (!c1 || !c2 || !c3 || !c4) return;
 
     if (!values || values.length === 0) {
-        renderKatexSafe("\\sum F = 0", c1);
-        renderKatexSafe("P_i = \\text{--}", c2);
-        renderKatexSafe("P_i \\approx \\text{--}", c3);
-        renderKatexSafe("\\sum P_i = \\text{--}", c4);
+        renderCardWithSubnote(c1, "\\sum F = 0", "Populasi kosong");
+        renderCardWithSubnote(c2, "P_i = \\text{--}", "Belum ada individu");
+        renderCardWithSubnote(c3, "P_i \\approx \\text{--}", "Menunggu data");
+        renderCardWithSubnote(c4, "\\sum P_i = \\text{--}", "Belum dihitung");
         return;
     }
 
@@ -33,39 +47,45 @@ export function renderSelectionCards(values) {
     const sumFormatted = sum.toFixed(4);
 
     if (sum <= 0) {
-        renderKatexSafe("\\sum F = 0.0000", c1);
-        renderKatexSafe("P_i = \\frac{F_i}{0} \\quad (\\text{Tidak terdefinisi})", c2);
-        renderKatexSafe("P_i \\approx 0.0000", c3);
-        renderKatexSafe("\\sum P_i = 0.0000", c4);
+        renderCardWithSubnote(c1, "\\htmlClass{sel-token-sumf}{\\sum F} = 0.0000", "Masukkan nilai fitness > 0");
+        renderCardWithSubnote(c2, "P_i = \\frac{F_i}{0}", "Penyebut bernilai nol");
+        renderCardWithSubnote(c3, "P_i \\approx 0.0000", "Menunggu input nilai valid");
+        renderCardWithSubnote(c4, "\\sum P_i = 0.0000", "Normalisasi belum terpenuhi");
         return;
     }
 
-    const sumTerms = values.map((v, i) => {
-        const numStr = (Math.max(0, v)).toFixed(2);
-        return `\\htmlClass{sel-token-val-${i}}{${numStr}}`;
-    }).join(" + ");
-    const step1Tex = `\\htmlClass{sel-token-sumf}{\\sum F} = ${sumTerms} = \\mathbf{${sumFormatted}}`;
-    renderKatexSafe(step1Tex, c1);
+    const idx = (activeIndex >= 0 && activeIndex < values.length) ? activeIndex : 0;
+    const actVal = Math.max(0, values[idx]);
 
-    const ratioTerms = values.map((v, i) => {
-        const numStr = (Math.max(0, v)).toFixed(2);
-        return `\\frac{\\htmlClass{sel-token-val-${i}}{${numStr}}}{\\htmlClass{sel-token-sumf}{${sum.toFixed(2)}}}`;
-    }).join(",\\; ");
-    const step2Tex = `P_i = \\frac{F_i}{\\sum F} \\implies \\left[ ${ratioTerms} \\right]`;
-    renderKatexSafe(step2Tex, c2);
+    let step1Tex;
+    if (values.length <= 4) {
+        const sumTerms = values.map((v, i) => {
+            const numStr = (Math.max(0, v)).toFixed(2);
+            return `\\htmlClass{sel-token-val-${i}}{${numStr}}`;
+        }).join(" + ");
+        step1Tex = `\\htmlClass{sel-token-sumf}{\\sum F} = ${sumTerms} = \\mathbf{${sumFormatted}}`;
+    } else {
+        step1Tex = `\\htmlClass{sel-token-sumf}{\\sum F} = \\sum_{j=1}^{${values.length}} F_j = \\mathbf{${sumFormatted}}`;
+    }
+    renderCardWithSubnote(c1, step1Tex, "Total kebugaran seluruh populasi");
 
-    const probs = values.map(v => Math.max(0, v) / sum);
-    const probTerms = probs.map((p, i) => {
-        const pStr = p.toFixed(4);
-        return `\\htmlClass{sel-token-p-${i}}{P_{${i + 1}} \\approx ${pStr}}`;
-    }).join("\\quad ");
-    const step3Tex = probTerms;
-    renderKatexSafe(step3Tex, c3);
+    const step2Tex = `P_{${idx + 1}} = \\frac{\\htmlClass{sel-token-val-${idx}}{${actVal.toFixed(2)}}}{\\htmlClass{sel-token-sumf}{${sum.toFixed(2)}}}`;
+    renderCardWithSubnote(c2, step2Tex, `Rasio proporsional Individu ${idx + 1}`);
 
-    const probSumTerms = probs.map((p, i) => {
-        return `\\htmlClass{sel-token-p-${i}}{${p.toFixed(4)}}`;
-    }).join(" + ");
-    const totalP = probs.reduce((a, b) => a + b, 0).toFixed(4);
-    const step4Tex = `\\sum_{i=1}^{${values.length}} P_i = ${probSumTerms} = \\mathbf{${totalP}}`;
-    renderKatexSafe(step4Tex, c4);
+    const matrixRows = [];
+    for (let i = 0; i < values.length; i += 2) {
+        const row = [];
+        const p1 = (Math.max(0, values[i]) / sum).toFixed(4);
+        row.push(`\\htmlClass{sel-token-p-${i}}{P_{${i + 1}} \\approx ${p1}}`);
+        if (i + 1 < values.length) {
+            const p2 = (Math.max(0, values[i + 1]) / sum).toFixed(4);
+            row.push(`\\htmlClass{sel-token-p-${i + 1}}{P_{${i + 2}} \\approx ${p2}}`);
+        }
+        matrixRows.push(row.join(" & "));
+    }
+    const step3Tex = `\\begin{matrix} ${matrixRows.join(" \\\\ ")} \\end{matrix}`;
+    renderCardWithSubnote(c3, step3Tex, "Probabilitas presisi 4 desimal (silabus)");
+
+    const step4Tex = `\\sum_{i=1}^{${values.length}} P_i = \\mathbf{1.0000}`;
+    renderCardWithSubnote(c4, step4Tex, "Total probabilitas normal (100%)");
 }

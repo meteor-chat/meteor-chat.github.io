@@ -1,4 +1,5 @@
 import { drawRouletteWheel4 } from "../visuals/math-visual-4.js";
+import { renderSelectionCards } from "./math-calc-4-cards.js";
 
 function setIndividualHighlight(index, count, values, isHovered) {
     for (let i = 0; i < count; i++) {
@@ -12,6 +13,8 @@ function setIndividualHighlight(index, count, values, isHovered) {
         const pTokens = document.querySelectorAll(`.sel-token-p-${i}`);
         pTokens.forEach(el => el.classList.toggle(`sel-glow-${i}`, active));
     }
+    const actIdx = isHovered ? index : 0;
+    renderSelectionCards(values, actIdx);
     drawRouletteWheel4(values, isHovered ? index : -1);
 }
 
