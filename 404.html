@@ -7,11 +7,22 @@
 <base href="/">
 <script type="module">
 import { parseFormulaUrl, getFormulaUrl } from "./math-routes.js";
-const route = parseFormulaUrl(window.location.pathname);
+const p = window.location.pathname.replace(/\/+$/, "");
+const route = parseFormulaUrl(p);
 if (route) {
     window.location.replace(getFormulaUrl(route.id));
-} else if (window.location.pathname.startsWith("/math")) {
+} else if (p.startsWith("/math")) {
     window.location.replace("/math");
+} else if (p === "/centrality") {
+    window.location.replace("/centrality.html");
+} else if (p === "/patterns") {
+    window.location.replace("/patterns.html");
+} else if (p === "/boids") {
+    window.location.replace("/boids.html");
+} else if (p === "/cipher") {
+    window.location.replace("/cipher.html");
+} else if (p === "/lab") {
+    window.location.replace("/lab.html");
 } else {
     window.location.replace("/");
 }

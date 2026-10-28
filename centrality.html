@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Visualisasi interaktif Betweenness Centrality di Lab Meteor - Temukan gatekeeper dan jembatan informasi pada jejaring sosial kompleks dan graf Zachary.">
+<title>Betweenness Centrality - Meteor Lab</title>
+<link rel="icon" href="./icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root {
+    --bg-main: #000000;
+    --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --font-stack: 'Google Sans', -apple-system, sans-serif;
+    --border-dark: #1e293b;
+    --card-bg: #0c0f14;
+}
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a, button, input { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
+#centrality-app { width: 100%; max-width: 960px; padding: 24px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+.centrality-header { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.btn-back-lab { font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 6px 14px; border-radius: 20px; border: 1px solid #222; transition: all 0.2s ease; }
+.btn-back-lab:hover { color: #fff; border-color: #444; background: rgba(255, 255, 255, 0.05); }
+.hub-tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+.title-wrap { text-align: left; }
+.page-title { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+.page-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.4; max-width: 760px; }
+.preset-bar { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.preset-bar::-webkit-scrollbar { display: none; }
+.btn-preset { font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border-dark); background: var(--card-bg); color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: all 0.2s ease; }
+.btn-preset:hover { border-color: #475569; color: #fff; }
+.btn-preset.active { background: #1e1b4b; border-color: #818cf8; color: #e0e7ff; font-weight: 600; }
+.path-banner { background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 10px 14px; font-size: 13px; min-height: 42px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.path-hint { color: #94a3b8; }
+.path-active { color: #38bdf8; }
+.path-error { color: #f87171; }
+.path-result { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 12px; }
+.p-start { color: #4ade80; font-weight: 600; }
+.p-end { color: #f43f5e; font-weight: 600; }
+.p-mid { color: #facc15; font-weight: 600; }
+.btn-clear-path { font-size: 12px; background: rgba(255, 255, 255, 0.08); border: 1px solid #334155; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.canvas-card { background: var(--card-bg); border: 1px solid var(--border-dark); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.canvas-wrap { position: relative; width: 100%; aspect-ratio: 600 / 400; border-radius: 8px; overflow: hidden; background: #07090e; border: 1px solid #141b26; }
+#centrality-canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+.canvas-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: 12px; }
+.legend-wrap { display: flex; align-items: center; gap: 8px; }
+.legend-bar { width: 130px; height: 10px; border-radius: 5px; background: linear-gradient(to right, rgb(49, 46, 129), rgb(124, 58, 237), rgb(219, 39, 119), rgb(249, 115, 22), rgb(250, 204, 21)); border: 1px solid #334155; }
+.legend-label { font-size: 11px; color: var(--text-muted); }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-tool { font-size: 12px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border-dark); background: rgba(255, 255, 255, 0.03); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+.btn-tool:hover { border-color: #64748b; color: #fff; }
+.btn-tool.active { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8; }
+.dashboard-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; width: 100%; }
+.info-card { background: var(--card-bg); border: 1px solid var(--border-dark); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.card-sec-title { font-size: 14px; font-weight: 600; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between; }
+.inspector-header { display: flex; align-items: center; gap: 10px; }
+.inspector-badge { font-size: 12px; font-weight: 600; background: #1e1b4b; border: 1px solid #818cf8; color: #c7d2fe; padding: 2px 8px; border-radius: 4px; }
+.inspector-name { font-size: 16px; font-weight: 600; color: #fff; }
+.inspector-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat-box { background: rgba(255, 255, 255, 0.02); border: 1px solid #1e293b; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.stat-lbl { font-size: 11px; color: var(--text-muted); }
+.stat-val { font-size: 14px; font-weight: 600; color: #e2e8f0; }
+.stat-hl { color: #facc15; }
+.inspector-desc { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+.top-list { display: flex; flex-direction: column; gap: 6px; }
+.rank-row { display: grid; grid-template-columns: 28px 1fr 64px; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; transition: all 0.2s; }
+.rank-row:hover { background: rgba(255, 255, 255, 0.04); border-color: #334155; }
+.rank-row.active { background: rgba(56, 189, 248, 0.08); border-color: #38bdf8; }
+.rank-num { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.rank-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rank-title { font-size: 13px; font-weight: 600; color: #f1f5f9; display: flex; align-items: center; gap: 6px; }
+.rank-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
+.badge-top { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+.badge-mid { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+.badge-low { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+.rank-meter { width: 100%; height: 4px; background: #1e293b; border-radius: 2px; overflow: hidden; }
+.rank-fill { height: 100%; background: linear-gradient(to right, #818cf8, #facc15); border-radius: 2px; }
+.rank-val { font-size: 12.5px; font-weight: 600; text-align: right; color: #facc15; font-family: monospace; }
+.explainer-card { background: rgba(255, 255, 255, 0.02); border: 1px solid #1e293b; border-radius: 10px; padding: 14px 16px; font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.explainer-card strong { color: #e2e8f0; }
+@media (max-width: 768px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .page-title { font-size: 20px; }
+    .inspector-stats { grid-template-columns: 1fr; gap: 6px; }
+}
+</style>
+</head>
+<body>
+<main id="centrality-app">
+    <header class="centrality-header">
+        <a href="/lab" class="btn-back-lab">← Kembali ke Lab</a>
+        <span class="hub-tag">Network Science Lab</span>
+    </header>
+    <div class="title-wrap">
+        <h1 class="page-title">Betweenness Centrality</h1>
+        <p class="page-desc">Algoritma pendeteksi gatekeeper dan jembatan informasi krusial pada graf sosial & jaringan komunikasi dengan visualisasi peta panas Brandes (2001).</p>
+    </div>
+    <nav class="preset-bar" aria-label="Preset Jaringan">
+        <button class="btn-preset active" data-preset="bridge" type="button">Dua Komunitas (Slide 2)</button>
+        <button class="btn-preset" data-preset="karate" type="button">Klub Karate Zachary (Slide 3)</button>
+        <button class="btn-preset" data-preset="kite" type="button">Krackhardt Kite</button>
+        <button class="btn-preset" data-preset="star" type="button">Jaringan Bintang</button>
+    </nav>
+    <div id="centrality-path-banner" class="path-banner"></div>
+    <section class="canvas-card">
+        <div class="canvas-wrap">
+            <canvas id="centrality-canvas" width="600" height="400"></canvas>
+        </div>
+        <div class="canvas-footer">
+            <div class="legend-wrap">
+                <span class="legend-label">Perifer</span>
+                <div class="legend-bar"></div>
+                <span class="legend-label">Gatekeeper</span>
+            </div>
+            <div class="toolbar">
+                <button id="toggle-heatmap" class="btn-tool active" type="button">Peta Panas</button>
+                <button id="toggle-norm" class="btn-tool active" type="button">Skor: 0.0–1.0</button>
+                <button id="btn-reset-pos" class="btn-tool" type="button">Reset Posisi</button>
+            </div>
+        </div>
+    </section>
+    <section class="dashboard-grid">
+        <article class="info-card">
+            <h2 class="card-sec-title">Detail Node Terpilih</h2>
+            <div id="centrality-node-card"></div>
+        </article>
+        <article class="info-card">
+            <h2 class="card-sec-title">Top 5 Gatekeeper</h2>
+            <div id="centrality-top-list" class="top-list"></div>
+        </article>
+    </section>
+    <aside class="explainer-card">
+        <strong>Fungsi Matematika:</strong> Skor Betweenness dihitung dengan rumus <em>C<sub>B</sub>(v) = ∑ (σ<sub>st</sub>(v) / σ<sub>st</sub>)</em>. Titik berwarna <strong>kuning neon</strong> adalah calo informasi atau jembatan utama. Jika titik tersebut keluar dari jaringan, kecepatan persebaran informasi akan anjlok atau kelompok akan terpecah. Drag titik untuk mengubah tata letak.
+    </aside>
+</main>
+<script type="module" src="./centrality-controller.js"></script>
+</body>
+</html>
