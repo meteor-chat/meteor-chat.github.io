@@ -28,12 +28,20 @@ export default [
                 marked: "readonly",
                 DOMPurify: "readonly",
                 katex: "readonly",
-                hljs: "readonly"
+                hljs: "readonly",
+                history: "readonly",
+                performance: "readonly",
+                IntersectionObserver: "readonly",
+                MutationObserver: "readonly",
+                math: "readonly"
             }
         },
         rules: {
             "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-            "no-undef": "error"
+            "no-undef": "error",
+            "no-empty": ["error", { "allowEmptyCatch": true }],
+            "preserve-caught-error": "off",
+            "no-useless-assignment": "off"
         }
     }
 ];

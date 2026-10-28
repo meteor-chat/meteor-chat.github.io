@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { FORMULAS } from "../math-formulas.js";
+import { FORMULAS } from "../src/math/math-formulas.js";
 import { loadKatex } from "./lib/load-katex.mjs";
 import { toInlineKatexCss } from "./lib/katex-css.mjs";
 import { renderCards } from "./lib/render-cards.mjs";
@@ -14,7 +14,7 @@ const css = toInlineKatexCss(
     readFileSync(new URL("vendor/katex/katex.min.css", root), "utf8"),
     "./vendor/katex/fonts/"
 );
-const mathCss = readFileSync(new URL("math.css", root), "utf8");
+const mathCss = readFileSync(new URL("styles/math.css", root), "utf8");
 
 const source = readFileSync(page, "utf8");
 if (!KATEX_STYLE.test(source)) {

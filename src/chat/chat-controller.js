@@ -1,0 +1,168 @@
+import { state } from "../core/app-state.js";
+import { refs, getActiveSendBtn } from "../core/dom-refs.js";
+import { callChatAPI } from "./api/api-client.js";
+import { renderChat, showTypingIndicator, removeTypingIndicator, showThinking, removeThinking, updateStreamingMessage, flushStreamingMessage, scrollToBottom } from "./chat-render.js";
+import { showError, hideError } from "../core/error-view.js";
+import { exitEditMode } from "./edit-mode.js";
+import { stripThinkTags } from "../core/text-utils.js";
+import { ensureTemplates } from "../core/template-loader.js";
+import { setupMarkdown } from "./markdown-setup.js";
+import { ensureChatAssets } from "../core/lazy-assets.js";
+let markdownReady = false;
+export function prepareChat() {
+    return ensureChatAssets();
+}
+function initMarkdown() {
+    if (!markdownReady) {
+        const missing = [];
+        if (typeof window.marked === 'undefined') missing.push('marked');
+        if (typeof window.DOMPurify === 'undefined') missing.push('DOMPurify');
+        if (typeof window.katex === 'undefined') missing.push('katex');
+        if (typeof window.hljs === 'undefined') missing.push('highlight.js');
+        if (missing.length > 0) {
+            throw new Error(`Library CDN gagal dimuat: ${missing.join(', ')}`);
+        }
+        setupMarkdown();
+        markdownReady = true;
+    }
+}
+export function stopGeneration() {
+    if (state.abortController) {
+        state.abortController.abort();
+    }
+}
+function showContinueButton(label = "▶ Lanjutkan") {
+    const btn = document.createElement("button");
+    btn.className = "continue-btn";
+    btn.id = "continue-btn";
+    btn.textContent = label;
+    btn.addEventListener("click", () => {
+        btn.remove();
+        sendMessage("Lanjutkan dari titik terakhir.");
+    });
+    refs.conversationEl.appendChild(btn);
+    scrollToBottom();
+}
+export async function sendMessage(text) {
+    if ([...text].length > state.config.max_message) {
+        showError(`Pesan maksimal ${state.config.max_message} karakter.`);
+        return;
+    }
+    hideError();
+    state.isLoading = true;
+    getActiveSendBtn().disabled = true;
+    if (refs.stopBtn) {
+        refs.stopBtn.classList.remove("hidden");
+        refs.sendChat.classList.add("hidden");
+    }
+    const prevContinue = document.getElementById("continue-btn");
+    if (prevContinue) prevContinue.remove();
+    const originalEditIndex = state.editIndex;
+    let backupMessages = null;
+    if (originalEditIndex !== null) {
+        backupMessages = [...state.messages];
+        state.messages = state.messages.slice(0, originalEditIndex);
+        exitEditMode();
+    }
+    let content = text;
+    try {
+        initMarkdown();
+    } catch (e) {
+        state.isLoading = false;
+        getActiveSendBtn().disabled = false;
+        if (refs.stopBtn) {
+            refs.stopBtn.classList.add("hidden");
+            refs.sendChat.classList.remove("hidden");
+        }
+        showError(e.message);
+        return;
+    }
+    await ensureTemplates();
+    state.messages.push({ role: "user", content });
+    renderChat();
+    showTypingIndicator();
+    refs.msgChat.readOnly = true;
+    try {
+        let firstChunk = true;
+        removeTypingIndicator();
+        showThinking();
+        const result = await callChatAPI(state.messages, (currentText) => {
+            if (firstChunk && currentText) {
+                firstChunk = false;
+                removeThinking();
+                state.messages.push({ role: "assistant", content: "" });
+                renderChat();
+            }
+            if (!firstChunk) {
+                state.messages[state.messages.length - 1].content = currentText;
+                updateStreamingMessage(currentText);
+            }
+        });
+        flushStreamingMessage();
+        if (firstChunk) {
+            removeThinking();
+            if (!result.text) throw new Error("Pesan kosong dari provider.");
+            state.messages.push({ role: "assistant", content: result.text });
+        } else {
+            state.messages[state.messages.length - 1].content = result.text;
+        }
+        state.isLoading = false;
+        renderChat();
+        if (result.finishReason !== "stop") {
+            const isLength = result.finishReason === "length";
+            showContinueButton(isLength ? "▶ Lanjutkan (Batas tercapai)" : "▶ Coba Lanjutkan (Terputus)");
+        }
+    } catch (err) {
+        flushStreamingMessage();
+        removeThinking();
+        const restoreState = () => {
+            if (backupMessages) {
+                state.messages = backupMessages;
+                state.editIndex = originalEditIndex;
+                refs.cancelBtn.classList.remove("hidden");
+                refs.editNotice.classList.remove("hidden");
+                refs.msgChat.value = text;
+            } else {
+                if (state.messages.length && state.messages[state.messages.length - 1].role === "assistant") state.messages.pop();
+                if (state.messages.length && state.messages[state.messages.length - 1].role === "user") state.messages.pop();
+                if (state.messages.length === 0) {
+                    refs.msgLanding.value = text;
+                } else {
+                    refs.msgChat.value = text;
+                }
+            }
+        };
+        if (err.name === "AbortError") {
+            const lastMsg = state.messages[state.messages.length - 1];
+            if (lastMsg?.role === "assistant" && lastMsg.content) {
+                lastMsg.content = stripThinkTags(lastMsg.content);
+                if (!lastMsg.content) {
+                    restoreState();
+                }
+            } else {
+                restoreState();
+            }
+        } else {
+            showError(err.message);
+            restoreState();
+        }
+        state.isLoading = false;
+        renderChat();
+    } finally {
+        state.isLoading = false;
+        state.abortController = null;
+        refs.sendChat.disabled = false;
+        refs.sendLanding.disabled = false;
+        refs.msgChat.readOnly = false;
+        if (refs.stopBtn) {
+            refs.stopBtn.classList.add("hidden");
+            refs.sendChat.classList.remove("hidden");
+        }
+        if (window.innerWidth > 768) refs.msgChat.focus();
+        const target = document.getElementById("streaming-target");
+        if (target) {
+            const btn = target.closest(".assistant-msg")?.querySelector(".btn-copy");
+            if (btn) btn.classList.remove("hidden");
+        }
+    }
+}

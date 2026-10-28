@@ -6,7 +6,7 @@
 <title>Halaman Tidak Ditemukan - Meteor</title>
 <base href="/">
 <script type="module">
-import { parseFormulaUrl, getFormulaUrl } from "./math-routes.js";
+import { parseFormulaUrl, getFormulaUrl } from "./src/math/math-routes.js";
 const p = window.location.pathname.replace(/\/+$/, "");
 const route = parseFormulaUrl(p);
 if (route) {

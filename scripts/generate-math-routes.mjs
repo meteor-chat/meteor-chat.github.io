@@ -1,8 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { getFormulaUrl, CATEGORY_SLUGS } from "../math-routes.js";
-import { FORMULA_NAMES } from "../math-formula-names.js";
+import { getFormulaUrl, CATEGORY_SLUGS } from "../src/math/math-routes.js";
+import { FORMULA_NAMES } from "../src/math/math-formula-names.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");

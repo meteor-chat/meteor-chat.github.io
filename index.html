@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Meteor is a minimalist AI chat platform and interactive STEM laboratory featuring real-time mathematical visualizations and sorting algorithm simulations without requiring login.">
 <title>Meteor</title>
-<link rel="icon" href="./icon-48.png" type="image/png" sizes="48x48">
-<link rel="preload" as="image" href="./banner-768.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
-<link rel="preload" as="image" href="./banner.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
-<link rel="modulepreload" href="./main.js?v=6">
-<link rel="modulepreload" href="./input-controls.js">
-<link rel="modulepreload" href="./dom-refs.js">
-<link rel="modulepreload" href="./app-state.js">
-<link rel="modulepreload" href="./error-view.js">
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="preload" as="image" href="./assets/images/banner-768.webp" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/images/banner.webp" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
+<link rel="modulepreload" href="./src/chat/main.js?v=6">
+<link rel="modulepreload" href="./src/chat/input-controls.js">
+<link rel="modulepreload" href="./src/core/dom-refs.js">
+<link rel="modulepreload" href="./src/core/app-state.js">
+<link rel="modulepreload" href="./src/core/error-view.js">
 <style>
 @font-face {
     font-family: "Google Sans";
@@ -55,15 +55,15 @@ textarea::placeholder { font-size: 16px; color: var(--text-muted); }
 <main id="app-main" class="app-main">
 <div id="landing" class="landing">
 <picture class="banner">
-<source type="image/webp" media="(max-width: 768px)" srcset="./banner-768.webp">
-<source type="image/webp" srcset="./banner.webp">
-<source media="(max-width: 768px)" srcset="./banner-768.png">
-<img src="./banner.png" alt="Meteor Banner" width="768" height="256" fetchpriority="high">
+<source type="image/webp" media="(max-width: 768px)" srcset="./assets/images/banner-768.webp">
+<source type="image/webp" srcset="./assets/images/banner.webp">
+<source media="(max-width: 768px)" srcset="./assets/images/banner-768.png">
+<img src="./assets/images/banner.png" alt="Meteor Banner" width="768" height="256" fetchpriority="high">
 </picture>
 <div class="tagline"><h1>Minimalist. No Login. Meteor</h1></div>
 <div class="input-wrap">
 <textarea id="message-landing" placeholder="Ask Meteor" rows="1"></textarea>
-<button id="send-landing" class="send-landing" aria-label="Send"><img src="send-inactive.svg" alt="Send" width="36" height="36"></button>
+<button id="send-landing" class="send-landing" aria-label="Send"><img src="./assets/svg/send-inactive.svg" alt="Send" width="36" height="36"></button>
 </div>
 <div class="home-nav-buttons"><a href="/math" class="btn-home-nav">Math</a><a href="/dsa" class="btn-home-nav">DSA</a><a href="/lab" class="btn-home-nav">Lab</a></div>
 </div>
@@ -75,11 +75,11 @@ textarea::placeholder { font-size: 16px; color: var(--text-muted); }
 <div id="edit-notice" class="hidden">Editing message</div>
 <button id="cancel-btn" class="hidden">Cancel</button>
 <textarea id="message-chat" placeholder="Ask Meteor" rows="1"></textarea>
-<button id="send-chat" aria-label="Send"><img src="send-inactive.svg" alt="Send" width="36" height="36"></button>
-<button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="stop.svg" alt="Stop" width="24" height="24"></button>
+<button id="send-chat" aria-label="Send"><img src="./assets/svg/send-inactive.svg" alt="Send" width="36" height="36"></button>
+<button id="stop-chat" class="stop-btn hidden" aria-label="Stop"><img src="./assets/svg/stop.svg" alt="Stop" width="24" height="24"></button>
 </div>
 </div>
 </main>
-<script type="module" src="main.js?v=6"></script>
+<script type="module" src="./src/chat/main.js?v=6"></script>
 </body>
 </html>
