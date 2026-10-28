@@ -35,6 +35,10 @@ describe("code block font and asset integrity", () => {
         expect(css).toContain(".hljs-keyword");
         expect(css).toContain(".hljs-string");
         expect(css).toContain(".hljs-number");
+        expect(css).toContain("#bb9af7");
+        expect(css).toContain("#9ece6a");
+        expect(css).toContain("#ff9e64");
+        expect(css).toContain("#131722");
     });
 });
 
