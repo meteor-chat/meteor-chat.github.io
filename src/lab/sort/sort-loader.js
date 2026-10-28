@@ -1,10 +1,10 @@
 const ALGORITHMS = {
-    bubble: () => import("./sort-bubble.js?v=13").then((m) => m.bubbleSort),
-    selection: () => import("./sort-selection.js?v=13").then((m) => m.selectionSort),
-    insertion: () => import("./sort-insertion.js?v=13").then((m) => m.insertionSort),
-    quick: () => import("./sort-quick.js?v=13").then((m) => m.quickSort),
-    merge: () => import("./sort-merge.js?v=13").then((m) => m.mergeSort),
-    shaker: () => import("./sort-shaker.js?v=13").then((m) => m.shakerSort)
+    bubble: () => import("./sort-bubble.js?v=14").then((m) => m.bubbleSort),
+    selection: () => import("./sort-selection.js?v=14").then((m) => m.selectionSort),
+    insertion: () => import("./sort-insertion.js?v=14").then((m) => m.insertionSort),
+    quick: () => import("./sort-quick.js?v=14").then((m) => m.quickSort),
+    merge: () => import("./sort-merge.js?v=14").then((m) => m.mergeSort),
+    shaker: () => import("./sort-shaker.js?v=14").then((m) => m.shakerSort)
 };
 
 let circlePromise = null;

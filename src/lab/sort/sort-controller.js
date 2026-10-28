@@ -1,4 +1,6 @@
 import { loadAlgorithm, loadCircle, getLoadedCircle, preloadWhenIdle } from "./sort-loader.js?v=13";
+import { toggleCodePanel, setCodeAlgorithm, highlightCodeStep, clearCodeHighlight } from "./code/sort-code-panel.js?v=1";
+import { preloadAllCodes } from "./code/sort-code-registry.js?v=1";
 
 const container = document.getElementById("sort-visualizer");
 const canvas = document.getElementById("sort-canvas");
@@ -10,16 +12,10 @@ const btnModeBar = document.getElementById("btn-mode-bar");
 const btnModeColor = document.getElementById("btn-mode-color");
 const btnLeanVerify = document.getElementById("btn-lean-verify");
 const leanBadgeText = document.getElementById("lean-badge-text");
+const btnToggleCode = document.getElementById("btn-toggle-code");
+const btnFloatingCode = document.getElementById("btn-code-floating");
 
 const SORTED_REF = [1, 1.5, 2, 2.5, 3, 3.5, 4];
-const SORT_LABELS = {
-    bubble: "Bubble Sort",
-    selection: "Selection Sort",
-    insertion: "Insertion Sort",
-    quick: "Quick Sort",
-    merge: "Merge Sort",
-    shaker: "Shaker Sort"
-};
 const VERIFIED_ALGORITHMS = {
     bubble: "Bubble Sort",
     insertion: "Insertion Sort",
@@ -113,6 +109,7 @@ function setControlsDisabled(disabled) {
 function finishSort() {
     isSorting = false;
     setControlsDisabled(false);
+    clearCodeHighlight();
     domBars.forEach((bar) => {
         bar.classList.remove("temp", "compare");
     });
@@ -130,7 +127,7 @@ async function startBarSort(type) {
     }
     const sort = await loadAlgorithm(type);
     if (sort) {
-        await sort(arr, domBars, updateBarPosition, setBarTemp, sleep, setBarCompare);
+        await sort(arr, domBars, updateBarPosition, setBarTemp, sleep, setBarCompare, highlightCodeStep);
     } else {
         await sleep(350);
     }
@@ -200,6 +197,7 @@ buttons.forEach((btn) => {
         btn.classList.add("active");
         currentAlgorithm = btn.getAttribute("data-sort");
         updateLeanBadge(currentAlgorithm);
+        setCodeAlgorithm(currentAlgorithm);
     });
 });
 
@@ -213,6 +211,7 @@ if (btnRun) {
 if (btnRandomize) {
     btnRandomize.addEventListener("click", () => {
         if (isBusy()) return;
+        clearCodeHighlight();
         if (currentMode === "bar") {
             initArray();
             renderBars();
@@ -225,10 +224,14 @@ if (btnRandomize) {
 if (btnWorst) {
     btnWorst.addEventListener("click", () => {
         if (isBusy() || currentMode !== "bar") return;
+        clearCodeHighlight();
         setWorstArray();
         renderBars();
     });
 }
+
+if (btnToggleCode) btnToggleCode.addEventListener("click", toggleCodePanel);
+if (btnFloatingCode) btnFloatingCode.addEventListener("click", toggleCodePanel);
 
 window.addEventListener("resize", () => {
     const circle = getLoadedCircle();
@@ -241,3 +244,4 @@ initArray();
 renderBars();
 updateLeanBadge(currentAlgorithm);
 preloadWhenIdle();
+preloadAllCodes();

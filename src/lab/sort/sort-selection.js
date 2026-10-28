@@ -1,12 +1,14 @@
 import { animateSwap } from "./sort-animator.js?v=13";
 
-export async function selectionSort(arr, domBars, updatePos, setTemp, sleep, setCompare) {
+export async function selectionSort(arr, domBars, updatePos, setTemp, sleep, setCompare, onStep) {
     let n = arr.length;
     for (let i = 0; i < n - 1; i++) {
         let min_idx = i;
+        if (onStep) onStep("min");
         setTemp(i, true);
         
         for (let j = i + 1; j < n; j++) {
+            if (onStep) onStep("compare");
             if (setCompare) {
                 setCompare(j, true);
             } else {
@@ -19,6 +21,7 @@ export async function selectionSort(arr, domBars, updatePos, setTemp, sleep, set
                     setTemp(min_idx, false);
                 }
                 min_idx = j;
+                if (onStep) onStep("new_min");
                 setTemp(min_idx, true);
                 if (setCompare) {
                     setCompare(j, false);
@@ -33,6 +36,7 @@ export async function selectionSort(arr, domBars, updatePos, setTemp, sleep, set
         }
         
         if (min_idx !== i) {
+            if (onStep) onStep("swap");
             setTemp(i, true);
             setTemp(min_idx, true);
             await sleep(140);
@@ -43,4 +47,5 @@ export async function selectionSort(arr, domBars, updatePos, setTemp, sleep, set
         setTemp(min_idx, false);
         setTemp(i, false);
     }
+    if (onStep) onStep("done");
 }
