@@ -12,14 +12,11 @@ export function calculateMath2() {
     const x1 = parseFloat(x1Str);
     const x2 = parseFloat(x2Str);
 
-    const presetSelect = document.getElementById("obj-preset-select");
-    const preset = presetSelect ? presetSelect.value : "default";
-
     clearObjectiveLandscape();
     if (isNaN(x1) || isNaN(x2)) return;
 
-    renderObjectiveCards(x1, x2, preset);
-    drawObjectiveLandscape(x1, x2, preset);
+    renderObjectiveCards(x1, x2);
+    drawObjectiveLandscape(x1, x2);
 }
 
 function handleCanvasInteraction(e) {
@@ -55,11 +52,6 @@ function initObjEvents() {
 
     renderParamLabels2();
     bindObjTokenHover();
-
-    const presetSelect = document.getElementById("obj-preset-select");
-    presetSelect?.addEventListener("change", () => {
-        calculateMath2();
-    });
 
     const btnImport = document.getElementById("btn-obj-import-chromo");
     btnImport?.addEventListener("click", () => {

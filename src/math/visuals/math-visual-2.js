@@ -1,19 +1,10 @@
 import { formatMax3 } from "../math-format.js";
 
-function evaluateH(x1, x2, preset = "default") {
-    if (preset === "sphere") {
-        return Math.pow(x1, 2) + Math.pow(x2, 2);
-    }
-    if (preset === "saddle") {
-        return Math.pow(x1, 2) - Math.pow(x2, 2);
-    }
-    if (preset === "rosenbrock") {
-        return 100 * Math.pow(x2 - Math.pow(x1, 2), 2) + Math.pow(1 - x1, 2);
-    }
+function evaluateH(x1, x2) {
     return Math.pow(x1, 3) + Math.pow(x2, 2) / 3;
 }
 
-export function drawObjectiveLandscape(x1, x2, preset = "default") {
+export function drawObjectiveLandscape(x1, x2) {
     const canvas = document.getElementById("math2-canvas");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -41,7 +32,7 @@ export function drawObjectiveLandscape(x1, x2, preset = "default") {
         for (let gx = 0; gx < gridSteps; gx++) {
             const worldX = minX + (gx / gridSteps) * (maxX - minX);
             const worldY = maxY - (gy / gridSteps) * (maxY - minY);
-            const val = evaluateH(worldX, worldY, preset);
+            const val = evaluateH(worldX, worldY);
             values.push(val);
             if (val < minH) minH = val;
             if (val > maxH) maxH = val;
@@ -88,7 +79,7 @@ export function drawObjectiveLandscape(x1, x2, preset = "default") {
 
     const ptX = toPx(x1);
     const ptY = toPy(x2);
-    const currH = evaluateH(x1, x2, preset);
+    const currH = evaluateH(x1, x2);
 
     ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
     ctx.lineWidth = 1;

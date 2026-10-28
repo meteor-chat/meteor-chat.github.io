@@ -18,12 +18,6 @@ describe("math-objective evaluation and cards", () => {
                 <div id="obj-label-x2"></div>
                 <input id="math2-in-x1" value="2" />
                 <input id="math2-in-x2" value="3" />
-                <select id="obj-preset-select">
-                    <option value="default">Default</option>
-                    <option value="sphere">Sphere</option>
-                    <option value="saddle">Saddle</option>
-                    <option value="rosenbrock">Rosenbrock</option>
-                </select>
                 <button id="btn-obj-import-chromo"></button>
                 <div id="obj-card-step1"></div>
                 <div id="obj-card-step2"></div>
@@ -44,13 +38,13 @@ describe("math-objective evaluation and cards", () => {
         };
     });
 
-    it("renders default formula and step cards correctly for x1=2, x2=3", () => {
-        renderTopFormula2("default");
+    it("renders syllabus formula and step cards correctly for x1=2, x2=3", () => {
+        renderTopFormula2();
         const formulaBox = document.getElementById("math-calc-formula-display-2");
         expect(formulaBox.innerHTML).toContain("x_1");
         expect(formulaBox.innerHTML).toContain("x_2");
 
-        renderObjectiveCards(2, 3, "default");
+        renderObjectiveCards(2, 3);
         const c1 = document.getElementById("obj-card-step1");
         const c2 = document.getElementById("obj-card-step2");
         const c3 = document.getElementById("obj-card-step3");
@@ -65,36 +59,29 @@ describe("math-objective evaluation and cards", () => {
         expect(c5.innerHTML).toContain("Nilai evaluasi fenotipe");
     });
 
-    it("evaluates sphere preset correctly", () => {
-        renderTopFormula2("sphere");
-        const formulaBox = document.getElementById("math-calc-formula-display-2");
-        expect(formulaBox.innerHTML).toContain("x_1}^2 + \\htmlClass{obj-token-x2}{x_2}^2");
-
-        renderObjectiveCards(2, 3, "sphere");
+    it("evaluates negative inputs correctly", () => {
+        renderObjectiveCards(-2, -3);
+        const c1 = document.getElementById("obj-card-step1");
+        const c2 = document.getElementById("obj-card-step2");
+        const c3 = document.getElementById("obj-card-step3");
         const c4 = document.getElementById("obj-card-step4");
         const c5 = document.getElementById("obj-card-step5");
-        expect(c4.innerHTML).toContain("4 + 9");
-        expect(c5.innerHTML).toContain("13");
-    });
 
-    it("evaluates saddle preset correctly", () => {
-        renderTopFormula2("saddle");
-        renderObjectiveCards(2, 3, "saddle");
-        const c4 = document.getElementById("obj-card-step4");
-        const c5 = document.getElementById("obj-card-step5");
-        expect(c4.innerHTML).toContain("4 - 9");
+        expect(c1.innerHTML).toContain("{-2}");
+        expect(c2.innerHTML).toContain("-8");
+        expect(c3.innerHTML).toContain("3");
+        expect(c4.innerHTML).toContain("-8 + 3");
         expect(c5.innerHTML).toContain("-5");
     });
 
-    it("evaluates rosenbrock preset correctly at optimum (1, 1)", () => {
-        renderTopFormula2("rosenbrock");
-        renderObjectiveCards(1, 1, "rosenbrock");
+    it("evaluates decimal inputs accurately", () => {
+        renderObjectiveCards(1.5, 3);
         const c5 = document.getElementById("obj-card-step5");
-        expect(c5.innerHTML).toContain("0");
+        expect(c5.innerHTML).toContain("6.375");
     });
 
     it("handles invalid inputs gracefully", () => {
-        renderObjectiveCards(NaN, 3, "default");
+        renderObjectiveCards(NaN, 3);
         const c1 = document.getElementById("obj-card-step1");
         const c2 = document.getElementById("obj-card-step2");
         expect(c1.textContent).toContain("Masukkan nilai x₁ dan x₂ yang valid");
@@ -138,10 +125,10 @@ describe("math-objective evaluation and cards", () => {
         expect(refs.m2InX1.value).toBe("1.85");
     });
 
-    it("verifies math.html contains new benchmark layout elements", () => {
+    it("verifies math.html contains benchmark layout without preset select", () => {
         const html = fs.readFileSync("math.html", "utf8");
         expect(html).toContain("obj-two-col-layout");
-        expect(html).toContain("obj-preset-select");
+        expect(html).not.toContain("obj-preset-select");
         expect(html).toContain("btn-obj-import-chromo");
         expect(html).toContain("obj-card-step1");
         expect(html).toContain("obj-card-step5");
