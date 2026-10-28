@@ -50,7 +50,7 @@ export function getNodeAt(graph, pt, canvas) {
         if (!p) continue;
         const dx = p.x - logical.x;
         const dy = p.y - logical.y;
-        if (Math.hypot(dx, dy) <= 18) {
+        if (Math.hypot(dx, dy) <= 20) {
             return u;
         }
     }
@@ -67,7 +67,12 @@ export function renderGraph(canvas, ctx, state) {
         inspectedNode,
         shortestPaths,
         heatmapEnabled,
-        draggingNode
+        draggingNode,
+        mode,
+        connectSource,
+        cursorPos,
+        hoveredEdge,
+        hoveredNode
     } = state;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -83,6 +88,8 @@ export function renderGraph(canvas, ctx, state) {
         });
     }
 
+    const hoverEdgeKey = hoveredEdge ? `${Math.min(hoveredEdge[0], hoveredEdge[1])}-${Math.max(hoveredEdge[0], hoveredEdge[1])}` : null;
+
     graph.edges.forEach(([u, v]) => {
         const p1 = graph.positions[u];
         const p2 = graph.positions[v];
@@ -92,13 +99,18 @@ export function renderGraph(canvas, ctx, state) {
         const c2 = toCanvasCoords(p2, canvas);
         const edgeKey = `${Math.min(u, v)}-${Math.max(u, v)}`;
         const isActive = activeEdges.has(edgeKey);
+        const isHoverCut = mode === "disconnect" && edgeKey === hoverEdgeKey;
 
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(c1.x, c1.y);
         ctx.lineTo(c2.x, c2.y);
 
-        if (isActive) {
+        if (isHoverCut) {
+            ctx.strokeStyle = "#ef4444";
+            ctx.lineWidth = 3.5;
+            ctx.setLineDash([5, 5]);
+        } else if (isActive) {
             ctx.strokeStyle = "#38bdf8";
             ctx.lineWidth = 3.5;
             ctx.shadowColor = "rgba(56, 189, 248, 0.8)";
@@ -106,11 +118,23 @@ export function renderGraph(canvas, ctx, state) {
         } else {
             ctx.strokeStyle = "rgba(100, 116, 139, 0.35)";
             ctx.lineWidth = 1.5;
-            ctx.shadowBlur = 0;
         }
         ctx.stroke();
         ctx.restore();
     });
+
+    if (mode === "connect" && connectSource && cursorPos && graph.positions[connectSource]) {
+        const c1 = toCanvasCoords(graph.positions[connectSource], canvas);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(c1.x, c1.y);
+        ctx.lineTo(cursorPos.x, cursorPos.y);
+        ctx.strokeStyle = "#4ade80";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+        ctx.restore();
+    }
 
     graph.nodes.forEach(u => {
         const pos = graph.positions[u];
@@ -119,10 +143,11 @@ export function renderGraph(canvas, ctx, state) {
         const score = scores[u] || 0;
         const norm = maxScore > 0 ? score / maxScore : 0;
         const radius = heatmapEnabled ? 11 + Math.sqrt(norm) * 12 : 13;
+        const isHoverDelete = mode === "delete_node" && u === hoveredNode;
 
         ctx.save();
 
-        if (heatmapEnabled && norm >= 0.5) {
+        if (heatmapEnabled && norm >= 0.5 && !isHoverDelete) {
             ctx.beginPath();
             ctx.arc(c.x, c.y, radius + 4, 0, Math.PI * 2);
             ctx.fillStyle = norm >= 0.8 ? "rgba(250, 204, 21, 0.25)" : "rgba(249, 115, 22, 0.2)";
@@ -132,7 +157,9 @@ export function renderGraph(canvas, ctx, state) {
         ctx.beginPath();
         ctx.arc(c.x, c.y, radius, 0, Math.PI * 2);
 
-        if (heatmapEnabled) {
+        if (isHoverDelete) {
+            ctx.fillStyle = "#ef4444";
+        } else if (heatmapEnabled) {
             ctx.fillStyle = getHeatmapColor(norm);
         } else {
             ctx.fillStyle = "#1e293b";
@@ -140,7 +167,10 @@ export function renderGraph(canvas, ctx, state) {
         ctx.fill();
 
         ctx.lineWidth = 2;
-        if (u === selectedA) {
+        if (u === connectSource) {
+            ctx.strokeStyle = "#4ade80";
+            ctx.lineWidth = 3.5;
+        } else if (u === selectedA) {
             ctx.strokeStyle = "#4ade80";
             ctx.lineWidth = 3.5;
         } else if (u === selectedB) {
@@ -157,7 +187,7 @@ export function renderGraph(canvas, ctx, state) {
         ctx.font = `600 ${radius > 16 ? 12 : 11}px 'Google Sans', sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = heatmapEnabled && norm >= 0.7 ? "#000000" : "#ffffff";
+        ctx.fillStyle = (heatmapEnabled && norm >= 0.7 && !isHoverDelete) ? "#000000" : "#ffffff";
         ctx.fillText(String(u), c.x, c.y + 0.5);
 
         if (u === draggingNode) {

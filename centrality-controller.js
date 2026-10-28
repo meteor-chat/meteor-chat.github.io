@@ -1,6 +1,8 @@
 import { calculateBetweenness, calculateDegrees, buildAdjacency, findShortestPaths } from "./centrality-algorithms.js";
 import { PRESETS, clonePreset } from "./centrality-datasets.js";
 import { renderGraph, getNodeAt, toLogicalCoords } from "./centrality-renderer.js";
+import { createNode, deleteNode, addEdge, removeEdge, findEdgeNearPoint, clearGraph } from "./centrality-editor.js";
+import { renderLeaderboard, renderInspector, renderBanner, updateNodeSelects } from "./centrality-ui.js";
 
 export function initCentralityApp() {
     const canvas = document.getElementById("centrality-canvas");
@@ -9,13 +11,19 @@ export function initCentralityApp() {
 
     let currentPreset = "bridge";
     let graph = clonePreset(currentPreset);
+    let mode = "inspect";
     let heatmapEnabled = true;
     let normalizedEnabled = true;
     let selectedA = null;
     let selectedB = null;
+    let connectSource = null;
+    let disconnectSource = null;
     let inspectedNode = 8;
     let shortestPaths = [];
     let draggingNode = null;
+    let cursorPos = null;
+    let hoveredEdge = null;
+    let hoveredNode = null;
     let scores = {};
     let degrees = {};
     let maxScore = 0;
@@ -39,117 +47,35 @@ export function initCentralityApp() {
     function render() {
         renderGraph(canvas, ctx, {
             graph, scores, maxScore, selectedA, selectedB,
-            inspectedNode, shortestPaths, heatmapEnabled, draggingNode
+            inspectedNode, shortestPaths, heatmapEnabled, draggingNode,
+            mode, connectSource, cursorPos, hoveredEdge, hoveredNode
         });
     }
 
     function updateUI() {
-        renderLeaderboard();
-        renderInspector();
-        renderPathBanner();
-    }
-
-    function renderLeaderboard() {
         const listEl = document.getElementById("centrality-top-list");
-        if (!listEl) return;
-        listEl.innerHTML = "";
-
-        const sorted = Object.entries(scores)
-            .map(([u, s]) => ({ node: parseInt(u, 10), score: s }))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 5);
-
-        sorted.forEach((item, idx) => {
-            const row = document.createElement("div");
-            row.className = `rank-row ${item.node === inspectedNode ? "active" : ""}`;
-            const pct = maxScore > 0 ? (item.score / maxScore) * 100 : 0;
-            const scoreFmt = normalizedEnabled ? item.score.toFixed(4) : item.score.toFixed(1);
-            let badgeClass = idx === 0 || pct >= 80 ? "badge-top" : (pct <= 20 ? "badge-low" : "badge-mid");
-            let badgeText = idx === 0 || pct >= 80 ? "Gatekeeper" : (pct <= 20 ? "Perifer" : "Perantara");
-
-            row.innerHTML = `<div class="rank-num">#${idx + 1}</div><div class="rank-info"><div class="rank-title">Node ${item.node} <span class="rank-badge ${badgeClass}">${badgeText}</span></div><div class="rank-meter"><div class="rank-fill" style="width: ${pct}%"></div></div></div><div class="rank-val">${scoreFmt}</div>`;
-            row.addEventListener("click", () => {
-                inspectedNode = item.node;
-                render();
-                updateUI();
-            });
-            listEl.appendChild(row);
-        });
-    }
-
-    function renderInspector() {
         const cardEl = document.getElementById("centrality-node-card");
-        if (!cardEl) return;
-
-        if (!inspectedNode || scores[inspectedNode] === undefined) {
-            const topNode = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
-            if (topNode) inspectedNode = parseInt(topNode[0], 10);
-        }
-
-        const u = inspectedNode;
-        const score = scores[u] !== undefined ? scores[u] : 0;
-        const deg = degrees[u] || 0;
-        const label = graph.labels && graph.labels[u] ? graph.labels[u] : `Node #${u}`;
-        const scoreFmt = normalizedEnabled ? score.toFixed(4) : score.toFixed(1);
-        const norm = maxScore > 0 ? score / maxScore : 0;
-
-        let roleDesc = "Titik ini berada di <strong>Perifer Jaringan</strong> dengan peran komunikasi minim.";
-        if (norm >= 0.75) {
-            roleDesc = "Titik ini adalah <strong>Gatekeeper Utama</strong>. Menghubungkan komponen utama jaringan; jika terputus, komunikasi antar kelompok akan terisolasi.";
-        } else if (norm >= 0.3) {
-            roleDesc = "Titik ini adalah <strong>Jembatan Sekunder</strong> penting yang menjadi perantara rute terpendek alternatif.";
-        } else if (deg > 3) {
-            roleDesc = "Titik ini memiliki <strong>Konektivitas Lokal Tinggi</strong> (banyak teman) namun bukan jembatan komunikasi global.";
-        }
-
-        cardEl.innerHTML = `
-            <div class="inspector-header"><div class="inspector-badge">Node ${u}</div><h3 class="inspector-name">${label}</h3></div>
-            <div class="inspector-stats">
-                <div class="stat-box"><span class="stat-lbl">Betweenness</span><span class="stat-val stat-hl">${scoreFmt}</span></div>
-                <div class="stat-box"><span class="stat-lbl">Derajat</span><span class="stat-val">${deg} tetangga</span></div>
-                <div class="stat-box"><span class="stat-lbl">Pengaruh</span><span class="stat-val">${(norm * 100).toFixed(1)}%</span></div>
-            </div>
-            <p class="inspector-desc">${roleDesc}</p>
-        `;
-    }
-
-    function renderPathBanner() {
         const bannerEl = document.getElementById("centrality-path-banner");
-        if (!bannerEl) return;
+        const selFrom = document.getElementById("sel-node-from");
+        const selTo = document.getElementById("sel-node-to");
 
-        if (!selectedA && !selectedB) {
-            bannerEl.innerHTML = `<span class="path-hint">Klik node di kanvas untuk inspeksi. Klik 2 node untuk melihat <strong>lintasan terpendek</strong>.</span>`;
-            return;
-        }
+        renderLeaderboard(listEl, scores, maxScore, inspectedNode, normalizedEnabled, (nodeId) => {
+            inspectedNode = nodeId;
+            render();
+            updateUI();
+        });
 
-        if (selectedA && !selectedB) {
-            bannerEl.innerHTML = `<span class="path-active">Titik awal: <strong>Node ${selectedA}</strong>. Klik satu node lagi sebagai tujuan.</span>`;
-            return;
-        }
+        renderInspector(cardEl, graph, scores, degrees, maxScore, inspectedNode, normalizedEnabled);
 
-        if (shortestPaths.length === 0) {
-            bannerEl.innerHTML = `<span class="path-error">Tidak ditemukan lintasan antara Node ${selectedA} dan Node ${selectedB}.</span>`;
-            return;
-        }
+        renderBanner(bannerEl, mode, {
+            connectSource, disconnectSource, selectedA, selectedB, shortestPaths, scores
+        }, () => {
+            selectedA = null;
+            selectedB = null;
+            recompute();
+        });
 
-        const path = shortestPaths[0];
-        const inters = path.slice(1, -1);
-        let note = "";
-        if (inters.length > 0) {
-            const best = inters.reduce((max, c) => (scores[c] > scores[max] ? c : max), inters[0]);
-            note = ` (Melewati Gatekeeper <strong>Node ${best}</strong>)`;
-        }
-        const str = path.map((n, i) => `<span class="${i === 0 ? "p-start" : (i === path.length - 1 ? "p-end" : "p-mid")}">${n}</span>`).join(" → ");
-
-        bannerEl.innerHTML = `<div class="path-result"><div>Rute (${path.length - 1} langkah): ${str}${note}</div><button id="btn-clear-path" class="btn-clear-path" type="button">Reset</button></div>`;
-        const clearBtn = document.getElementById("btn-clear-path");
-        if (clearBtn) {
-            clearBtn.addEventListener("click", () => {
-                selectedA = null;
-                selectedB = null;
-                recompute();
-            });
-        }
+        updateNodeSelects(selFrom, selTo, graph.nodes);
     }
 
     function getEventPos(e) {
@@ -167,7 +93,57 @@ export function initCentralityApp() {
 
     function onPointerDown(e) {
         const pt = getEventPos(e);
+        const logical = toLogicalCoords(pt, canvas);
         const u = getNodeAt(graph, pt, canvas);
+
+        if (mode === "add_node") {
+            if (!u) {
+                createNode(graph, logical.x, logical.y);
+                recompute();
+            }
+            return;
+        }
+
+        if (mode === "connect") {
+            if (u) {
+                if (!connectSource) {
+                    connectSource = u;
+                } else if (connectSource !== u) {
+                    addEdge(graph, connectSource, u);
+                    connectSource = u;
+                }
+                recompute();
+            }
+            return;
+        }
+
+        if (mode === "disconnect") {
+            if (u) {
+                if (!disconnectSource) {
+                    disconnectSource = u;
+                } else {
+                    removeEdge(graph, disconnectSource, u);
+                    disconnectSource = null;
+                }
+                recompute();
+                return;
+            }
+            const edge = findEdgeNearPoint(graph, logical);
+            if (edge) {
+                removeEdge(graph, edge[0], edge[1]);
+                recompute();
+            }
+            return;
+        }
+
+        if (mode === "delete_node") {
+            if (u) {
+                deleteNode(graph, u);
+                recompute();
+            }
+            return;
+        }
+
         if (u) {
             e.preventDefault();
             draggingNode = u;
@@ -188,26 +164,51 @@ export function initCentralityApp() {
     window.addEventListener("touchmove", onPointerMove, { passive: false });
 
     function onPointerMove(e) {
-        if (!draggingNode) return;
-        e.preventDefault();
         const pt = getEventPos(e);
         const logical = toLogicalCoords(pt, canvas);
-        graph.positions[draggingNode] = {
-            x: Math.max(30, Math.min(570, logical.x)),
-            y: Math.max(30, Math.min(370, logical.y))
-        };
+        cursorPos = pt;
+
+        if (mode === "disconnect") {
+            hoveredEdge = findEdgeNearPoint(graph, logical);
+        } else {
+            hoveredEdge = null;
+        }
+
+        if (mode === "delete_node") {
+            hoveredNode = getNodeAt(graph, pt, canvas);
+        } else {
+            hoveredNode = null;
+        }
+
+        if (draggingNode && mode === "inspect") {
+            e.preventDefault();
+            graph.positions[draggingNode] = {
+                x: Math.max(30, Math.min(570, logical.x)),
+                y: Math.max(30, Math.min(370, logical.y))
+            };
+        }
         render();
     }
 
-    window.addEventListener("mouseup", onPointerUp);
-    window.addEventListener("touchend", onPointerUp);
-
-    function onPointerUp() {
+    window.addEventListener("mouseup", () => {
         if (draggingNode) {
             draggingNode = null;
             render();
         }
-    }
+    });
+
+    document.querySelectorAll(".btn-mode").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll(".btn-mode").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            mode = btn.getAttribute("data-mode");
+            connectSource = null;
+            disconnectSource = null;
+            hoveredEdge = null;
+            hoveredNode = null;
+            recompute();
+        });
+    });
 
     document.querySelectorAll(".btn-preset").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -221,6 +222,36 @@ export function initCentralityApp() {
             recompute();
         });
     });
+
+    const btnClearCanvas = document.getElementById("btn-clear-canvas");
+    if (btnClearCanvas) {
+        btnClearCanvas.addEventListener("click", () => {
+            clearGraph(graph);
+            selectedA = null;
+            selectedB = null;
+            inspectedNode = null;
+            document.querySelectorAll(".btn-preset").forEach(b => b.classList.remove("active"));
+            recompute();
+        });
+    }
+
+    const btnManualAdd = document.getElementById("btn-manual-add");
+    if (btnManualAdd) {
+        btnManualAdd.addEventListener("click", () => {
+            const u = parseInt(document.getElementById("sel-node-from").value, 10);
+            const v = parseInt(document.getElementById("sel-node-to").value, 10);
+            if (addEdge(graph, u, v)) recompute();
+        });
+    }
+
+    const btnManualCut = document.getElementById("btn-manual-cut");
+    if (btnManualCut) {
+        btnManualCut.addEventListener("click", () => {
+            const u = parseInt(document.getElementById("sel-node-from").value, 10);
+            const v = parseInt(document.getElementById("sel-node-to").value, 10);
+            if (removeEdge(graph, u, v)) recompute();
+        });
+    }
 
     const toggleHeatmap = document.getElementById("toggle-heatmap");
     if (toggleHeatmap) {
