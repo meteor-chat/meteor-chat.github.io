@@ -210,30 +210,16 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
     flex-direction: column;
     gap: 6px;
 }
-.detail-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.detail-number {
-    font-size: 20px;
-    font-weight: 700;
-    color: #ffffff;
-}
-.detail-tags {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-.pattern-tag {
-    font-size: 10.5px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 4px;
-}
+.detail-header { display: flex; align-items: center; justify-content: space-between; }
+.detail-number { font-size: 20px; font-weight: 700; color: #ffffff; }
+.detail-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.pattern-tag { font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px; }
 .tag-prime { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 .tag-fib { background: rgba(34, 211, 238, 0.15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.3); }
 .tag-sq { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.tag-tri { background: rgba(132, 204, 22, 0.15); color: #a3e635; border: 1px solid rgba(132, 204, 22, 0.3); }
+.tag-cube { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+.tag-pow2 { background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
 .tag-eo { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
 .detail-factors {
     font-size: 13px;
@@ -260,6 +246,9 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
             <button type="button" class="pattern-filter-btn" data-filter="mult-3">Kelipatan 3</button>
             <button type="button" class="pattern-filter-btn" data-filter="prime">Bilangan Prima</button>
             <button type="button" class="pattern-filter-btn" data-filter="fibonacci">Fibonacci</button>
+            <button type="button" class="pattern-filter-btn" data-filter="triangular">Bilangan Segitiga</button>
+            <button type="button" class="pattern-filter-btn" data-filter="cube">Bilangan Kubik</button>
+            <button type="button" class="pattern-filter-btn" data-filter="pow2">Pangkat 2 (2ⁿ)</button>
             <button type="button" class="pattern-filter-btn" data-filter="even">Genap</button>
             <button type="button" class="pattern-filter-btn" data-filter="odd">Ganjil</button>
             <button type="button" class="pattern-filter-btn" data-filter="square">Kuadrat</button>

@@ -5,6 +5,9 @@ import {
     getEvens,
     getOdds,
     getSquares,
+    getTriangular,
+    getCubes,
+    getPowersOfTwo,
     getNumberDetails
 } from "./patterns-logic.js";
 
@@ -44,6 +47,24 @@ const FILTER_CONFIG = {
         color: "#10b981",
         textColor: "#000000",
         getSet: () => getSquares(100)
+    },
+    triangular: {
+        title: "Triangular Numbers",
+        color: "#84cc16",
+        textColor: "#000000",
+        getSet: () => getTriangular(100)
+    },
+    cube: {
+        title: "Cube Numbers",
+        color: "#ec4899",
+        textColor: "#ffffff",
+        getSet: () => getCubes(100)
+    },
+    pow2: {
+        title: "Powers of 2 (2ⁿ Binary Weights)",
+        color: "#6366f1",
+        textColor: "#ffffff",
+        getSet: () => getPowersOfTwo(100)
     },
     "mult-3": {
         title: "Multiples of 3",
@@ -119,6 +140,9 @@ export function inspectNumber(n) {
     if (info.isPrime) tags.push('<span class="pattern-tag tag-prime">Prima</span>');
     if (info.isFibonacci) tags.push('<span class="pattern-tag tag-fib">Fibonacci</span>');
     if (info.isSquare) tags.push('<span class="pattern-tag tag-sq">Kuadrat</span>');
+    if (info.isTriangular) tags.push('<span class="pattern-tag tag-tri">Segitiga</span>');
+    if (info.isCube) tags.push('<span class="pattern-tag tag-cube">Kubik</span>');
+    if (info.isPowerOfTwo) tags.push('<span class="pattern-tag tag-pow2">Pangkat 2</span>');
     tags.push(`<span class="pattern-tag tag-eo">${info.isEven ? "Genap" : "Ganjil"}</span>`);
 
     detailEl.innerHTML = `

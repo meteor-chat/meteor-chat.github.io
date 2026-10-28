@@ -62,6 +62,32 @@ export function getSquares(max = 100) {
     return res;
 }
 
+export function getTriangular(max = 100) {
+    const res = new Set();
+    for (let n = 1; ; n++) {
+        const val = (n * (n + 1)) / 2;
+        if (val > max) break;
+        res.add(val);
+    }
+    return res;
+}
+
+export function getCubes(max = 100) {
+    const res = new Set();
+    for (let n = 1; n * n * n <= max; n++) {
+        res.add(n * n * n);
+    }
+    return res;
+}
+
+export function getPowersOfTwo(max = 100) {
+    const res = new Set();
+    for (let val = 1; val <= max; val *= 2) {
+        res.add(val);
+    }
+    return res;
+}
+
 export function getFactors(n) {
     const factors = [];
     for (let i = 1; i <= n; i++) {
@@ -75,12 +101,18 @@ export function getNumberDetails(n) {
     const prime = isPrime(n);
     const fibSet = getFibonacci(100);
     const sqSet = getSquares(100);
+    const triSet = getTriangular(100);
+    const cubeSet = getCubes(100);
+    const pow2Set = getPowersOfTwo(100);
     return {
         number: n,
         isPrime: prime,
         isFibonacci: fibSet.has(n),
         isEven: n % 2 === 0,
         isSquare: sqSet.has(n),
+        isTriangular: triSet.has(n),
+        isCube: cubeSet.has(n),
+        isPowerOfTwo: pow2Set.has(n),
         factors
     };
 }
