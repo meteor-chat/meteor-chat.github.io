@@ -1,4 +1,6 @@
 import { loadAlgorithmCode } from "./sort-code-registry.js?v=1";
+import { highlightSortCode } from "./sort-code-highlighter.js?v=1";
+import { initCodePanelResizer } from "./sort-code-resizer.js?v=1";
 
 const LANGUAGES = [
     { id: "python", label: "Python" },
@@ -29,13 +31,6 @@ let activeLang = "python";
 let activeStep = null;
 let currentCodeData = null;
 let isOpen = false;
-
-function escapeHtml(text) {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-}
 
 function updateTabs() {
     if (!tabsContainer) return;
@@ -69,7 +64,7 @@ function renderCode() {
 
         const codeSpan = document.createElement("span");
         codeSpan.className = "sort-code-line-text";
-        codeSpan.innerHTML = escapeHtml(lineText) || "&nbsp;";
+        codeSpan.innerHTML = highlightSortCode(lineText, activeLang) || "&nbsp;";
 
         lineDiv.appendChild(numSpan);
         lineDiv.appendChild(codeSpan);
@@ -176,6 +171,8 @@ function createDOM() {
     panelEl.id = "sort-code-panel";
     panelEl.className = "sort-code-panel sort-code-hidden";
     panelEl.setAttribute("aria-label", "Sorting Code Inspector");
+
+    initCodePanelResizer(panelEl);
 
     const header = document.createElement("div");
     header.className = "sort-code-header";

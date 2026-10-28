@@ -12,6 +12,7 @@ import {
     highlightCodeStep,
     clearCodeHighlight
 } from "../src/lab/sort/code/sort-code-panel.js";
+import { highlightSortCode } from "../src/lab/sort/code/sort-code-highlighter.js";
 
 const ALGOS = ["bubble", "insertion", "selection", "quick", "merge", "shaker"];
 const LANGS = ["python", "javascript", "c", "cpp", "java", "golang"];
@@ -47,6 +48,26 @@ describe("sort-code-registry", () => {
     });
 });
 
+describe("sort-code-highlighter", () => {
+    it("highlights keywords, strings, numbers, and functions accurately", () => {
+        const js = highlightSortCode("const btn = document.getElementById('btn');", "javascript");
+        expect(js).toContain("sort-hl-keyword");
+        expect(js).toContain("sort-hl-fn");
+        expect(js).toContain("sort-hl-str");
+
+        const java = highlightSortCode("public static int partition(int[] arr, int low, int high) {", "java");
+        expect(java).toContain("sort-hl-keyword");
+        expect(java).toContain("sort-hl-fn");
+        expect(java).toContain("partition");
+
+        const comment = highlightSortCode("// Count from 1 to 10.", "javascript");
+        expect(comment).toContain("sort-hl-comment");
+
+        const num = highlightSortCode("let count = 10;", "javascript");
+        expect(num).toContain("sort-hl-num");
+    });
+});
+
 describe("sort-code-panel DOM operations", () => {
     beforeEach(async () => {
         await closeCodePanel();
@@ -68,13 +89,55 @@ describe("sort-code-panel DOM operations", () => {
         expect(panel.classList.contains("sort-code-hidden")).toBe(true);
     });
 
-    it("renders code lines and switches languages", async () => {
+    it("includes a resizer handle element with proper ARIA attributes", async () => {
+        await openCodePanel();
+        const panel = document.getElementById("sort-code-panel");
+        const resizer = panel.querySelector(".sort-code-resizer");
+        expect(resizer).not.toBeNull();
+        expect(resizer.getAttribute("role")).toBe("separator");
+        expect(resizer.getAttribute("aria-orientation")).toBe("vertical");
+    });
+
+    it("resizes panel via keyboard navigation", async () => {
+        await openCodePanel();
+        const panel = document.getElementById("sort-code-panel");
+        const resizer = panel.querySelector(".sort-code-resizer");
+        panel.style.width = "400px";
+
+        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+        expect(parseInt(panel.style.width, 10)).toBe(420);
+
+        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+        expect(parseInt(panel.style.width, 10)).toBe(400);
+
+        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
+        expect(parseInt(panel.style.width, 10)).toBe(440);
+    });
+
+    it("resizes panel via pointer drag events", async () => {
+        await openCodePanel();
+        const panel = document.getElementById("sort-code-panel");
+        const resizer = panel.querySelector(".sort-code-resizer");
+        panel.style.width = "400px";
+
+        resizer.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: 600, button: 0 }));
+        expect(panel.classList.contains("is-resizing")).toBe(true);
+
+        resizer.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 500 }));
+        resizer.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, clientX: 500 }));
+        expect(panel.classList.contains("is-resizing")).toBe(false);
+    });
+
+    it("renders code lines with syntax highlight spans and switches languages", async () => {
         await openCodePanel();
         await setCodeAlgorithm("bubble");
 
         const panel = document.getElementById("sort-code-panel");
         const lines = panel.querySelectorAll(".sort-code-line");
         expect(lines.length).toBeGreaterThan(0);
+
+        const highlightedSpans = panel.querySelectorAll(".sort-hl-keyword, .sort-hl-fn, .sort-hl-num");
+        expect(highlightedSpans.length).toBeGreaterThan(0);
 
         setCodeLanguage("golang");
         const golangLines = panel.querySelectorAll(".sort-code-line");
@@ -94,9 +157,13 @@ describe("sort-code-panel DOM operations", () => {
         expect(clearedLines.length).toBe(0);
     });
 
-    it("ensures no per-line horizontal scrollbars in sort.html CSS", () => {
+    it("ensures no per-line horizontal scrollbars and includes syntax styles in sort.html", () => {
         const html = fs.readFileSync(path.resolve(process.cwd(), "sort.html"), "utf-8");
         expect(html).toContain("overflow-x: hidden");
         expect(html).not.toMatch(/\.sort-code-line-text[^{]*\{[^}]*overflow-x:\s*auto/);
+        expect(html).toContain(".sort-code-resizer");
+        expect(html).toContain(".sort-hl-keyword");
+        expect(html).toContain(".sort-hl-str");
+        expect(html).toContain(".sort-hl-num");
     });
 });
