@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Laboratorium interaktif Linear Congruential Generator (LCG) - Uji Teorema Hull-Dobell, visualisasi siklus modular 60 FPS, dan kalkulasi langkah demi langkah.">
+<title>Linear Congruential Generator - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root { --bg-main: #000000; --text-main: #ffffff; --font-stack: 'Google Sans', sans-serif; --mono-stack: 'Roboto Mono', monospace; --space-lg: 20px; }
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, button, select, input { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
+#lcg-app { width: 100%; max-width: 860px; padding: 40px var(--space-lg) 60px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.lcg-header { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+.btn-back-lab { font-size: 13px; color: #888; text-decoration: none; padding: 6px 16px; border-radius: 20px; border: 1px solid #222; transition: all 0.2s ease; }
+.btn-back-lab:hover { color: #fff; border-color: #444; background: rgba(255, 255, 255, 0.05); }
+.lcg-tag { font-size: 11px; font-weight: 600; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 12px; }
+.lcg-title-block { text-align: center; }
+.lcg-title { font-size: 26px; font-weight: 400; margin-bottom: 6px; }
+.lcg-formula-box { background: rgba(255, 255, 255, 0.03); border: 1px solid #222; border-radius: 12px; padding: 12px 20px; font-family: var(--mono-stack); font-size: 17px; color: #38bdf8; letter-spacing: 0.5px; margin-top: 6px; }
+.lcg-presets-bar { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.lcg-preset-select { background: #0c0f14; border: 1px solid #2a3447; color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 13px; cursor: pointer; }
+.lcg-grid-main { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.lcg-card { background: #0c0f14; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.lcg-card-title { font-size: 15px; font-weight: 600; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between; }
+.lcg-inputs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lcg-input-group { display: flex; flex-direction: column; gap: 4px; }
+.lcg-label { font-size: 12px; color: #94a3b8; font-family: var(--mono-stack); }
+.lcg-input { background: #05070a; border: 1px solid #26334d; border-radius: 8px; padding: 8px 10px; color: #fff; font-family: var(--mono-stack); font-size: 14px; }
+.lcg-input:focus { border-color: #38bdf8; }
+.lcg-badge-period { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px; text-align: center; }
+.badge-full { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.badge-short { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.lcg-cond-list { display: flex; flex-direction: column; gap: 6px; font-size: 12px; line-height: 1.4; }
+.lcg-cond-item { padding: 4px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.02); }
+.lcg-cond-item.passed { color: #4ade80; }
+.lcg-cond-item.failed { color: #f87171; }
+.lcg-canvas-container { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.lcg-canvas { width: 360px; height: 360px; max-width: 100%; aspect-ratio: 1; border-radius: 12px; background: #05070a; border: 1px solid #1e293b; }
+.lcg-mode-toggle { display: flex; gap: 6px; }
+.lcg-mode-btn { background: rgba(255, 255, 255, 0.04); border: 1px solid #2a3447; color: #888; padding: 5px 14px; border-radius: 14px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.lcg-mode-btn.active { background: #38bdf8; color: #000; font-weight: 600; border-color: #38bdf8; }
+.lcg-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.btn-action { background: transparent; border: 1px solid #444; color: #fff; padding: 8px 18px; border-radius: 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.btn-action:hover { border-color: #888; background: rgba(255, 255, 255, 0.05); }
+.btn-action-primary { background: #22c55e; color: #000; font-weight: 600; border-color: #22c55e; }
+.btn-action-primary:hover { background: #4ade80; border-color: #4ade80; }
+.lcg-steps-box { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+.lcg-step-card { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.02); border: 1px solid #1a2233; border-radius: 8px; padding: 8px 12px; font-family: var(--mono-stack); font-size: 12px; }
+.lcg-step-card .step-num { color: #38bdf8; font-weight: 600; }
+.lcg-step-card .step-calc strong { color: #4ade80; }
+.lcg-series-box { width: 100%; background: #0c0f14; border: 1px solid #1e293b; border-radius: 16px; padding: 16px 20px; }
+.lcg-series-chips { font-family: var(--mono-stack); font-size: 13px; color: #cbd5e1; word-break: break-all; line-height: 1.6; margin-top: 6px; }
+.lcg-security-callout { width: 100%; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 16px; padding: 16px 20px; }
+.lcg-security-title { font-size: 14px; font-weight: 600; color: #fbbf24; margin-bottom: 4px; }
+.lcg-security-desc { font-size: 12.5px; color: #d1d5db; line-height: 1.5; }
+.sort-code-panel { position: fixed; top: 0; right: 0; width: 440px; max-width: 100vw; height: 100vh; background: #131722; border-left: 1px solid rgba(255, 255, 255, 0.08); z-index: 1000; box-shadow: -8px 0 28px rgba(0, 0, 0, 0.6); display: flex; flex-direction: column; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.sort-code-panel.sort-code-hidden { transform: translateX(100%); pointer-events: none; }
+.sort-code-panel.is-resizing { transition: none !important; user-select: none; }
+.sort-code-resizer { position: absolute; top: 0; left: -4px; width: 8px; height: 100%; cursor: ew-resize; z-index: 20; user-select: none; touch-action: none; background: transparent; }
+.sort-code-resizer::after { content: ""; position: absolute; top: 0; left: 3px; width: 2px; height: 100%; background: transparent; transition: background 0.15s ease; }
+.sort-code-resizer:hover::after, .sort-code-resizer.is-dragging::after { background: #22c55e; box-shadow: 0 0 8px rgba(34, 197, 94, 0.5); }
+.sort-code-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: #0f121b; }
+.sort-code-title { font-size: 15px; font-weight: 600; color: #fff; }
+.sort-code-close { background: transparent; border: none; font-size: 22px; color: #888; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.sort-code-close:hover { color: #fff; }
+.sort-code-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); background: #131722; }
+.sort-code-tab { background: rgba(255, 255, 255, 0.04); border: 1px solid #282828; color: #aaa; padding: 5px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.sort-code-tab.active { background: #22c55e; color: #000; font-weight: 600; border-color: #22c55e; }
+.sort-code-pre { flex: 1; overflow-x: hidden; overflow-y: auto; margin: 0; padding: 12px 0; background: #131722; font-family: var(--mono-stack); font-size: 12.5px; line-height: 1.6; }
+.sort-code-body { display: block; width: 100%; }
+.sort-code-line { display: flex; align-items: flex-start; padding: 1px 16px; }
+.sort-code-line-num { width: 32px; text-align: right; color: #555; padding-right: 14px; user-select: none; flex-shrink: 0; font-family: var(--mono-stack); font-size: 12px; }
+.sort-code-line-text { white-space: pre-wrap; word-break: break-word; flex: 1; color: #c0caf5; font-family: var(--mono-stack); }
+.sort-hl-keyword, .hljs-keyword { color: #bb9af7; font-style: italic; font-weight: 500; }
+.sort-hl-fn, .hljs-function, .hljs-title { color: #7aa2f7; }
+.sort-hl-type, .hljs-type { color: #2ac3de; }
+.sort-hl-str, .hljs-string { color: #9ece6a; }
+.sort-hl-num, .hljs-number { color: #ff9e64; }
+.sort-hl-op, .hljs-operator { color: #89ddff; }
+.btn-code-floating { position: fixed; right: 20px; bottom: 24px; z-index: 999; background: #181818; border: 1px solid #383838; color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5); }
+@media (max-width: 650px) {
+    .sort-code-panel { width: 100vw !important; }
+    .sort-code-resizer { display: none; }
+}
+</style>
+</head>
+<body>
+<main id="lcg-app">
+    <div class="lcg-header">
+        <a href="/lab" class="btn-back-lab">&larr; Kembali ke Lab</a>
+        <span class="lcg-tag">PRNG Simulator</span>
+    </div>
+    <div class="lcg-title-block">
+        <h1 class="lcg-title">Linear Congruential Generator</h1>
+        <div class="lcg-formula-box">X<sub>n+1</sub> = (a · X<sub>n</sub> + c) mod m</div>
+    </div>
+    <div class="lcg-presets-bar">
+        <label for="lcg-preset-select" class="lcg-label">Pilih Preset:</label>
+        <select id="lcg-preset-select" class="lcg-preset-select">
+            <option value="prompt">Simulasi Sederhana (Contoh Prompt: m=8, a=5, c=3, X₀=1)</option>
+            <option value="short">Periode Pendek (Gagal Hull-Dobell: m=8, a=4, c=2)</option>
+            <option value="multiplicative">Multiplicative Congruential (c=0: m=17, a=3)</option>
+            <option value="zx">ZX Spectrum ROM (m=65537, a=75, c=0)</option>
+            <option value="ansic">ANSI C rand() (m=2³¹, a=1103515245, c=12345)</option>
+            <option value="minstd">MINSTD Lehmer (m=2³¹-1, a=16807, c=0)</option>
+        </select>
+    </div>
+    <div class="lcg-grid-main">
+        <div class="lcg-card">
+            <div class="lcg-card-title">Parameter Konstanta</div>
+            <div class="lcg-inputs-row">
+                <div class="lcg-input-group">
+                    <label for="lcg-in-m" class="lcg-label">Modulus (m &gt; 0)</label>
+                    <input type="number" id="lcg-in-m" class="lcg-input" value="8" min="1">
+                </div>
+                <div class="lcg-input-group">
+                    <label for="lcg-in-a" class="lcg-label">Multiplier (0 &lt; a &lt; m)</label>
+                    <input type="number" id="lcg-in-a" class="lcg-input" value="5" min="1">
+                </div>
+                <div class="lcg-input-group">
+                    <label for="lcg-in-c" class="lcg-label">Increment (0 &le; c &lt; m)</label>
+                    <input type="number" id="lcg-in-c" class="lcg-input" value="3" min="0">
+                </div>
+                <div class="lcg-input-group">
+                    <label for="lcg-in-x0" class="lcg-label">Seed (X₀)</label>
+                    <input type="number" id="lcg-in-x0" class="lcg-input" value="1" min="0">
+                </div>
+            </div>
+            <div class="lcg-card-title" style="margin-top: 6px;">Teorema Hull-Dobell</div>
+            <div id="lcg-hull-badge" class="lcg-badge-period badge-full">✓ Periode Penuh Terjamin (8)</div>
+            <div class="lcg-cond-list">
+                <div id="lcg-cond-gcd" class="lcg-cond-item passed">1. FPB(c, m) = 1 ✓</div>
+                <div id="lcg-cond-primes" class="lcg-cond-item passed">2. Faktor prima m membagi (a-1) ✓</div>
+                <div id="lcg-cond-mod4" class="lcg-cond-item passed">3. m kelipatan 4, maka (a-1) kelipatan 4 ✓</div>
+            </div>
+        </div>
+        <div class="lcg-card">
+            <div class="lcg-card-title">
+                <span>Visualisasi Status</span>
+                <div class="lcg-mode-toggle">
+                    <button type="button" id="btn-mode-ring" class="lcg-mode-btn active">Ring</button>
+                    <button type="button" id="btn-mode-lattice" class="lcg-mode-btn">Lattice</button>
+                </div>
+            </div>
+            <div class="lcg-canvas-container">
+                <canvas id="lcg-canvas" class="lcg-canvas" width="360" height="360"></canvas>
+            </div>
+            <div class="lcg-actions">
+                <button type="button" id="btn-lcg-step" class="btn-action btn-action-primary">Next Step</button>
+                <button type="button" id="btn-lcg-play" class="btn-action">Auto Play</button>
+                <button type="button" id="btn-lcg-reset" class="btn-action">Reset</button>
+                <button type="button" id="btn-toggle-code" class="btn-action">Code</button>
+            </div>
+        </div>
+    </div>
+    <div class="lcg-card" style="width: 100%;">
+        <div class="lcg-card-title">Kalkulasi Langkah Demi Langkah</div>
+        <div id="lcg-steps-box" class="lcg-steps-box"></div>
+    </div>
+    <div class="lcg-series-box">
+        <div class="lcg-card-title">Deret Bilangan Acak Semu (Xₙ)</div>
+        <div id="lcg-series-chips" class="lcg-series-chips">1</div>
+    </div>
+    <div class="lcg-security-callout">
+        <div class="lcg-security-title">💡 Catatan Kriptografi & Keamanan</div>
+        <div class="lcg-security-desc">Meskipun LCG sangat cepat dijalankan dan hemat memori, algoritma ini <strong>tidak aman untuk kriptografi</strong> (seperti enkripsi atau token otentikasi) karena keadaannya linear dan mudah ditebak dari beberapa sampel keluaran. LCG paling cocok untuk simulasi sederhana, game, dan eksperimen algoritma.</div>
+    </div>
+</main>
+<aside id="sort-code-panel" class="sort-code-panel sort-code-hidden" aria-label="LCG Code Inspector">
+    <div class="sort-code-header">
+        <h3 id="lcg-code-title" class="sort-code-title">LCG Code (Python)</h3>
+        <button type="button" id="lcg-code-close" class="sort-code-close" aria-label="Tutup panel kode">×</button>
+    </div>
+    <div id="lcg-code-tabs" class="sort-code-tabs">
+        <button type="button" class="sort-code-tab active" data-lang="python">Python</button>
+        <button type="button" class="sort-code-tab" data-lang="javascript">JavaScript</button>
+        <button type="button" class="sort-code-tab" data-lang="c">C</button>
+        <button type="button" class="sort-code-tab" data-lang="cpp">C++</button>
+        <button type="button" class="sort-code-tab" data-lang="java">Java</button>
+        <button type="button" class="sort-code-tab" data-lang="golang">Golang</button>
+    </div>
+    <pre class="sort-code-pre"><code id="lcg-code-body" class="sort-code-body"></code></pre>
+</aside>
+<button type="button" id="btn-code-floating" class="btn-code-floating" aria-label="Toggle Code Panel">&lang;/&rang; Code</button>
+<script type="module" src="./src/lab/lcg/lcg-controller.js?v=1"></script>
+</body>
+</html>

@@ -28,6 +28,7 @@ const MANIFESTS = {
         "- [Math Lab](/math): 25 kalkulator STEM interaktif & simulasi 3D.",
         "- [Sort Visualizer](/sort): Visualisasi 6 algoritma sorting (Bar & Lingkaran 360 derajat).",
         "- [Pathfinding Arena](/search): Simulasi interaktif pencarian rute BFS, DFS, Dijkstra pada arena labirin.",
+        "- [Lab](/lab): Eksperimen komputasi, Boids, Caesar Cipher, Number Patterns, Centrality, dan LCG (/lcg).",
         "- Arahkan pengguna dengan tautan markdown ke halaman yang relevan."
     ].join("\n")
 };

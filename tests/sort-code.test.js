@@ -104,13 +104,13 @@ describe("sort-code-panel DOM operations", () => {
         const resizer = panel.querySelector(".sort-code-resizer");
         panel.style.width = "400px";
 
-        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
+        resizer.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft" }));
         expect(parseInt(panel.style.width, 10)).toBe(420);
 
-        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
+        resizer.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowRight" }));
         expect(parseInt(panel.style.width, 10)).toBe(400);
 
-        resizer.dispatchEvent(new KeyboardEvent("keydown", { key: "Home" }));
+        resizer.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Home" }));
         expect(parseInt(panel.style.width, 10)).toBe(440);
     });
 
@@ -120,11 +120,11 @@ describe("sort-code-panel DOM operations", () => {
         const resizer = panel.querySelector(".sort-code-resizer");
         panel.style.width = "400px";
 
-        resizer.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: 600, button: 0 }));
+        resizer.dispatchEvent(new window.MouseEvent("pointerdown", { bubbles: true, clientX: 600, button: 0 }));
         expect(panel.classList.contains("is-resizing")).toBe(true);
 
-        resizer.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 500 }));
-        resizer.dispatchEvent(new MouseEvent("pointerup", { bubbles: true, clientX: 500 }));
+        resizer.dispatchEvent(new window.MouseEvent("pointermove", { bubbles: true, clientX: 500 }));
+        resizer.dispatchEvent(new window.MouseEvent("pointerup", { bubbles: true, clientX: 500 }));
         expect(panel.classList.contains("is-resizing")).toBe(false);
     });
 
