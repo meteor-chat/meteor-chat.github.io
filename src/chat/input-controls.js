@@ -4,7 +4,7 @@ import { showError, hideError } from "../core/error-view.js";
 export function syncInputUI(input) {
     const btn = input === refs.msgLanding ? refs.sendLanding : refs.sendChat;
     const img = btn.querySelector("img");
-    if (img) img.src = input.value.trim() ? "assets/svg/send-active.svg" : "assets/svg/send-inactive.svg";
+    if (img) img.src = input.value.trim() ? "./assets/svg/send-active.svg" : "./assets/svg/send-inactive.svg";
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 120) + "px";
 }

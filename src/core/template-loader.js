@@ -13,7 +13,7 @@ export function ensureTemplates() {
             "tpl-code-block.html"
         ];
         templatePromise = Promise.all(tpls.map(async (file) => {
-            const res = await fetch(`templates/${file}`);
+            const res = await fetch(`./templates/${file}`);
             if (!res.ok) throw new Error(`Gagal memuat template: ${file}`);
             const text = await res.text();
             state.templates[file.replace(".html", "")] = text;
@@ -25,7 +25,7 @@ export function ensureJadwal() {
     if (!jadwalPromise) {
         jadwalPromise = (async () => {
             try {
-                const res = await fetch("assets/data/jadwal-kuliah.json");
+                const res = await fetch("./assets/data/jadwal-kuliah.json");
                 if (res.ok) {
                     const data = await res.json();
                     const validData = {};

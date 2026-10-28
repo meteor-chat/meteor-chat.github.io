@@ -22,8 +22,10 @@ export async function copyCode(btn) {
         setTimeout(() => {
             btn.textContent = "";
             const img = document.createElement("img");
-            img.src = "assets/svg/copy.svg";
+            img.src = "./assets/svg/copy.svg";
             img.alt = "Copy";
+            img.width = 16;
+            img.height = 16;
             btn.appendChild(img);
         }, 1500);
     }
