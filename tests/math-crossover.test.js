@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { computeCrossover } from "../src/math/calculators/math-calc-7.js";
+import { computeCrossover, initMath7, calculateMath7 } from "../src/math/calculators/math-calc-7.js";
 import { renderCrossoverCards, renderTopFormula7 } from "../src/math/calculators/math-calc-7-cards.js";
 import { renderVisualChromosomeBoard } from "../src/math/visuals/math-visual-7.js";
 
@@ -115,6 +115,31 @@ describe("Crossover Kromosom (Form 7)", () => {
             expect(cutCell).not.toBeNull();
             cells[1].click();
             expect(clickedK).toBe(2);
+        });
+
+        it("integrates with full DOM form including user input from screenshot", () => {
+            document.body.innerHTML = `
+                <div id="math-calc-formula-display-7"></div>
+                <div id="cross-visual-board"></div>
+                <input type="text" id="math7-in-p1" value="101100101">
+                <input type="text" id="math7-in-p2" value="011011011">
+                <select id="math7-in-type"><option value="single" selected>Single-point</option></select>
+                <input type="number" id="math7-in-k" value="4">
+                <input type="range" id="math7-in-k-slider" value="4">
+                <div id="cross-card-step1"></div>
+                <div id="cross-card-step2"></div>
+                <div id="cross-card-step3"></div>
+                <div id="cross-card-step4"></div>
+            `;
+            initMath7();
+            calculateMath7();
+            const board = document.getElementById("cross-visual-board");
+            expect(board.querySelectorAll(".cross-bit-cell").length).toBe(36);
+            const c2 = document.getElementById("cross-card-step2");
+            expect(c2.textContent).toContain("101111011");
+            expect(c2.textContent).toContain("011000101");
+            const c3 = document.getElementById("cross-card-step3");
+            expect(c3.textContent).toContain("n = 9");
         });
     });
 });
