@@ -259,22 +259,22 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .cube-out-name, .cube-out-colon, .cube-out-val { font-size: 14px; }
     .cube-out-row { grid-template-columns: 115px 12px 1fr; }
 }
-.obj-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
-.obj-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
-.obj-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
-.obj-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
-.obj-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
-.obj-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
-.obj-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
-.btn-obj-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-.btn-obj-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
-.obj-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
-.obj-token-x1 { color: #38bdf8 !important; cursor: default; }
-.obj-token-x2 { color: #fbbf24 !important; cursor: default; }
-.obj-token-h { color: #4ade80 !important; cursor: default; }
-.obj-token-x1:hover, .obj-token-x1.obj-glow-x1 { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
-.obj-token-x2:hover, .obj-token-x2.obj-glow-x2 { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
-@media (max-width: 900px) { .obj-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
+.obj-page, .fit-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+.obj-two-col-layout, .fit-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.obj-col-left, .fit-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
+.obj-col-right, .fit-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
+.obj-top-formula, .fit-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
+.obj-canvas-wrap, .fit-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+.obj-canvas, .fit-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
+.btn-obj-pipeline, .btn-fit-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+.btn-obj-pipeline:hover, .btn-fit-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
+.obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
+.obj-token-x1, .fit-token-h { color: #38bdf8 !important; cursor: default; }
+.obj-token-x2, .fit-token-a { color: #fbbf24 !important; cursor: default; }
+.obj-token-h, .fit-token-f { color: #4ade80 !important; cursor: default; }
+.obj-token-x1:hover, .obj-token-x1.obj-glow-x1, .fit-token-h:hover, .fit-token-h.fit-glow-h { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
+.obj-token-x2:hover, .obj-token-x2.obj-glow-x2, .fit-token-a:hover, .fit-token-a.fit-glow-a { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
+@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
 </style>
 <link rel="modulepreload" href="./src/math/math-main.js?v=13">
 <link rel="modulepreload" href="./math-filter.js">
@@ -476,18 +476,51 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
         </div>
       </div>
         
-      <div id="math-calc-form-3" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Nilai Fitness</h1></div>
-        <div class="math-calc-left"><div id="math-calc-formula-display-3" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group">
-                    <label>h (user input)</label>
-                    <input type="number" id="math3-in-h" placeholder="misalnya 5" step="0.1">
-                </div>
-                <div class="math-input-group">
-                    <label>a (user input)</label>
-                    <input type="number" id="math3-in-a" placeholder="misalnya 0.1" step="0.1">
-                </div></div></div><div class="math-calc-right"><canvas id="math3-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps" id="math3-steps-container"></div>
+      <div id="math-calc-form-3" class="math-calc-container fit-page hidden"><div class="math-calc-header chromo-header"><button id="btn-math-calc-back-3" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title chromo-title">Nilai Fitness</h1></div>
+        <div class="fit-two-col-layout">
+          <div class="fit-col-left">
+            <div id="math-calc-formula-display-3" class="math-formula-box fit-top-formula"></div>
+            <div class="fit-canvas-wrap">
+              <canvas id="math3-canvas" class="fit-canvas" width="340" height="340"></canvas>
+            </div>
+          </div>
+          <div class="fit-col-right">
+            <button type="button" id="btn-fit-import-obj" class="btn-fit-pipeline">&#8595; Tarik Nilai h dari Rumus 2 (Fungsi Objektif)</button>
+            <div class="fit-inputs-box">
+              <div class="chromo-param-group">
+                <label for="math3-in-h" class="chromo-param-label"><span id="fit-label-h" class="chromo-param-math">h</span></label>
+                <input type="number" id="math3-in-h" class="chromo-param-input" value="5" step="0.1">
+              </div>
+              <div class="chromo-param-group">
+                <label for="math3-in-a" class="chromo-param-label"><span id="fit-label-a" class="chromo-param-math">a</span></label>
+                <input type="number" id="math3-in-a" class="chromo-param-input" value="0.1" step="0.05">
+              </div>
+            </div>
+            <div class="chromo-curved-arrows-box">
+              <svg class="chromo-curved-arrows-svg" viewBox="0 0 380 60" preserveAspectRatio="none">
+                <defs>
+                  <marker id="fit-curved-arrowhead" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+                    <polygon points="0 0, 6 3, 0 6" fill="#ffffff" />
+                  </marker>
+                </defs>
+                <path d="M 80 5 C 80 32, 140 46, 160 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#fit-curved-arrowhead)" />
+                <path d="M 300 5 C 300 32, 240 46, 220 54" fill="none" stroke="#ffffff" stroke-width="1.8" marker-end="url(#fit-curved-arrowhead)" />
+              </svg>
+            </div>
+            <div id="fit-card-step1" class="chromo-card chromo-card-rounded"></div>
+            <div id="fit-arrow-1" class="chromo-step-arrow">&darr;</div>
+            <div id="fit-card-step2" class="chromo-card chromo-card-rect"></div>
+            <div id="fit-arrow-2" class="chromo-step-arrow">&darr;</div>
+            <div id="fit-card-step3" class="chromo-card chromo-card-rect"></div>
+            <div id="fit-arrow-3" class="chromo-step-arrow">&darr;</div>
+            <div id="fit-card-step4" class="chromo-card chromo-card-rect"></div>
+            <div id="fit-arrow-4" class="chromo-step-arrow">&darr;</div>
+            <div id="fit-card-step5" class="chromo-card chromo-card-result"></div>
+            <div id="math3-steps-container" class="hidden"></div>
+          </div>
         </div>
-    </div>
-    
+      </div>
+        
       <div id="math-calc-form-4" class="math-calc-container "><div class="math-calc-header"><button id="btn-math-calc-back-4" class="btn-math-back calc-back-btn">&larr; Kembali</button><h1 class="math-calc-title">Probabilitas Seleksi</h1></div>
         <div class="math-calc-left"><div id="math-calc-formula-display-4" class="math-formula-box"></div><div class="math-inputs"><div id="math4-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><canvas id="math4-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps" id="math4-steps-container"></div>
         </div>

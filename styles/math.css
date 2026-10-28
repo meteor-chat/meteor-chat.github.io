@@ -247,19 +247,19 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .cube-out-name, .cube-out-colon, .cube-out-val { font-size: 14px; }
     .cube-out-row { grid-template-columns: 115px 12px 1fr; }
 }
-.obj-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
-.obj-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
-.obj-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
-.obj-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
-.obj-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
-.obj-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
-.obj-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
-.btn-obj-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
-.btn-obj-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
-.obj-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
-.obj-token-x1 { color: #38bdf8 !important; cursor: default; }
-.obj-token-x2 { color: #fbbf24 !important; cursor: default; }
-.obj-token-h { color: #4ade80 !important; cursor: default; }
-.obj-token-x1:hover, .obj-token-x1.obj-glow-x1 { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
-.obj-token-x2:hover, .obj-token-x2.obj-glow-x2 { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
-@media (max-width: 900px) { .obj-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }
+.obj-page, .fit-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+.obj-two-col-layout, .fit-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.obj-col-left, .fit-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
+.obj-col-right, .fit-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; }
+.obj-top-formula, .fit-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
+.obj-canvas-wrap, .fit-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; }
+.obj-canvas, .fit-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
+.btn-obj-pipeline, .btn-fit-pipeline { background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11.5px; padding: 6px 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-bottom: 4px; }
+.btn-obj-pipeline:hover, .btn-fit-pipeline:hover { background: rgba(56, 189, 248, 0.2); color: #fff; border-color: #38bdf8; }
+.obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
+.obj-token-x1, .fit-token-h { color: #38bdf8 !important; cursor: default; }
+.obj-token-x2, .fit-token-a { color: #fbbf24 !important; cursor: default; }
+.obj-token-h, .fit-token-f { color: #4ade80 !important; cursor: default; }
+.obj-token-x1:hover, .obj-token-x1.obj-glow-x1, .fit-token-h:hover, .fit-token-h.fit-glow-h { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
+.obj-token-x2:hover, .obj-token-x2.obj-glow-x2, .fit-token-a:hover, .fit-token-a.fit-glow-a { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
+@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right { width: 100%; max-width: 340px; margin: 0 auto; } }

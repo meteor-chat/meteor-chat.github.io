@@ -79,5 +79,11 @@ export function renderObjectiveCards(x1, x2) {
         sub.className = "chromo-card-subnote";
         sub.textContent = "Nilai evaluasi fenotipe individu untuk seleksi algoritma genetika";
         card5.appendChild(sub);
+
+        try {
+            if (typeof window !== "undefined" && window.sessionStorage) {
+                window.sessionStorage.setItem("last_evaluated_obj_h", String(total));
+            }
+        } catch {}
     }
 }
