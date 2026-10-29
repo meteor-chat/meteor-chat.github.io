@@ -16,13 +16,15 @@ function renderCardWithSubnote(card, tex, subnoteText) {
     }
 }
 
-export function renderTopFormula7(type = "single") {
+export function renderTopFormula7(type = "single", activeMode = "pair") {
     const el = document.getElementById("math-calc-formula-display-7");
     if (!el) return;
     el.textContent = "";
 
     let tex = "\\htmlClass{cross-tok-c1}{C_1} = \\htmlClass{cross-tok-p1}{P_1}[1..k] \\parallel \\htmlClass{cross-tok-p2}{P_2}[k+1..n], \\quad \\htmlClass{cross-tok-c2}{C_2} = \\htmlClass{cross-tok-p2}{P_2}[1..k] \\parallel \\htmlClass{cross-tok-p1}{P_1}[k+1..n]";
-    if (type === "two") {
+    if (activeMode === "pop") {
+        tex = "\\mathcal{O}^{(t)} = \\bigcup_{k=1}^{N/2} \\mathrm{Cross}(P_{2k-1}, P_{2k}, p_c), \\quad \\text{Stop: } t \\ge G_{\\max} \\lor \\text{Pola Identik}";
+    } else if (type === "two") {
         tex = "\\htmlClass{cross-tok-c1}{C_1} = P_1[:k_1] \\parallel P_2[k_1:k_2] \\parallel P_1[k_2:], \\quad \\htmlClass{cross-tok-c2}{C_2} = P_2[:k_1] \\parallel P_1[k_1:k_2] \\parallel P_2[k_2:]";
     } else if (type === "uniform") {
         tex = "\\htmlClass{cross-tok-c1}{C_{1,j}} = \\begin{cases} P_{1,j} & M_j = 1 \\\\ P_{2,j} & M_j = 0 \\end{cases}, \\quad \\htmlClass{cross-tok-c2}{C_{2,j}} = \\begin{cases} P_{2,j} & M_j = 1 \\\\ P_{1,j} & M_j = 0 \\end{cases}";
@@ -53,7 +55,6 @@ export function renderCrossoverCards(state) {
     }
 
     const n = p1.length;
-
     let step1Tex = "";
     let step1Note = "";
     let step2Tex = "";
@@ -99,6 +100,69 @@ export function renderCrossoverCards(state) {
     const dec1 = parseInt(off1, 2);
     const dec2 = parseInt(off2, 2);
     const step4Tex = `\\begin{aligned} C_1 &= \\mathbf{${off1}}_2 = ${dec1}_{10} \\\\ C_2 &= \\mathbf{${off2}}_2 = ${dec2}_{10} \\end{aligned}`;
-    const step4Note = "Dua offspring siap memasuki tahap evaluasi kebugaran atau mutasi genetik.";
+    const step4Note = "Offspring hasil rekombinasi selesai dibentuk (proses crossover berhenti sebelum mutasi genetik).";
     renderCardWithSubnote(c4, step4Tex, step4Note);
+}
+
+export function renderPopulationCards(popState) {
+    const c1 = document.getElementById("cross-card-step1");
+    const c2 = document.getElementById("cross-card-step2");
+    const c3 = document.getElementById("cross-card-step3");
+    const c4 = document.getElementById("cross-card-step4");
+    if (!c1 || !c2 || !c3 || !c4) return;
+
+    const { generation, maxGenerations, pc, status, statusMessage, currentPopulation, lastStepResult } = popState;
+
+    if (generation === 0 || !lastStepResult) {
+        const s1Tex = `\\mathcal{P}^{(0)} = \\{P_1, P_2, P_3, P_4\\}`;
+        const s1Note = "Populasi awal 4 kromosom parent dari hasil seleksi.";
+        renderCardWithSubnote(c1, s1Tex, s1Note);
+
+        const s2Tex = `p_c = ${pc}, \\quad G_{\\max} = ${maxGenerations}`;
+        const s2Note = "Parameter probabilitas crossover dan batas generasi maksimum.";
+        renderCardWithSubnote(c2, s2Tex, s2Note);
+
+        const s3Tex = `\\mathcal{O}^{(0)} = \\emptyset`;
+        const s3Note = "Kumpulan anak belum terbentuk. Tekan 'Langkah Berikutnya' untuk memulai perulangan.";
+        renderCardWithSubnote(c3, s3Tex, s3Note);
+
+        const s4Tex = `\\text{Status: Siap Dijalankan}`;
+        const s4Note = "Proses rekombinasi berhenti sebelum tahap mutasi.";
+        renderCardWithSubnote(c4, s4Tex, s4Note);
+        return;
+    }
+
+    const pairs = lastStepResult.pairs || [];
+    let pairFormula = "\\begin{aligned}";
+    pairs.forEach((p, idx) => {
+        pairFormula += `\\text{Pasangan } ${idx + 1} &: (P_{${idx * 2 + 1}}, P_{${idx * 2 + 2}}) \\\\`;
+    });
+    pairFormula += "\\end{aligned}";
+    renderCardWithSubnote(c1, pairFormula, `Generasi ${generation - 1}: Pembentukan pasangan mating pool.`);
+
+    let crossGatingTex = "\\begin{aligned}";
+    pairs.forEach((p, idx) => {
+        const statusText = p.crossoverApplied ? "\\text{Crossover}" : "\\text{Salin Langsung}";
+        crossGatingTex += `r_{${idx + 1}} = ${p.rVal} &\\le ${p.pc} \\implies ${statusText} \\\\`;
+    });
+    crossGatingTex += "\\end{aligned}";
+    renderCardWithSubnote(c2, crossGatingTex, "Evaluasi probabilitas crossover per pasangan.");
+
+    let offPoolTex = "\\begin{aligned}";
+    currentPopulation.forEach((chr, idx) => {
+        const dec = parseInt(chr, 2);
+        offPoolTex += `O_{${idx + 1}} &= \\mathbf{${chr}}_2 = ${dec}_{10} \\\\`;
+    });
+    offPoolTex += "\\end{aligned}";
+    renderCardWithSubnote(c3, offPoolTex, `Kumpulan anak kromosom generasi ${generation} berhasil didapatkan.`);
+
+    let stopTex = "";
+    if (status === "stopped_converged") {
+        stopTex = "\\begin{aligned} \\text{Konvergensi Pola} &\\implies \\text{Pola Identik} \\\\ \\text{Diversitas} &= 0\\% \\implies \\mathbf{STOP} \\end{aligned}";
+    } else if (status === "stopped_max_gen") {
+        stopTex = `\\begin{aligned} t = ${generation} &\\ge G_{\\max} = ${maxGenerations} \\\\ &\\implies \\mathbf{STOP} \\end{aligned}`;
+    } else {
+        stopTex = `\\begin{aligned} t = ${generation} &< G_{\\max} = ${maxGenerations} \\\\ &\\implies \\text{Lanjut Generasi } ${generation + 1} \\end{aligned}`;
+    }
+    renderCardWithSubnote(c4, stopTex, statusMessage);
 }

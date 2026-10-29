@@ -306,6 +306,47 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .cross-steps-container, .pareto-steps-container { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 480px; } .cross-step-card, .pareto-step-card { width: 100%; box-sizing: border-box; overflow-x: auto; }
 .cross-tok-p1, .cross-glow-p1 { color: #06b6d4 !important; text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); } .cross-tok-p2, .cross-glow-p2 { color: #f59e0b !important; text-shadow: 0 0 10px rgba(245, 158, 11, 0.8); } .cross-tok-c1, .cross-glow-c1 { color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.8); } .cross-tok-c2, .cross-glow-c2 { color: #8b5cf6 !important; text-shadow: 0 0 10px rgba(139, 92, 246, 0.8); } .cross-glow-cut { color: #f43f5e !important; text-shadow: 0 0 10px rgba(244, 63, 94, 0.8); }
 .cross-visual-empty { padding: 24px; text-align: center; color: #f43f5e; background: rgba(244, 63, 94, 0.08); border: 1px dashed rgba(244, 63, 94, 0.3); border-radius: 8px; font-size: 13px; }
+.cross-mode-tabs { display: flex; gap: 8px; width: 100%; max-width: 520px; margin-bottom: 4px; }
+.cross-tab-btn { flex: 1; padding: 7px 12px; font-size: 13px; font-weight: 600; border-radius: 8px; border: 1px solid #27272a; background: #18181b; color: #a1a1aa; cursor: pointer; transition: all 0.15s ease; text-align: center; }
+.cross-tab-btn:hover { border-color: #52525b; color: #ffffff; }
+.cross-tab-active { border-color: #38bdf8 !important; background: rgba(56, 189, 248, 0.12) !important; color: #38bdf8 !important; }
+.cross-pop-board { width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; }
+.cross-pop-wrap { width: 100%; display: flex; flex-direction: column; gap: 12px; background: #121214; border: 1px solid #27272a; border-radius: 12px; padding: 14px; box-sizing: border-box; }
+.cross-pop-status { padding: 10px 14px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; box-sizing: border-box; }
+.cross-status-running { border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); }
+.cross-status-stopped_max_gen { border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.08); }
+.cross-status-stopped_converged { border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); }
+.cross-pop-status-title { font-weight: 700; font-size: 13px; color: #ffffff; }
+.cross-pop-status-desc { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+.cross-pop-metrics { display: flex; flex-direction: column; gap: 6px; }
+.cross-metric-item { display: flex; justify-content: space-between; font-size: 12px; color: #a1a1aa; font-weight: 500; }
+.cross-metric-value { font-weight: 700; color: #38bdf8; font-family: monospace; }
+.cross-diversity-bar { height: 6px; border-radius: 3px; background: #27272a; overflow: hidden; width: 100%; }
+.cross-diversity-fill { height: 100%; background: linear-gradient(90deg, #10b981, #38bdf8); transition: width 0.3s ease; }
+.cross-pop-section { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.cross-pair-card { display: flex; flex-direction: column; gap: 6px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; padding: 8px 10px; box-sizing: border-box; }
+.cross-pair-header { display: flex; justify-content: space-between; align-items: center; }
+.cross-pair-num { font-size: 12px; font-weight: 600; color: #ffffff; }
+.cross-prob-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.cross-prob-yes { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+.cross-prob-no { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+.cross-pop-chromo-row { display: flex; align-items: center; gap: 8px; }
+.cross-pop-label { font-size: 12px; font-weight: 600; color: #a1a1aa; width: 24px; flex-shrink: 0; }
+.cross-pop-bits { font-family: monospace; font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+.cross-bits-pa { color: #38bdf8; }
+.cross-bits-pb { color: #fbbf24; }
+.cross-offspring-grid { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.cross-offspring-item { display: flex; align-items: center; gap: 10px; width: 100%; }
+.cross-offspring-dec { font-size: 12px; font-family: monospace; color: #a1a1aa; margin-left: auto; flex-shrink: 0; }
+.cross-btn { border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; border: none; outline: none; }
+.cross-btn-step { background: #2563eb; color: #ffffff; }
+.cross-btn-step:hover { background: #1d4ed8; }
+.cross-btn-auto { background: #059669; color: #ffffff; }
+.cross-btn-auto:hover { background: #047857; }
+.cross-btn-reset { background: #3f3f46; color: #ffffff; }
+.cross-btn-reset:hover { background: #52525b; }
+.cross-actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.cross-scope-note { font-size: 11px; color: #94a3b8; line-height: 1.4; margin-top: 2px; }
 .pareto-presets-container { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 340px; justify-content: center; } .pareto-preset-btn { background: #18181b; border: 1px solid #27272a; color: #cbd5e1; border-radius: 6px; font-size: 11px; padding: 4px 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s; } .pareto-preset-btn:hover { border-color: #38bdf8; color: #38bdf8; } .pareto-inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 340px; }
 @media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout, .pareto-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right, .sel-col-right, .pareto-col-right { width: 100%; max-width: 340px; margin: 0 auto; } .cross-col-right { width: 100%; max-width: 480px; margin: 0 auto; } }
 </style>
@@ -615,8 +656,13 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
         <div class="cross-two-col-layout">
           <div class="cross-col-left">
             <div id="math-calc-formula-display-7" class="math-formula-box cross-top-formula"></div>
+            <div class="cross-mode-tabs">
+              <button type="button" id="cross-tab-pair" class="cross-tab-btn cross-tab-active">Analisis Pasangan (Mikro)</button>
+              <button type="button" id="cross-tab-pop" class="cross-tab-btn">Siklus Generasi &amp; Kumpulan Anak (Makro)</button>
+            </div>
             <div class="cross-visual-board" id="cross-visual-board"></div>
-            <div class="cross-inputs-container">
+            <div class="cross-pop-board hidden" id="cross-pop-board"></div>
+            <div class="cross-inputs-container" id="cross-pair-inputs">
               <div class="cross-input-row">
                 <label for="math7-in-p1" class="cross-label">Parent 1 (P1)</label>
                 <input type="text" id="math7-in-p1" class="cross-input" value="10110010" spellcheck="false" autocomplete="off" placeholder="misal: 10110010">
@@ -651,6 +697,32 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
               <div class="cross-input-row hidden" id="math7-mask-container">
                 <label for="math7-in-mask" class="cross-label">Mask Biner (1=P1, 0=P2)</label>
                 <input type="text" id="math7-in-mask" class="cross-input" value="11001010" spellcheck="false" autocomplete="off" placeholder="misal: 11001010">
+              </div>
+            </div>
+            <div class="cross-inputs-container cross-pop-controls hidden" id="cross-pop-controls">
+              <div class="cross-input-row">
+                <label for="math7-pop-preset" class="cross-label">Preset Populasi Awal (4 Parent)</label>
+                <select id="math7-pop-preset" class="cross-select">
+                  <option value="week3" selected>Slide Kuliah Week 3 (P1..P4)</option>
+                  <option value="alternate">Variasi Alternatif</option>
+                  <option value="converged">Pola Identik (Uji Konvergensi)</option>
+                </select>
+              </div>
+              <div class="cross-input-row">
+                <label for="math7-pop-maxgen" class="cross-label">Batas Maksimum Iterasi (G_max: 1 .. 20)</label>
+                <input type="number" id="math7-pop-maxgen" class="cross-input cross-input-num" value="5" min="1" max="20" step="1">
+              </div>
+              <div class="cross-input-row">
+                <label for="math7-pop-pc" class="cross-label">Probabilitas Crossover (pc): <span id="math7-pop-pc-val">0.80</span></label>
+                <input type="range" id="math7-pop-pc" class="cross-range" min="0.1" max="1.0" step="0.05" value="0.80">
+              </div>
+              <div class="cross-actions-row">
+                <button type="button" id="math7-btn-step" class="cross-btn cross-btn-step">Langkah Berikutnya (Step)</button>
+                <button type="button" id="math7-btn-autorun" class="cross-btn cross-btn-auto">Jalankan Otomatis</button>
+                <button type="button" id="math7-btn-reset" class="cross-btn cross-btn-reset">Reset ke Awal</button>
+              </div>
+              <div class="cross-scope-note">
+                Catatan Dosen: Crossover menghasilkan kumpulan anak dari parent terpilih. Proses berhenti sebelum tahap mutasi.
               </div>
             </div>
           </div>

@@ -1,71 +1,54 @@
 import { refs } from "../../core/dom-refs.js";
+import { computePairCrossover } from "./math-calc-7-engine.js";
+import { PopulationCrossoverManager } from "./math-calc-7-pop-state.js";
 import { renderVisualChromosomeBoard } from "../visuals/math-visual-7.js";
-import { renderTopFormula7, renderCrossoverCards } from "./math-calc-7-cards.js";
+import { renderPopulationBoard } from "../visuals/math-visual-7-pop.js";
+import { renderTopFormula7, renderCrossoverCards, renderPopulationCards } from "./math-calc-7-cards.js";
 import { bindCrossoverTokens } from "./math-calc-7-tokens.js";
 
 let initialized = false;
+let activeMode = "pair";
+let popManager = new PopulationCrossoverManager();
+let autoRunTimer = null;
 
 export function computeCrossover(p1, p2, type, k, k1, k2, mask) {
-    const cleanP1 = (p1 || "").trim();
-    const cleanP2 = (p2 || "").trim();
+    return computePairCrossover(p1, p2, type, k, k1, k2, mask);
+}
 
-    if (!cleanP1 || !cleanP2) {
-        return { valid: false, errorMsg: "Parent 1 dan Parent 2 wajib diisi" };
-    }
-    if (!/^[01]+$/.test(cleanP1) || !/^[01]+$/.test(cleanP2)) {
-        return { valid: false, errorMsg: "Kromosom harus berupa deret biner (0 atau 1)" };
-    }
-    if (cleanP1.length !== cleanP2.length) {
-        return { valid: false, errorMsg: "Panjang kromosom Parent 1 dan Parent 2 harus sama" };
-    }
+export function getPopManager() {
+    return popManager;
+}
 
-    const n = cleanP1.length;
-    if (n < 2) {
-        return { valid: false, errorMsg: "Panjang kromosom minimal 2 bit" };
+export function setCrossoverMode(mode) {
+    activeMode = mode === "pop" ? "pop" : "pair";
+    if (activeMode === "pair" && autoRunTimer) {
+        clearInterval(autoRunTimer);
+        autoRunTimer = null;
     }
+    updateModeUI();
+    calculateMath7();
+}
 
-    let c1 = "";
-    let c2 = "";
+function updateModeUI() {
+    const tabPair = document.getElementById("cross-tab-pair");
+    const tabPop = document.getElementById("cross-tab-pop");
+    const pairInputs = document.getElementById("cross-pair-inputs");
+    const popControls = document.getElementById("cross-pop-controls");
+    const boardPair = document.getElementById("cross-visual-board");
+    const boardPop = document.getElementById("cross-pop-board");
 
-    if (type === "single") {
-        const cutK = parseInt(k, 10);
-        if (isNaN(cutK) || cutK < 1 || cutK >= n) {
-            return { valid: false, errorMsg: `Titik potong k harus antara 1 dan ${n - 1}` };
-        }
-        c1 = cleanP1.slice(0, cutK) + cleanP2.slice(cutK);
-        c2 = cleanP2.slice(0, cutK) + cleanP1.slice(cutK);
-        return { valid: true, p1: cleanP1, p2: cleanP2, type, k: cutK, c1, c2 };
+    if (tabPair && tabPop) {
+        tabPair.classList.toggle("cross-tab-active", activeMode === "pair");
+        tabPop.classList.toggle("cross-tab-active", activeMode === "pop");
     }
-
-    if (type === "two") {
-        const cutK1 = parseInt(k1, 10);
-        const cutK2 = parseInt(k2, 10);
-        if (isNaN(cutK1) || isNaN(cutK2) || cutK1 < 1 || cutK2 >= n || cutK1 >= cutK2) {
-            return { valid: false, errorMsg: `Titik potong tidak valid (1 \u2264 k1 < k2 < ${n})` };
-        }
-        c1 = cleanP1.slice(0, cutK1) + cleanP2.slice(cutK1, cutK2) + cleanP1.slice(cutK2);
-        c2 = cleanP2.slice(0, cutK1) + cleanP1.slice(cutK1, cutK2) + cleanP2.slice(cutK2);
-        return { valid: true, p1: cleanP1, p2: cleanP2, type, k1: cutK1, k2: cutK2, c1, c2 };
+    if (pairInputs && popControls) {
+        pairInputs.classList.toggle("hidden", activeMode !== "pair");
+        popControls.classList.toggle("hidden", activeMode !== "pop");
     }
-
-    if (type === "uniform") {
-        const cleanMask = (mask || "").trim();
-        if (cleanMask.length !== n || !/^[01]+$/.test(cleanMask)) {
-            return { valid: false, errorMsg: `Mask harus biner sepanjang ${n} bit` };
-        }
-        for (let i = 0; i < n; i++) {
-            if (cleanMask[i] === "1") {
-                c1 += cleanP1[i];
-                c2 += cleanP2[i];
-            } else {
-                c1 += cleanP2[i];
-                c2 += cleanP1[i];
-            }
-        }
-        return { valid: true, p1: cleanP1, p2: cleanP2, type, mask: cleanMask, c1, c2 };
+    if (boardPair && boardPop) {
+        boardPair.classList.toggle("hidden", activeMode !== "pair");
+        boardPop.classList.toggle("hidden", activeMode !== "pop");
     }
-
-    return { valid: false, errorMsg: "Tipe skema crossover tidak dikenal" };
 }
 
 export function initMath7() {
@@ -79,10 +62,20 @@ export function initMath7() {
     const inP2 = refs.m7InP2 || document.getElementById("math7-in-p2");
     const inK = refs.m7InK || document.getElementById("math7-in-k");
     const sliderK = document.getElementById("math7-in-k-slider");
+    const inType = refs.m7InType || document.getElementById("math7-in-type");
+    const inK1 = refs.m7InK1 || document.getElementById("math7-in-k1");
+    const inK2 = refs.m7InK2 || document.getElementById("math7-in-k2");
+    const inMask = refs.m7InMask || document.getElementById("math7-in-mask");
+
+    const tabPair = document.getElementById("cross-tab-pair");
+    const tabPop = document.getElementById("cross-tab-pop");
+    if (tabPair) tabPair.addEventListener("click", () => setCrossoverMode("pair"));
+    if (tabPop) tabPop.addEventListener("click", () => setCrossoverMode("pop"));
 
     if (inP1 && !inP1.value) inP1.value = "10110010";
     if (inP2 && !inP2.value) inP2.value = "01101101";
     if (inK && !inK.value) inK.value = "3";
+
     if (sliderK && inK) {
         sliderK.value = inK.value;
         sliderK.addEventListener("input", () => {
@@ -91,9 +84,106 @@ export function initMath7() {
         });
         inK.addEventListener("input", () => {
             sliderK.value = inK.value;
+            calculateMath7();
         });
     }
 
+    [inP1, inP2, inK1, inK2, inMask].forEach((inp) => {
+        if (inp) inp.addEventListener("input", () => calculateMath7());
+    });
+
+    if (inType) {
+        inType.addEventListener("change", () => {
+            const val = inType.value;
+            const kBox = document.getElementById("math7-k-container");
+            const k1Box = document.getElementById("math7-k1-container");
+            const k2Box = document.getElementById("math7-k2-container");
+            const maskBox = document.getElementById("math7-mask-container");
+            if (kBox) kBox.classList.toggle("hidden", val !== "single");
+            if (k1Box) k1Box.classList.toggle("hidden", val !== "two");
+            if (k2Box) k2Box.classList.toggle("hidden", val !== "two");
+            if (maskBox) maskBox.classList.toggle("hidden", val !== "uniform");
+            calculateMath7();
+        });
+    }
+
+    const inMaxGen = document.getElementById("math7-pop-maxgen");
+    const inPc = document.getElementById("math7-pop-pc");
+    const btnStep = document.getElementById("math7-btn-step");
+    const btnAuto = document.getElementById("math7-btn-autorun");
+    const btnReset = document.getElementById("math7-btn-reset");
+    const selPreset = document.getElementById("math7-pop-preset");
+
+    if (inMaxGen) {
+        inMaxGen.addEventListener("change", () => {
+            popManager.setMaxGenerations(inMaxGen.value);
+            calculateMath7();
+        });
+    }
+
+    if (inPc) {
+        inPc.addEventListener("input", () => {
+            popManager.setPc(inPc.value);
+            const lbl = document.getElementById("math7-pop-pc-val");
+            if (lbl) lbl.textContent = inPc.value;
+            calculateMath7();
+        });
+    }
+
+    if (btnStep) {
+        btnStep.addEventListener("click", () => {
+            popManager.step();
+            calculateMath7();
+        });
+    }
+
+    if (btnAuto) {
+        btnAuto.addEventListener("click", () => {
+            if (autoRunTimer) {
+                clearInterval(autoRunTimer);
+                autoRunTimer = null;
+                btnAuto.textContent = "Jalankan Otomatis";
+            } else {
+                btnAuto.textContent = "Jeda";
+                autoRunTimer = setInterval(() => {
+                    const stepRes = popManager.step();
+                    calculateMath7();
+                    if (stepRes.finished) {
+                        clearInterval(autoRunTimer);
+                        autoRunTimer = null;
+                        btnAuto.textContent = "Jalankan Otomatis";
+                    }
+                }, 800);
+            }
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener("click", () => {
+            if (autoRunTimer) {
+                clearInterval(autoRunTimer);
+                autoRunTimer = null;
+                if (btnAuto) btnAuto.textContent = "Jalankan Otomatis";
+            }
+            popManager.reset();
+            calculateMath7();
+        });
+    }
+
+    if (selPreset) {
+        selPreset.addEventListener("change", () => {
+            if (selPreset.value === "week3") {
+                popManager.setPopulation(["11001011", "11011111", "01010101", "10101010"]);
+            } else if (selPreset.value === "converged") {
+                popManager.setPopulation(["11110000", "11110000", "11110000", "11110000"]);
+            } else if (selPreset.value === "alternate") {
+                popManager.setPopulation(["10101010", "01010101", "11001100", "00110011"]);
+            }
+            calculateMath7();
+        });
+    }
+
+    updateModeUI();
     calculateMath7();
 }
 
@@ -107,6 +197,7 @@ export function calculateMath7() {
     const inMask = refs.m7InMask || document.getElementById("math7-in-mask");
     const sliderK = document.getElementById("math7-in-k-slider");
     const boardEl = document.getElementById("cross-visual-board");
+    const popBoardEl = document.getElementById("cross-pop-board");
 
     const p1 = inP1 ? inP1.value : "";
     const p2 = inP2 ? inP2.value : "";
@@ -121,9 +212,22 @@ export function calculateMath7() {
         if (inK) inK.max = String(p1.length - 1);
     }
 
-    const state = computeCrossover(p1, p2, type, k, k1, k2, mask);
+    renderTopFormula7(type, activeMode);
 
-    renderTopFormula7(type);
+    if (activeMode === "pop") {
+        popManager.setCrossoverType(type, {
+            k: parseInt(k, 10) || 4,
+            k1: parseInt(k1, 10) || 2,
+            k2: parseInt(k2, 10) || 5,
+            mask: mask || "11001010"
+        });
+        const popState = popManager.getState();
+        renderPopulationBoard(popBoardEl, popState);
+        renderPopulationCards(popState);
+        return;
+    }
+
+    const state = computePairCrossover(p1, p2, type, k, k1, k2, mask);
 
     renderVisualChromosomeBoard(boardEl, state, (newK) => {
         if (inK) inK.value = String(newK);
@@ -132,6 +236,5 @@ export function calculateMath7() {
     });
 
     renderCrossoverCards(state);
-
     bindCrossoverTokens();
 }
