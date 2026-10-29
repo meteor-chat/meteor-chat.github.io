@@ -64,7 +64,7 @@ export function renderCrossoverCards(state) {
         const t1 = p1.slice(k);
         const h2 = p2.slice(0, k);
         const t2 = p2.slice(k);
-        step1Tex = `P_1 = [\\mathbf{${h1}} \\mid \\mathbf{${t1}}], \\quad P_2 = [\\mathbf{${h2}} \\mid \\mathbf{${t2}}]`;
+        step1Tex = `\\begin{aligned} P_1 &= [\\mathbf{${h1}} \\mid \\mathbf{${t1}}] \\\\ P_2 &= [\\mathbf{${h2}} \\mid \\mathbf{${t2}}] \\end{aligned}`;
         step1Note = `Kromosom dipotong setelah gen ke-${k} menjadi segmen kepala dan ekor.`;
 
         step2Tex = `\\begin{aligned} C_1 &= \\mathbf{${h1}} \\parallel \\mathbf{${t2}} \\implies \\mathbf{${off1}} \\\\ C_2 &= \\mathbf{${h2}} \\parallel \\mathbf{${t1}} \\implies \\mathbf{${off2}} \\end{aligned}`;
@@ -76,7 +76,7 @@ export function renderCrossoverCards(state) {
         const a2 = p2.slice(0, k1);
         const b2 = p2.slice(k1, k2);
         const d2 = p2.slice(k2);
-        step1Tex = `P_1 = [${a1} \\mid ${b1} \\mid ${d1}], \\quad P_2 = [${a2} \\mid ${b2} \\mid ${d2}]`;
+        step1Tex = `\\begin{aligned} P_1 &= [${a1} \\mid ${b1} \\mid ${d1}] \\\\ P_2 &= [${a2} \\mid ${b2} \\mid ${d2}] \\end{aligned}`;
         step1Note = `Kromosom dipotong pada titik k1 = ${k1} dan k2 = ${k2}.`;
 
         step2Tex = `\\begin{aligned} C_1 &= ${a1} \\parallel ${b2} \\parallel ${d1} \\implies \\mathbf{${off1}} \\\\ C_2 &= ${a2} \\parallel ${b1} \\parallel ${d2} \\implies \\mathbf{${off2}} \\end{aligned}`;
@@ -85,20 +85,20 @@ export function renderCrossoverCards(state) {
         step1Tex = `\\text{Mask: } M = \\mathbf{${mask}}`;
         step1Note = "Bit mask 1 mengambil alel dari P1, bit mask 0 mengambil alel dari P2.";
 
-        step2Tex = `C_1 = \\mathbf{${off1}}, \\quad C_2 = \\mathbf{${off2}}`;
+        step2Tex = `\\begin{aligned} C_1 &= \\mathbf{${off1}} \\\\ C_2 &= \\mathbf{${off2}} \\end{aligned}`;
         step2Note = "Alel disilangkan posisi demi posisi sesuai pola biner mask.";
     }
 
     renderCardWithSubnote(c1, step1Tex, step1Note);
     renderCardWithSubnote(c2, step2Tex, step2Note);
 
-    const step3Tex = `\\text{length}(C_1) = \\text{length}(C_2) = n = ${n} \\quad (\\text{Valid})`;
+    const step3Tex = `\\begin{aligned} \\text{length}(C_1) &= \\text{length}(C_2) = n = ${n} \\\\ &\\implies \\text{Valid} \\end{aligned}`;
     const step3Note = "Panjang kromosom anak terverifikasi identik dengan panjang kedua parent.";
     renderCardWithSubnote(c3, step3Tex, step3Note);
 
     const dec1 = parseInt(off1, 2);
     const dec2 = parseInt(off2, 2);
-    const step4Tex = `C_1 = \\mathbf{${off1}}_2 = ${dec1}_{10}, \\quad C_2 = \\mathbf{${off2}}_2 = ${dec2}_{10}`;
+    const step4Tex = `\\begin{aligned} C_1 &= \\mathbf{${off1}}_2 = ${dec1}_{10} \\\\ C_2 &= \\mathbf{${off2}}_2 = ${dec2}_{10} \\end{aligned}`;
     const step4Note = "Dua offspring siap memasuki tahap evaluasi kebugaran atau mutasi genetik.";
     renderCardWithSubnote(c4, step4Tex, step4Note);
 }
