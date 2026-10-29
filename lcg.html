@@ -30,8 +30,9 @@ body, button, select, input { font-family: var(--font-stack); color: var(--text-
 body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
 #lcg-app { width: 100%; max-width: 860px; padding: 40px var(--space-lg) 60px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
 .lcg-header { width: 100%; display: flex; align-items: center; justify-content: space-between; }
-.btn-back-lab { font-size: 13px; color: #888; text-decoration: none; padding: 6px 16px; border-radius: 20px; border: 1px solid #222; transition: all 0.2s ease; }
-.btn-back-lab:hover { color: #fff; border-color: #444; background: rgba(255, 255, 255, 0.05); }
+.btn-back-lab { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: none; background: transparent; cursor: pointer; text-decoration: none; border-radius: 50%; }
+.btn-back-lab:hover img { transform: scale(1.08); }
+.btn-back-lab img { display: block; width: 36px; height: 36px; border-radius: 50%; transition: transform 0.15s ease; }
 .lcg-tag { font-size: 11px; font-weight: 600; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 12px; }
 .lcg-title-block { text-align: center; }
 .lcg-title { font-size: 26px; font-weight: 400; margin-bottom: 6px; }
@@ -106,7 +107,7 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
 <body>
 <main id="lcg-app">
     <div class="lcg-header">
-        <a href="/lab" class="btn-back-lab">&larr; Kembali ke Lab</a>
+        <a href="/lab" class="btn-back-lab" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
         <span class="lcg-tag">PRNG Simulator</span>
     </div>
     <div class="lcg-title-block">

@@ -43,20 +43,9 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
     justify-content: space-between;
     margin-bottom: 4px;
 }
-.btn-back-lab {
-    font-size: 14px;
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 6px 14px;
-    border-radius: 20px;
-    border: 1px solid #222;
-    transition: all 0.2s ease;
-}
-.btn-back-lab:hover {
-    color: #fff;
-    border-color: #444;
-    background: rgba(255, 255, 255, 0.05);
-}
+.btn-back-lab { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: none; background: transparent; cursor: pointer; text-decoration: none; border-radius: 50%; }
+.btn-back-lab:hover img { transform: scale(1.08); }
+.btn-back-lab img { display: block; width: 36px; height: 36px; border-radius: 50%; transition: transform 0.15s ease; }
 .patterns-hub-tag {
     font-size: 12px;
     color: #f59e0b;
@@ -237,7 +226,7 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
 <body>
 <main id="patterns-app">
     <div class="patterns-header">
-        <a href="/lab" class="btn-back-lab">&larr; Kembali ke Lab</a>
+        <a href="/lab" class="btn-back-lab" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
         <span class="patterns-hub-tag">Interactive Grid</span>
     </div>
     <div class="patterns-filter-scroll">

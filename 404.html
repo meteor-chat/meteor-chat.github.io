@@ -32,12 +32,15 @@ if (route) {
 <style>
 body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
 a { color: #38bdf8; text-decoration: none; }
+.btn-math-back { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; }
+.btn-math-back:hover img { transform: scale(1.08); }
+.btn-math-back img { display: block; width: 36px; height: 36px; border-radius: 50%; transition: transform 0.15s ease; }
 </style>
 </head>
 <body>
 <div>
 <p>Mengalihkan...</p>
-<p><a href="/math">&larr; Kembali ke Math</a></p>
+<p><a href="/math" class="btn-math-back" aria-label="Kembali ke Math"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a></p>
 </div>
 </body>
 </html>

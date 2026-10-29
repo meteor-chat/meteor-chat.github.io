@@ -29,8 +29,9 @@ body, a, button, input, select { font-family: var(--font-stack); color: var(--te
 body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direction: column; align-items: center; }
 #centrality-app { width: 100%; max-width: 960px; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
 .centrality-header { width: 100%; display: flex; align-items: center; justify-content: space-between; }
-.btn-back-lab { font-size: 13px; color: var(--text-muted); text-decoration: none; padding: 6px 14px; border-radius: 20px; border: 1px solid #222; transition: all 0.2s ease; }
-.btn-back-lab:hover { color: #fff; border-color: #444; background: rgba(255, 255, 255, 0.05); }
+.btn-back-lab { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: none; background: transparent; cursor: pointer; text-decoration: none; border-radius: 50%; }
+.btn-back-lab:hover img { transform: scale(1.08); }
+.btn-back-lab img { display: block; width: 36px; height: 36px; border-radius: 50%; transition: transform 0.15s ease; }
 .hub-tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
 .page-title { font-size: 24px; font-weight: 600; margin-bottom: 2px; }
 .page-desc { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
@@ -107,7 +108,7 @@ body { background: var(--bg-main); min-height: 100dvh; display: flex; flex-direc
 <body>
 <main id="centrality-app">
     <header class="centrality-header">
-        <a href="/lab" class="btn-back-lab">← Kembali ke Lab</a>
+        <a href="/lab" class="btn-back-lab" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
         <span class="hub-tag">Network Science Lab</span>
     </header>
     <div>
