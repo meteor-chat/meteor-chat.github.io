@@ -256,17 +256,17 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
     .cube-out-name, .cube-out-colon, .cube-out-val { font-size: 14px; }
     .cube-out-row { grid-template-columns: 115px 12px 1fr; }
 }
-.obj-page, .fit-page, .sel-page, .cross-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
-.obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
-.obj-col-left, .fit-col-left, .sel-col-left, .cross-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
-.obj-col-right, .fit-col-right, .sel-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; } .cross-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 380px; width: 100%; max-width: 480px; min-width: 0; }
-.obj-top-formula, .fit-top-formula, .sel-top-formula, .cross-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
-.obj-canvas-wrap, .fit-canvas-wrap, .sel-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative; }
-.obj-canvas, .fit-canvas, .sel-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
+.obj-page, .fit-page, .sel-page, .cross-page, .pareto-page { flex-direction: column; align-items: center; width: 100%; max-width: 1200px; }
+.obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout, .pareto-two-col-layout { display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 48px; width: 100%; max-width: 100%; box-sizing: border-box; }
+.obj-col-left, .fit-col-left, .sel-col-left, .cross-col-left, .pareto-col-left { display: flex; flex-direction: column; align-items: center; gap: 14px; flex: 1 1 auto; max-width: 100%; min-width: 0; width: 100%; }
+.obj-col-right, .fit-col-right, .sel-col-right, .pareto-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 0 0 340px; width: 100%; max-width: 340px; min-width: 0; } .cross-col-right { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 380px; width: 100%; max-width: 480px; min-width: 0; }
+.obj-top-formula, .fit-top-formula, .sel-top-formula, .cross-top-formula, .pareto-top-formula { margin: 0 auto; text-align: center; min-height: 52px; }
+.obj-canvas-wrap, .fit-canvas-wrap, .sel-canvas-wrap, .pareto-canvas-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #333; position: relative; }
+.obj-canvas, .fit-canvas, .sel-canvas, .pareto-canvas { width: 340px; height: 340px; max-width: 100%; aspect-ratio: 1; display: block; cursor: crosshair; touch-action: none; }
 .obj-inputs-box, .fit-inputs-box { display: flex; justify-content: space-between; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
-.obj-token-x1, .fit-token-h, .sel-token-fi { color: #38bdf8 !important; cursor: default; }
-.obj-token-x2, .fit-token-a, .sel-token-sumf { color: #c084fc !important; cursor: default; }
-.obj-token-h, .fit-token-f, .sel-token-pi { color: #4ade80 !important; cursor: default; }
+.obj-token-x1, .fit-token-h, .sel-token-fi, .pareto-tok-a { color: #38bdf8 !important; cursor: default; }
+.obj-token-x2, .fit-token-a, .sel-token-sumf, .pareto-tok-b { color: #f59e0b !important; cursor: default; }
+.obj-token-h, .fit-token-f, .sel-token-pi, .pareto-tok-prec { color: #10b981 !important; cursor: default; }
 .obj-token-x1:hover, .obj-token-x1.obj-glow-x1, .fit-token-h:hover, .fit-token-h.fit-glow-h { color: #7dd3fc !important; text-shadow: 0 0 12px rgba(56, 189, 248, 0.95); }
 .obj-token-x2:hover, .obj-token-x2.obj-glow-x2, .fit-token-a:hover, .fit-token-a.fit-glow-a { color: #fde68a !important; text-shadow: 0 0 12px rgba(251, 191, 36, 0.95); }
 .sel-inputs-box { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 340px; padding: 0 4px; box-sizing: border-box; }
@@ -294,20 +294,20 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .cross-bit-cell { width: 32px; height: 38px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; border: 1px solid transparent; background: #18181b; color: #ffffff; transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; padding: 0; outline: none; flex-shrink: 0; }
 .cross-bit-cell:hover { transform: translateY(-2px); z-index: 2; }
 .cross-origin-p1 { border-color: rgba(6, 182, 212, 0.5); background: rgba(6, 182, 212, 0.08); color: #38bdf8; } .cross-origin-p2 { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.08); color: #fbbf24; }
-.cross-bit-value { font-size: 15px; font-weight: 700; font-family: monospace; line-height: 1; }
-.cross-bit-index { font-size: 9px; color: #71717a; margin-top: 2px; }
+.cross-bit-value { font-size: 15px; font-weight: 700; font-family: monospace; line-height: 1; } .cross-bit-index { font-size: 9px; color: #71717a; margin-top: 2px; }
 .cross-cut-after { border-right: 3px dashed #f43f5e !important; margin-right: 6px; }
 .cross-board-divider { display: flex; align-items: center; justify-content: center; width: 100%; margin: 6px 0; border-top: 1px dashed #3f3f46; position: relative; }
 .cross-cut-badge { background: #27272a; border: 1px solid #3f3f46; color: #f43f5e; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 12px; margin-top: -10px; }
-.cross-inputs-container { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 520px; margin-top: 8px; } .cross-input-row { display: flex; flex-direction: column; gap: 3px; width: 100%; } .cross-label { font-size: 12px; color: #a1a1aa; font-weight: 500; }
-.cross-input, .cross-select { background: #18181b; border: 1px solid #27272a; border-radius: 6px; color: #ffffff; padding: 5px 8px; font-family: monospace; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
-.cross-input:focus, .cross-select:focus { border-color: #38bdf8; }
+.cross-inputs-container, .pareto-inputs-container { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 520px; margin-top: 8px; } .cross-input-row, .pareto-input-row { display: flex; flex-direction: column; gap: 3px; width: 100%; } .cross-label, .pareto-label { font-size: 12px; color: #a1a1aa; font-weight: 500; }
+.cross-input, .cross-select, .pareto-input, .pareto-select { background: #18181b; border: 1px solid #27272a; border-radius: 6px; color: #ffffff; padding: 5px 8px; font-family: monospace; font-size: 13px; outline: none; width: 100%; box-sizing: border-box; }
+.cross-input:focus, .cross-select:focus, .pareto-input:focus, .pareto-select:focus { border-color: #38bdf8; }
 .cross-slider-wrap { display: flex; align-items: center; gap: 10px; width: 100%; } .cross-input-num { width: 64px !important; flex-shrink: 0; } .cross-range { flex: 1; cursor: pointer; accent-color: #f43f5e; }
 .step-card-arrow { text-align: center; width: 100%; color: #ffffff; font-size: 16px; margin: 4px 0; user-select: none; }
-.cross-steps-container { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 480px; } .cross-step-card { width: 100%; box-sizing: border-box; overflow-x: auto; }
+.cross-steps-container, .pareto-steps-container { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 480px; } .cross-step-card, .pareto-step-card { width: 100%; box-sizing: border-box; overflow-x: auto; }
 .cross-tok-p1, .cross-glow-p1 { color: #06b6d4 !important; text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); } .cross-tok-p2, .cross-glow-p2 { color: #f59e0b !important; text-shadow: 0 0 10px rgba(245, 158, 11, 0.8); } .cross-tok-c1, .cross-glow-c1 { color: #10b981 !important; text-shadow: 0 0 10px rgba(16, 185, 129, 0.8); } .cross-tok-c2, .cross-glow-c2 { color: #8b5cf6 !important; text-shadow: 0 0 10px rgba(139, 92, 246, 0.8); } .cross-glow-cut { color: #f43f5e !important; text-shadow: 0 0 10px rgba(244, 63, 94, 0.8); }
 .cross-visual-empty { padding: 24px; text-align: center; color: #f43f5e; background: rgba(244, 63, 94, 0.08); border: 1px dashed rgba(244, 63, 94, 0.3); border-radius: 8px; font-size: 13px; }
-@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right, .sel-col-right { width: 100%; max-width: 340px; margin: 0 auto; } .cross-col-right { width: 100%; max-width: 480px; margin: 0 auto; } }
+.pareto-presets-container { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; max-width: 340px; justify-content: center; } .pareto-preset-btn { background: #18181b; border: 1px solid #27272a; color: #cbd5e1; border-radius: 6px; font-size: 11px; padding: 4px 8px; cursor: pointer; transition: border-color 0.15s, color 0.15s; } .pareto-preset-btn:hover { border-color: #38bdf8; color: #38bdf8; } .pareto-inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 340px; }
+@media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout, .pareto-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right, .sel-col-right, .pareto-col-right { width: 100%; max-width: 340px; margin: 0 auto; } .cross-col-right { width: 100%; max-width: 480px; margin: 0 auto; } }
 </style>
 <link rel="modulepreload" href="./src/math/math-main.js?v=14">
 <link rel="modulepreload" href="./math-filter.js">
@@ -667,7 +667,72 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
           </div>
         </div>
       </div>
-      <div id="math-calc-form-8" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-8" class="btn-math-back calc-back-btn" aria-label="Kembali"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></button><h1 class="math-calc-title">Dominasi Pareto</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-8" class="math-formula-box"></div><div class="math-inputs"><div class="math-input-group"><label>Fungsi Objektif A (contoh: 3,45)</label><input type="text" id="math8-in-a" placeholder="misal: 3, 45"></div><div class="math-input-group"><label>Fungsi Objektif B (contoh: 5,40)</label><input type="text" id="math8-in-b" placeholder="misal: 5, 40"></div></div></div><div class="math-calc-right"><div class="math-steps" id="math8-steps-container"></div></div></div>
+      <div id="math-calc-form-8" class="math-calc-container pareto-page hidden">
+        <div class="math-calc-header pareto-header">
+          <button id="btn-math-calc-back-8" class="btn-math-back calc-back-btn" aria-label="Kembali"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></button>
+          <h1 class="math-calc-title pareto-title">Dominasi Pareto</h1>
+        </div>
+        <div class="pareto-two-col-layout">
+          <div class="pareto-col-left">
+            <div id="math-calc-formula-display-8" class="math-formula-box pareto-top-formula"></div>
+            <div class="pareto-presets-container" id="math8-presets"></div>
+            <div class="pareto-canvas-wrap">
+              <canvas id="math8-canvas" class="pareto-canvas" width="340" height="340"></canvas>
+            </div>
+            <div class="pareto-inputs-container">
+              <div class="pareto-inputs-grid">
+                <div class="pareto-input-col">
+                  <span class="pareto-label" style="color: #38bdf8; font-weight: 600;">Solusi A (Cyan)</span>
+                  <div class="pareto-input-row">
+                    <label for="math8-in-f1a" class="pareto-label">f1 (A)</label>
+                    <input type="number" id="math8-in-f1a" class="pareto-input" value="3" step="any">
+                  </div>
+                  <div class="pareto-input-row">
+                    <label for="math8-in-f2a" class="pareto-label">f2 (A)</label>
+                    <input type="number" id="math8-in-f2a" class="pareto-input" value="29" step="any">
+                  </div>
+                </div>
+                <div class="pareto-input-col">
+                  <span class="pareto-label" style="color: #f59e0b; font-weight: 600;">Solusi B (Amber)</span>
+                  <div class="pareto-input-row">
+                    <label for="math8-in-f1b" class="pareto-label">f1 (B)</label>
+                    <input type="number" id="math8-in-f1b" class="pareto-input" value="4" step="any">
+                  </div>
+                  <div class="pareto-input-row">
+                    <label for="math8-in-f2b" class="pareto-label">f2 (B)</label>
+                    <input type="number" id="math8-in-f2b" class="pareto-input" value="44" step="any">
+                  </div>
+                </div>
+              </div>
+              <div class="pareto-input-row">
+                <label for="math8-in-dir" class="pareto-label">Arah Optimasi</label>
+                <select id="math8-in-dir" class="pareto-select">
+                  <option value="min-min" selected>f1: Minimisasi, f2: Minimisasi (Kuliah Week 6)</option>
+                  <option value="min-max">f1: Minimisasi, f2: Maksimisasi</option>
+                  <option value="max-max">f1: Maksimisasi, f2: Maksimisasi</option>
+                  <option value="max-min">f1: Maksimisasi, f2: Minimisasi</option>
+                </select>
+              </div>
+              <div class="hidden">
+                <input type="text" id="math8-in-a" value="3, 29">
+                <input type="text" id="math8-in-b" value="4, 44">
+              </div>
+            </div>
+          </div>
+          <div class="pareto-col-right">
+            <div class="pareto-steps-container">
+              <div class="chromo-card chromo-card-rounded pareto-step-card" id="pareto-card-step1"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="chromo-card chromo-card-rect pareto-step-card" id="pareto-card-step2"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="chromo-card chromo-card-rect pareto-step-card" id="pareto-card-step3"></div>
+              <div class="step-card-arrow">&darr;</div>
+              <div class="chromo-card chromo-card-result pareto-step-card" id="pareto-card-step4"></div>
+              <div id="math8-steps-container" class="hidden"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="math-calc-form-9" class="math-calc-container "><div class="math-calc-header"><button id="btn-math-calc-back-9" class="btn-math-back calc-back-btn" aria-label="Kembali"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></button><h1 class="math-calc-title">Non-Dominated Sorting</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-9" class="math-formula-box"></div><div class="math-inputs"><div id="math9-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><div class="math-steps math-steps-scroll" id="math9-steps-container"></div></div></div>
       <div id="math-calc-form-10" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-10" class="btn-math-back calc-back-btn" aria-label="Kembali"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></button><h1 class="math-calc-title">Standar Deviasi Populasi</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-10" class="math-formula-box"></div><div class="math-inputs"><div id="math10-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><canvas id="math10-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps math-steps-scroll" id="math10-steps-container"></div></div></div>
       <div id="math-calc-form-11" class="math-calc-container hidden"><div class="math-calc-header"><button id="btn-math-calc-back-11" class="btn-math-back calc-back-btn" aria-label="Kembali"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></button><h1 class="math-calc-title">Standar Deviasi Sampel</h1></div><div class="math-calc-left"><div id="math-calc-formula-display-11" class="math-formula-box"></div><div class="math-inputs"><div id="math11-dynamic-inputs" class="math-dynamic-inputs"></div></div></div><div class="math-calc-right"><canvas id="math11-canvas" class="math-canvas" width="400" height="400"></canvas><div class="math-steps math-steps-scroll" id="math11-steps-container"></div></div></div>

@@ -7,7 +7,7 @@ const INPUTS = {
     3: ["m3InH", "m3InA"],
     5: ["m5InR"],
     7: ["m7InP1", "m7InP2", "m7InType", "m7InK", "m7InK1", "m7InK2", "m7InMask"],
-    8: ["m8InA", "m8InB"],
+    8: ["m8InA", "m8InB", "m8InF1A", "m8InF2A", "m8InF1B", "m8InF2B", "m8InDir"],
     12: ["m12InPa", "m12InPba", "m12InPb"],
     13: ["m13InN", "m13InK"],
     14: ["m14InA", "m14InB", "m14InC"],
