@@ -3,6 +3,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getFormulaUrl, CATEGORY_SLUGS } from "../src/math/math-routes.js";
 import { FORMULA_NAMES } from "../src/math/math-formula-names.js";
+import { getPmGuideHtml } from "../src/math/calculators/math-calc-pm-guide.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
@@ -66,6 +67,14 @@ for (let id = 1; id <= 36; id++) {
 
     const formRegex = new RegExp(`(<div\\s+id="math-calc-form-${id}"[^>]*class="[^"]*)\\bhidden\\b([^"]*")`);
     html = html.replace(formRegex, (_m, before, after) => `${before}${after}`.replace(/\s{2,}/g, " "));
+
+    if (id >= 25 && id <= 35) {
+        const guideHtml = getPmGuideHtml(id);
+        html = html.replace(
+            `<div id="pm-guide-container-${id}" class="pm-guide-container"></div>`,
+            `<div id="pm-guide-container-${id}" class="pm-guide-container" data-rendered="true">${guideHtml}</div>`
+        );
+    }
 
     writeFileSync(join(outDir, "index.html"), html);
     count++;

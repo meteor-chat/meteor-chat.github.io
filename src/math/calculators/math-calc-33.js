@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawEtcMeter, clearVisual33 } from "../visuals/math-visual-33.js?v=13";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -61,6 +62,7 @@ function bindResize() {
 }
 
 export function calculateMath33() {
+    renderPmGuide(33);
     bindResize();
     const errEl = document.getElementById("pm9-error-msg");
     const pathOte = document.getElementById("pm9-path-ote");

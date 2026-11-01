@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawSvMeter, clearVisual29 } from "../visuals/math-visual-29.js";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -65,6 +66,7 @@ function bindResize() {
 }
 
 export function calculateMath29() {
+    renderPmGuide(29);
     bindResize();
     const errEl = document.getElementById("pm5-error-msg");
     const pathEv = document.getElementById("pm5-path-ev");

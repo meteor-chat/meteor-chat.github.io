@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawEacMeter, clearVisual32 } from "../visuals/math-visual-32.js";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -65,6 +66,7 @@ function bindResize() {
 }
 
 export function calculateMath32() {
+    renderPmGuide(32);
     bindResize();
     const errEl = document.getElementById("pm8-error-msg");
     const pathBac = document.getElementById("pm8-path-bac");

@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawEtcCostMeter, clearVisual34 } from "../visuals/math-visual-34.js";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -65,6 +66,7 @@ function bindResize() {
 }
 
 export function calculateMath34() {
+    renderPmGuide(34);
     bindResize();
     const errEl = document.getElementById("pm10-error-msg");
     const pathEac = document.getElementById("pm10-path-eac");

@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawVacMeter, clearVisual35 } from "../visuals/math-visual-35.js?v=13";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -61,6 +62,7 @@ function bindResize() {
 }
 
 export function calculateMath35() {
+    renderPmGuide(35);
     bindResize();
     const errEl = document.getElementById("pm11-error-msg");
     const pathBac = document.getElementById("pm11-path-bac");

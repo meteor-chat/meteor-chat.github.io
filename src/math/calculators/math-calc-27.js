@@ -1,6 +1,7 @@
 import { refs } from "../../core/dom-refs.js";
 import { formatMax3 } from "../math-format.js";
 import { drawEvMeter, clearVisual27 } from "../visuals/math-visual-27.js?v=13";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -66,6 +67,7 @@ function bindResize() {
 }
 
 export function calculateMath27() {
+    renderPmGuide(27);
     bindResize();
     const errEl = document.getElementById("pm3-error-msg");
     const pathBac = document.getElementById("pm3-path-bac");

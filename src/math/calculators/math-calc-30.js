@@ -1,5 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { drawCpiMeter, clearVisual30 } from "../visuals/math-visual-30.js";
+import { renderPmGuide } from "./math-calc-pm-guide.js";
 
 let resizeBound = false;
 
@@ -65,6 +66,7 @@ function bindResize() {
 }
 
 export function calculateMath30() {
+    renderPmGuide(30);
     bindResize();
     const errEl = document.getElementById("pm6-error-msg");
     const pathEv = document.getElementById("pm6-path-ev");
