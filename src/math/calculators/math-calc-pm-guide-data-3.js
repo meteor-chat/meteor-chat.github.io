@@ -1,19 +1,19 @@
 export const PM_GUIDE_DATA_3 = {
     37: {
         title: "Net Present Value (NPV)",
-        formula: "NPV = \\frac{C_t}{1 + r} - C_0",
+        formula: "NPV = \\sum_{t=1}^T \\frac{C_t}{(1 + r)^t} - C_0",
         inputs: [
             {
                 name: "C0 (Investasi Awal)",
-                meaning: "Jumlah total uang yang dikeluarkan di awal (tahun ke-0) untuk memulai proyek.",
+                meaning: "Jumlah total modal yang dikeluarkan di awal (tahun ke-0) untuk memulai proyek.",
                 source: "Didapat dari rencana anggaran belanja modal (CAPEX) awal proyek.",
                 purpose: "Sebagai modal awal yang harus ditutup oleh keuntungan masa depan."
             },
             {
-                name: "Ct (Arus Kas Masuk Periode t)",
-                meaning: "Jumlah uang masuk bersih yang diterima dari proyek pada periode ke-t.",
-                source: "Didapat dari proyeksi pendapatan atau pemasukan bersih proyek.",
-                purpose: "Sebagai uang masuk masa depan yang didiskon ke nilai uang saat ini."
+                name: "Ct (Arus Kas Masuk Tiap Periode)",
+                meaning: "Jumlah uang masuk bersih yang diterima dari proyek pada tahun ke-1, 2, dan seterusnya. Kolom baru bertambah otomatis.",
+                source: "Didapat dari proyeksi arus kas masuk dan keuntungan operasional tahunan.",
+                purpose: "Sebagai arus uang masuk masa depan yang didiskon ke nilai uang saat ini."
             },
             {
                 name: "r (Discount Rate / Suku Bunga)",
@@ -32,10 +32,10 @@ export const PM_GUIDE_DATA_3 = {
             action: "Pilih proyek dengan NPV positif terbesar. Jika NPV negatif, tolak proyek atau negosiasikan modal awal."
         },
         example: {
-            title: "Contoh Evaluasi Investasi Proyek",
-            story: "Investasi awal modal $1.000 dengan suku bunga diskonto 10%. Kas masuk masa depan sebesar $1.200.",
-            calc: "PV = $1.200 / (1 + 0,10) = $1.090,91. NPV = $1.090,91 - $1.000 = +$90,91.",
-            meaning: "Nilai NPV positif (+$90,91). Proyek diterima karena menambah kekayaan bagi perusahaan."
+            title: "Contoh Multi-Tahun Project 1 (Slide Fig 4-4)",
+            story: "Investasi awal $5.000 dengan diskonto 10%. Kas masuk tahun 1-4 berturut-turut $1.000, $2.000, $3.000, $4.000.",
+            calc: "Total PV ($7.547,98) - Investasi Awal ($5.000) = NPV +$2.547,98.",
+            meaning: "Nilai NPV positif (+$2.547,98). Proyek layak diterima karena menambah nilai perusahaan."
         }
     }
 };

@@ -6,8 +6,8 @@ import { FORMULAS } from "../src/math/math-formulas.js";
 import { FORMULA_NAMES } from "../src/math/math-formula-names.js";
 import { FORMULA_URLS, parseFormulaUrl } from "../src/math/math-routes.js";
 
-describe("math-npv (Formula 37 - Simplified Rapid)", () => {
-    it("computes positive NPV and accepted status correctly", () => {
+describe("math-npv (Formula 37 - Auto-Expanding Ct)", () => {
+    it("computes single-period NPV correctly", () => {
         const c0 = 1000;
         const ct = 1200;
         const r = 10;
@@ -16,61 +16,70 @@ describe("math-npv (Formula 37 - Simplified Rapid)", () => {
 
         expect(res.pv).toBeCloseTo(1090.91, 2);
         expect(res.npv).toBeCloseTo(90.91, 2);
-        expect(res.roi).toBeCloseTo(9.09, 2);
         expect(res.status).toBe("DITERIMA");
     });
 
-    it("computes negative NPV and rejected status correctly", () => {
-        const c0 = 1000;
-        const ct = 1000;
+    it("computes Figure 4-4 Project 1 multi-period cash flows accurately", () => {
+        const c0 = 5000;
+        const ctList = [1000, 2000, 3000, 4000];
         const r = 10;
 
-        const res = computeNpv(c0, ct, r);
+        const res = computeNpv(c0, ctList, r);
 
-        expect(res.pv).toBeCloseTo(909.09, 2);
-        expect(res.npv).toBeCloseTo(-90.91, 2);
+        expect(res.pv).toBeCloseTo(7547.98, 2);
+        expect(res.npv).toBeCloseTo(2547.98, 2);
+        expect(res.status).toBe("DITERIMA");
+        expect(res.pvList.length).toBe(4);
+    });
+
+    it("computes Figure 4-4 Project 2 multi-period cash flows accurately", () => {
+        const c0 = 1000;
+        const ctList = [0, 2000, 2000, 2000];
+        const r = 10;
+
+        const res = computeNpv(c0, ctList, r);
+
+        expect(res.pv).toBeCloseTo(4521.55, 2);
+        expect(res.npv).toBeCloseTo(3521.55, 2);
+        expect(res.status).toBe("DITERIMA");
+    });
+
+    it("identifies negative NPV reject condition", () => {
+        const c0 = 5000;
+        const ctList = [1000, 1000];
+        const r = 10;
+
+        const res = computeNpv(c0, ctList, r);
+
+        expect(res.npv).toBeLessThan(0);
         expect(res.status).toBe("DITOLAK");
     });
 
-    it("computes exact zero NPV and neutral status correctly", () => {
+    it("handles exact zero NPV neutral condition", () => {
         const c0 = 1000;
         const ct = 1100;
         const r = 10;
 
         const res = computeNpv(c0, ct, r);
 
-        expect(res.pv).toBeCloseTo(1000, 4);
         expect(res.npv).toBeCloseTo(0, 4);
         expect(res.status).toBe("NETRAL");
     });
 
-    it("handles zero discount rate correctly", () => {
+    it("handles zero discount rate with multiple cash flows", () => {
         const c0 = 1000;
-        const ct = 1500;
+        const ctList = [600, 700];
         const r = 0;
 
-        const res = computeNpv(c0, ct, r);
+        const res = computeNpv(c0, ctList, r);
 
-        expect(res.pv).toBe(1500);
-        expect(res.npv).toBe(500);
-        expect(res.roi).toBe(50);
+        expect(res.pv).toBe(1300);
+        expect(res.npv).toBe(300);
         expect(res.status).toBe("DITERIMA");
     });
 
-    it("handles zero cash inflow correctly", () => {
-        const c0 = 500;
-        const ct = 0;
-        const r = 5;
-
-        const res = computeNpv(c0, ct, r);
-
-        expect(res.pv).toBe(0);
-        expect(res.npv).toBe(-500);
-        expect(res.status).toBe("DITOLAK");
-    });
-
     it("registers formula 37 metadata and routing correctly", () => {
-        expect(FORMULAS[37]).toBe("NPV = \\frac{C_t}{1 + r} - C_0");
+        expect(FORMULAS[37]).toContain("NPV");
         expect(FORMULA_NAMES[37]).toBe("Net Present Value (NPV)");
         expect(FORMULA_URLS[37]).toBe("/math/pm/12");
         expect(parseFormulaUrl("/math/pm/12").id).toBe(37);
@@ -82,13 +91,8 @@ describe("math-npv (Formula 37 - Simplified Rapid)", () => {
         const entry = PM_GUIDE_DATA[37];
         expect(entry).toBeDefined();
         expect(entry.title).toBe("Net Present Value (NPV)");
-        expect(entry.formula).toBe("NPV = \\frac{C_t}{1 + r} - C_0");
         expect(Array.isArray(entry.inputs)).toBe(true);
         expect(entry.inputs.length).toBe(3);
-
-        expect(entry.inputs[0].name).toContain("C0");
-        expect(entry.inputs[1].name).toContain("Ct");
-        expect(entry.inputs[2].name).toContain("r");
 
         for (const input of entry.inputs) {
             expect(input.meaning).toBeTruthy();

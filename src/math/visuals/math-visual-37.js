@@ -42,7 +42,7 @@ export function drawNpvMeter(c0, ct, r, pv, npv) {
 
     ctx.clearRect(0, 0, W, H);
 
-    if (isNaN(c0) || isNaN(ct) || isNaN(r) || isNaN(pv) || isNaN(npv)) return;
+    if (isNaN(c0) || isNaN(r) || isNaN(pv) || isNaN(npv)) return;
 
     let themeColor = "#f59e0b";
     let bgBadge = "rgba(245, 158, 11, 0.15)";
