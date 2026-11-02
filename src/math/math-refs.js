@@ -139,10 +139,14 @@ const IDS = {
     m36InR: "math36-in-r",
     m36InK: "math36-in-k",
     m36Steps: "math36-steps-container",
-    m36Canvas: "math36-canvas"
+    m36Canvas: "math36-canvas",
+    m37InRate: "math37-in-rate",
+    m37InInitial: "math37-in-initial",
+    m37Steps: "math37-steps-container",
+    m37Canvas: "math37-canvas"
 };
 
-export const FORM_COUNT = 36;
+export const FORM_COUNT = 37;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

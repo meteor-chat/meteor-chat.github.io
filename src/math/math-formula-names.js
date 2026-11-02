@@ -35,5 +35,6 @@ export const FORMULA_NAMES = [
     "Estimated Time to Complete",
     "Estimate to Complete (ETC)",
     "Variance at Completion (VAC)",
-    "Konversi Suhu"
+    "Konversi Suhu",
+    "Net Present Value (NPV)"
 ];

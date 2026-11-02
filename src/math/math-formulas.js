@@ -35,5 +35,6 @@ export const FORMULAS = [
     "\\text{Estimated Time to Complete} = \\frac{\\text{Original Time Estimate}}{SPI}",
     "ETC = EAC - AC",
     "VAC = BAC - EAC",
-    "\\frac{C}{5} = \\frac{R}{4} = \\frac{F - 32}{9} = \\frac{K - 273.15}{5}"
+    "\\frac{C}{5} = \\frac{R}{4} = \\frac{F - 32}{9} = \\frac{K - 273.15}{5}",
+    "NPV = \\sum_{t=1}^{T} \\frac{C_t}{(1 + r)^t} - C_0"
 ];
