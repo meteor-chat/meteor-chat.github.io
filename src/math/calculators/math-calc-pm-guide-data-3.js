@@ -1,41 +1,41 @@
 export const PM_GUIDE_DATA_3 = {
     37: {
         title: "Net Present Value (NPV)",
-        formula: "NPV = \\sum_{t=1}^T \\frac{C_t}{(1 + r)^t} - C_0",
+        formula: "NPV = \\frac{C_t}{1 + r} - C_0",
         inputs: [
             {
-                name: "C0 (Biaya Investasi Awal)",
+                name: "C0 (Investasi Awal)",
                 meaning: "Jumlah total uang yang dikeluarkan di awal (tahun ke-0) untuk memulai proyek.",
                 source: "Didapat dari rencana anggaran belanja modal (CAPEX) awal proyek.",
                 purpose: "Sebagai modal awal yang harus ditutup oleh keuntungan masa depan."
             },
             {
-                name: "r (Discount Rate / Suku Bunga)",
-                meaning: "Tingkat bunga atau penurunan nilai waktu uang (Time Value of Money) per tahun.",
-                source: "Didapat dari kebijakan bunga bank, biaya modal perusahaan, atau tingkat inflasi.",
-                purpose: "Sebagai faktor pemotong (diskon) agar nilai uang masa depan setara uang tunai hari ini."
+                name: "Ct (Arus Kas Masuk Periode t)",
+                meaning: "Jumlah uang masuk bersih yang diterima dari proyek pada periode ke-t.",
+                source: "Didapat dari proyeksi pendapatan atau pemasukan bersih proyek.",
+                purpose: "Sebagai uang masuk masa depan yang didiskon ke nilai uang saat ini."
             },
             {
-                name: "Ct (Arus Kas Bersih Tahun ke-t)",
-                meaning: "Sisa uang masuk neto pada tahun ke-t, yaitu Manfaat (Benefit) dikurangi Biaya operasional (Cost).",
-                source: "Didapat dari proyeksi laba rugi dan perkiraan pemasukan tahunan proyek.",
-                purpose: "Sebagai arus uang masuk masa depan yang didiskon ke nilai sekarang."
+                name: "r (Discount Rate / Suku Bunga)",
+                meaning: "Tingkat bunga atau penurunan nilai waktu uang (Time Value of Money) per tahun.",
+                source: "Didapat dari suku bunga bank, biaya modal perusahaan, atau target keuntungan minimum.",
+                purpose: "Sebagai faktor pemotong (diskon) agar nilai uang masa depan setara uang tunai hari ini."
             }
         ],
         outputs: {
             meaning: "Total keuntungan atau kerugian bersih yang sudah disesuaikan dengan nilai uang sekarang.",
             interpretation: [
-                { label: "NPV > 0", meaning: "Proyek Layak / Diterima. Proyek menambah kekayaan dan nilai bagi perusahaan.", status: "good" },
-                { label: "NPV = 0", meaning: "Proyek Netral (Impas). Tidak untung dan tidak rugi. Keputusan berdasarkan faktor strategis lain.", status: "warn" },
-                { label: "NPV < 0", meaning: "Proyek Ditolak / Tidak Layak. Proyek mengurangi kekayaan perusahaan dan menimbulkan kerugian.", status: "bad" }
+                { label: "NPV > 0", meaning: "Proyek Diterima (Layak). Investasi menambah nilai dan kekayaan bagi perusahaan.", status: "good" },
+                { label: "NPV = 0", meaning: "Proyek Netral (Impas). Tidak untung dan tidak rugi secara nilai waktu uang.", status: "warn" },
+                { label: "NPV < 0", meaning: "Proyek Ditolak (Tidak Layak). Investasi mengurangi kekayaan dan menimbulkan kerugian.", status: "bad" }
             ],
-            action: "Pilih proyek dengan NPV positif terbesar. Periksa juga nilai ROI dan waktu Payback Period."
+            action: "Pilih proyek dengan NPV positif terbesar. Jika NPV negatif, tolak proyek atau negosiasikan modal awal."
         },
         example: {
-            title: "Contoh JWD Consulting (Figure 4-5)",
-            story: "Investasi awal $140.000 dengan diskon 8%. Tiap tahun menghasilkan laba bersih $160.000 selama 3 tahun.",
-            calc: "Total manfaat terdiskon ($516.000) - Total biaya terdiskon ($243.200) = NPV $272.800",
-            meaning: "Proyek sangat menguntungkan. Memberikan ROI 112% dan modal awal sudah kembali lunas pada Tahun ke-1."
+            title: "Contoh Evaluasi Investasi Proyek",
+            story: "Investasi awal modal $1.000 dengan suku bunga diskonto 10%. Kas masuk masa depan sebesar $1.200.",
+            calc: "PV = $1.200 / (1 + 0,10) = $1.090,91. NPV = $1.090,91 - $1.000 = +$90,91.",
+            meaning: "Nilai NPV positif (+$90,91). Proyek diterima karena menambah kekayaan bagi perusahaan."
         }
     }
 };

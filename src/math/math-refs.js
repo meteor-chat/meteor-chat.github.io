@@ -140,8 +140,9 @@ const IDS = {
     m36InK: "math36-in-k",
     m36Steps: "math36-steps-container",
     m36Canvas: "math36-canvas",
-    m37InRate: "math37-in-rate",
-    m37InInitial: "math37-in-initial",
+    m37InC0: "math37-in-c0",
+    m37InCt: "math37-in-ct",
+    m37InR: "math37-in-r",
     m37Steps: "math37-steps-container",
     m37Canvas: "math37-canvas"
 };
