@@ -145,10 +145,23 @@ const IDS = {
     m37InR: "math37-in-r",
     m37CtList: "math37-ct-list",
     m37Steps: "math37-steps-container",
-    m37Canvas: "math37-canvas"
+    m37Canvas: "math37-canvas",
+    m38Preset: "math38-preset",
+    m38InT0: "math38-in-t0",
+    m38InAlpha: "math38-in-alpha",
+    m38InSigma: "math38-in-sigma",
+    m38InX0: "math38-in-x0",
+    m38InSchedule: "math38-in-schedule",
+    m38BtnPlay: "math38-btn-play",
+    m38BtnStep: "math38-btn-step",
+    m38BtnReset: "math38-btn-reset",
+    m38Speed: "math38-in-speed",
+    m38CanvasLandscape: "math38-canvas-landscape",
+    m38CanvasTelemetry: "math38-canvas-telemetry",
+    m38Steps: "math38-steps-container"
 };
 
-export const FORM_COUNT = 37;
+export const FORM_COUNT = 38;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");

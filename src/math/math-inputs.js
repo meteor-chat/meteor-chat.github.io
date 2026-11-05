@@ -33,7 +33,8 @@ const INPUTS = {
     34: ["m34InEac", "m34InAc"],
     35: ["m35InBac", "m35InEac"],
     36: ["m36InC", "m36InF", "m36InR", "m36InK"],
-    37: ["m37InC0", "m37InCt", "m37InR"]
+    37: ["m37InC0", "m37InCt", "m37InR"],
+    38: ["m38Preset", "m38InT0", "m38InAlpha", "m38InSigma", "m38InX0", "m38InSchedule"]
 };
 
 function recalc(n) {

@@ -54,7 +54,7 @@ for (const [category, slug] of Object.entries(CATEGORY_SLUGS)) {
 }
 
 let count = 0;
-for (let id = 1; id <= 37; id++) {
+for (let id = 1; id <= 38; id++) {
     const url = getFormulaUrl(id);
     const relDir = url.replace(/^\/+/, "");
     const outDir = join(root, relDir);

@@ -36,5 +36,6 @@ export const FORMULA_NAMES = [
     "Estimate to Complete (ETC)",
     "Variance at Completion (VAC)",
     "Konversi Suhu",
-    "Net Present Value (NPV)"
+    "Net Present Value (NPV)",
+    "Simulated Annealing"
 ];
