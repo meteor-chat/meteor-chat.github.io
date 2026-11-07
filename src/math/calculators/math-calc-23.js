@@ -180,12 +180,21 @@ function initCubeControls() {
     }
 
     const spotButtons = document.querySelectorAll(".cube-spotlight-btn");
+    const rightPanel = document.getElementById("cube-right-panel");
+    const map = ["all", "lp", "pr", "ds", "dr", "bd"];
+
     spotButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
             spotButtons.forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
             const target = btn.dataset.target || "all";
             setCubeHighlight(target);
+            if (rightPanel) {
+                const rows = rightPanel.querySelectorAll(".cube-out-row");
+                rows.forEach((r, rIdx) => {
+                    r.classList.toggle("cube-row-selected", map[rIdx] === target);
+                });
+            }
         });
     });
 
@@ -197,10 +206,8 @@ function initCubeControls() {
         });
     }
 
-    const rightPanel = document.getElementById("cube-right-panel");
     if (rightPanel) {
         const rows = rightPanel.querySelectorAll(".cube-out-row");
-        const map = ["all", "lp", "pr", "ds", "dr", "bd"];
         rows.forEach((row, idx) => {
             row.style.cursor = "pointer";
             row.addEventListener("click", () => {
@@ -208,6 +215,9 @@ function initCubeControls() {
                 setCubeHighlight(target);
                 spotButtons.forEach((b) => {
                     b.classList.toggle("active", b.dataset.target === target);
+                });
+                rows.forEach((r, rIdx) => {
+                    r.classList.toggle("cube-row-selected", rIdx === idx);
                 });
             });
         });
