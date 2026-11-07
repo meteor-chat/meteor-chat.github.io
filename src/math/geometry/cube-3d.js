@@ -1,3 +1,12 @@
+import {
+    projectPoint,
+    computeFaceNormal,
+    computeFaceShading,
+    drawFaceDiagonal,
+    drawSpaceDiagonal,
+    drawDiagonalPlane
+} from "./cube-overlays.js";
+
 const VERTICES = [
     [-1, -1, -1],
     [ 1, -1, -1],
@@ -81,6 +90,22 @@ let currentGetValue = null;
 let isDragging = false;
 let lastX = 0;
 let lastY = 0;
+let projectionMode = "perspective";
+let highlightElement = "all";
+
+export function setCubeProjection(mode) {
+    projectionMode = mode === "orthographic" ? "orthographic" : "perspective";
+    renderCube();
+}
+
+export function setCubeHighlight(elem) {
+    highlightElement = elem || "all";
+    renderCube();
+}
+
+export function getCube3dState() {
+    return { projection: projectionMode, highlight: highlightElement };
+}
 
 export function renderCube() {
     if (!currentCanvas) return;
@@ -91,38 +116,32 @@ export function renderCube() {
     const h = currentCanvas.height;
     const cx = w / 2;
     const cy = h / 2;
-    const cubeSize = Math.min(w, h) * 0.22;
-    const D = 400;
-    const F = 360;
+    const isOrtho = projectionMode === "orthographic";
+    const cubeSize = Math.min(w, h) * (isOrtho ? 0.25 : 0.22);
 
     ctx.clearRect(0, 0, w, h);
 
-    const rotVerts = VERTICES.map(v => {
+    const rotVerts = VERTICES.map((v) => {
         const x = v[0] * rotationMatrix[0][0] + v[1] * rotationMatrix[0][1] + v[2] * rotationMatrix[0][2];
         const y = v[0] * rotationMatrix[1][0] + v[1] * rotationMatrix[1][1] + v[2] * rotationMatrix[1][2];
         const z = v[0] * rotationMatrix[2][0] + v[1] * rotationMatrix[2][1] + v[2] * rotationMatrix[2][2];
-        return {
-            x: x * cubeSize,
-            y: y * cubeSize,
-            z: z * cubeSize
-        };
+        return { x, y, z };
     });
 
-    const projVerts = rotVerts.map(v => {
-        const scale = F / (D - v.z);
-        return {
-            x: cx + v.x * scale,
-            y: cy + v.y * scale,
-            z: v.z
-        };
-    });
+    const projVerts = rotVerts.map((v) => projectPoint(v, cx, cy, cubeSize, isOrtho));
 
-    const sortedFaces = FACES.map(f => {
+    if (highlightElement === "bd") {
+        drawDiagonalPlane(ctx, projVerts);
+    }
+
+    const sortedFaces = FACES.map((f) => {
         const avgZ = (rotVerts[f[0]].z + rotVerts[f[1]].z + rotVerts[f[2]].z + rotVerts[f[3]].z) / 4;
-        return { face: f, z: avgZ };
+        const norm = computeFaceNormal(rotVerts[f[0]], rotVerts[f[1]], rotVerts[f[2]]);
+        const shade = computeFaceShading(norm);
+        return { face: f, z: avgZ, shade };
     }).sort((a, b) => a.z - b.z);
 
-    sortedFaces.forEach(sf => {
+    sortedFaces.forEach((sf) => {
         const f = sf.face;
         ctx.beginPath();
         ctx.moveTo(projVerts[f[0]].x, projVerts[f[0]].y);
@@ -130,14 +149,23 @@ export function renderCube() {
         ctx.lineTo(projVerts[f[2]].x, projVerts[f[2]].y);
         ctx.lineTo(projVerts[f[3]].x, projVerts[f[3]].y);
         ctx.closePath();
-        ctx.fillStyle = sf.z > 0 ? "rgba(56, 189, 248, 0.22)" : "rgba(30, 64, 175, 0.14)";
+
+        if (highlightElement === "lp") {
+            ctx.fillStyle = `rgba(56, 189, 248, ${Math.min(sf.shade * 0.42, 0.65)})`;
+        } else {
+            ctx.fillStyle = sf.z > 0
+                ? `rgba(56, 189, 248, ${sf.shade * 0.28})`
+                : `rgba(30, 64, 175, ${sf.shade * 0.16})`;
+        }
         ctx.fill();
     });
 
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 2.5;
+    const edgeWidth = highlightElement === "pr" ? 3.5 : 2.5;
+    ctx.strokeStyle = highlightElement === "pr" ? "#38bdf8" : "rgba(56, 189, 248, 0.85)";
+    ctx.lineWidth = edgeWidth;
     ctx.lineCap = "round";
-    EDGES.forEach(e => {
+
+    EDGES.forEach((e) => {
         const p1 = projVerts[e[0]];
         const p2 = projVerts[e[1]];
         ctx.beginPath();
@@ -146,41 +174,46 @@ export function renderCube() {
         ctx.stroke();
     });
 
-    projVerts.forEach(p => {
-        ctx.fillStyle = "#e0f2fe";
+    const vertRadius = highlightElement === "pr" ? 4.5 : 3;
+    projVerts.forEach((p) => {
+        ctx.fillStyle = highlightElement === "pr" ? "#fbbf24" : "#e0f2fe";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, vertRadius, 0, Math.PI * 2);
         ctx.fill();
     });
 
-    const val = currentGetValue ? currentGetValue() : "12";
-    const textStr = String(val);
+    if (highlightElement === "ds") {
+        drawFaceDiagonal(ctx, projVerts);
+    } else if (highlightElement === "dr") {
+        drawSpaceDiagonal(ctx, projVerts);
+    }
 
-    ctx.font = "bold 13px 'Google Sans', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    if (highlightElement !== "ds" && highlightElement !== "dr" && highlightElement !== "bd") {
+        const val = currentGetValue ? currentGetValue() : "12";
+        const textStr = String(val);
+        ctx.font = "bold 13px 'Google Sans', sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
 
-    EDGES.forEach(e => {
-        const v1 = rotVerts[e[0]];
-        const v2 = rotVerts[e[1]];
-        let mx = (v1.x + v2.x) / 2;
-        let my = (v1.y + v2.y) / 2;
-        let mz = (v1.z + v2.z) / 2;
-        const offset = 1.14;
-        mx *= offset;
-        my *= offset;
-        mz *= offset;
+        EDGES.forEach((e) => {
+            const v1 = rotVerts[e[0]];
+            const v2 = rotVerts[e[1]];
+            let mx = (v1.x + v2.x) / 2;
+            let my = (v1.y + v2.y) / 2;
+            let mz = (v1.z + v2.z) / 2;
+            const offset = 1.14;
+            mx *= offset;
+            my *= offset;
+            mz *= offset;
 
-        const scale = F / (D - mz);
-        const px = cx + mx * scale;
-        const py = cy + my * scale;
-
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
-        ctx.lineWidth = 3.5;
-        ctx.strokeText(textStr, px, py);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(textStr, px, py);
-    });
+            const pt = projectPoint({ x: mx, y: my, z: mz }, cx, cy, cubeSize, isOrtho);
+            ctx.strokeStyle = "rgba(0, 0, 0, 0.85)";
+            ctx.lineWidth = 3.5;
+            ctx.strokeText(textStr, pt.x, pt.y);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(textStr, pt.x, pt.y);
+        });
+    }
 }
 
 function handleDrag(dx, dy) {

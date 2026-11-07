@@ -1,7 +1,9 @@
 import { refs } from "../../core/dom-refs.js";
-import { initCube, renderCube } from "../geometry/cube-3d.js";
+import { initCube, renderCube, setCubeProjection, setCubeHighlight } from "../geometry/cube-3d.js";
 import { initCubeAnimation, triggerCubeAnimation } from "../geometry/cube-animation.js";
 import { computeCubeMetrics } from "../geometry/cube-metrics.js";
+import { renderCubeCriticalCards } from "../geometry/cube-critical.js";
+import { drawCubeScalingChart } from "../geometry/cube-chart.js";
 
 let cubeInitialized = false;
 let displayedSisi = "12";
@@ -11,6 +13,19 @@ let lastResultsSeq = 0;
 
 export function getCubeSisiValue() {
     return displayedSisi;
+}
+
+export function renderTopFormula23() {
+    if (typeof katex === "undefined") return;
+    const box = document.getElementById("math-calc-formula-display-23");
+    if (!box) return;
+    box.textContent = "";
+    const tex = "V = s^3, \\quad L_p = 6s^2, \\quad P_r = 12s, \\quad d_s = s\\sqrt{2}, \\quad d_r = s\\sqrt{3}, \\quad B_d = s^2\\sqrt{2}";
+    try {
+        katex.render(tex, box, { throwOnError: false, trust: true, displayMode: false });
+    } catch {
+        box.textContent = tex;
+    }
 }
 
 export function updateCubeLines() {
@@ -88,6 +103,12 @@ export function applyCubeResultsToDOM(metrics) {
     if (outBd) outBd.textContent = metrics.bd;
 
     flashResultRows();
+
+    const critBox = document.getElementById("cube-critical-container");
+    if (critBox && metrics.valid) {
+        renderCubeCriticalCards(metrics.sisi, critBox);
+    }
+    drawCubeScalingChart(metrics.sisi);
 }
 
 function onCubeInputBlur() {
@@ -105,6 +126,12 @@ export function calculateMath23() {
     const metrics = computeCubeMetrics(raw);
     if (!metrics.valid) return;
     refs.cubeInSisi.placeholder = metrics.sisiText;
+
+    const rangeSlider = document.getElementById("cube-range-sisi");
+    if (rangeSlider && rangeSlider.value !== raw) {
+        rangeSlider.value = metrics.sisi;
+    }
+
     if (window.innerWidth <= 768) {
         displayedSisi = metrics.sisiText;
         renderCube();
@@ -136,13 +163,70 @@ export function calculateMath23() {
     });
 }
 
+function initCubeControls() {
+    const btnPersp = document.getElementById("cube-proj-persp");
+    const btnOrtho = document.getElementById("cube-proj-ortho");
+    if (btnPersp && btnOrtho) {
+        btnPersp.addEventListener("click", () => {
+            btnPersp.classList.add("active");
+            btnOrtho.classList.remove("active");
+            setCubeProjection("perspective");
+        });
+        btnOrtho.addEventListener("click", () => {
+            btnOrtho.classList.add("active");
+            btnPersp.classList.remove("active");
+            setCubeProjection("orthographic");
+        });
+    }
+
+    const spotButtons = document.querySelectorAll(".cube-spotlight-btn");
+    spotButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            spotButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            const target = btn.dataset.target || "all";
+            setCubeHighlight(target);
+        });
+    });
+
+    const rangeSlider = document.getElementById("cube-range-sisi");
+    if (rangeSlider && refs.cubeInSisi) {
+        rangeSlider.addEventListener("input", (e) => {
+            refs.cubeInSisi.value = e.target.value;
+            calculateMath23();
+        });
+    }
+
+    const rightPanel = document.getElementById("cube-right-panel");
+    if (rightPanel) {
+        const rows = rightPanel.querySelectorAll(".cube-out-row");
+        const map = ["all", "lp", "pr", "ds", "dr", "bd"];
+        rows.forEach((row, idx) => {
+            row.style.cursor = "pointer";
+            row.addEventListener("click", () => {
+                const target = map[idx] || "all";
+                setCubeHighlight(target);
+                spotButtons.forEach((b) => {
+                    b.classList.toggle("active", b.dataset.target === target);
+                });
+            });
+        });
+    }
+}
+
 export function initCubeView() {
+    renderTopFormula23();
     if (!cubeInitialized && refs.cubeCanvas) {
         initCube(refs.cubeCanvas, getCubeSisiValue);
         initCubeAnimation();
+        initCubeControls();
         window.addEventListener("resize", updateCubeLines);
         if (refs.cubeInSisi) {
             refs.cubeInSisi.addEventListener("blur", onCubeInputBlur);
+            refs.cubeInSisi.addEventListener("input", () => {
+                const rangeSlider = document.getElementById("cube-range-sisi");
+                if (rangeSlider) rangeSlider.value = refs.cubeInSisi.value;
+            });
         }
         cubeInitialized = true;
     }

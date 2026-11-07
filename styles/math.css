@@ -293,3 +293,6 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .obj-sci-cmap { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #a1a1aa; }
 .obj-colormap-select { background: #18181b; border: 1px solid #3f3f46; color: #ffffff; border-radius: 6px; padding: 3px 6px; font-size: 11px; outline: none; cursor: pointer; }
 #obj-critical-cards-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.cube-sci-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; max-width: 980px; margin: 12px auto 8px; gap: 8px; padding: 0 4px; box-sizing: border-box; } .cube-toolbar-group { display: flex; align-items: center; gap: 6px; } .cube-toolbar-label { font-size: 11px; color: #a1a1aa; font-weight: 500; }
+.cube-spotlight-btn { background: #18181b; border: 1px solid #27272a; color: #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; } .cube-spotlight-btn.active, .cube-spotlight-btn:hover { background: #0284c7; border-color: #38bdf8; color: #ffffff; }
+.cube-critical-wrap { width: 100%; max-width: 980px; margin: 16px auto 0; display: flex; flex-direction: column; gap: 10px; }
