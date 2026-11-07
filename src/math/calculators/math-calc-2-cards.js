@@ -1,4 +1,5 @@
 import { formatMax3 } from "../math-format.js";
+import { renderObjectiveCriticalAnalysis } from "./math-calc-2-critical.js";
 
 export function renderTopFormula2() {
     if (typeof katex === "undefined") return;
@@ -33,12 +34,14 @@ export function renderObjectiveCards(x1, x2) {
     const card3 = document.getElementById("obj-card-step3");
     const card4 = document.getElementById("obj-card-step4");
     const card5 = document.getElementById("obj-card-step5");
+    const critContainer = document.getElementById("obj-critical-cards-container");
 
     if (isNaN(x1) || isNaN(x2)) {
         if (card1) card1.textContent = "Masukkan nilai x₁ dan x₂ yang valid";
         [card2, card3, card4, card5].forEach((c) => {
             if (c) c.textContent = "";
         });
+        if (critContainer) critContainer.innerHTML = "";
         return;
     }
 
@@ -80,5 +83,9 @@ export function renderObjectiveCards(x1, x2) {
                 window.sessionStorage.setItem("last_evaluated_obj_h", String(total));
             }
         } catch {}
+    }
+
+    if (critContainer) {
+        renderObjectiveCriticalAnalysis(x1, x2, critContainer);
     }
 }

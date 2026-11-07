@@ -298,6 +298,13 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .sa-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; } .sa-badge-acc { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); } .sa-badge-rej { background: rgba(244, 63, 94, 0.15); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4); }
 .sa-explain-box { margin-top: 10px; font-size: 12px; line-height: 1.5; color: #a1a1aa; display: flex; flex-direction: column; gap: 6px; } .sa-explain-box b { color: #f4f4f5; }
 @media (max-width: 900px) { .obj-two-col-layout, .fit-two-col-layout, .sel-two-col-layout, .cross-two-col-layout, .pareto-two-col-layout, .sa-two-col-layout { flex-direction: column; align-items: center; gap: 24px; } .obj-col-right, .fit-col-right, .sel-col-right, .pareto-col-right { width: 100%; max-width: 340px; margin: 0 auto; } .cross-col-right, .sa-col-right { width: 100%; max-width: 480px; margin: 0 auto; } }
+.obj-sci-toolbar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 340px; margin-bottom: 8px; gap: 8px; }
+.obj-sci-modes { display: flex; gap: 4px; }
+.obj-mode-btn { background: #27272a; border: 1px solid #3f3f46; color: #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.obj-mode-btn.active, .obj-mode-btn:hover { background: #0284c7; border-color: #38bdf8; color: #ffffff; }
+.obj-sci-cmap { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #a1a1aa; }
+.obj-colormap-select { background: #18181b; border: 1px solid #3f3f46; color: #ffffff; border-radius: 6px; padding: 3px 6px; font-size: 11px; outline: none; cursor: pointer; }
+#obj-critical-cards-container { width: 100%; display: flex; flex-direction: column; gap: 8px; }
 </style>
 <link rel="modulepreload" href="./src/math/math-main.js?v=14">
 <link rel="modulepreload" href="./math-filter.js">
@@ -460,6 +467,20 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
         <div class="obj-two-col-layout">
           <div class="obj-col-left">
             <div id="math-calc-formula-display-2" class="math-formula-box obj-top-formula"></div>
+            <div class="obj-sci-toolbar">
+              <div class="obj-sci-modes">
+                <button type="button" id="obj-mode-contour-btn" class="obj-mode-btn active" title="Tampilan Kontur 2D">Kontur 2D</button>
+                <button type="button" id="obj-mode-slices-btn" class="obj-mode-btn" title="Tampilan Irisan 1D">Irisan 1D</button>
+              </div>
+              <div class="obj-sci-cmap">
+                <label for="obj-colormap-select" class="obj-cmap-label">Palet:</label>
+                <select id="obj-colormap-select" class="obj-colormap-select">
+                  <option value="viridis" selected>Viridis</option>
+                  <option value="cividis">Cividis</option>
+                  <option value="rdbu">RdBu</option>
+                </select>
+              </div>
+            </div>
             <div class="obj-canvas-wrap">
               <canvas id="math2-canvas" class="obj-canvas" width="340" height="340"></canvas>
             </div>
@@ -495,6 +516,7 @@ M1001 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">â
             <div id="obj-card-step4" class="chromo-card chromo-card-rect"></div>
             <div id="obj-arrow-4" class="chromo-step-arrow">&darr;</div>
             <div id="obj-card-step5" class="chromo-card chromo-card-result"></div>
+            <div id="obj-critical-cards-container"></div>
             <div id="math2-table-container" class="hidden"></div>
           </div>
         </div>

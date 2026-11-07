@@ -1,7 +1,12 @@
 import { refs } from "../../core/dom-refs.js";
 import { renderParamLabels2, renderObjectiveCards } from "./math-calc-2-cards.js";
 import { bindObjTokenHover } from "./math-calc-2-tokens.js";
-import { drawObjectiveLandscape, clearObjectiveLandscape } from "../visuals/math-visual-2.js";
+import {
+    drawObjectiveLandscape,
+    clearObjectiveLandscape,
+    setObjectiveVisualMode,
+    setObjectiveColormap
+} from "../visuals/math-visual-2.js";
 
 export function calculateMath2() {
     if (!refs.m2InX1 || typeof katex === "undefined") return;
@@ -52,6 +57,32 @@ function initObjEvents() {
 
     renderParamLabels2();
     bindObjTokenHover();
+
+    const modeContourBtn = document.getElementById("obj-mode-contour-btn");
+    const modeSlicesBtn = document.getElementById("obj-mode-slices-btn");
+    const colormapSelect = document.getElementById("obj-colormap-select");
+
+    if (modeContourBtn && modeSlicesBtn) {
+        modeContourBtn.addEventListener("click", () => {
+            modeContourBtn.classList.add("active");
+            modeSlicesBtn.classList.remove("active");
+            setObjectiveVisualMode("contour");
+            calculateMath2();
+        });
+        modeSlicesBtn.addEventListener("click", () => {
+            modeSlicesBtn.classList.add("active");
+            modeContourBtn.classList.remove("active");
+            setObjectiveVisualMode("slices");
+            calculateMath2();
+        });
+    }
+
+    if (colormapSelect) {
+        colormapSelect.addEventListener("change", (e) => {
+            setObjectiveColormap(e.target.value);
+            calculateMath2();
+        });
+    }
 
     const canvas = document.getElementById("math2-canvas");
     if (!canvas) return;
