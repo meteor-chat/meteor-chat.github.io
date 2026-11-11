@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Bar Chart Studio on Meteor - Buat diagram batang komparatif interaktif berstandar publikasi dengan orientasi ganda dan ekspor vektor.">
+<title>Bar Chart Studio - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="stylesheet" href="./styles/barchart.css">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600 700;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: 'Google Sans', sans-serif; color: #ffffff; }
+body { background: #07080c; }
+</style>
+</head>
+<body>
+<div id="bar-app-root" class="bar-page-wrapper">
+    <header class="bar-nav-header">
+        <div class="bar-title-area">
+            <h1 class="bar-header-title">Bar Chart Studio</h1>
+            <span class="bar-header-badge">Komparasi & Metrik</span>
+        </div>
+        <a href="/plot" class="bar-back-btn" aria-label="Kembali ke Plot"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
+    </header>
+
+    <div class="bar-main-grid">
+        <aside class="bar-controls-col">
+            <div class="bar-card">
+                <div class="bar-card-title">
+                    <span>Data Kategori & Nilai</span>
+                    <span style="font-size:10px;color:#64748b;font-family:monospace;">TEKS / CSV</span>
+                </div>
+                <div class="bar-preset-group">
+                    <button type="button" id="bar-preset-benchmark" class="bar-btn-preset">Hardware</button>
+                    <button type="button" id="bar-preset-finance" class="bar-btn-preset">Laba Rugi</button>
+                    <button type="button" id="bar-preset-languages" class="bar-btn-preset">Bahasa</button>
+                </div>
+                <textarea id="bar-input-text" class="bar-textarea" placeholder="Format: Kategori: Nilai atau Kategori, Nilai"></textarea>
+            </div>
+
+            <div class="bar-card">
+                <div class="bar-card-title">Orientasi & Pengurutan</div>
+                <div class="bar-control-group">
+                    <div class="bar-label-row">
+                        <label for="bar-opt-orientation">Orientasi</label>
+                    </div>
+                    <select id="bar-opt-orientation" class="bar-select-input">
+                        <option value="vertical" selected>Kolom Vertikal (Column)</option>
+                        <option value="horizontal">Batang Horizontal (Inverted)</option>
+                    </select>
+                </div>
+                <div class="bar-control-group">
+                    <div class="bar-label-row">
+                        <label for="bar-opt-sort">Urutan Data</label>
+                    </div>
+                    <select id="bar-opt-sort" class="bar-select-input">
+                        <option value="none" selected>Sesuai Input Data</option>
+                        <option value="desc">Nilai Terbesar ke Terkecil</option>
+                        <option value="asc">Nilai Terkecil ke Terbesar</option>
+                        <option value="alpha-asc">Alfabetik (A-Z)</option>
+                        <option value="alpha-desc">Alfabetik (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="bar-card">
+                <div class="bar-card-title">Gaya & Tata Letak</div>
+                <div class="bar-control-group">
+                    <div class="bar-label-row">
+                        <label for="bar-opt-palette">Palet Warna</label>
+                    </div>
+                    <select id="bar-opt-palette" class="bar-select-input">
+                        <option value="okabe_ito" selected>Okabe-Ito (Scientific / Colorblind)</option>
+                        <option value="cyan">Modern Slate / Cyan</option>
+                        <option value="emerald">Emerald Forest</option>
+                        <option value="sunset">Sunset Amber</option>
+                        <option value="crimson">Crimson Ember</option>
+                        <option value="mono">Monochrome Silver</option>
+                    </select>
+                </div>
+                <div class="bar-control-group">
+                    <div class="bar-label-row">
+                        <label for="bar-opt-width">Lebar Batang (Cluster Ratio)</label>
+                        <span id="bar-opt-width-val" class="bar-val-badge">70%</span>
+                    </div>
+                    <input type="range" id="bar-opt-width" class="bar-range-input" min="0.2" max="0.95" step="0.05" value="0.7">
+                </div>
+                <label class="bar-toggle-row">
+                    <input type="checkbox" id="bar-opt-show-values" checked>
+                    <span>Tampilkan Label Nilai</span>
+                </label>
+                <label class="bar-toggle-row">
+                    <input type="checkbox" id="bar-opt-show-avg" checked>
+                    <span>Garis Rata-rata Referensi</span>
+                </label>
+                <label class="bar-toggle-row">
+                    <input type="checkbox" id="bar-opt-color-neg" checked>
+                    <span>Warna Pembeda Nilai Negatif</span>
+                </label>
+            </div>
+
+            <div class="bar-card">
+                <div class="bar-card-title">Ekspor & Bagikan</div>
+                <div class="bar-actions-row">
+                    <button type="button" id="bar-btn-export-png" class="bar-btn-action bar-btn-primary">PNG</button>
+                    <button type="button" id="bar-btn-export-svg" class="bar-btn-action bar-btn-primary">SVG Vektor</button>
+                    <button type="button" id="bar-btn-export-csv" class="bar-btn-action bar-btn-secondary">Unduh CSV</button>
+                    <button type="button" id="bar-btn-copy-svg" class="bar-btn-action bar-btn-secondary">Salin SVG</button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="bar-viewport-col">
+            <div class="bar-metrics-banner">
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Jumlah Data</span>
+                    <span id="bar-stat-count" class="bar-metric-num">0</span>
+                </div>
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Total Jumlah</span>
+                    <span id="bar-stat-sum" class="bar-metric-num">0</span>
+                </div>
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Rata-rata</span>
+                    <span id="bar-stat-mean" class="bar-metric-num" style="color:#f59e0b;">0</span>
+                </div>
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Nilai Minimum</span>
+                    <span id="bar-stat-min" class="bar-metric-num" style="color:#ef4444;">0</span>
+                </div>
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Nilai Maksimum</span>
+                    <span id="bar-stat-max" class="bar-metric-num" style="color:#10b981;">0</span>
+                </div>
+                <div class="bar-metric-tile">
+                    <span class="bar-metric-label">Standar Deviasi</span>
+                    <span id="bar-stat-stddev" class="bar-metric-num">0</span>
+                </div>
+            </div>
+
+            <div class="bar-canvas-card">
+                <canvas id="bar-canvas" class="bar-canvas"></canvas>
+            </div>
+        </section>
+    </div>
+</div>
+<script type="module" src="./src/plot/barchart/barchart-app.js"></script>
+</body>
+</html>
