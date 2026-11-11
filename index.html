@@ -44,7 +44,7 @@ button { cursor: pointer; background: transparent; border: none; display: flex; 
 .banner { position: fixed; z-index: -1; top: 0; left: 0; right: 0; margin: 0 auto; width: 100%; max-width: 768px; pointer-events: none; }
 .banner img { width: 100%; height: auto; display: block; }
 .tagline h1 { font-weight: 400; font-size: 32px; }
-.home-nav-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; }
+.home-nav-buttons { display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
 .btn-home-nav { background-color: #333; color: var(--text-main); text-decoration: none; padding: 10px 24px; border-radius: 24px; font-size: 14px; font-weight: 500; font-family: inherit; transition: opacity 0.2s; }
 .btn-home-nav:hover { opacity: 0.8; }
 .input-wrap { display: flex; flex-direction: column; position: relative; border: solid 1px var(--border-input); border-radius: var(--radius-xl); width: calc(100% - var(--space-xxl)); max-width: 768px; margin: 0 auto; z-index: 1; }
@@ -73,7 +73,7 @@ textarea::placeholder { font-size: 16px; color: var(--text-muted); }
 <textarea id="message-landing" placeholder="Ask Meteor" rows="1"></textarea>
 <button id="send-landing" class="send-landing" aria-label="Send"><img src="./assets/svg/send-inactive.svg" alt="Send" width="36" height="36"></button>
 </div>
-<div class="home-nav-buttons"><a href="/math" class="btn-home-nav">Math</a><a href="/dsa" class="btn-home-nav">DSA</a><a href="/lab" class="btn-home-nav">Lab</a></div>
+<div class="home-nav-buttons"><a href="/math" class="btn-home-nav">Math</a><a href="/dsa" class="btn-home-nav">DSA</a><a href="/lab" class="btn-home-nav">Lab</a><a href="/plot" class="btn-home-nav">Plot</a></div>
 </div>
 <div id="chat-view" class="hidden">
 <div id="chat-messages" aria-live="polite">

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Interactive data visualization and charting studio on Meteor - Create Word Cloud, Bar Chart, and Line Chart from your data.">
+<title>Plot - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+:root { --bg-main: black; --text-main: white; --font-stack: 'Google Sans', sans-serif; --space-lg: 20px; }
+@media (prefers-reduced-motion) { * { transition: none !important; animation: none !important; } }
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: var(--font-stack); color: var(--text-main); }
+body { background: var(--bg-main); }
+#plot-menu-view { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; padding: 60px var(--space-lg); width: 100%; }
+.plot-header { text-align: center; margin-bottom: 40px; }
+.plot-title { font-size: 32px; font-weight: 400; margin-bottom: 8px; }
+.plot-desc { font-size: 14px; color: #888; max-width: 480px; line-height: 1.5; }
+.plot-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 580px; margin-bottom: 40px; }
+.plot-card { display: flex; flex-direction: column; gap: 8px; background: #0c0f14; border: 1px solid #1e293b; border-radius: 16px; padding: 20px 24px; text-decoration: none; transition: all 0.2s ease; position: relative; overflow: hidden; }
+.plot-card:hover { border-color: #38bdf8; transform: translateY(-2px); background: #111827; box-shadow: 0 10px 25px rgba(56, 189, 248, 0.1); }
+.plot-card-header { display: flex; justify-content: space-between; align-items: center; }
+.plot-card-title { font-size: 18px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 10px; }
+.plot-card-title span.arrow { color: #38bdf8; font-size: 16px; transition: transform 0.2s ease; }
+.plot-card:hover .plot-card-title span.arrow { transform: translateX(4px); }
+.plot-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
+.plot-badge-text { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+.plot-badge-bar { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.plot-badge-line { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.plot-card-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
+.plot-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.plot-tag { font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.03); border: 1px solid #1e293b; padding: 2px 8px; border-radius: 4px; }
+.plot-back-link { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: none; background: transparent; cursor: pointer; text-decoration: none; border-radius: 50%; }
+.plot-back-link:hover img { transform: scale(1.08); }
+.plot-back-link img { display: block; width: 36px; height: 36px; border-radius: 50%; transition: transform 0.15s ease; }
+@media (max-width: 480px) {
+    .plot-title { font-size: 26px; }
+    .plot-card { padding: 16px 18px; }
+    .plot-card-title { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<main id="plot-menu-view">
+    <div class="plot-header">
+        <h1 class="plot-title">Plot</h1>
+        <p class="plot-desc">Pilih jenis visualisasi untuk membuat chart interaktif sesuai dengan data yang Anda masukkan.</p>
+    </div>
+    <div class="plot-grid">
+        <a href="/plot/wordcloud" class="plot-card">
+            <div class="plot-card-header">
+                <div class="plot-card-title">Word Cloud <span class="arrow">→</span></div>
+                <span class="plot-badge plot-badge-text">Teks & Frekuensi</span>
+            </div>
+            <p class="plot-card-desc">Visualisasi sebaran dan frekuensi kata kunci interaktif dari teks mentah atau daftar bobot kata.</p>
+            <div class="plot-card-tags">
+                <span class="plot-tag">Word Cloud</span>
+                <span class="plot-tag">Text Frequency</span>
+                <span class="plot-tag">NLP Vocabulary</span>
+            </div>
+        </a>
+        <a href="/plot/bar" class="plot-card">
+            <div class="plot-card-header">
+                <div class="plot-card-title">Bar Chart <span class="arrow">→</span></div>
+                <span class="plot-badge plot-badge-bar">Kategori & Metrik</span>
+            </div>
+            <p class="plot-card-desc">Diagram batang komparatif untuk membandingkan distribusi nilai, agregasi metrik, dan kategori data.</p>
+            <div class="plot-card-tags">
+                <span class="plot-tag">Bar Chart</span>
+                <span class="plot-tag">Perbandingan Data</span>
+                <span class="plot-tag">Distribusi Kategori</span>
+            </div>
+        </a>
+        <a href="/plot/line" class="plot-card">
+            <div class="plot-card-header">
+                <div class="plot-card-title">Line Chart <span class="arrow">→</span></div>
+                <span class="plot-badge plot-badge-line">Tren & Deret Waktu</span>
+            </div>
+            <p class="plot-card-desc">Grafik garis runut waktu untuk memvisualisasikan tren kontinu, fluktuasi data, dan analisis sekuens.</p>
+            <div class="plot-card-tags">
+                <span class="plot-tag">Line Chart</span>
+                <span class="plot-tag">Tren Kontinu</span>
+                <span class="plot-tag">Time Series</span>
+            </div>
+        </a>
+    </div>
+    <a href="/" class="plot-back-link" aria-label="Kembali ke Beranda"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
+</main>
+</body>
+</html>
