@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Word Cloud Studio on Meteor - Buat awan kata interaktif berstandar publikasi ilmiah dengan dukungan NLP dan ekspor grafis vektor.">
+<title>Word Cloud Studio - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="stylesheet" href="./styles/wordcloud.css">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600 700;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: 'Google Sans', sans-serif; color: #ffffff; }
+body { background: #07080c; }
+</style>
+</head>
+<body>
+<div id="wc-app-root" class="wc-page-wrapper">
+    <header class="wc-nav-header">
+        <div class="wc-title-area">
+            <h1 class="wc-header-title">Word Cloud Studio</h1>
+            <span class="wc-header-badge">NLP & Sains Visual</span>
+        </div>
+        <a href="/plot" class="wc-back-btn" aria-label="Kembali ke Plot"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
+    </header>
+
+    <div class="wc-main-grid">
+        <aside class="wc-controls-col">
+            <div class="wc-card">
+                <div class="wc-card-title">
+                    <span>Data Teks</span>
+                    <span style="font-size:10px;color:#64748b;font-family:monospace;">KATA ATAU KORPUS</span>
+                </div>
+                <div class="wc-preset-group">
+                    <button type="button" id="wc-preset-ai" class="wc-btn-preset">AI & ML</button>
+                    <button type="button" id="wc-preset-semantics" class="wc-btn-preset">NLP Semantik</button>
+                    <button type="button" id="wc-preset-physics_id" class="wc-btn-preset">Fisika ID</button>
+                </div>
+                <textarea id="wc-input-text" class="wc-textarea" placeholder="Tempel teks atau daftar pasangan kata:frekuensi di sini..."></textarea>
+            </div>
+
+            <div class="wc-card">
+                <div class="wc-card-title">Filter Stopwords & Panjang</div>
+                <div class="wc-control-group">
+                    <label for="wc-select-lang" class="wc-label-row">Bahasa Stopwords</label>
+                    <select id="wc-select-lang" class="wc-select-input">
+                        <option value="all" selected>Indonesia & Inggris</option>
+                        <option value="id">Bahasa Indonesia Saja</option>
+                        <option value="en">English Only</option>
+                        <option value="none">Tanpa Filter Stopwords</option>
+                    </select>
+                </div>
+                <div class="wc-control-group">
+                    <label for="wc-input-custom-stop" class="wc-label-row">Kata Dikecualikan Kustom</label>
+                    <input type="text" id="wc-input-custom-stop" class="wc-text-input" placeholder="contoh: kata1, kata2, kata3">
+                </div>
+                <div class="wc-control-group">
+                    <div class="wc-label-row">
+                        <label for="wc-range-min-len">Panjang Kata Minimal</label>
+                        <span id="wc-range-min-len-val" class="wc-val-badge">2</span>
+                    </div>
+                    <input type="range" id="wc-range-min-len" class="wc-range-input" min="1" max="6" step="1" value="2">
+                </div>
+                <div class="wc-control-group">
+                    <div class="wc-label-row">
+                        <label for="wc-range-max-words">Maksimal Kata Ditampilkan</label>
+                        <span id="wc-range-max-words-val" class="wc-val-badge">75</span>
+                    </div>
+                    <input type="range" id="wc-range-max-words" class="wc-range-input" min="15" max="150" step="5" value="75">
+                </div>
+            </div>
+
+            <div class="wc-card">
+                <div class="wc-card-title">Tipografi & Penataan Spiral</div>
+                <div class="wc-control-group">
+                    <label for="wc-select-scale" class="wc-label-row">Penskalaan Ukuran</label>
+                    <select id="wc-select-scale" class="wc-select-input">
+                        <option value="sqrt" selected>Akar Kuadrat (Seimbang)</option>
+                        <option value="log">Logaritmik (Merata)</option>
+                        <option value="linear">Linear (Dominan)</option>
+                    </select>
+                </div>
+                <div class="wc-control-group">
+                    <label for="wc-select-font" class="wc-label-row">Font Family</label>
+                    <select id="wc-select-font" class="wc-select-input">
+                        <option value="'Google Sans', sans-serif" selected>Google Sans</option>
+                        <option value="'Roboto Mono', monospace">Roboto Mono</option>
+                        <option value="Georgia, serif">Georgia Serif</option>
+                    </select>
+                </div>
+                <div class="wc-control-group">
+                    <label for="wc-select-angle" class="wc-label-row">Orientasi Sudut</label>
+                    <select id="wc-select-angle" class="wc-select-input">
+                        <option value="mixed" selected>Campuran (0° & 90°)</option>
+                        <option value="horizontal">Horizontal Saja (0°)</option>
+                        <option value="skewed">Multi-Sudut (-45°, 0°, 45°, 90°)</option>
+                    </select>
+                </div>
+                <div class="wc-control-group">
+                    <label for="wc-select-palette" class="wc-label-row">Palet Warna</label>
+                    <select id="wc-select-palette" class="wc-select-input">
+                        <option value="aurora" selected>Meteor Aurora</option>
+                        <option value="okabe_ito">Okabe-Ito (Sains Publikasi)</option>
+                        <option value="cyber">Cyber Neon</option>
+                        <option value="solar">Solar Flare</option>
+                        <option value="monochrome">Monochrome Titanium</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="wc-card">
+                <div class="wc-card-title">Ekspor Visualisasi</div>
+                <div class="wc-actions-row">
+                    <button type="button" id="wc-btn-export-png" class="wc-btn-action wc-btn-primary">PNG</button>
+                    <button type="button" id="wc-btn-export-svg" class="wc-btn-action wc-btn-secondary">SVG</button>
+                    <button type="button" id="wc-btn-export-csv" class="wc-btn-action wc-btn-secondary">CSV</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="wc-viewport-col">
+            <section class="wc-metrics-banner" aria-label="Metrik Kualitas Tata Letak">
+                <div class="wc-metric-tile">
+                    <span class="wc-metric-label">Kekompakan c(Γ)</span>
+                    <span id="wc-metric-compactness" class="wc-metric-num wc-metric-accent">0%</span>
+                </div>
+                <div class="wc-metric-tile">
+                    <span class="wc-metric-label">Kata Tampil / Total</span>
+                    <span id="wc-metric-tokens" class="wc-metric-num">0 / 0</span>
+                </div>
+                <div class="wc-metric-tile">
+                    <span class="wc-metric-label">Kosakata Unik</span>
+                    <span id="wc-metric-unique" class="wc-metric-num">0</span>
+                </div>
+                <div class="wc-metric-tile">
+                    <span class="wc-metric-label">Diversitas TTR</span>
+                    <span id="wc-metric-ttr" class="wc-metric-num">0%</span>
+                </div>
+            </section>
+
+            <section class="wc-canvas-card">
+                <canvas id="wc-canvas" class="wc-canvas"></canvas>
+                <div id="wc-tooltip" class="wc-tooltip hidden"></div>
+            </section>
+
+            <section class="wc-card wc-badge-tray">
+                <div class="wc-card-title">
+                    <span>Kata Terpopuler (Klik untuk Sorot)</span>
+                    <span style="font-size:10px;color:#64748b;font-family:monospace;">TOP 15 FREKUENSI</span>
+                </div>
+                <div id="wc-badge-list" class="wc-badge-list"></div>
+            </section>
+        </main>
+    </div>
+</div>
+<script type="module" src="./src/plot/wordcloud/wordcloud-app.js"></script>
+</body>
+</html>

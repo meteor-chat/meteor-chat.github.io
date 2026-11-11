@@ -1,0 +1,7 @@
+export const SAMPLE_PRESETS = {
+    ai: `Machine learning neural networks deep learning transformer models attention mechanism gradient descent loss function backpropagation latent space embeddings computer vision natural language processing supervised reinforcement learning reinforcement policy generative adversarial networks diffusion prompt engineering tokens weights bias inference tensor matrix optimization epoch convergence hyperparameters validation accuracy precision recall cross-entropy activation function convolution recurrent sequence classification clustering dimensions vector representation`,
+    
+    semantics: `Semantic word cloud layout similarity graph Jaccard index multidimensional scaling MDS force directed layout rigid body simulation non-overlap collision detection realized adjacencies distortion compactness vocabulary frequency tokens term frequency inverse document frequency TF-IDF text mining keywords stopwords stemming filtering interactive authoring visualization exploratory data analysis clustering neighborhood consistency`,
+    
+    physics_id: `Kuantum mekanika partikel gravitasi relativitas umum relativitas khusus termodinamika energi kinetik potensial massa momentum sudut gelombang elektromagnetik frekuensi foton elektron proton neutron atom inti radiasi entropi hukum kekekalan ruang waktu kecepatan cahaya medan magnet fluks termal termal difusi osilasi resonansi spektroskopi interaksi nuklir gaya fundamental fusi fisi partikel kosmologi alam semesta singularitas lubang hitam`
+};
