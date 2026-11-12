@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Simulasi Tata Surya 3D interaktif bergerak infinity berbasis Keplerian analitik, WebGL, dan ekor komet Finson-Probstein di Meteor.">
+<title>Solar System 3D - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="stylesheet" href="./styles/solar-system.css">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600 700;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: "Google Sans", sans-serif; color: #ffffff; }
+body { background: #0e1519; }
+</style>
+</head>
+<body>
+<main id="solar-app-root" class="solar-page">
+    <canvas class="solar-canvas-layer" data-solar-gl aria-hidden="true"></canvas>
+    <canvas class="solar-canvas-layer solar-overlay-canvas" data-solar-overlay aria-label="Simulasi Tata Surya 3D Interaktif"></canvas>
+
+    <header class="solar-hud-top">
+        <div class="solar-brand-block">
+            <h1 class="solar-title">SOLAR SYSTEM</h1>
+            <div class="solar-subtitle-row">
+                <span class="solar-epoch-pill" data-tel-simdays>J2000 + 0 d</span>
+                <div class="solar-segmented" role="group" aria-label="Mode Skala Tata Surya">
+                    <button type="button" class="solar-seg-btn" data-scale-mode="visual" aria-pressed="true">Visual Referensi</button>
+                    <button type="button" class="solar-seg-btn" data-scale-mode="real" aria-pressed="false">Skala Nyata AU</button>
+                </div>
+            </div>
+        </div>
+        <div class="solar-top-actions">
+            <button type="button" class="solar-pill-btn" data-solar-overview>Overview</button>
+            <button type="button" class="solar-pill-btn" data-solar-orbits aria-pressed="true">Orbits</button>
+            <button type="button" class="solar-pill-btn" data-solar-labels aria-pressed="true">Labels</button>
+            <button type="button" class="solar-pill-btn" data-solar-cruise aria-pressed="true">Cruise</button>
+            <a href="/lab" class="btn-back-lab" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
+        </div>
+    </header>
+
+    <aside class="solar-telemetry" data-solar-telemetry aria-label="Telemetri Benda Langit">
+        <div class="solar-tel-head">
+            <span class="solar-tel-name" data-tel-name>Sun</span>
+            <span class="solar-tel-cat" data-tel-cat>G2V Main-Sequence Star</span>
+        </div>
+        <div class="solar-tel-grid">
+            <div class="solar-tel-metric">
+                <span class="solar-tel-k">Heliocentric</span>
+                <span class="solar-tel-v" data-tel-dist>0.000 AU</span>
+            </div>
+            <div class="solar-tel-metric">
+                <span class="solar-tel-k">Orbital Speed</span>
+                <span class="solar-tel-v" data-tel-speed>0.0 km/s</span>
+            </div>
+            <div class="solar-tel-metric">
+                <span class="solar-tel-k">Period</span>
+                <span class="solar-tel-v" data-tel-period>225M yr Galactic</span>
+            </div>
+            <div class="solar-tel-metric">
+                <span class="solar-tel-k">Axial Tilt</span>
+                <span class="solar-tel-v" data-tel-tilt>7.2 deg</span>
+            </div>
+        </div>
+        <p class="solar-tel-desc" data-tel-summary>Central star anchoring the solar system gravitational well.</p>
+    </aside>
+
+    <section class="solar-hud-bottom" aria-label="Kontrol Waktu dan Pilihan Planet">
+        <div class="solar-timebar">
+            <button type="button" class="solar-pill-btn" data-solar-play aria-pressed="false">Pause</button>
+            <button type="button" class="solar-pill-btn" data-solar-reverse aria-pressed="false">Forward</button>
+            <label class="solar-speed-wrap">
+                <input type="range" class="solar-speed-range" min="1" max="120" step="1" value="16" data-solar-speed aria-label="Kecepatan Waktu Orbit">
+                <span class="solar-speed-readout" data-solar-speed-label>16 d/s</span>
+            </label>
+        </div>
+        <nav class="solar-dock" data-solar-dock aria-label="Pilih Planet Tata Surya"></nav>
+    </section>
+</main>
+<script type="module">
+import { createSolarSystemApp } from "./src/lab/solar/solar-controller.js";
+const root = document.getElementById("solar-app-root");
+const app = createSolarSystemApp(root);
+window.addEventListener("pagehide", () => {
+    if (app) app.destroy();
+});
+</script>
+</body>
+</html>

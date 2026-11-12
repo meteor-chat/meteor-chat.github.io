@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Interactive Labs on Meteor - Explore Boids collective intelligence flocking simulation and Caesar cryptographic cipher wheel.">
+<meta name="description" content="Interactive Labs on Meteor - Explore Solar System 3D simulation, Boids flocking, cryptographic cipher wheel, and interactive ML algorithms.">
 <title>Lab - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
 <style>
@@ -37,6 +37,7 @@ body { background: var(--bg-main); }
 .lab-badge-pattern { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
 .lab-badge-graph { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
 .lab-badge-ml { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+.lab-badge-cosmos { background: rgba(251, 146, 60, 0.16); color: #fbbf24; border: 1px solid rgba(251, 146, 60, 0.34); }
 .lab-card-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
 .lab-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .lab-tag { font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.03); border: 1px solid #1e293b; padding: 2px 8px; border-radius: 4px; }
@@ -57,6 +58,18 @@ body { background: var(--bg-main); }
         <p class="lab-desc">Eksperimen komputasi, simulasi kecerdasan kolektif, dan laboratorium kriptografi interaktif.</p>
     </div>
     <div class="lab-grid">
+        <a href="/solar-system" class="lab-card">
+            <div class="lab-card-header">
+                <div class="lab-card-title">Solar System 3D <span class="arrow">→</span></div>
+                <span class="lab-badge lab-badge-cosmos">Kepler 3D</span>
+            </div>
+            <p class="lab-card-desc">Simulasi tata surya 3D interaktif bergerak infinity: solver Kepler analitik Float64, sabuk asteroid, komet Finson-Probstein, dan kamera bebas.</p>
+            <div class="lab-card-tags">
+                <span class="lab-tag">Astrodynamics</span>
+                <span class="lab-tag">WebGL 3D</span>
+                <span class="lab-tag">Kepler</span>
+            </div>
+        </a>
         <a href="/boids" class="lab-card">
             <div class="lab-card-header">
                 <div class="lab-card-title">Boids Simulation <span class="arrow">→</span></div>
