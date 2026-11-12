@@ -126,7 +126,7 @@ function samplePlanetPixel(bodyId, nx, ny, nz) {
     ];
 }
 
-export function generatePlanetTextureData(bodyId, width = 160, height = 80) {
+export function generatePlanetTextureData(bodyId, width = 256, height = 128) {
     const key = `${bodyId}:${width}x${height}`;
     if (textureCache.has(key)) return textureCache.get(key);
     const data = new Uint8Array(width * height * 4);
@@ -278,9 +278,9 @@ export function drawPlanetThumbnail(canvas, bodyDef) {
 }
 
 export function prewarmSolarTextures() {
-    generatePlanetTextureData(SUN_DEF.id, 160, 80);
+    generatePlanetTextureData(SUN_DEF.id, 256, 128);
     for (const p of PLANET_CATALOG) {
-        generatePlanetTextureData(p.id, 160, 80);
+        generatePlanetTextureData(p.id, 256, 128);
         if (p.hasRing) generateRingTextureData(p.id, 256);
     }
 }

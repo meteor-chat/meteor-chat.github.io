@@ -32,8 +32,8 @@ export function createStarfield(count = 720, seed = 4201) {
             x: r * sinPhi * Math.cos(theta),
             y: r * u,
             z: r * sinPhi * Math.sin(theta),
-            size: 0.75 + Math.pow(rand(), 2.2) * 2.4,
-            alpha: 0.25 + rand() * 0.72,
+            size: 2.8 + Math.pow(rand(), 1.9) * 5.2,
+            alpha: 0.45 + rand() * 0.52,
             phase: rand() * Math.PI * 2,
             r: c[0],
             g: c[1],
@@ -65,11 +65,11 @@ export function createAsteroidBelt(count = 900, seed = 9103) {
             ecc,
             angularSpeedVisual,
             angularSpeedReal,
-            size: 1.0 + Math.pow(rand(), 1.8) * 2.6,
-            r: isCyan ? 65 + Math.floor(rand() * 55) : 130 + Math.floor(rand() * 50),
-            g: isCyan ? 165 + Math.floor(rand() * 65) : 155 + Math.floor(rand() * 55),
-            b: isCyan ? 190 + Math.floor(rand() * 55) : 175 + Math.floor(rand() * 55),
-            alpha: 0.38 + rand() * 0.52
+            size: 0.75 + Math.pow(rand(), 1.8) * 1.9,
+            r: isCyan ? 56 + Math.floor(rand() * 48) : 110 + Math.floor(rand() * 48),
+            g: isCyan ? 172 + Math.floor(rand() * 58) : 168 + Math.floor(rand() * 48),
+            b: isCyan ? 188 + Math.floor(rand() * 52) : 182 + Math.floor(rand() * 48),
+            alpha: 0.34 + rand() * 0.46
         });
     }
     return rocks;
@@ -151,14 +151,14 @@ export function createCometStates(scaleMode = "visual") {
     return COMET_CATALOG.map((def) => {
         const state0 = propagateKeplerian(def, 0, scaleMode);
         const particles = [];
-        const tailCount = 46;
+        const tailCount = 72;
         const distSun = Math.max(2, Math.hypot(state0.x, state0.y, state0.z));
         const antiSun = { x: state0.x / distSun, y: state0.y / distSun, z: state0.z / distSun };
         for (let i = 0; i < tailCount; i += 1) {
             const frac = i / tailCount;
             const beta = def.betaRange[0] + frac * (def.betaRange[1] - def.betaRange[0]);
-            const spread = 0.22 + frac * 0.9;
-            const tailDist = frac * 10.5;
+            const spread = 0.24 + frac * 1.1;
+            const tailDist = frac * 15.5;
             particles.push({
                 x: state0.x + antiSun.x * tailDist + (rand() - 0.5) * spread,
                 y: state0.y + antiSun.y * tailDist + (rand() - 0.5) * spread * 0.5,

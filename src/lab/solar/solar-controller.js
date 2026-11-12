@@ -58,14 +58,14 @@ export function createSolarSystemApp(root) {
         activeBodyId: "sun",
         hoverBodyId: null,
         focusReticleVisible: false,
-        azimuth: -0.34,
-        elevation: 0.44,
-        distance: 76,
-        targetAzimuth: -0.34,
-        targetElevation: 0.44,
-        targetDistance: 76,
+        azimuth: -0.28,
+        elevation: 0.42,
+        distance: 66,
+        targetAzimuth: -0.28,
+        targetElevation: 0.42,
+        targetDistance: 66,
         fovRad: 0.74,
-        anchorPos: { x: 0, y: -2.2, z: 0 },
+        anchorPos: { x: 0, y: -1.8, z: 0 },
         lastProjected: [],
         timeSec: 0,
         rafId: 0,
@@ -76,11 +76,11 @@ export function createSolarSystemApp(root) {
         x: s.x,
         y: s.y,
         z: s.z,
-        size: s.size,
+        size: s.size * 0.9,
         a: s.alpha,
-        r: s.r,
-        g: s.g,
-        b: s.b,
+        r: s.r / 255,
+        g: s.g / 255,
+        b: s.b / 255,
         phase: s.phase
     }));
     const asteroids = createAsteroidBelt(880, 9103);
@@ -97,10 +97,10 @@ export function createSolarSystemApp(root) {
         if (overview || !id || id === "sun") {
             state.activeBodyId = "sun";
             state.focusReticleVisible = !overview && id === "sun";
-            state.targetDistance = state.scaleMode === "real" ? (overview ? 390 : 28) : (overview ? 76 : 16);
+            state.targetDistance = state.scaleMode === "real" ? (overview ? 390 : 28) : (overview ? 66 : 14);
             if (overview) {
-                state.targetAzimuth = -0.34;
-                state.targetElevation = 0.44;
+                state.targetAzimuth = -0.28;
+                state.targetElevation = 0.42;
             }
             syncUi();
             updateSolarTelemetry(root, state, latestWorldMap);
@@ -200,18 +200,27 @@ export function createSolarSystemApp(root) {
 
         const asteroidPoints = asteroids.map((rock) => {
             const p = toObserverCentered(computeAsteroidPosition(rock, state.simDays, state.scaleMode), state.anchorPos);
-            return { x: p.x, y: p.y, z: p.z, size: rock.size, r: rock.r, g: rock.g, b: rock.b, a: rock.alpha };
+            return { x: p.x, y: p.y, z: p.z, size: rock.size, r: rock.r / 255, g: rock.g / 255, b: rock.b / 255, a: rock.alpha };
         });
 
         const cometPoints = [];
         for (const comet of comets) {
             const headRel = toObserverCentered(comet.state, state.anchorPos);
-            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 7.5, r: 0.85, g: 0.96, b: 1.0, a: 0.98 });
-            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 15, r: 0.35, g: 0.72, b: 1.0, a: 0.42 });
+            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 10.5, r: 0.9, g: 0.98, b: 1.0, a: 0.96 });
+            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 20.0, r: 0.32, g: 0.62, b: 1.0, a: 0.45 });
             for (const pt of comet.particles) {
                 const pr = toObserverCentered(pt, state.anchorPos);
                 const frac = Math.max(0, 1 - pt.age / Math.max(0.01, pt.maxAge));
-                cometPoints.push({ x: pr.x, y: pr.y, z: pr.z, size: 4.8 * frac + 1.2, r: 0.42, g: 0.78, b: 1.0, a: frac * 0.72 });
+                cometPoints.push({
+                    x: pr.x,
+                    y: pr.y,
+                    z: pr.z,
+                    size: 9.2 * frac + 2.2,
+                    r: 0.24 + 0.42 * frac,
+                    g: 0.45 + 0.38 * frac,
+                    b: 1.0,
+                    a: frac * 0.68
+                });
             }
         }
 

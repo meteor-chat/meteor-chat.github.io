@@ -57,7 +57,7 @@ export function createWebGLSolarRenderer(canvas) {
 
     function ensureBodyTex(id) {
         if (!bodyTextures.has(id)) {
-            bodyTextures.set(id, createGLTexture(gl, generatePlanetTextureData(id, 160, 80), false));
+            bodyTextures.set(id, createGLTexture(gl, generatePlanetTextureData(id, 256, 128), false));
         }
         return bodyTextures.get(id);
     }

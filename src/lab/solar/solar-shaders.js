@@ -33,19 +33,20 @@ void main() {
     vec3 V = normalize(uCamPos - vWorldPos);
     float ndotv = clamp(dot(N, V), 0.0, 1.0);
     if (uIsSun > 0.5) {
-        float limb = pow(ndotv, 0.42);
-        vec3 core = mix(vec3(1.0, 0.42, 0.08), tex * 1.15, limb);
-        vec3 rim = vec3(1.0, 0.25, 0.06) * pow(1.0 - ndotv, 2.2) * 0.85;
-        gl_FragColor = vec4(core + rim, 1.0);
+        float limb = pow(ndotv, 0.28);
+        vec3 core = mix(vec3(1.0, 0.55, 0.12), tex * vec3(1.14, 1.12, 1.05), limb);
+        vec3 rim = vec3(1.0, 0.35, 0.08) * pow(1.0 - ndotv, 2.0) * 0.72;
+        gl_FragColor = vec4(clamp(core + rim, 0.0, 1.0), 1.0);
         return;
     }
     vec3 L = normalize(uSunPos - vWorldPos);
     float ndotl = dot(N, L);
-    float diffuse = smoothstep(-0.22, 0.85, ndotl);
-    float light = 0.26 + 0.86 * diffuse;
+    float diffuse = smoothstep(-0.36, 0.78, ndotl);
+    float topFill = 0.14 * max(0.0, N.y);
+    float light = 0.52 + 0.58 * diffuse + topFill;
     vec3 H = normalize(L + V);
-    float spec = pow(max(dot(N, H), 0.0), 28.0) * smoothstep(0.0, 0.4, ndotl) * 0.14;
-    float fresnel = pow(1.0 - ndotv, 2.5) * uAtmoStrength * (0.45 + 0.55 * diffuse);
+    float spec = pow(max(dot(N, H), 0.0), 24.0) * smoothstep(0.0, 0.4, ndotl) * 0.14;
+    float fresnel = pow(1.0 - ndotv, 2.4) * uAtmoStrength * (0.55 + 0.45 * diffuse);
     vec3 color = tex * light + vec3(spec) + uAtmoColor * fresnel;
     gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -89,7 +90,7 @@ void main() {
         float perpDist = length(rel - toSun * proj);
         shadow = smoothstep(uPlanetRadius * 0.88, uPlanetRadius * 1.08, perpDist);
     }
-    vec3 col = band.rgb * (0.35 + 0.72 * shadow);
+    vec3 col = band.rgb * (0.65 + 0.42 * shadow);
     gl_FragColor = vec4(col, band.a);
 }
 `;
@@ -115,11 +116,9 @@ varying vec2 vQuad;
 void main() {
     float d = length(vQuad);
     if (d > 1.0) discard;
-    float inner = exp(-d * 3.1);
-    float outer = exp(-d * 1.45) * (1.0 - smoothstep(0.55, 1.0, d));
-    vec3 col = mix(vec3(0.98, 0.24, 0.08), vec3(1.0, 0.86, 0.35), inner);
-    float alpha = clamp(inner * 0.72 + outer * 0.42, 0.0, 0.92);
-    gl_FragColor = vec4(col, alpha);
+    float aura = smoothstep(0.16, 0.42, d) * exp(-max(0.0, d - 0.34) * 3.1) * (1.0 - smoothstep(0.68, 1.0, d));
+    vec3 col = mix(vec3(1.0, 0.72, 0.22), vec3(0.98, 0.24, 0.06), smoothstep(0.28, 0.72, d));
+    gl_FragColor = vec4(col, clamp(aura * 0.85, 0.0, 0.85));
 }
 `;
 
@@ -134,7 +133,7 @@ void main() {
     vColor = aColor;
     vec4 clip = uViewProj * vec4(aPos, 1.0);
     gl_Position = clip;
-    gl_PointSize = clamp((aSize * uPixelRatio * 240.0) / max(1.0, clip.w), 1.2, 68.0);
+    gl_PointSize = clamp((aSize * uPixelRatio * 145.0) / max(1.0, clip.w), 1.4, 72.0);
 }
 `;
 
