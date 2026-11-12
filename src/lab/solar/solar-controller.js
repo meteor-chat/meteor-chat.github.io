@@ -1,4 +1,4 @@
-import { SUN_DEF, PLANET_CATALOG } from "./solar-catalog.js";
+import { SUN_DEF, MOON_DEF, PLANET_CATALOG } from "./solar-catalog.js";
 import {
     getBodyRenderRadius,
     propagateKeplerian,
@@ -72,18 +72,18 @@ export function createSolarSystemApp(root) {
         destroyed: false
     };
 
-    const starPoints = createStarfield(760, 4201).map((s) => ({
+    const starPoints = createStarfield(1050, 4201).map((s) => ({
         x: s.x,
         y: s.y,
         z: s.z,
-        size: s.size * 0.9,
+        size: s.size,
         a: s.alpha,
         r: s.r / 255,
         g: s.g / 255,
         b: s.b / 255,
         phase: s.phase
     }));
-    const asteroids = createAsteroidBelt(880, 9103);
+    const asteroids = createAsteroidBelt(1050, 9103);
     const meteors = createMeteorStreaks(7, 7701);
     let comets = createCometStates(state.scaleMode);
     let orbitCache = buildOrbitCache(state.scaleMode);
@@ -106,12 +106,12 @@ export function createSolarSystemApp(root) {
             updateSolarTelemetry(root, state, latestWorldMap);
             return;
         }
-        const target = PLANET_CATALOG.find((p) => p.id === id);
+        const target = [MOON_DEF, ...PLANET_CATALOG].find((p) => p.id === id);
         if (!target) return;
         state.activeBodyId = target.id;
         state.focusReticleVisible = true;
         const r = getBodyRenderRadius(target, state.scaleMode);
-        state.targetDistance = Math.max(4.8, Math.min(48, r * (target.hasRing ? 9.5 : 8.2)));
+        state.targetDistance = Math.max(3.6, Math.min(48, r * (target.hasRing ? 9.5 : 8.2)));
         syncUi();
         updateSolarTelemetry(root, state, latestWorldMap);
     }
@@ -159,6 +159,10 @@ export function createSolarSystemApp(root) {
 
         const worldMap = new Map([["sun", { x: 0, y: 0, z: 0 }]]);
         for (const p of PLANET_CATALOG) worldMap.set(p.id, propagateKeplerian(p, state.simDays, state.scaleMode));
+        const earthPos = worldMap.get("earth");
+        const moonRel = propagateKeplerian(MOON_DEF, state.simDays, "visual");
+        const mScale = state.scaleMode === "real" ? 0.52 : 1;
+        worldMap.set("moon", { x: earthPos.x + moonRel.x * mScale, y: earthPos.y + moonRel.y * mScale, z: earthPos.z + moonRel.z * mScale });
         latestWorldMap = worldMap;
 
         const rawTarget = worldMap.get(state.activeBodyId) || { x: 0, y: 0, z: 0 };
@@ -183,7 +187,7 @@ export function createSolarSystemApp(root) {
         const sunPosRel = toObserverCentered({ x: 0, y: 0, z: 0 }, state.anchorPos);
         const sunRadius = getBodyRenderRadius(SUN_DEF, state.scaleMode);
 
-        const bodies = [SUN_DEF, ...PLANET_CATALOG].map((b) => ({
+        const bodies = [SUN_DEF, MOON_DEF, ...PLANET_CATALOG].map((b) => ({
             id: b.id,
             name: b.name,
             color: b.color,
@@ -206,20 +210,21 @@ export function createSolarSystemApp(root) {
         const cometPoints = [];
         for (const comet of comets) {
             const headRel = toObserverCentered(comet.state, state.anchorPos);
-            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 10.5, r: 0.9, g: 0.98, b: 1.0, a: 0.96 });
-            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 20.0, r: 0.32, g: 0.62, b: 1.0, a: 0.45 });
+            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 10.5, r: 1.0, g: 0.96, b: 0.88, a: 0.96 });
+            cometPoints.push({ x: headRel.x, y: headRel.y, z: headRel.z, size: 22.0, r: 0.42, g: 0.72, b: 1.0, a: 0.38 });
             for (const pt of comet.particles) {
                 const pr = toObserverCentered(pt, state.anchorPos);
                 const frac = Math.max(0, 1 - pt.age / Math.max(0.01, pt.maxAge));
+                const dustMix = 1 - frac;
                 cometPoints.push({
                     x: pr.x,
                     y: pr.y,
                     z: pr.z,
-                    size: 9.2 * frac + 2.2,
-                    r: 0.24 + 0.42 * frac,
-                    g: 0.45 + 0.38 * frac,
-                    b: 1.0,
-                    a: frac * 0.68
+                    size: 9.6 * frac + 2.4,
+                    r: 0.42 + 0.52 * frac - 0.12 * dustMix,
+                    g: 0.66 + 0.28 * frac - 0.18 * dustMix,
+                    b: 1.0 - 0.32 * dustMix,
+                    a: frac * 0.62
                 });
             }
         }
@@ -228,6 +233,7 @@ export function createSolarSystemApp(root) {
         const scene = {
             camBasis,
             dpr: state.dpr,
+            timeSec: state.timeSec,
             sunPosRel,
             sunRadius,
             anchorPos: state.anchorPos,

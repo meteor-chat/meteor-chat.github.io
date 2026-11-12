@@ -32,8 +32,8 @@ function drawOrbitPaths(ctx, orbitEntries, anchorPos, camBasis, w, h, activeId, 
             }
             prev = proj;
         }
-        ctx.strokeStyle = isActive ? "rgba(125, 211, 252, 0.72)" : "rgba(218, 230, 236, 0.34)";
-        ctx.lineWidth = isActive ? 1.55 : 1.05;
+        ctx.strokeStyle = isActive ? "rgba(125, 211, 252, 0.65)" : "rgba(175, 205, 240, 0.22)";
+        ctx.lineWidth = isActive ? 1.45 : 0.95;
         ctx.stroke();
     }
     ctx.restore();
@@ -223,6 +223,9 @@ export function renderSolarOverlay2D(ctx, scene, state) {
         ctx.textBaseline = "top";
         for (const item of sortedForLabels) {
             if (item.screenX < 20 || item.screenX > w - 20 || item.screenY < 20 || item.screenY > h - 24) continue;
+            if (item.body.id === "moon" && state.distance > 22 && state.activeBodyId !== "earth" && state.activeBodyId !== "moon") {
+                continue;
+            }
             const label = item.body.name;
             const lw = ctx.measureText(label).width + 10;
             let lx = Math.max(lw * 0.5 + 8, Math.min(w - lw * 0.5 - 8, item.screenX));

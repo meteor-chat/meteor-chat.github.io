@@ -71,9 +71,66 @@ export function createGLTexture(gl, texData, clampEdge = false) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, texData.width, texData.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, texData.data);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    if (texData.height > 1) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    } else {
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, clampEdge ? gl.CLAMP_TO_EDGE : gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     return tex;
 }
+
+export function multiplyMat4(a, b) {
+    const out = new Float32Array(16);
+    for (let c = 0; c < 4; c += 1) {
+        for (let r = 0; r < 4; r += 1) {
+            out[c * 4 + r] =
+                a[r] * b[c * 4] +
+                a[4 + r] * b[c * 4 + 1] +
+                a[8 + r] * b[c * 4 + 2] +
+                a[12 + r] * b[c * 4 + 3];
+        }
+    }
+    return out;
+}
+
+export function buildViewProjFromBasis(camBasis, near = 0.25, far = 4500) {
+    const f = 1 / Math.tan(camBasis.fovRad * 0.5);
+    const nf = 1 / (near - far);
+    const proj = new Float32Array([
+        f / camBasis.aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+    ]);
+    const { right: r, up: u, fwd: fw, eye: e } = camBasis;
+    const view = new Float32Array([
+        r.x, u.x, -fw.x, 0,
+        r.y, u.y, -fw.y, 0,
+        r.z, u.z, -fw.z, 0,
+        -(r.x * e.x + r.y * e.y + r.z * e.z),
+        -(u.x * e.x + u.y * e.y + u.z * e.z),
+        fw.x * e.x + fw.y * e.y + fw.z * e.z,
+        1
+    ]);
+    return multiplyMat4(proj, view);
+}
+
+export function buildBodyModelMatrix(posRel, radius, tiltDeg, spinRad = 0.25) {
+    const tilt = (tiltDeg * Math.PI) / 180;
+    const ct = Math.cos(tilt);
+    const st = Math.sin(tilt);
+    const cs = Math.cos(spinRad);
+    const ss = Math.sin(spinRad);
+    return new Float32Array([
+        radius * cs, radius * st * ss, -radius * ct * ss, 0,
+        0, radius * ct, radius * st, 0,
+        radius * ss, -radius * st * cs, radius * ct * cs, 0,
+        posRel.x, posRel.y, posRel.z, 1
+    ]);
+}
+
+export const buildRingModelMatrix = buildBodyModelMatrix;

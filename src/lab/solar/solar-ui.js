@@ -1,4 +1,4 @@
-import { SUN_DEF, PLANET_CATALOG } from "./solar-catalog.js";
+import { SUN_DEF, PLANET_CATALOG, MOON_DEF } from "./solar-catalog.js";
 import { getSemiMajorAxis } from "./kepler-solver.js";
 import { drawPlanetThumbnail } from "./planet-textures.js";
 import { hitTestSolarBody } from "./overlay-2d.js";
@@ -65,7 +65,7 @@ export function syncSolarControlUi(root, state, dockButtons) {
 }
 
 export function updateSolarTelemetry(root, state, worldMap) {
-    const body = PLANET_CATALOG.find((p) => p.id === state.activeBodyId) || SUN_DEF;
+    const body = [MOON_DEF, ...PLANET_CATALOG].find((p) => p.id === state.activeBodyId) || SUN_DEF;
     const setTxt = (sel, val) => {
         const el = root.querySelector(sel);
         if (el) el.textContent = val;
@@ -80,6 +80,12 @@ export function updateSolarTelemetry(root, state, worldMap) {
         setTxt("[data-tel-dist]", "0.000 AU");
         setTxt("[data-tel-speed]", "0.0 km/s (Barycenter)");
         setTxt("[data-tel-period]", "225M yr Galactic");
+        return;
+    }
+    if (body.id === "moon") {
+        setTxt("[data-tel-dist]", "384,400 km (Earth)");
+        setTxt("[data-tel-speed]", `${body.orbitalSpeedKms.toFixed(2)} km/s`);
+        setTxt("[data-tel-period]", `${body.periodDays.toFixed(1)} d`);
         return;
     }
     const pos = worldMap.get(body.id) || { x: 0, y: 0, z: 0 };

@@ -16,11 +16,11 @@ export function createStarfield(count = 720, seed = 4201) {
     const rand = mulberry32(seed);
     const stars = [];
     const palette = [
-        [226, 232, 240],
-        [148, 226, 255],
-        [94, 234, 212],
-        [254, 240, 138],
-        [186, 230, 253]
+        [205, 226, 255],
+        [255, 252, 244],
+        [255, 238, 206],
+        [172, 218, 255],
+        [255, 212, 178]
     ];
     for (let i = 0; i < count; i += 1) {
         const u = rand() * 2 - 1;
@@ -28,12 +28,13 @@ export function createStarfield(count = 720, seed = 4201) {
         const r = 190 + rand() * 240;
         const sinPhi = Math.sqrt(Math.max(0, 1 - u * u));
         const c = palette[Math.floor(rand() * palette.length)];
+        const isBrightGiant = rand() > 0.94;
         stars.push({
             x: r * sinPhi * Math.cos(theta),
             y: r * u,
             z: r * sinPhi * Math.sin(theta),
-            size: 2.8 + Math.pow(rand(), 1.9) * 5.2,
-            alpha: 0.45 + rand() * 0.52,
+            size: isBrightGiant ? 5.2 + rand() * 4.4 : 2.1 + Math.pow(rand(), 2.1) * 2.5,
+            alpha: isBrightGiant ? 0.82 + rand() * 0.16 : 0.35 + rand() * 0.55,
             phase: rand() * Math.PI * 2,
             r: c[0],
             g: c[1],
@@ -46,17 +47,23 @@ export function createStarfield(count = 720, seed = 4201) {
 export function createAsteroidBelt(count = 900, seed = 9103) {
     const rand = mulberry32(seed);
     const rocks = [];
+    const rockTones = [
+        [168, 152, 134],
+        [136, 132, 128],
+        [188, 166, 140],
+        [152, 162, 176]
+    ];
     for (let i = 0; i < count; i += 1) {
         const t = rand();
-        const visualRadius = 12.9 + (t + (rand() - 0.5) * 0.18) * 3.4;
+        const visualRadius = 12.9 + (t + (rand() - 0.5) * 0.22) * 3.5;
         const realRadiusAU = 2.15 + t * 1.15;
         const angle0 = rand() * Math.PI * 2;
-        const incl = (rand() - 0.5) * 0.09;
-        const ecc = rand() * 0.08;
+        const incl = (rand() - 0.5) * 0.11;
+        const ecc = rand() * 0.09;
         const angularSpeedVisual = (Math.PI * 2) / (1100 + Math.pow(visualRadius / 13.0, 1.5) * 750);
         const angularSpeedReal = (Math.PI * 2) / (365.25 * Math.pow(realRadiusAU, 1.5));
-        const bright = rand();
-        const isCyan = bright > 0.35;
+        const base = rockTones[Math.floor(rand() * rockTones.length)];
+        const jitter = Math.floor((rand() - 0.5) * 26);
         rocks.push({
             visualRadius,
             realRadiusAU,
@@ -65,11 +72,11 @@ export function createAsteroidBelt(count = 900, seed = 9103) {
             ecc,
             angularSpeedVisual,
             angularSpeedReal,
-            size: 0.75 + Math.pow(rand(), 1.8) * 1.9,
-            r: isCyan ? 56 + Math.floor(rand() * 48) : 110 + Math.floor(rand() * 48),
-            g: isCyan ? 172 + Math.floor(rand() * 58) : 168 + Math.floor(rand() * 48),
-            b: isCyan ? 188 + Math.floor(rand() * 52) : 182 + Math.floor(rand() * 48),
-            alpha: 0.34 + rand() * 0.46
+            size: 0.72 + Math.pow(rand(), 1.9) * 2.2,
+            r: Math.max(40, Math.min(245, base[0] + jitter)),
+            g: Math.max(40, Math.min(245, base[1] + jitter)),
+            b: Math.max(40, Math.min(245, base[2] + jitter)),
+            alpha: 0.55 + rand() * 0.38
         });
     }
     return rocks;

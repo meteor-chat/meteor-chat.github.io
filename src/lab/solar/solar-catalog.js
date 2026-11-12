@@ -188,6 +188,28 @@ export const PLANET_CATALOG = [
     }
 ];
 
+export const MOON_DEF = {
+    id: "moon",
+    name: "Moon",
+    category: "Satelit Alami Bumi",
+    color: "#cbd5e1",
+    accentColor: "#94a3b8",
+    visualA: 1.85,
+    aAU: 0.00257,
+    visualRadius: 0.28,
+    realRadiusScale: 0.09,
+    e: 0.0549,
+    iDeg: 5.14,
+    nodeDeg: 125.08,
+    omegaDeg: 318.15,
+    M0Deg: 40,
+    periodDays: 27.32,
+    rotSpeed: 0.14,
+    tiltDeg: 6.68,
+    orbitalSpeedKms: 1.02,
+    summary: "Satelit alami Bumi dengan lembah basal gelap dan kawah dataran tinggi."
+};
+
 export const COMET_CATALOG = [
     {
         id: "comet-blue-inner",

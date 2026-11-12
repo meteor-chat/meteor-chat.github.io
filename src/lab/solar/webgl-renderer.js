@@ -1,4 +1,6 @@
 import {
+    NEBULA_VS,
+    NEBULA_FS,
     PLANET_VS,
     PLANET_FS,
     RING_VS,
@@ -14,15 +16,16 @@ import {
 import { createProgram, buildSphereBuffers, createGLTexture } from "./solar-gl-utils.js";
 import { generatePlanetTextureData, generateRingTextureData } from "./planet-textures.js";
 
-const ATMO_MAP = {
-    mercury: [0.75, 0.75, 0.78, 0.12],
-    venus: [0.95, 0.65, 0.28, 0.42],
-    earth: [0.35, 0.72, 1.0, 0.78],
-    mars: [0.88, 0.45, 0.25, 0.28],
-    jupiter: [0.88, 0.68, 0.45, 0.22],
-    saturn: [0.92, 0.82, 0.62, 0.22],
-    uranus: [0.55, 0.92, 0.98, 0.62],
-    neptune: [0.28, 0.62, 1.0, 0.72]
+const MAT_MAP = {
+    mercury: [0.75, 0.75, 0.78, 0.04, 3.6, 0.08],
+    moon: [0.75, 0.75, 0.78, 0.04, 3.8, 0.06],
+    venus: [0.95, 0.68, 0.34, 0.56, 0.9, 0.12],
+    earth: [0.32, 0.74, 1.0, 0.88, 1.8, 0.44],
+    mars: [0.92, 0.52, 0.32, 0.28, 3.2, 0.08],
+    jupiter: [0.92, 0.72, 0.48, 0.24, 0.75, 0.06],
+    saturn: [0.94, 0.84, 0.64, 0.24, 0.55, 0.06],
+    uranus: [0.55, 0.92, 0.98, 0.65, 0.35, 0.16],
+    neptune: [0.24, 0.58, 1.0, 0.76, 0.65, 0.18]
 };
 
 export function createWebGLSolarRenderer(canvas) {
@@ -31,11 +34,12 @@ export function createWebGLSolarRenderer(canvas) {
         || canvas.getContext("experimental-webgl", { alpha: false, antialias: true });
     if (!gl) return null;
 
+    const nebulaProg = createProgram(gl, NEBULA_VS, NEBULA_FS);
     const planetProg = createProgram(gl, PLANET_VS, PLANET_FS);
     const ringProg = createProgram(gl, RING_VS, RING_FS);
     const coronaProg = createProgram(gl, CORONA_VS, CORONA_FS);
     const pointProg = createProgram(gl, POINT_VS, POINT_FS);
-    if (!planetProg || !ringProg || !coronaProg || !pointProg) return null;
+    if (!nebulaProg || !planetProg || !ringProg || !coronaProg || !pointProg) return null;
 
     const sphere = buildSphereBuffers(gl);
     const ringVbo = gl.createBuffer();
@@ -69,7 +73,7 @@ export function createWebGLSolarRenderer(canvas) {
         return ringTextures.get(id);
     }
 
-    function drawPointBatch(viewProj, dpr, points, softMode, additive) {
+    function drawPointBatch(viewProj, dpr, points, spriteMode, additive) {
         const count = points.length;
         if (!count) return;
         const pos = new Float32Array(count * 3);
@@ -90,7 +94,7 @@ export function createWebGLSolarRenderer(canvas) {
         gl.blendFunc(gl.SRC_ALPHA, additive ? gl.ONE : gl.ONE_MINUS_SRC_ALPHA);
         gl.uniformMatrix4fv(gl.getUniformLocation(pointProg, "uViewProj"), false, viewProj);
         gl.uniform1f(gl.getUniformLocation(pointProg, "uPixelRatio"), dpr);
-        gl.uniform1f(gl.getUniformLocation(pointProg, "uSoftMode"), softMode ? 1.0 : 0.0);
+        gl.uniform1f(gl.getUniformLocation(pointProg, "uSpriteMode"), spriteMode);
 
         const aPos = gl.getAttribLocation(pointProg, "aPos");
         gl.bindBuffer(gl.ARRAY_BUFFER, ptPosVbo);
@@ -123,15 +127,29 @@ export function createWebGLSolarRenderer(canvas) {
             gl.viewport(0, 0, canvas.width, canvas.height);
         },
         renderFrame(scene) {
-            const { camBasis, dpr, sunPosRel, bodies, ringBodies, starPoints, asteroidPoints, cometPoints, sunRadius } = scene;
+            const { camBasis, dpr, sunPosRel, bodies, ringBodies, starPoints, asteroidPoints, cometPoints, sunRadius, timeSec } = scene;
             const viewProj = buildViewProjFromBasis(camBasis, 0.25, 4500);
-            gl.clearColor(0.055, 0.082, 0.098, 1.0);
+            gl.clearColor(0.012, 0.018, 0.036, 1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.disable(gl.DEPTH_TEST);
+            gl.depthMask(false);
+
+            gl.useProgram(nebulaProg);
+            gl.uniform3f(gl.getUniformLocation(nebulaProg, "uCamFwd"), camBasis.fwd.x, camBasis.fwd.y, camBasis.fwd.z);
+            gl.uniform3f(gl.getUniformLocation(nebulaProg, "uCamRight"), camBasis.right.x, camBasis.right.y, camBasis.right.z);
+            gl.uniform3f(gl.getUniformLocation(nebulaProg, "uCamUp"), camBasis.up.x, camBasis.up.y, camBasis.up.z);
+            gl.uniform1f(gl.getUniformLocation(nebulaProg, "uTanHalf"), Math.tan(camBasis.fovRad * 0.5));
+            gl.uniform1f(gl.getUniformLocation(nebulaProg, "uAspect"), camBasis.aspect);
+            const nAttr = gl.getAttribLocation(nebulaProg, "aCorner");
+            gl.bindBuffer(gl.ARRAY_BUFFER, coronaVbo);
+            gl.enableVertexAttribArray(nAttr);
+            gl.vertexAttribPointer(nAttr, 2, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            gl.disableVertexAttribArray(nAttr);
+
             gl.enable(gl.DEPTH_TEST);
             gl.enable(gl.BLEND);
-
-            gl.depthMask(false);
-            drawPointBatch(viewProj, dpr, starPoints, false, false);
+            drawPointBatch(viewProj, dpr, starPoints, 0.0, false);
 
             gl.depthMask(true);
             gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -139,6 +157,7 @@ export function createWebGLSolarRenderer(canvas) {
             gl.uniformMatrix4fv(gl.getUniformLocation(planetProg, "uViewProj"), false, viewProj);
             gl.uniform3f(gl.getUniformLocation(planetProg, "uSunPos"), sunPosRel.x, sunPosRel.y, sunPosRel.z);
             gl.uniform3f(gl.getUniformLocation(planetProg, "uCamPos"), camBasis.eye.x, camBasis.eye.y, camBasis.eye.z);
+            gl.uniform1f(gl.getUniformLocation(planetProg, "uTime"), timeSec || 0);
 
             const aPos = gl.getAttribLocation(planetProg, "aPos");
             const aNorm = gl.getAttribLocation(planetProg, "aNorm");
@@ -155,12 +174,14 @@ export function createWebGLSolarRenderer(canvas) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphere.ibo);
 
             for (const body of bodies) {
-                const atmo = ATMO_MAP[body.id] || [1.0, 0.7, 0.3, 0.0];
+                const mat = MAT_MAP[body.id] || [1.0, 0.7, 0.3, 0.0, 0.0, 0.0];
                 const model = buildBodyModelMatrix(body.posRel, body.radius, body.tiltDeg, body.spinRad);
                 gl.uniformMatrix4fv(gl.getUniformLocation(planetProg, "uModel"), false, model);
                 gl.uniform1f(gl.getUniformLocation(planetProg, "uIsSun"), body.id === "sun" ? 1.0 : 0.0);
-                gl.uniform3f(gl.getUniformLocation(planetProg, "uAtmoColor"), atmo[0], atmo[1], atmo[2]);
-                gl.uniform1f(gl.getUniformLocation(planetProg, "uAtmoStrength"), atmo[3]);
+                gl.uniform3f(gl.getUniformLocation(planetProg, "uAtmoColor"), mat[0], mat[1], mat[2]);
+                gl.uniform1f(gl.getUniformLocation(planetProg, "uAtmoStrength"), mat[3]);
+                gl.uniform1f(gl.getUniformLocation(planetProg, "uBumpStrength"), mat[4]);
+                gl.uniform1f(gl.getUniformLocation(planetProg, "uSpecStrength"), mat[5]);
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(gl.TEXTURE_2D, ensureBodyTex(body.id));
                 gl.uniform1i(gl.getUniformLocation(planetProg, "uTex"), 0);
@@ -170,7 +191,7 @@ export function createWebGLSolarRenderer(canvas) {
             gl.disableVertexAttribArray(aNorm);
             gl.disableVertexAttribArray(aUv);
 
-            drawPointBatch(viewProj, dpr, asteroidPoints, false, false);
+            drawPointBatch(viewProj, dpr, asteroidPoints, 1.0, false);
 
             gl.depthMask(false);
             gl.useProgram(ringProg);
@@ -214,7 +235,7 @@ export function createWebGLSolarRenderer(canvas) {
             gl.drawArrays(gl.TRIANGLES, 0, 6);
             gl.disableVertexAttribArray(cAttr);
 
-            drawPointBatch(viewProj, dpr, cometPoints, true, true);
+            drawPointBatch(viewProj, dpr, cometPoints, 2.0, true);
             gl.depthMask(true);
         },
         dispose() {

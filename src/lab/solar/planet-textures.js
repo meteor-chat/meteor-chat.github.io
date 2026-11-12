@@ -57,72 +57,81 @@ function samplePlanetPixel(bodyId, nx, ny, nz) {
         const hot = Math.min(1, g1 * 0.72 + g2 * 0.35);
         return [clampByte(lerp(245, 255, hot)), clampByte(lerp(132, 245, hot)), clampByte(lerp(24, 178, Math.pow(hot, 1.5)))];
     }
-    if (bodyId === "mercury") {
-        const base = fbm3(nx * 3.5, ny * 3.5, nz * 3.5, 307, 4);
-        const crater = Math.abs(fbm3(nx * 9.5, ny * 9.5, nz * 9.5, 311, 3) - 0.5) * 2;
-        const v = Math.max(0.18, Math.min(1, base * 0.78 + crater * 0.32));
-        return [clampByte(v * 218), clampByte(v * 216), clampByte(v * 220)];
+    if (bodyId === "mercury" || bodyId === "moon") {
+        const maria = fbm3(nx * 2.4, ny * 2.4, nz * 2.4, bodyId === "moon" ? 331 : 307, 4);
+        const ridge = 1 - Math.abs(fbm3(nx * 9.8, ny * 9.8, nz * 9.8, 313, 3) - 0.5) * 2;
+        const fine = fbm3(nx * 19, ny * 19, nz * 19, 317, 2);
+        const basin = maria < 0.46 ? 0.58 + (maria / 0.46) * 0.22 : 0.78 + (maria - 0.46) * 0.42;
+        const v = Math.max(0.24, Math.min(1, basin * 0.72 + ridge * 0.24 + fine * 0.14));
+        return [clampByte(v * 224), clampByte(v * 222), clampByte(v * 226)];
     }
     if (bodyId === "venus") {
-        const swirl = fbm3(nx * 2.8 + ny * 1.1, ny * 5.5, nz * 2.8, 409, 4);
-        const band = 0.5 + 0.5 * Math.sin(ny * 7 + swirl * 4.2);
-        const t = Math.min(1, band * 0.6 + swirl * 0.5);
-        return [clampByte(lerp(148, 240, t)), clampByte(lerp(86, 188, t)), clampByte(lerp(34, 102, t))];
+        const warp = fbm3(nx * 3.1, ny * 4.8, nz * 3.1, 401, 3) * 1.4;
+        const chevron = fbm3(nx * 2.6 + warp, ny * 7.2, nz * 2.6 - warp, 409, 4);
+        const band = 0.5 + 0.5 * Math.sin(ny * 10 + chevron * 4.6);
+        const t = Math.min(1, band * 0.55 + chevron * 0.52);
+        return [clampByte(lerp(168, 246, t)), clampByte(lerp(106, 204, t)), clampByte(lerp(46, 124, t))];
     }
     if (bodyId === "earth") {
-        const cont = fbm3(nx * 2.6, ny * 2.6, nz * 2.6, 503, 5);
-        const cloud = fbm3(nx * 4.4 + 1.8, ny * 6.2, nz * 4.4, 521, 4);
-        const ice = Math.abs(ny) + (cont - 0.5) * 0.14 > 0.86;
-        let [r, g, b] = [24, 104, 216];
+        const warp = fbm3(nx * 2.2, ny * 2.2, nz * 2.2, 499, 3) * 0.55;
+        const cont = fbm3(nx * 2.8 + warp, ny * 2.8, nz * 2.8 - warp, 503, 5);
+        const cloud = fbm3(nx * 5.2 + warp * 2.4, ny * 7.4, nz * 5.2, 521, 4);
+        const ice = Math.abs(ny) + (cont - 0.5) * 0.18 > 0.85;
+        let [r, g, b] = [12, 58, 138];
         if (ice) {
-            [r, g, b] = [240, 247, 255];
-        } else if (cont > 0.505) {
-            const elev = Math.min(1, (cont - 0.505) * 4.5);
-            const arid = Math.max(0, 1 - Math.abs(ny) * 2.2) * (0.45 + 0.55 * elev);
-            [r, g, b] = [lerp(52, 188, arid), lerp(148, 166, arid * 0.8), lerp(64, 96, elev)];
+            [r, g, b] = [238, 246, 255];
+        } else if (cont > 0.495) {
+            const elev = Math.min(1, (cont - 0.495) * 4.8);
+            const arid = Math.max(0, 1 - Math.abs(ny) * 2.15) * (0.42 + 0.58 * elev);
+            [r, g, b] = [lerp(36, 184, arid), lerp(118, 152, arid * 0.78), lerp(48, 88, elev)];
+            if (elev > 0.76) [r, g, b] = [lerp(r, 224, elev - 0.7), lerp(g, 224, elev - 0.7), lerp(b, 228, elev - 0.7)];
         } else {
-            const shelf = Math.max(0, (cont - 0.36) * 5);
-            [r, g, b] = [lerp(18, 48, shelf), lerp(68, 168, shelf), lerp(188, 238, shelf)];
+            const shelf = Math.max(0, (cont - 0.34) * 5.2);
+            [r, g, b] = [lerp(9, 32, shelf), lerp(42, 138, shelf), lerp(116, 212, shelf)];
         }
-        const cA = cloud > 0.57 ? Math.min(0.85, (cloud - 0.57) * 3.1) : 0;
-        return [clampByte(lerp(r, 252, cA)), clampByte(lerp(g, 254, cA)), clampByte(lerp(b, 255, cA))];
+        const cA = cloud > 0.55 ? Math.min(0.9, (cloud - 0.55) * 3.4) : 0;
+        return [clampByte(lerp(r, 250, cA)), clampByte(lerp(g, 252, cA)), clampByte(lerp(b, 255, cA))];
     }
     if (bodyId === "mars") {
-        const dust = fbm3(nx * 3.2, ny * 3.2, nz * 3.2, 613, 4);
-        const basalt = fbm3(nx * 5.8, ny * 5.8, nz * 5.8, 631, 3);
-        const ice = Math.abs(ny) > 0.91;
-        if (ice) return [242, 232, 224];
-        const tone = Math.min(1, dust * 0.72 + basalt * 0.28);
-        return [clampByte(lerp(132, 226, tone)), clampByte(lerp(54, 128, tone)), clampByte(lerp(28, 76, tone))];
+        const warp = fbm3(nx * 2.8, ny * 2.8, nz * 2.8, 607, 3);
+        const dust = fbm3(nx * 3.8 + warp * 0.4, ny * 3.8, nz * 3.8, 613, 4);
+        const basalt = fbm3(nx * 6.5, ny * 6.5, nz * 6.5, 631, 3);
+        if (Math.abs(ny) + (basalt - 0.5) * 0.08 > 0.9) return [242, 232, 226];
+        const tone = Math.max(0, Math.min(1, dust * 0.68 + basalt * 0.38 - 0.05));
+        return [clampByte(lerp(96, 224, tone)), clampByte(lerp(36, 114, tone)), clampByte(lerp(20, 62, tone))];
     }
     if (bodyId === "jupiter") {
-        const eddy = fbm3(nx * 4.8, ny * 7.2, nz * 4.8, 709, 4);
-        const lat = ny + (eddy - 0.5) * 0.14;
-        const stripe = 0.5 + 0.5 * Math.sin(lat * 20 + eddy * 2.6);
-        const spotDist = Math.hypot((nx - 0.72) * 1.4, (ny + 0.28) * 3.1, nz - 0.62);
-        if (spotDist < 0.24) {
-            const core = 1 - spotDist / 0.24;
-            return [clampByte(lerp(205, 226, core)), clampByte(lerp(116, 78, core)), clampByte(lerp(72, 54, core))];
+        const turb = fbm3(nx * 5.8, ny * 9.5, nz * 5.8, 709, 4);
+        const eddy = fbm3(nx * 11, ny * 14, nz * 11, 719, 3);
+        const lat = ny + (turb - 0.5) * 0.14 + (eddy - 0.5) * 0.05;
+        const zone = Math.sin(lat * 26 + turb * 3.2);
+        const belt = 0.5 + 0.5 * Math.cos(lat * 13);
+        const spotDist = Math.hypot((nx - 0.72) * 1.4, (ny + 0.28) * 3.0, nz - 0.62);
+        if (spotDist < 0.23) {
+            const core = 1 - spotDist / 0.23;
+            return [clampByte(lerp(214, 218, core)), clampByte(lerp(132, 74, core)), clampByte(lerp(88, 52, core))];
         }
-        return [clampByte(lerp(156, 240, stripe)), clampByte(lerp(96, 224, stripe)), clampByte(lerp(58, 198, stripe))];
+        const w = Math.max(0, Math.min(1, 0.52 + zone * 0.34 + (belt - 0.5) * 0.28));
+        return [clampByte(lerp(132, 245, w)), clampByte(lerp(76, 228, w)), clampByte(lerp(46, 198, w))];
     }
     if (bodyId === "saturn") {
-        const wisp = fbm3(nx * 3.4, ny * 6.5, nz * 3.4, 809, 3);
-        const band = 0.5 + 0.5 * Math.sin((ny + (wisp - 0.5) * 0.06) * 18);
-        return [clampByte(lerp(182, 238, band)), clampByte(lerp(154, 218, band)), clampByte(lerp(106, 174, band))];
+        const wisp = fbm3(nx * 4.2, ny * 8.0, nz * 4.2, 809, 3);
+        const band = 0.5 + 0.5 * Math.sin((ny + (wisp - 0.5) * 0.05) * 22);
+        if (Math.abs(ny) > 0.85) return [152, 168, 174];
+        return [clampByte(lerp(176, 244, band)), clampByte(lerp(144, 224, band)), clampByte(lerp(96, 178, band))];
     }
     if (bodyId === "uranus") {
-        const haze = fbm3(nx * 3.1, ny * 5.2, nz * 3.1, 907, 3);
-        const band = 0.5 + 0.5 * Math.cos(ny * 5.5 + haze * 0.9);
-        return [clampByte(lerp(82, 168, band)), clampByte(lerp(194, 238, band)), clampByte(lerp(218, 248, band))];
+        const haze = fbm3(nx * 3.6, ny * 6.0, nz * 3.6, 907, 3);
+        const band = 0.5 + 0.5 * Math.cos(ny * 7.5 + haze * 1.1);
+        return [clampByte(lerp(94, 178, band)), clampByte(lerp(204, 242, band)), clampByte(lerp(218, 246, band))];
     }
-    const swirl = fbm3(nx * 3.8, ny * 6.4, nz * 3.8, 991, 4);
-    const streak = swirl > 0.63 ? Math.min(1, (swirl - 0.63) * 3.5) : 0;
-    const base = 0.5 + 0.5 * Math.sin(ny * 8 + swirl * 2.1);
+    const swirl = fbm3(nx * 4.5, ny * 7.8, nz * 4.5, 991, 4);
+    const streak = swirl > 0.61 ? Math.min(1, (swirl - 0.61) * 3.8) : 0;
+    const base = 0.5 + 0.5 * Math.sin(ny * 10 + swirl * 2.5);
     return [
-        clampByte(lerp(lerp(24, 54, base), 192, streak)),
-        clampByte(lerp(lerp(88, 152, base), 228, streak)),
-        clampByte(lerp(lerp(196, 248, base), 255, streak))
+        clampByte(lerp(lerp(20, 48, base), 205, streak)),
+        clampByte(lerp(lerp(72, 138, base), 234, streak)),
+        clampByte(lerp(lerp(184, 244, base), 255, streak))
     ];
 }
 
@@ -238,9 +247,7 @@ export function drawPlanetThumbnail(canvas, bodyDef) {
         if (octx && typeof octx.createImageData === "function") {
             const img = octx.createImageData(size, size);
             const rPx = size * 0.5;
-            const lx = -0.52;
-            const ly = -0.36;
-            const lz = 0.77;
+            const [lx, ly, lz] = [-0.52, -0.36, 0.77];
             for (let py = 0; py < size; py += 1) {
                 const dy = (py + 0.5 - rPx) / rPx;
                 for (let px = 0; px < size; px += 1) {
@@ -253,8 +260,9 @@ export function drawPlanetThumbnail(canvas, bodyDef) {
                     const tx = Math.min(tex.width - 1, Math.floor(u * tex.width));
                     const ty = Math.min(tex.height - 1, Math.floor(v * tex.height));
                     const ti = (ty * tex.width + tx) * 4;
-                    const ndotl = Math.max(0.18, dx * lx + dy * ly + dz * lz);
-                    const fresnel = bodyDef.hasAtmosphere ? Math.pow(1 - dz, 2.5) * 0.4 : 0;
+                    const rawLit = Math.max(0, Math.min(1, (dx * lx + dy * ly + dz * lz + 0.22) / 1.12));
+                    const ndotl = 0.16 + 0.94 * smoothstep(rawLit);
+                    const fresnel = bodyDef.hasAtmosphere ? Math.pow(1 - dz, 2.6) * 0.45 * (0.3 + 0.7 * rawLit) : 0;
                     const di = (py * size + px) * 4;
                     img.data[di] = clampByte(tex.data[ti] * ndotl + fresnel * 95);
                     img.data[di + 1] = clampByte(tex.data[ti + 1] * ndotl + fresnel * 165);
@@ -271,14 +279,12 @@ export function drawPlanetThumbnail(canvas, bodyDef) {
         ctx.fillStyle = bodyDef.color || "#93c5fd";
         ctx.fill();
     }
-
-    if (bodyDef.hasRing) {
-        drawSaturnRingArc(ctx, cx, cy, ringR * 1.44, ringR * 0.38, -0.42, 0, Math.PI);
-    }
+    if (bodyDef.hasRing) drawSaturnRingArc(ctx, cx, cy, ringR * 1.44, ringR * 0.38, -0.42, 0, Math.PI);
 }
 
 export function prewarmSolarTextures() {
     generatePlanetTextureData(SUN_DEF.id, 256, 128);
+    generatePlanetTextureData("moon", 128, 64);
     for (const p of PLANET_CATALOG) {
         generatePlanetTextureData(p.id, 256, 128);
         if (p.hasRing) generateRingTextureData(p.id, 256);
