@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="/">
-<meta name="description" content="Interactive data visualization and charting studio on Meteor - Create Word Cloud, Bar Chart, and Line Chart from your data.">
+<meta name="description" content="Interactive data visualization and charting studio on Meteor - Create Word Cloud, Bar Chart, Line Chart, and Pie Chart from your data.">
 <title>Plot - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
 <style>
@@ -36,6 +36,7 @@ body { background: var(--bg-main); }
 .plot-badge-text { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
 .plot-badge-bar { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 .plot-badge-line { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+.plot-badge-pie { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
 .plot-card-desc { font-size: 13px; color: #94a3b8; line-height: 1.4; }
 .plot-card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 .plot-tag { font-size: 11px; color: #64748b; background: rgba(255, 255, 255, 0.03); border: 1px solid #1e293b; padding: 2px 8px; border-radius: 4px; }
@@ -90,6 +91,18 @@ body { background: var(--bg-main); }
                 <span class="plot-tag">Line Chart</span>
                 <span class="plot-tag">Tren Kontinu</span>
                 <span class="plot-tag">Time Series</span>
+            </div>
+        </a>
+        <a href="/plot/pie" class="plot-card">
+            <div class="plot-card-header">
+                <div class="plot-card-title">Pie Chart <span class="arrow">→</span></div>
+                <span class="plot-badge plot-badge-pie">Proporsi &amp; Komposisi</span>
+            </div>
+            <p class="plot-card-desc">Diagram lingkaran, donut konsentris multi-seri, dan polar area dengan pelabelan cerdas anti-tumpuk.</p>
+            <div class="plot-card-tags">
+                <span class="plot-tag">Pie &amp; Donut</span>
+                <span class="plot-tag">Multi-Series Ring</span>
+                <span class="plot-tag">Polar Area</span>
             </div>
         </a>
     </div>

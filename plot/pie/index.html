@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Pie Chart Studio on Meteor - Diagram Pie, Donut ber-KPI, Multi-Donut konsentris, Polar Area, dan ekspor SVG vektor.">
+<title>Pie Chart Studio - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="stylesheet" href="./styles/piechart.css">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600 700;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: 'Google Sans', sans-serif; color: #ffffff; }
+body { background: #07080c; }
+</style>
+</head>
+<body>
+<div id="pie-app-root" class="pie-page-wrapper">
+    <header class="pie-nav-header">
+        <div class="pie-title-area">
+            <h1 class="pie-header-title">Pie Chart Studio</h1>
+            <span class="pie-header-badge">Proporsi &amp; Komposisi</span>
+        </div>
+        <a href="/plot" class="pie-back-btn" aria-label="Kembali ke Plot"><img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36"></a>
+    </header>
+
+    <div class="pie-main-grid">
+        <aside class="pie-controls-col">
+            <div class="pie-card">
+                <div class="pie-card-title">
+                    <span>Data Kategori &amp; Seri</span>
+                    <span style="font-size:10px;color:#64748b;font-family:monospace;">CSV / TSV</span>
+                </div>
+                <div class="pie-preset-group">
+                    <button type="button" id="pie-preset-budget" class="pie-btn-preset">Pangsa &amp; Anggaran</button>
+                    <button type="button" id="pie-preset-market" class="pie-btn-preset">Long-Tail (&gt;3%)</button>
+                    <button type="button" id="pie-preset-cohort" class="pie-btn-preset">Multi-Seri Konsentris</button>
+                    <button type="button" id="pie-preset-radar" class="pie-btn-preset">Indeks Polar 8 Sektor</button>
+                </div>
+                <textarea id="pie-input-text" class="pie-textarea" placeholder="Format: Kategori, Nilai (atau Multi-Seri)"></textarea>
+            </div>
+
+            <div class="pie-card">
+                <div class="pie-card-title">Geometri Radial &amp; Urutan</div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row"><label for="pie-opt-mode">Jenis Chart</label></div>
+                    <select id="pie-opt-mode" class="pie-select-input">
+                        <option value="donut" selected>Donut Chart (Cincin + KPI)</option>
+                        <option value="pie">Pie Chart Klasik</option>
+                        <option value="multi">Multi-Donut Konsentris</option>
+                        <option value="polar">Polar Area (Radius Proporsional)</option>
+                    </select>
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row"><label for="pie-opt-sort">Urutan Irisan (Jam 12)</label></div>
+                    <select id="pie-opt-sort" class="pie-select-input">
+                        <option value="desc" selected>Terbesar ke Terkecil</option>
+                        <option value="asc">Terkecil ke Terbesar</option>
+                        <option value="input">Sesuai Urutan Input</option>
+                    </select>
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row">
+                        <label for="pie-opt-cutout">Lubang Dalam Donut</label>
+                        <span id="pie-opt-cutout-val" class="pie-val-badge">54%</span>
+                    </div>
+                    <input type="range" id="pie-opt-cutout" class="pie-range-input" min="0" max="78" step="2" value="54">
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row">
+                        <label for="pie-opt-gap">Celah Pemisah Irisan</label>
+                        <span id="pie-opt-gap-val" class="pie-val-badge">2px</span>
+                    </div>
+                    <input type="range" id="pie-opt-gap" class="pie-range-input" min="0" max="6" step="0.5" value="2">
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row">
+                        <label for="pie-opt-angle">Sudut Mulai</label>
+                        <span id="pie-opt-angle-val" class="pie-val-badge">-90 deg</span>
+                    </div>
+                    <input type="range" id="pie-opt-angle" class="pie-range-input" min="-180" max="180" step="15" value="-90">
+                </div>
+                <label class="pie-toggle-row">
+                    <input type="checkbox" id="pie-opt-group-small">
+                    <span>Gabungkan Irisan Kecil (&lt; 3% Lainnya)</span>
+                </label>
+            </div>
+
+            <div class="pie-card">
+                <div class="pie-card-title">Warna, Label &amp; Interaksi</div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row"><label for="pie-opt-palette">Palet Warna</label></div>
+                    <select id="pie-opt-palette" class="pie-select-input">
+                        <option value="okabe_ito" selected>Okabe-Ito (Scientific / Colorblind)</option>
+                        <option value="tripal">Tripal Categorical (Kontras Tinggi)</option>
+                        <option value="ocean">Ocean Cyan &amp; Indigo</option>
+                        <option value="aurora">Aurora Emerald</option>
+                        <option value="ember">Warm Ember</option>
+                        <option value="monochrome">Monochrome Silver</option>
+                    </select>
+                </div>
+                <label class="pie-toggle-row">
+                    <input type="checkbox" id="pie-opt-contrast-order" checked>
+                    <span>Permutasi Warna Kontras (Tripal)</span>
+                </label>
+                <div class="pie-control-group">
+                    <div class="pie-label-row"><label for="pie-opt-labels">Posisi Label</label></div>
+                    <select id="pie-opt-labels" class="pie-select-input">
+                        <option value="auto" selected>Otomatis (Dalam / Leader Line)</option>
+                        <option value="inside">Di Dalam Irisan</option>
+                        <option value="outside">Di Luar (Leader Line)</option>
+                        <option value="none">Sembunyikan Label</option>
+                    </select>
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row"><label for="pie-opt-label-format">Format Teks Label</label></div>
+                    <select id="pie-opt-label-format" class="pie-select-input">
+                        <option value="pct" selected>Persentase (%)</option>
+                        <option value="name_pct">Kategori + Persentase</option>
+                        <option value="value">Nilai Asli</option>
+                        <option value="full">Kategori, Nilai &amp; %</option>
+                    </select>
+                </div>
+                <div class="pie-control-group">
+                    <div class="pie-label-row">
+                        <label for="pie-opt-threshold">Ambang Label Minimum</label>
+                        <span id="pie-opt-threshold-val" class="pie-val-badge">4%</span>
+                    </div>
+                    <input type="range" id="pie-opt-threshold" class="pie-range-input" min="0" max="12" step="1" value="4">
+                </div>
+                <label class="pie-toggle-row">
+                    <input type="checkbox" id="pie-opt-expand" checked>
+                    <span>Mekar Irisan Saat Hover (Expand)</span>
+                </label>
+                <label class="pie-toggle-row">
+                    <input type="checkbox" id="pie-opt-center-kpi" checked>
+                    <span>Ringkasan KPI di Tengah Donut</span>
+                </label>
+            </div>
+
+            <div class="pie-card">
+                <div class="pie-card-title">Ekspor &amp; Bagikan</div>
+                <div class="pie-actions-row">
+                    <button type="button" id="pie-btn-export-png" class="pie-btn-action pie-btn-primary">PNG</button>
+                    <button type="button" id="pie-btn-export-svg" class="pie-btn-action pie-btn-primary">SVG Vektor</button>
+                    <button type="button" id="pie-btn-export-csv" class="pie-btn-action pie-btn-secondary">Unduh CSV</button>
+                    <button type="button" id="pie-btn-copy-svg" class="pie-btn-action pie-btn-secondary">Salin SVG</button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="pie-viewport-col">
+            <div class="pie-metrics-banner">
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Total Aktif</span>
+                    <span id="pie-stat-total" class="pie-metric-num">0</span>
+                </div>
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Irisan Aktif</span>
+                    <span id="pie-stat-slices" class="pie-metric-num">0</span>
+                </div>
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Dominan</span>
+                    <span id="pie-stat-dominant" class="pie-metric-num">-</span>
+                </div>
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Terkecil</span>
+                    <span id="pie-stat-smallest" class="pie-metric-num">-</span>
+                </div>
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Top-1 Share</span>
+                    <span id="pie-stat-topshare" class="pie-metric-num">-</span>
+                </div>
+                <div class="pie-metric-tile">
+                    <span class="pie-metric-label">Indeks HHI</span>
+                    <span id="pie-stat-hhi" class="pie-metric-num">-</span>
+                </div>
+            </div>
+
+            <div id="pie-legend-bar" class="pie-legend-bar" aria-label="Legenda interaktif irisan data"></div>
+
+            <div class="pie-canvas-container">
+                <canvas id="pie-canvas"></canvas>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script type="module" src="./src/plot/piechart/piechart-app.js"></script>
+</body>
+</html>

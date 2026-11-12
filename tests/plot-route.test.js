@@ -19,6 +19,7 @@ describe("Plot Route & Navigation", () => {
         expect(plotHtml).toContain("Word Cloud");
         expect(plotHtml).toContain("Bar Chart");
         expect(plotHtml).toContain("Line Chart");
+        expect(plotHtml).toContain("Pie Chart");
 
         const plotDirHtml = readFileSync("plot/index.html", "utf8");
         expect(plotDirHtml).toContain('<base href="/">');
