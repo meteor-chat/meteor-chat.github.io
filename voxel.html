@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<meta name="description" content="Voxel World Engine 3D Pure WebGL 2.0: Greedy Meshing, Ambient Occlusion, Flood-Fill Lighting, 3D DDA Raycasting, dan FBO Bloom di Meteor.">
+<title>Voxel World 3D - Meteor</title>
+<link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="stylesheet" href="./styles/voxel.css">
+<style>
+@font-face {
+    font-family: "Google Sans";
+    font-style: normal;
+    font-weight: 400 600 700;
+    font-display: swap;
+    src: url("./fonts/google-sans-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: "Roboto Mono";
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+body, a { font-family: "Google Sans", sans-serif; color: #ffffff; }
+body { background: #09131f; }
+</style>
+</head>
+<body>
+<main id="voxel-app-root" class="voxel-page">
+    <canvas class="voxel-canvas" data-voxel-gl aria-label="Dunia Voxel 3D WebGL 2.0"></canvas>
+    <div class="voxel-crosshair" aria-hidden="true"></div>
+    <div class="voxel-fallback" data-voxel-fallback hidden>Browser atau perangkat Anda tidak mendukung WebGL 2.0 untuk merender Voxel World Engine.</div>
+
+    <header class="voxel-hud-top">
+        <div class="voxel-brand">
+            <h1 class="voxel-title">VOXEL WORLD</h1>
+            <div class="voxel-stats">
+                <span class="voxel-stat-pill" data-tel-fps>60 FPS</span>
+                <span class="voxel-stat-pill" data-tel-coords>8, 52, 8</span>
+                <span class="voxel-stat-pill" data-tel-chunks>9 cols</span>
+                <span class="voxel-stat-pill" data-tel-tris>0 tris</span>
+            </div>
+        </div>
+        <div class="voxel-actions">
+            <button type="button" class="voxel-btn" data-voxel-lock>FPS Lock</button>
+            <button type="button" class="voxel-btn" data-voxel-fly aria-pressed="true">Mode: Fly</button>
+            <button type="button" class="voxel-btn" data-voxel-action aria-pressed="false">Click: Break</button>
+            <button type="button" class="voxel-btn" data-voxel-time="0.28" aria-pressed="true">Day</button>
+            <button type="button" class="voxel-btn" data-voxel-time="0.62" aria-pressed="false">Sunset</button>
+            <button type="button" class="voxel-btn" data-voxel-time="0.88" aria-pressed="false">Night</button>
+            <button type="button" class="voxel-btn" data-voxel-cycle aria-pressed="false">Auto</button>
+            <a href="/lab" class="voxel-back-btn" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="34" height="34"></a>
+        </div>
+    </header>
+
+    <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Pilihan Blok"></nav>
+</main>
+<script type="module">
+import { createVoxelApp } from "./src/lab/voxel/voxel-controller.js";
+const root = document.getElementById("voxel-app-root");
+if (root) createVoxelApp(root);
+</script>
+</body>
+</html>

@@ -25,6 +25,8 @@ export default [
                 localStorage: "readonly",
                 navigator: "readonly",
                 Blob: "readonly",
+                Worker: "readonly",
+                self: "readonly",
                 marked: "readonly",
                 DOMPurify: "readonly",
                 katex: "readonly",
