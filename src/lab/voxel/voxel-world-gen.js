@@ -1,5 +1,5 @@
 import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SEA_LEVEL, chunkIndex } from "./voxel-blocks.js";
-import { fbm2, fbm3, mulberry32, ridged2 } from "./voxel-noise.js";
+import { fbm2, fbm3, mulberry32, noise3, ridged2 } from "./voxel-noise.js";
 
 export function sampleColumnMeta(wx, wz, seed) {
     const warpX = fbm2(wx * 0.008, wz * 0.008, 2, seed + 11) * 14;
@@ -87,14 +87,14 @@ export function generateColumn(cx, cz, seed = 2026) {
                     if (meta.biome === "desert" || surf <= SEA_LEVEL + 1) id = BLOCK.SAND;
                     else id = BLOCK.DIRT;
                 } else {
-                    const ore = fbm3(wx * 0.14, y * 0.14, wz * 0.14, 2, seed + 613);
-                    if (y < 26 && ore > 0.77) id = BLOCK.GOLD_ORE;
-                    else if (ore < 0.25) id = BLOCK.COAL_ORE;
+                    const ore = noise3(wx * 0.16, y * 0.16, wz * 0.16, seed + 613);
+                    if (y < 26 && ore > 0.78) id = BLOCK.GOLD_ORE;
+                    else if (ore < 0.22) id = BLOCK.COAL_ORE;
                 }
 
                 if (y > 2 && y < surf - 2) {
-                    const caveA = fbm3(wx * 0.045, y * 0.055, wz * 0.045, 3, seed + 881);
-                    const caveB = fbm3(wx * 0.07 + 30, y * 0.07, wz * 0.07 - 30, 2, seed + 997);
+                    const caveA = fbm3(wx * 0.045, y * 0.055, wz * 0.045, 2, seed + 881);
+                    const caveB = noise3(wx * 0.07 + 30, y * 0.07, wz * 0.07 - 30, seed + 997);
                     const depthBias = y < 18 ? 0.04 : 0;
                     if (caveA > 0.67 - depthBias || Math.abs(caveB - 0.5) < 0.045) {
                         id = y <= 10 ? BLOCK.LAVA : BLOCK.AIR;

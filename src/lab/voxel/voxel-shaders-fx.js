@@ -70,7 +70,7 @@ void main() {
         hdr = mix(hdr * vec3(0.42, 0.78, 0.96), vec3(0.05, 0.24, 0.38), clamp(vig * 0.95, 0.0, 0.65));
     }
     vec3 ldr = acesTone(hdr);
-    ldr = pow(ldr, vec3(1.0 / 1.08));
+    ldr = pow(max(ldr, vec3(1e-4)), vec3(1.0 / 1.08));
     fragColor = vec4(ldr, 1.0);
 }`;
 

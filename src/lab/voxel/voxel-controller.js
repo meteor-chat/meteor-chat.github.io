@@ -26,7 +26,7 @@ export function createVoxelApp(root) {
     const world = createVoxelWorld({ seed, viewRadius: 3 });
 
     const spawnY = getSpawnHeight(8, 8, seed);
-    world.warmAreaSync(8, 8, 1);
+    world.warmAreaSync(8, 8, 0);
 
     const state = {
         timeSec: 0,

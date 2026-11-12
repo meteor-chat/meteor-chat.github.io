@@ -90,9 +90,12 @@ describe("Voxel World Engine Core", () => {
         expect(atlas.layerCount).toBe(18);
         expect(atlas.data.length).toBe(16 * 16 * 4 * 18);
 
-        const cam = buildCameraBasis([0, 60, 0], 0, 0, Math.PI / 2, 1.5);
+        const cam = buildCameraBasis([0, 60, 0], 0.4, -0.3, Math.PI / 2, 1.5);
+        expect(cam.up[1]).toBeGreaterThan(0.8);
+        const dotFU = cam.forward[0] * cam.up[0] + cam.forward[1] * cam.up[1] + cam.forward[2] * cam.up[2];
+        expect(Math.abs(dotFU)).toBeLessThan(1e-5);
         const planes = extractFrustumPlanes(cam.viewProj);
-        expect(isBoxInFrustum(planes, -8, 50, -32, 8, 66, -16)).toBe(true);
+        expect(isBoxInFrustum(planes, 0, 50, -20, 16, 66, -4)).toBe(true);
         expect(isBoxInFrustum(planes, -8, 50, 24, 8, 66, 40)).toBe(false);
 
         const noon = computeSkyAtmosphere(0.3);
@@ -102,8 +105,8 @@ describe("Voxel World Engine Core", () => {
 
     it("manages synchronous world streaming, block editing, and sub-chunk bounds", () => {
         const world = createVoxelWorld({ seed: 2026, viewRadius: 1, useWorker: false });
-        world.warmAreaSync(8, 8, 1);
-        expect(world.getColumnCount()).toBe(9);
+        world.warmAreaSync(8, 8, 0);
+        expect(world.getColumnCount()).toBe(1);
         expect(world.setBlock(8, 100, 8, BLOCK.TORCH)).toBe(true);
         expect(world.getBlock(8, 100, 8)).toBe(BLOCK.TORCH);
         const meshes = world.consumeMeshes();

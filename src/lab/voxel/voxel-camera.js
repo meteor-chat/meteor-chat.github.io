@@ -32,7 +32,7 @@ export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = 0.1, fa
     rz /= rLen;
 
     const ux = -fy * rz;
-    const uy = fz * rx - fx * rz;
+    const uy = rz * fx - rx * fz;
     const uz = fy * rx;
     const uLen = Math.hypot(ux, uy, uz) || 1;
     const up = [ux / uLen, uy / uLen, uz / uLen];

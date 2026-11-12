@@ -108,10 +108,10 @@ void main() {
         float nz = sin(vWorldPos.z * 2.1 + uTime * 2.3) * 0.14;
         N = normalize(N + vec3(nx, 0.0, nz));
         vec3 R = reflect(-V, N);
-        float fresnel = mix(0.14, 0.9, pow(1.0 - max(dot(N, V), 0.0), 4.0));
+        float fresnel = mix(0.14, 0.9, pow(max(1e-4, 1.0 - max(dot(N, V), 0.0)), 4.0));
         vec3 reflCol = mix(uHorizonColor, uSkyColor, clamp(R.y * 1.5, 0.0, 1.0));
         vec3 H = normalize(uSunDir + V);
-        float spec = pow(max(dot(N, H), 0.0), 72.0) * max(0.0, uSunDir.y) * uDayIntensity;
+        float spec = pow(max(1e-4, max(dot(N, H), 0.0)), 72.0) * max(0.0, uSunDir.y) * uDayIntensity;
         float waterLight = clamp(0.24 + vLight.x * uDayIntensity * 0.78 + vLight.y * 0.8, 0.08, 1.15);
         col = mix(col * waterLight, reflCol, fresnel * 0.65) + uSunTint * spec * 1.35;
         alpha = clamp(0.68 + fresnel * 0.26, 0.65, 0.95);
@@ -126,14 +126,14 @@ void main() {
         vec3 sunTerm = uSunTint * skyFactor * (0.28 + 0.85 * sunDiff);
         vec3 ambTerm = mix(vec3(0.06, 0.07, 0.11), uSkyColor * 0.42, hemi) * (0.2 + 0.8 * vLight.x * uDayIntensity);
         float flicker = 0.94 + 0.06 * sin(uTime * 7.1 + vWorldPos.x + vWorldPos.z);
-        vec3 blkTerm = vec3(1.12, 0.58, 0.22) * pow(vLight.y, 1.25) * flicker;
+        vec3 blkTerm = vec3(1.12, 0.58, 0.22) * pow(max(1e-4, vLight.y), 1.25) * flicker;
         vec3 totalLight = (sunTerm + ambTerm + blkTerm) * vAo;
         col *= totalLight;
         if (vTexLayer == 11u && tex.r > 0.75 && tex.g > 0.65) {
             col += tex.rgb * 1.35;
         }
         if ((vFlags & 4u) != 0u) {
-            float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+            float fresnel = pow(max(1e-4, 1.0 - max(dot(N, V), 0.0)), 3.0);
             col += uSkyColor * fresnel * 0.35;
             alpha = max(alpha, 0.34);
         }
@@ -183,10 +183,10 @@ void main() {
     vec2 ndc = vUv * 2.0 - 1.0;
     vec3 dir = normalize(uCamForward + uCamRight * (ndc.x * uTanFov.x) + uCamUp * (ndc.y * uTanFov.y));
     float up = clamp(dir.y, -0.2, 1.0);
-    vec3 sky = mix(uHorizonColor, uSkyColor, pow(clamp(up, 0.0, 1.0), 0.65));
+    vec3 sky = mix(uHorizonColor, uSkyColor, pow(max(1e-4, clamp(up, 0.0, 1.0)), 0.65));
 
     float sunDot = max(dot(dir, uSunDir), 0.0);
-    sky += uSunTint * pow(sunDot, 22.0) * 0.42;
+    sky += uSunTint * pow(max(1e-4, sunDot), 22.0) * 0.42;
     if (sunDot > 0.9982) {
         sky += uSunTint * 2.6;
     }
