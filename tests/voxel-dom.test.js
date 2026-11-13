@@ -52,10 +52,15 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         const files = [
             ...readdirSync("src/lab/voxel").map((f) => `src/lab/voxel/${f}`),
             "styles/voxel.css",
+            "styles/voxel-guard.css",
             "voxel.html",
             "voxel/index.html",
             "tests/voxel-engine.test.js",
-            "tests/voxel-dom.test.js"
+            "tests/voxel-dom.test.js",
+            "tests/voxel-guard.test.js",
+            "tests/voxel-perf.test.js",
+            "tests/voxel-lifecycle.test.js",
+            "tests/helpers/mock-gl.js"
         ];
         const slashLineRe = new RegExp("(^|\\s)/" + "/");
         const blockComRe = new RegExp("/" + "\\*");
@@ -69,6 +74,16 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             expect(raw, `${file} must contain zero HTML comments`).not.toMatch(htmlComRe);
             expect(raw, `${file} must contain zero em-dashes`).not.toContain("\u2014");
         }
+    });
+
+    it("ships hidden GPU telemetry, resolution telemetry, and a hidden context-lost banner in both entrypoints", () => {
+        for (const file of ["voxel.html", "voxel/index.html"]) {
+            const html = readFileSync(file, "utf8");
+            expect(html, file).toContain("data-tel-scale");
+            expect(html, file).toMatch(/data-tel-gpu hidden/);
+            expect(html, file).toMatch(/data-voxel-context-lost[^>]*hidden/);
+        }
+        expect(readFileSync("voxel.html", "utf8")).toBe(readFileSync("voxel/index.html", "utf8"));
     });
 
     it("renders 9 hotbar slots, toggles fly/action/time-of-day modes, and reveals fallback when WebGL 2 is absent", () => {

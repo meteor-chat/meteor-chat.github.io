@@ -51,8 +51,8 @@ self.onmessage = (e) => {
     }
 
     if (msg.type === "mesh") {
-        const { cx, cz, subMask, padBlocks, padLight } = msg;
+        const { cx, cz, subMask, padBlocks, padLight, seq, colId } = msg;
         const { subs, transfers } = buildMeshesFromPadded(padBlocks, padLight, subMask);
-        self.postMessage({ type: "meshed", cx, cz, subs }, transfers);
+        self.postMessage({ type: "meshed", cx, cz, subs, seq, colId }, transfers);
     }
 };

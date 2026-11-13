@@ -2,8 +2,13 @@ import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SUB_COUNT, SUB_SIZE, chunkIndex } from
 import { propagateColumnLight, updateWorldLight } from "./voxel-light.js";
 import { meshSubchunk } from "./voxel-mesher.js";
 import { generateColumn } from "./voxel-world-gen.js";
-
-const PAD_W = CHUNK_SIZE + 2;
+import {
+    acceptMeshMessages,
+    buildPaddedBuffers,
+    isBeyondRadius,
+    makeColumn,
+    orderDirtyColumns
+} from "./voxel-world-stream.js";
 
 export function createVoxelWorld(options = {}) {
     const seed = options.seed ?? 2026;
@@ -12,6 +17,8 @@ export function createVoxelWorld(options = {}) {
     const pendingGen = new Set();
     const dirtySubs = new Map();
     const meshResults = [];
+    const center = { cx: 0, cz: 0 };
+    let seqCounter = 0;
     let worker = null;
 
     if (typeof Worker !== "undefined" && options.useWorker !== false) {
@@ -38,16 +45,21 @@ export function createVoxelWorld(options = {}) {
         dirtySubs.set(k, (dirtySubs.get(k) || 0) | 255);
     };
 
+    const markColumnAndNeighborsDirty = (cx, cz) => {
+        markColumnAllDirty(cx, cz);
+        markColumnAllDirty(cx + 1, cz);
+        markColumnAllDirty(cx - 1, cz);
+        markColumnAllDirty(cx, cz + 1);
+        markColumnAllDirty(cx, cz - 1);
+    };
+
     function handleWorkerMsg(msg) {
         const k = colKey(msg.cx, msg.cz);
         if (msg.type === "generated") {
             pendingGen.delete(k);
-            columns.set(k, { cx: msg.cx, cz: msg.cz, blocks: msg.blocks, light: msg.light });
-            markColumnAllDirty(msg.cx, msg.cz);
-            markColumnAllDirty(msg.cx + 1, msg.cz);
-            markColumnAllDirty(msg.cx - 1, msg.cz);
-            markColumnAllDirty(msg.cx, msg.cz + 1);
-            markColumnAllDirty(msg.cx, msg.cz - 1);
+            if (isBeyondRadius(msg.cx, msg.cz, center, viewRadius + 2)) return;
+            columns.set(k, makeColumn(msg.cx, msg.cz, msg.blocks, msg.light));
+            markColumnAndNeighborsDirty(msg.cx, msg.cz);
         } else if (msg.type === "meshed") {
             meshResults.push(msg);
         }
@@ -79,25 +91,6 @@ export function createVoxelWorld(options = {}) {
         return col.light[chunkIndex(x - cx * CHUNK_SIZE, y, z - cz * CHUNK_SIZE)];
     };
 
-    const buildPaddedBuffers = (cx, cz) => {
-        const padBlocks = new Uint8Array(PAD_W * CHUNK_HEIGHT * PAD_W);
-        const padLight = new Uint8Array(PAD_W * CHUNK_HEIGHT * PAD_W);
-        const baseX = cx * CHUNK_SIZE;
-        const baseZ = cz * CHUNK_SIZE;
-        for (let y = 0; y < CHUNK_HEIGHT; y += 1) {
-            const yOff = y * PAD_W * PAD_W;
-            for (let dz = -1; dz <= CHUNK_SIZE; dz += 1) {
-                const zOff = (dz + 1) * PAD_W + yOff;
-                for (let dx = -1; dx <= CHUNK_SIZE; dx += 1) {
-                    const pIdx = dx + 1 + zOff;
-                    padBlocks[pIdx] = getBlock(baseX + dx, y, baseZ + dz);
-                    padLight[pIdx] = getLight(baseX + dx, y, baseZ + dz);
-                }
-            }
-        }
-        return { padBlocks, padLight };
-    };
-
     const meshColumnSync = (cx, cz, subMask) => {
         const col = getColumn(cx, cz);
         if (!col) return;
@@ -120,7 +113,8 @@ export function createVoxelWorld(options = {}) {
             if ((subMask & (1 << sy)) === 0) continue;
             subs.push({ sy, ...meshSubchunk(sy, gBlock, gLight) });
         }
-        meshResults.push({ cx, cz, subs });
+        seqCounter += 1;
+        meshResults.push({ cx, cz, subs, seq: seqCounter, colId: col.id });
     };
 
     const setBlock = (wx, wy, wz, id) => {
@@ -159,6 +153,8 @@ export function createVoxelWorld(options = {}) {
     const updateAround = (px, pz) => {
         const pcx = Math.floor(px / CHUNK_SIZE);
         const pcz = Math.floor(pz / CHUNK_SIZE);
+        center.cx = pcx;
+        center.cz = pcz;
         const needed = [];
         for (let dz = -viewRadius; dz <= viewRadius; dz += 1) {
             for (let dx = -viewRadius; dx <= viewRadius; dx += 1) {
@@ -180,12 +176,8 @@ export function createVoxelWorld(options = {}) {
             } else {
                 const col = generateColumn(cx, cz, seed);
                 propagateColumnLight(col.blocks, col.light);
-                columns.set(k, col);
-                markColumnAllDirty(cx, cz);
-                markColumnAllDirty(cx + 1, cz);
-                markColumnAllDirty(cx - 1, cz);
-                markColumnAllDirty(cx, cz + 1);
-                markColumnAllDirty(cx, cz - 1);
+                columns.set(k, makeColumn(cx, cz, col.blocks, col.light));
+                markColumnAndNeighborsDirty(cx, cz);
             }
         }
 
@@ -199,31 +191,37 @@ export function createVoxelWorld(options = {}) {
         }
 
         let meshBudget = worker ? 6 : 3;
-        for (const [k, subMask] of dirtySubs.entries()) {
+        for (const job of orderDirtyColumns(dirtySubs, pcx, pcz)) {
             if (meshBudget <= 0) break;
-            dirtySubs.delete(k);
-            const [cxStr, czStr] = k.split(",");
-            const cx = Number(cxStr);
-            const cz = Number(czStr);
+            dirtySubs.delete(job.key);
             if (worker) {
-                const { padBlocks, padLight } = buildPaddedBuffers(cx, cz);
+                const col = getColumn(job.cx, job.cz);
+                if (!col) continue;
+                const { padBlocks, padLight } = buildPaddedBuffers(getColumn, job.cx, job.cz);
+                seqCounter += 1;
                 worker.postMessage(
-                    { type: "mesh", cx, cz, subMask, padBlocks, padLight },
+                    { type: "mesh", cx: job.cx, cz: job.cz, subMask: job.mask, padBlocks, padLight, seq: seqCounter, colId: col.id },
                     [padBlocks.buffer, padLight.buffer]
                 );
             } else {
-                meshColumnSync(cx, cz, subMask);
+                meshColumnSync(job.cx, job.cz, job.mask);
             }
             meshBudget -= 1;
         }
         return unloaded;
     };
 
-    const consumeMeshes = () => meshResults.splice(0, meshResults.length);
+    const consumeMeshes = () => acceptMeshMessages(meshResults.splice(0, meshResults.length), getColumn);
+
+    const remeshAll = () => {
+        for (const col of columns.values()) markColumnAllDirty(col.cx, col.cz);
+    };
 
     const warmAreaSync = (px, pz, radius = 1) => {
         const pcx = Math.floor(px / CHUNK_SIZE);
         const pcz = Math.floor(pz / CHUNK_SIZE);
+        center.cx = pcx;
+        center.cz = pcz;
         for (let dz = -radius; dz <= radius; dz += 1) {
             for (let dx = -radius; dx <= radius; dx += 1) {
                 const cx = pcx + dx;
@@ -232,7 +230,7 @@ export function createVoxelWorld(options = {}) {
                 if (!columns.has(k)) {
                     const col = generateColumn(cx, cz, seed);
                     propagateColumnLight(col.blocks, col.light);
-                    columns.set(k, col);
+                    columns.set(k, makeColumn(cx, cz, col.blocks, col.light));
                 }
             }
         }
@@ -257,6 +255,7 @@ export function createVoxelWorld(options = {}) {
         setBlock,
         updateAround,
         consumeMeshes,
+        remeshAll,
         warmAreaSync,
         getColumnCount: () => columns.size,
         destroy

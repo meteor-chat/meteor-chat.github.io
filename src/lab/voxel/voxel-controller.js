@@ -1,5 +1,7 @@
 import { BLOCK, HOTBAR_ITEMS } from "./voxel-blocks.js";
 import { buildCameraBasis, stepPlayerPhysics } from "./voxel-camera.js";
+import { bindVisibility, createVoxelInput } from "./voxel-input.js";
+import { createQualityController } from "./voxel-quality.js";
 import { raycastVoxel } from "./voxel-raycast.js";
 import { createVoxelRenderer } from "./voxel-renderer.js";
 import { generateVoxelAtlasData } from "./voxel-textures.js";
@@ -22,8 +24,23 @@ export function createVoxelApp(root) {
 
     const seed = 2026;
     const atlas = generateVoxelAtlasData();
-    const renderer = createVoxelRenderer(canvas, atlas);
     const world = createVoxelWorld({ seed, viewRadius: 3 });
+    const fallbackBanner = root.querySelector("[data-voxel-fallback]");
+    const lostBanner = root.querySelector("[data-voxel-context-lost]");
+    const setLostBanner = (visible) => {
+        if (lostBanner) lostBanner.hidden = !visible;
+    };
+    const quality = createQualityController();
+    const renderer = createVoxelRenderer(canvas, atlas, {
+        onContextLost: () => setLostBanner(true),
+        onContextRestored: () => {
+            setLostBanner(false);
+            quality.reset();
+            world.remeshAll();
+        },
+        onContextError: () => setLostBanner(true)
+    });
+    if (!renderer && fallbackBanner) fallbackBanner.hidden = false;
 
     const spawnY = getSpawnHeight(8, 8, seed);
     world.warmAreaSync(8, 8, 0);
@@ -38,7 +55,8 @@ export function createVoxelApp(root) {
         fps: 60,
         frameCount: 0,
         fpsTimer: 0,
-        stats: { drawCalls: 0, culledSubs: 0, triCount: 0 }
+        renderScale: 1,
+        stats: { drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null }
     };
 
     const player = {
@@ -51,18 +69,17 @@ export function createVoxelApp(root) {
         submerged: false
     };
 
-    const keys = new Set();
-    let dragging = false;
-    let dragMoved = false;
-    let lastX = 0;
-    let lastY = 0;
     let rafId = 0;
+    let paused = false;
     let lastTime = performance.now();
 
-    const fallbackBanner = root.querySelector("[data-voxel-fallback]");
-    if (!renderer && fallbackBanner) fallbackBanner.hidden = false;
-
     const hud = createVoxelHud(root, atlas, state, player, canvas);
+
+    const uploadMeshes = (urgent) => {
+        for (const msg of world.consumeMeshes()) {
+            if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs, urgent);
+        }
+    };
 
     const performBlockAction = (place) => {
         const hit = raycastVoxel(getEyePos(player), getLookVector(player.yaw, player.pitch), 8.5, world.getBlock);
@@ -82,13 +99,13 @@ export function createVoxelApp(root) {
                 ty <= Math.floor(player.pos[1] + 1.65);
             if (!insidePlayer) world.setBlock(tx, ty, tz, item.id);
         }
-        for (const msg of world.consumeMeshes()) {
-            if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs);
-        }
+        uploadMeshes(true);
     };
 
+    const input = createVoxelInput({ canvas, player, state, hud, performBlockAction });
+
     const handleResize = () => {
-        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        const dpr = Math.min(2, window.devicePixelRatio || 1) * state.renderScale;
         const w = Math.max(2, Math.round(canvas.clientWidth * dpr));
         const h = Math.max(2, Math.round(canvas.clientHeight * dpr));
         if (canvas.width !== w || canvas.height !== h) {
@@ -96,98 +113,28 @@ export function createVoxelApp(root) {
             canvas.height = h;
         }
     };
-
-    const onKeyDown = (e) => {
-        keys.add(e.code);
-        if (e.code >= "Digit1" && e.code <= "Digit9") {
-            const idx = Number(e.code.replace("Digit", "")) - 1;
-            if (idx >= 0 && idx < HOTBAR_ITEMS.length) {
-                state.selectedSlot = idx;
-                hud.syncHud();
-            }
-        } else if (e.code === "KeyF") {
-            player.flyMode = !player.flyMode;
-            hud.syncHud();
-        }
-    };
-    const onKeyUp = (e) => keys.delete(e.code);
-
-    const onMouseDown = (e) => {
-        if (document.pointerLockElement === canvas) {
-            performBlockAction(e.button === 2 || e.shiftKey || state.actionMode === "place");
-            return;
-        }
-        if (e.button === 2) {
-            performBlockAction(true);
-            return;
-        }
-        dragging = true;
-        dragMoved = false;
-        lastX = e.clientX;
-        lastY = e.clientY;
-    };
-
-    const onMouseMove = (e) => {
-        if (document.pointerLockElement === canvas) {
-            player.yaw += e.movementX * 0.0024;
-            player.pitch = Math.max(-1.48, Math.min(1.48, player.pitch - e.movementY * 0.0024));
-            return;
-        }
-        if (!dragging) return;
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        if (Math.hypot(dx, dy) > 3) dragMoved = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        player.yaw += dx * 0.0045;
-        player.pitch = Math.max(-1.48, Math.min(1.48, player.pitch - dy * 0.0045));
-    };
-
-    const onMouseUp = (e) => {
-        if (dragging && !dragMoved && e.button === 0) {
-            performBlockAction(e.shiftKey || state.actionMode === "place");
-        }
-        dragging = false;
-    };
-
-    const onWheel = (e) => {
-        state.selectedSlot = (state.selectedSlot + (e.deltaY > 0 ? 1 : -1) + HOTBAR_ITEMS.length) % HOTBAR_ITEMS.length;
-        hud.syncHud();
-    };
-
-    const onContextMenu = (e) => e.preventDefault();
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
     window.addEventListener("resize", handleResize);
-    canvas.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    canvas.addEventListener("wheel", onWheel, { passive: true });
-    canvas.addEventListener("contextmenu", onContextMenu);
 
     handleResize();
     hud.syncHud();
-    for (const msg of world.consumeMeshes()) {
-        if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs);
-    }
+    uploadMeshes(false);
+    if (renderer) renderer.flushUploads();
 
     const tick = (now) => {
-        if (state.destroyed) return;
+        if (state.destroyed || paused) return;
         const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) * 0.001));
         lastTime = now;
         state.timeSec += dt;
+        state.renderScale = quality.update(dt);
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.025) % 1;
 
-        stepPlayerPhysics(player, keys, dt, world.getBlock);
+        stepPlayerPhysics(player, input.keys, dt, world.getBlock);
 
         const unloaded = world.updateAround(player.pos[0], player.pos[2]);
         for (const u of unloaded) {
             if (renderer) renderer.unloadColumn(u.cx, u.cz);
         }
-        for (const msg of world.consumeMeshes()) {
-            if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs);
-        }
+        uploadMeshes(false);
 
         handleResize();
         const eye = getEyePos(player);
@@ -211,6 +158,23 @@ export function createVoxelApp(root) {
         rafId = requestAnimationFrame(tick);
     };
 
+    const pauseLoop = () => {
+        if (paused) return;
+        paused = true;
+        cancelAnimationFrame(rafId);
+        input.resetTransient();
+    };
+
+    const resumeLoop = () => {
+        if (!paused || state.destroyed) return;
+        paused = false;
+        lastTime = performance.now();
+        quality.reset();
+        rafId = requestAnimationFrame(tick);
+    };
+
+    const unbindVisibility = bindVisibility(document, pauseLoop, resumeLoop);
+
     hud.updateTelemetry(world.getColumnCount());
     rafId = requestAnimationFrame(tick);
 
@@ -218,17 +182,14 @@ export function createVoxelApp(root) {
         state,
         player,
         world,
+        pause: pauseLoop,
+        resume: resumeLoop,
         destroy() {
             state.destroyed = true;
             cancelAnimationFrame(rafId);
-            window.removeEventListener("keydown", onKeyDown);
-            window.removeEventListener("keyup", onKeyUp);
+            unbindVisibility();
+            input.destroy();
             window.removeEventListener("resize", handleResize);
-            canvas.removeEventListener("mousedown", onMouseDown);
-            window.removeEventListener("mousemove", onMouseMove);
-            window.removeEventListener("mouseup", onMouseUp);
-            canvas.removeEventListener("wheel", onWheel);
-            canvas.removeEventListener("contextmenu", onContextMenu);
             world.destroy();
             if (renderer) renderer.destroy();
         }

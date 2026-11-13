@@ -93,6 +93,13 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
         setTxt("[data-tel-coords]", `${Math.floor(player.pos[0])}, ${Math.floor(player.pos[1])}, ${Math.floor(player.pos[2])}`);
         setTxt("[data-tel-chunks]", `${columnCount} cols`);
         setTxt("[data-tel-tris]", `${state.stats.triCount.toLocaleString("en-US")} tris`);
+        setTxt("[data-tel-scale]", `${Math.round(state.renderScale * 100)}% res`);
+        const gpuEl = root.querySelector("[data-tel-gpu]");
+        if (gpuEl) {
+            const gpuMs = state.stats.gpuMs;
+            gpuEl.hidden = typeof gpuMs !== "number";
+            if (typeof gpuMs === "number") gpuEl.textContent = `${gpuMs.toFixed(1)} ms GPU`;
+        }
     };
 
     return { syncHud, updateTelemetry };

@@ -25,6 +25,12 @@ export function linkProgram(gl, vsSrc, fsSrc) {
     return prog;
 }
 
+export function createUniformCache(gl, program, names) {
+    const cache = {};
+    for (const name of names) cache[name] = gl.getUniformLocation(program, name);
+    return cache;
+}
+
 function mix3(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }

@@ -8,6 +8,7 @@
 <title>Voxel World 3D - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
 <link rel="stylesheet" href="./styles/voxel.css">
+<link rel="stylesheet" href="./styles/voxel-guard.css">
 <style>
 @font-face {
     font-family: "Google Sans";
@@ -35,6 +36,7 @@ body { background: #09131f; }
     <canvas class="voxel-canvas" data-voxel-gl aria-label="Dunia Voxel 3D WebGL 2.0"></canvas>
     <div class="voxel-crosshair" aria-hidden="true"></div>
     <div class="voxel-fallback" data-voxel-fallback hidden>Browser atau perangkat Anda tidak mendukung WebGL 2.0 untuk merender Voxel World Engine.</div>
+    <div class="voxel-fallback" data-voxel-context-lost role="status" hidden>Koneksi GPU terputus. Memulihkan dunia...</div>
 
     <header class="voxel-hud-top">
         <div class="voxel-brand">
@@ -44,6 +46,8 @@ body { background: #09131f; }
                 <span class="voxel-stat-pill" data-tel-coords>8, 52, 8</span>
                 <span class="voxel-stat-pill" data-tel-chunks>9 cols</span>
                 <span class="voxel-stat-pill" data-tel-tris>0 tris</span>
+                <span class="voxel-stat-pill" data-tel-scale>100% res</span>
+                <span class="voxel-stat-pill" data-tel-gpu hidden>0.0 ms GPU</span>
             </div>
         </div>
         <div class="voxel-actions">
@@ -60,10 +64,20 @@ body { background: #09131f; }
 
     <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Pilihan Blok"></nav>
 </main>
+<div class="voxel-guard" role="alertdialog" aria-labelledby="voxel-guard-title" aria-describedby="voxel-guard-text" data-voxel-mobile-guard hidden>
+    <h2 class="voxel-guard-title" id="voxel-guard-title">Hanya untuk Desktop</h2>
+    <p class="voxel-guard-text" id="voxel-guard-text">Voxel World membutuhkan keyboard dan mouse. Silakan buka halaman ini dari komputer desktop atau laptop.</p>
+    <a href="/lab" class="voxel-guard-back" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="" width="28" height="28"><span>Kembali ke Lab</span></a>
+</div>
 <script type="module">
-import { createVoxelApp } from "./src/lab/voxel/voxel-controller.js";
+import { isUnsupportedDevice } from "./src/lab/voxel/voxel-device-guard.js";
 const root = document.getElementById("voxel-app-root");
-if (root) createVoxelApp(root);
+const guard = document.querySelector("[data-voxel-mobile-guard]");
+if (isUnsupportedDevice(window)) {
+    if (guard) guard.hidden = false;
+} else if (root) {
+    import("./src/lab/voxel/voxel-controller.js").then((mod) => mod.createVoxelApp(root));
+}
 </script>
 </body>
 </html>
