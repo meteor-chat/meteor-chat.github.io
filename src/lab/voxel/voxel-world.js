@@ -5,6 +5,7 @@ import { generateColumn } from "./voxel-world-gen.js";
 import {
     acceptMeshMessages,
     buildPaddedBuffers,
+    isAwaitingNeighbor,
     isBeyondRadius,
     makeColumn,
     orderDirtyColumns
@@ -193,6 +194,7 @@ export function createVoxelWorld(options = {}) {
         let meshBudget = worker ? 6 : 3;
         for (const job of orderDirtyColumns(dirtySubs, pcx, pcz)) {
             if (meshBudget <= 0) break;
+            if (isAwaitingNeighbor(columns, job.cx, job.cz, center, viewRadius)) continue;
             dirtySubs.delete(job.key);
             if (worker) {
                 const col = getColumn(job.cx, job.cz);

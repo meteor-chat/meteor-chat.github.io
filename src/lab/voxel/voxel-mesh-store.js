@@ -9,6 +9,7 @@ export function createMeshStore(gl, options = {}) {
     const maxBytes = options.maxBytesPerFrame ?? DEFAULT_MAX_BYTES;
     const entries = new Map();
     const pending = new Map();
+    let revision = 0;
 
     const keyOf = (cx, sy, cz) => `${cx},${sy},${cz}`;
 
@@ -43,6 +44,7 @@ export function createMeshStore(gl, options = {}) {
     };
 
     const applyUpload = (job) => {
+        revision += 1;
         const key = keyOf(job.cx, job.sy, job.cz);
         const prev = entries.get(key);
         const opq = fillSlot(prev ? prev.opq : null, job.opaque);
@@ -88,6 +90,7 @@ export function createMeshStore(gl, options = {}) {
     };
 
     const unloadColumn = (cx, cz) => {
+        revision += 1;
         for (let sy = 0; sy < SUB_COUNT; sy += 1) {
             const key = keyOf(cx, sy, cz);
             pending.delete(key);
@@ -117,6 +120,15 @@ export function createMeshStore(gl, options = {}) {
         return { opaque, translucent, culled };
     };
 
+    const collectOpaque = (planes) => {
+        const list = [];
+        for (const entry of entries.values()) {
+            const b = entry.box;
+            if (entry.opq && isBoxInFrustum(planes, b[0], b[1], b[2], b[3], b[4], b[5])) list.push(entry);
+        }
+        return list;
+    };
+
     const reset = () => {
         entries.clear();
         pending.clear();
@@ -133,6 +145,8 @@ export function createMeshStore(gl, options = {}) {
         flush,
         unloadColumn,
         collectVisible,
+        collectOpaque,
+        version: () => revision,
         release,
         reset,
         size: () => entries.size,

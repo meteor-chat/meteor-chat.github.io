@@ -15,7 +15,10 @@ export function multiplyMat4(a, b) {
     return out;
 }
 
-export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = 0.1, far = 260) {
+export const CAMERA_NEAR = 0.1;
+export const CAMERA_FAR = 260;
+
+export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_NEAR, far = CAMERA_FAR) {
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
     const cy = Math.cos(yaw);

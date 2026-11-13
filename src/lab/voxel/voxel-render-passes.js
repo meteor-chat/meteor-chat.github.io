@@ -22,7 +22,8 @@ export function drawSky(gl, res, cam, atmo, timeSec) {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
-export function beginWorldPass(gl, res, cam, eye, atmo, timeSec) {
+export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
+    const shadowFrame = extras.shadow;
     const { program, u } = res.world;
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
@@ -31,11 +32,25 @@ export function beginWorldPass(gl, res, cam, eye, atmo, timeSec) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, res.texArray);
     gl.uniform1i(u.uTexArray, 0);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, res.texData);
+    gl.uniform1i(u.uTexData, 2);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, res.shadowTarget.tex);
+    gl.uniform1i(u.uShadowMap, 3);
+    gl.uniformMatrix4fv(u.uShadowMat, false, shadowFrame.viewProj);
+    gl.uniform3fv(u.uShadowCenter, shadowFrame.center);
+    gl.uniform2f(u.uShadowParams, 1 / shadowFrame.mapSize, shadowFrame.radius);
+    gl.activeTexture(gl.TEXTURE4);
+    gl.bindTexture(gl.TEXTURE_2D, extras.depthTex);
+    gl.uniform1i(u.uSceneDepth, 4);
+    gl.uniform2f(u.uResolution, extras.width, extras.height);
+    gl.activeTexture(gl.TEXTURE0);
     gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
     gl.uniform3fv(u.uCamPos, eye);
     setAtmosphere(gl, u, atmo, timeSec);
-    gl.uniform1f(u.uFogStart, 34);
-    gl.uniform1f(u.uFogEnd, 68);
+    gl.uniform1f(u.uFogStart, fog[0]);
+    gl.uniform1f(u.uFogEnd, fog[1]);
 }
 
 function drawLayer(gl, res, entries, layer) {
@@ -66,6 +81,13 @@ export function drawWire(gl, res, cam, hit) {
     gl.uniform3f(u.uBlockPos, hit.vx, hit.vy, hit.vz);
     gl.bindVertexArray(res.wireVao);
     gl.drawArrays(gl.LINES, 0, 24);
+}
+
+export function blitSceneDepth(gl, targets, w, h) {
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, targets.scene.fbo);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, targets.depthCopy.fbo);
+    gl.blitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, targets.scene.fbo);
 }
 
 export function drawTranslucent(gl, res, entries) {

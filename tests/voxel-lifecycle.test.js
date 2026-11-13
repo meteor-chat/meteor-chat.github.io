@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { readFileSync } from "fs";
 import { buildCameraBasis } from "../src/lab/voxel/voxel-camera.js";
+import { PROGRAM_SPECS } from "../src/lab/voxel/voxel-gpu-resources.js";
 import { bindVisibility, createVoxelInput } from "../src/lab/voxel/voxel-input.js";
 import { createVoxelApp } from "../src/lab/voxel/voxel-controller.js";
 import { createVoxelRenderer } from "../src/lab/voxel/voxel-renderer.js";
@@ -61,7 +62,7 @@ describe("Voxel renderer GPU lifecycle", () => {
         const vaoDeletesBefore = mock.calls("deleteVertexArray");
         canvas.dispatchEvent(new window.Event("webglcontextrestored"));
         expect(mock.calls("deleteVertexArray")).toBe(vaoDeletesBefore);
-        expect(mock.calls("createProgram")).toBe(programsBefore + 6);
+        expect(mock.calls("createProgram")).toBe(programsBefore + Object.keys(PROGRAM_SPECS).length);
         expect(renderer.isLost()).toBe(false);
         expect(renderer.meshCount()).toBe(0);
         expect(onContextRestored).toHaveBeenCalledTimes(1);

@@ -1,10 +1,19 @@
 import { extractFrustumPlanes } from "./voxel-camera.js";
-import { createGpuResources, destroyGpuResources } from "./voxel-gpu-resources.js";
+import { createGpuResources, destroyGpuResources, SHADOW_MAP_SIZE } from "./voxel-gpu-resources.js";
 import { createGpuTimer } from "./voxel-gpu-timer.js";
-import { computeSkyAtmosphere, createFboTarget, disposeFboTarget } from "./voxel-gl-utils.js";
+import {
+    computeSkyAtmosphere,
+    createDepthOnlyTarget,
+    createFboTarget,
+    disposeFboTarget,
+    linearizeAtmosphere
+} from "./voxel-gl-utils.js";
 import { createMeshStore } from "./voxel-mesh-store.js";
+import { createShadowController } from "./voxel-shadow-math.js";
+import { drawShadowMap } from "./voxel-shadow-pass.js";
 import {
     beginWorldPass,
+    blitSceneDepth,
     drawOpaque,
     drawPostFx,
     drawSky,
@@ -14,6 +23,8 @@ import {
 
 export { computeSkyAtmosphere };
 
+const DEFAULT_FOG = [24, 48];
+const DEFAULT_SHADOW_RADIUS = 56;
 const EMPTY_STATS = Object.freeze({ drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null });
 
 export function createVoxelRenderer(canvas, atlas, hooks = {}) {
@@ -22,6 +33,8 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
 
     let res = createGpuResources(gl, atlas);
     const store = createMeshStore(gl, hooks.store);
+    const fogRange = hooks.fogRange || DEFAULT_FOG;
+    const shadowCtl = createShadowController({ radius: hooks.shadowRadius || DEFAULT_SHADOW_RADIUS, mapSize: SHADOW_MAP_SIZE });
     let timer = createGpuTimer(gl);
     let targets = null;
     let lost = false;
@@ -31,6 +44,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         disposeFboTarget(gl, targets.scene);
         disposeFboTarget(gl, targets.bloomA);
         disposeFboTarget(gl, targets.bloomB);
+        disposeFboTarget(gl, targets.depthCopy);
         targets = null;
     };
 
@@ -42,7 +56,8 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         targets = {
             scene: createFboTarget(gl, w, h, res.floatExt, true),
             bloomA: createFboTarget(gl, bw, bh, res.floatExt, false),
-            bloomB: createFboTarget(gl, bw, bh, res.floatExt, false)
+            bloomB: createFboTarget(gl, bw, bh, res.floatExt, false),
+            depthCopy: createDepthOnlyTarget(gl, w, h)
         };
     };
 
@@ -64,6 +79,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             return;
         }
         timer = createGpuTimer(gl);
+        shadowCtl.invalidate();
         lost = false;
         if (hooks.onContextRestored) hooks.onContextRestored();
     };
@@ -71,7 +87,10 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
     canvas.addEventListener("webglcontextlost", onContextLost);
     canvas.addEventListener("webglcontextrestored", onContextRestored);
 
-    const uploadMeshUpdate = (cx, cz, subs, urgent = false) => store.queue(cx, cz, subs, urgent);
+    const uploadMeshUpdate = (cx, cz, subs, urgent = false) => {
+        if (urgent) shadowCtl.forceNext();
+        store.queue(cx, cz, subs, urgent);
+    };
     const flushUploads = () => store.flush(true);
     const unloadColumn = (cx, cz) => store.unloadColumn(cx, cz);
 
@@ -86,7 +105,13 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             timer.begin();
         }
         const upload = store.flush();
-        const atmo = computeSkyAtmosphere(timeOfDay);
+        const rawAtmo = computeSkyAtmosphere(timeOfDay);
+        const atmo = linearizeAtmosphere(rawAtmo);
+        const shadow = shadowCtl.update(rawAtmo.sunDir, eye, store.version());
+        if (shadow.refresh && rawAtmo.sunDir[1] > -0.05) {
+            const casters = store.collectOpaque(extractFrustumPlanes(shadow.frame.viewProj));
+            drawShadowMap(gl, res, shadow.frame, casters);
+        }
         const planes = extractFrustumPlanes(cam.viewProj);
         const visible = store.collectVisible(planes, eye);
 
@@ -96,9 +121,15 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         drawSky(gl, res, cam, atmo, timeSec);
-        beginWorldPass(gl, res, cam, eye, atmo, timeSec);
+        beginWorldPass(gl, res, cam, eye, atmo, timeSec, fogRange, {
+            shadow: shadow.frame,
+            depthTex: targets.depthCopy.depthTex,
+            width: w,
+            height: h
+        });
         const opaqueStats = drawOpaque(gl, res, visible.opaque);
         drawWire(gl, res, cam, targetHit);
+        blitSceneDepth(gl, targets, w, h);
         const glassStats = drawTranslucent(gl, res, visible.translucent);
         drawPostFx(gl, res, targets, w, h, timeSec, underwater);
         if (timer) timer.end();

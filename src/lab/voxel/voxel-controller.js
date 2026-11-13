@@ -24,7 +24,8 @@ export function createVoxelApp(root) {
 
     const seed = 2026;
     const atlas = generateVoxelAtlasData();
-    const world = createVoxelWorld({ seed, viewRadius: 3 });
+    const viewRadius = 3;
+    const world = createVoxelWorld({ seed, viewRadius });
     const fallbackBanner = root.querySelector("[data-voxel-fallback]");
     const lostBanner = root.querySelector("[data-voxel-context-lost]");
     const setLostBanner = (visible) => {
@@ -32,6 +33,7 @@ export function createVoxelApp(root) {
     };
     const quality = createQualityController();
     const renderer = createVoxelRenderer(canvas, atlas, {
+        fogRange: [viewRadius * 8, viewRadius * 16],
         onContextLost: () => setLostBanner(true),
         onContextRestored: () => {
             setLostBanner(false);

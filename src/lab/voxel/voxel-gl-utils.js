@@ -61,6 +61,18 @@ export function computeSkyAtmosphere(timeOfDay) {
     return { sunDir, dayIntensity, skyColor, horizonColor, sunTint };
 }
 
+const toLinear = (c) => [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)];
+
+export function linearizeAtmosphere(atmo) {
+    return {
+        sunDir: atmo.sunDir,
+        dayIntensity: atmo.dayIntensity,
+        skyColor: toLinear(atmo.skyColor),
+        horizonColor: toLinear(atmo.horizonColor),
+        sunTint: toLinear(atmo.sunTint)
+    };
+}
+
 export function createFboTarget(gl, w, h, useFloat, withDepth) {
     const fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
@@ -75,20 +87,40 @@ export function createFboTarget(gl, w, h, useFloat, withDepth) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
 
-    let rbo = null;
+    let depthTex = null;
     if (withDepth) {
-        rbo = gl.createRenderbuffer();
-        gl.bindRenderbuffer(gl.RENDERBUFFER, rbo);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rbo);
+        depthTex = createDepthTexture(gl, w, h);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    return { fbo, tex, rbo, w, h };
+    return { fbo, tex, depthTex, w, h };
+}
+
+export function createDepthOnlyTarget(gl, w, h) {
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    const depthTex = createDepthTexture(gl, w, h);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
+    gl.drawBuffers([gl.NONE]);
+    gl.readBuffer(gl.NONE);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { fbo, tex: null, depthTex, w, h };
 }
 
 export function disposeFboTarget(gl, target) {
     if (!target) return;
     gl.deleteFramebuffer(target.fbo);
-    gl.deleteTexture(target.tex);
-    if (target.rbo) gl.deleteRenderbuffer(target.rbo);
+    if (target.tex) gl.deleteTexture(target.tex);
+    if (target.depthTex) gl.deleteTexture(target.depthTex);
+}
+
+function createDepthTexture(gl, w, h) {
+    const depthTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, depthTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return depthTex;
 }

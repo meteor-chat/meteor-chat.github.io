@@ -67,6 +67,18 @@ export function orderDirtyColumns(dirtySubs, pcx, pcz) {
     return list.sort((a, b) => a.d2 - b.d2);
 }
 
+const NEIGHBOR_STEPS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+export function isAwaitingNeighbor(columns, cx, cz, center, radius) {
+    for (const [dx, dz] of NEIGHBOR_STEPS) {
+        const nx = cx + dx;
+        const nz = cz + dz;
+        const inView = Math.abs(nx - center.cx) <= radius && Math.abs(nz - center.cz) <= radius;
+        if (inView && !columns.has(`${nx},${nz}`)) return true;
+    }
+    return false;
+}
+
 export function isBeyondRadius(cx, cz, center, radius) {
     return Math.abs(cx - center.cx) > radius || Math.abs(cz - center.cz) > radius;
 }
