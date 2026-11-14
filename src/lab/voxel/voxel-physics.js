@@ -1,5 +1,17 @@
 import { BLOCK, isSolid } from "./voxel-blocks.js";
 
+const SWIM_SPEED = 3.8;
+const GRAVITY = -24;
+const WATER_GRAVITY = -7.5;
+const WATER_DRAG = 0.92;
+const SWIM_RESPONSE = 10;
+
+function steerSwim(player, moveF, stepDt) {
+    const target = Math.sin(player.pitch) * moveF * SWIM_SPEED;
+    const blend = 1 - Math.exp(-SWIM_RESPONSE * stepDt);
+    player.vel[1] += (target - player.vel[1]) * blend;
+}
+
 export function collidesAABB(px, py, pz, getBlock) {
     const hw = 0.28;
     const h = 1.68;
@@ -60,12 +72,15 @@ export function stepPlayerPhysics(player, keys, dt, getBlock) {
         return;
     }
 
-    const walkSpeed = inWater ? 3.8 : 6.2;
+    const walkSpeed = inWater ? SWIM_SPEED : 6.2;
     const vx = wishX * walkSpeed;
     const vz = wishZ * walkSpeed;
-    const gravity = inWater ? -7.5 : -24;
-    player.vel[1] += gravity * stepDt;
-    if (inWater) player.vel[1] *= 0.92;
+    if (inWater && moveF !== 0) {
+        steerSwim(player, moveF, stepDt);
+    } else {
+        player.vel[1] += (inWater ? WATER_GRAVITY : GRAVITY) * stepDt;
+        if (inWater) player.vel[1] *= Math.pow(WATER_DRAG, stepDt * 60);
+    }
 
     if (keys.has("Space")) {
         if (player.onGround) {
