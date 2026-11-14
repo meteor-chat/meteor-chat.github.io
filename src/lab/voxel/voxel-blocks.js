@@ -41,7 +41,17 @@ export const TEX = {
     COAL_ORE: 14,
     GOLD_ORE: 15,
     BEDROCK: 16,
-    CACTUS: 17
+    CACTUS: 17,
+    CAT_FUR_ORANGE: 18,
+    CAT_FUR_BLACK: 19,
+    CAT_FUR_CALICO: 20,
+    CAT_FUR_WHITE: 21,
+    CAT_FUR_SAND: 22,
+    CAT_FACE_ORANGE: 23,
+    CAT_FACE_BLACK: 24,
+    CAT_FACE_CALICO: 25,
+    CAT_FACE_WHITE: 26,
+    CAT_FACE_SAND: 27
 };
 
 export const HOTBAR_ITEMS = [

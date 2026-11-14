@@ -1,10 +1,11 @@
 import { renderRecipe, TILE, writeLayer } from "./voxel-tex-maps.js";
 import { FX_RECIPES } from "./voxel-tex-recipes-fx.js";
+import { MOB_RECIPES } from "./voxel-tex-recipes-mobs.js";
 import { ORGANIC_RECIPES } from "./voxel-tex-recipes-organic.js";
 import { TERRAIN_RECIPES } from "./voxel-tex-recipes-terrain.js";
 
-const LAYER_COUNT = 18;
-const RECIPES = { ...TERRAIN_RECIPES, ...ORGANIC_RECIPES, ...FX_RECIPES };
+const LAYER_COUNT = 28;
+const RECIPES = { ...TERRAIN_RECIPES, ...ORGANIC_RECIPES, ...FX_RECIPES, ...MOB_RECIPES };
 
 export function generateVoxelAtlasData() {
     const data = new Uint8Array(TILE * TILE * 4 * LAYER_COUNT);

@@ -81,14 +81,14 @@ describe("Voxel World Engine Core", () => {
         expect(light[chunkIndex(6, 20, 8)] & 15).toBe(0);
     });
 
-    it("generates terrain columns, procedural 18-layer texture array data, and handles frustum culling", () => {
+    it("generates terrain columns, procedural 28-layer texture array data, and handles frustum culling", () => {
         const col = generateColumn(0, 0, 2026);
         expect(col.blocks.length).toBe(CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE);
         expect(col.blocks[chunkIndex(0, 0, 0)]).toBe(BLOCK.BEDROCK);
 
         const atlas = generateVoxelAtlasData();
-        expect(atlas.layerCount).toBe(18);
-        expect(atlas.data.length).toBe(16 * 16 * 4 * 18);
+        expect(atlas.layerCount).toBe(28);
+        expect(atlas.data.length).toBe(16 * 16 * 4 * 28);
 
         const cam = buildCameraBasis([0, 60, 0], 0.4, -0.3, Math.PI / 2, 1.5);
         expect(cam.up[1]).toBeGreaterThan(0.8);
