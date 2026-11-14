@@ -29,9 +29,7 @@ function autoJump(player, inWater, tx, tz, getBlock) {
     }
 }
 
-export function collidesAABB(px, py, pz, getBlock) {
-    const hw = 0.28;
-    const h = 1.68;
+export function collidesAABB(px, py, pz, getBlock, hw = 0.28, h = 1.68) {
     const minX = Math.floor(px - hw);
     const maxX = Math.floor(px + hw);
     const minY = Math.floor(py);
