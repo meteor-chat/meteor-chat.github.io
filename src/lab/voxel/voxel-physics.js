@@ -5,6 +5,7 @@ const GRAVITY = -24;
 const WATER_GRAVITY = -7.5;
 const WATER_DRAG = 0.92;
 const SWIM_RESPONSE = 10;
+const SNEAK_FACTOR = 0.35;
 
 function steerSwim(player, moveF, stepDt) {
     const target = Math.sin(player.pitch) * moveF * SWIM_SPEED;
@@ -87,7 +88,8 @@ export function stepPlayerPhysics(player, keys, dt, getBlock) {
         return;
     }
 
-    const walkSpeed = inWater ? SWIM_SPEED : 6.2;
+    const sneaking = keys.has("AltLeft") || keys.has("AltRight");
+    const walkSpeed = (inWater ? SWIM_SPEED : 6.2) * (sneaking ? SNEAK_FACTOR : 1);
     const vx = wishX * walkSpeed;
     const vz = wishZ * walkSpeed;
     if (inWater && moveF !== 0) {

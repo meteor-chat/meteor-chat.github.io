@@ -59,6 +59,20 @@ describe("walking physics", () => {
         run(player, ["Space"], makeWorld(), 0.15);
         expect(player.pos[1]).toBeGreaterThan(GROUND + 0.3);
     });
+
+    it("walks slower while holding alt and at full speed again when released", () => {
+        const distance = (keys) => {
+            const player = makePlayer();
+            run(player, keys, makeWorld(), 0.5);
+            return 0.5 - player.pos[2];
+        };
+        const normal = distance(["KeyW"]);
+        const sneakLeft = distance(["KeyW", "AltLeft"]);
+        const sneakRight = distance(["KeyW", "AltRight"]);
+        expect(sneakLeft).toBeGreaterThan(0);
+        expect(sneakLeft).toBeLessThan(normal * 0.5);
+        expect(sneakRight).toBeCloseTo(sneakLeft, 5);
+    });
 });
 
 describe("auto jump", () => {

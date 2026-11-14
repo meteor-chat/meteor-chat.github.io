@@ -26,6 +26,7 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
 
     const onKeyDown = (e) => {
         keys.add(e.code);
+        if (e.code === "AltLeft" || e.code === "AltRight") e.preventDefault();
         if (e.code >= "Digit1" && e.code <= "Digit9") {
             const idx = Number(e.code.replace("Digit", "")) - 1;
             if (idx >= 0 && idx < HOTBAR_ITEMS.length) {
