@@ -1,5 +1,16 @@
 import { GLSL_ATMOSPHERE, GLSL_NOISE } from "./voxel-glsl-common.js";
 
+export const SKY_VS = `#version 300 es
+precision highp float;
+
+out vec2 vUv;
+
+void main() {
+    vec2 pos = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+    vUv = pos;
+    gl_Position = vec4(pos * 2.0 - 1.0, 1.0, 1.0);
+}`;
+
 export const SKY_FS = `#version 300 es
 precision highp float;
 

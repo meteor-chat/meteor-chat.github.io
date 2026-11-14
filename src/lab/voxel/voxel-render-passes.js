@@ -9,7 +9,9 @@ function setAtmosphere(gl, u, atmo, timeSec) {
 
 export function drawSky(gl, res, cam, atmo, timeSec) {
     const { program, u } = res.sky;
-    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(false);
     gl.disable(gl.CULL_FACE);
     gl.disable(gl.BLEND);
     gl.useProgram(program);
@@ -20,6 +22,8 @@ export function drawSky(gl, res, cam, atmo, timeSec) {
     setAtmosphere(gl, u, atmo, timeSec);
     gl.bindVertexArray(res.quadVao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.depthFunc(gl.LESS);
+    gl.depthMask(true);
 }
 
 export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
@@ -103,7 +107,7 @@ export function drawTranslucent(gl, res, entries) {
     return stats;
 }
 
-export function drawPostFx(gl, res, targets, w, h, timeSec, underwater) {
+export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     const { scene, bloomA, bloomB } = targets;
     gl.bindFramebuffer(gl.FRAMEBUFFER, bloomA.fbo);
     gl.viewport(0, 0, bloomA.w, bloomA.h);
@@ -128,6 +132,20 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater) {
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
+    if (post.raysOn) {
+        const rays = res.rays;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targets.rays.fbo);
+        gl.viewport(0, 0, targets.rays.w, targets.rays.h);
+        gl.useProgram(rays.program);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, scene.tex);
+        gl.uniform1i(rays.u.uSceneTex, 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, scene.depthTex);
+        gl.uniform1i(rays.u.uDepthTex, 1);
+        gl.uniform2f(rays.u.uSunUv, post.sunUv[0], post.sunUv[1]);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
     const comp = res.comp;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, w, h);
@@ -140,5 +158,10 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater) {
     gl.uniform1i(comp.u.uBloomTex, 1);
     gl.uniform1f(comp.u.uTime, timeSec);
     gl.uniform1f(comp.u.uUnderwater, underwater ? 1 : 0);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, targets.rays.tex);
+    gl.uniform1i(comp.u.uRaysTex, 2);
+    const k = post.raysOn ? post.raysStrength : 0;
+    gl.uniform3f(comp.u.uRaysColor, post.tint[0] * k, post.tint[1] * k, post.tint[2] * k);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }

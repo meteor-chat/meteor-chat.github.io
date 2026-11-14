@@ -10,14 +10,12 @@ float sunShadow(vec3 worldPos, vec3 normal) {
     vec3 sc = sp.xyz * 0.5 + 0.5;
     if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0 || sc.z > 1.0) return 1.0;
     float ref = sc.z - 0.0012;
-    float sum = 0.0;
-    for (int y = -1; y <= 1; y += 1) {
-        for (int x = -1; x <= 1; x += 1) {
-            vec2 off = vec2(float(x), float(y)) * uShadowParams.x;
-            sum += texture(uShadowMap, vec3(sc.xy + off, ref));
-        }
-    }
+    float o = uShadowParams.x * 1.2;
+    float sum = texture(uShadowMap, vec3(sc.xy + vec2(-o, -o), ref))
+        + texture(uShadowMap, vec3(sc.xy + vec2(o, -o), ref))
+        + texture(uShadowMap, vec3(sc.xy + vec2(-o, o), ref))
+        + texture(uShadowMap, vec3(sc.xy + vec2(o, o), ref));
     float edge = smoothstep(0.78, 0.97, length(worldPos - uShadowCenter) / uShadowParams.y);
-    return mix(sum / 9.0, 1.0, edge);
+    return mix(sum * 0.25, 1.0, edge);
 }
 `;

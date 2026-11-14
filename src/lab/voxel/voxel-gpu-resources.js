@@ -1,7 +1,15 @@
 import { createUniformCache, linkProgram } from "./voxel-gl-utils.js";
-import { BLOOM_BLUR_FS, BLOOM_EXTRACT_FS, COMPOSITE_FS, QUAD_VS, WIRE_FS, WIRE_VS } from "./voxel-shaders-fx.js";
+import {
+    BLOOM_BLUR_FS,
+    BLOOM_EXTRACT_FS,
+    COMPOSITE_FS,
+    QUAD_VS,
+    RAYS_FS,
+    WIRE_FS,
+    WIRE_VS
+} from "./voxel-shaders-fx.js";
 import { SHADOW_FS, SHADOW_VS } from "./voxel-shaders-shadow.js";
-import { SKY_FS } from "./voxel-shaders-sky.js";
+import { SKY_FS, SKY_VS } from "./voxel-shaders-sky.js";
 import { WORLD_FS, WORLD_VS } from "./voxel-shaders-world.js";
 import { createShadowTarget, disposeShadowTarget } from "./voxel-shadow-pass.js";
 import { createVoxelDataArray, createVoxelTextureArray } from "./voxel-textures.js";
@@ -23,12 +31,17 @@ const WORLD_UNIFORMS = [
 ];
 
 export const PROGRAM_SPECS = {
-    sky: { vs: QUAD_VS, fs: SKY_FS, uniforms: SKY_UNIFORMS },
+    sky: { vs: SKY_VS, fs: SKY_FS, uniforms: SKY_UNIFORMS },
     world: { vs: WORLD_VS, fs: WORLD_FS, uniforms: WORLD_UNIFORMS },
     shadow: { vs: SHADOW_VS, fs: SHADOW_FS, uniforms: ["uLightViewProj", "uChunkOrigin", "uTexArray"] },
     extract: { vs: QUAD_VS, fs: BLOOM_EXTRACT_FS, uniforms: ["uSceneTex"] },
     blur: { vs: QUAD_VS, fs: BLOOM_BLUR_FS, uniforms: ["uTex", "uStep"] },
-    comp: { vs: QUAD_VS, fs: COMPOSITE_FS, uniforms: ["uSceneTex", "uBloomTex", "uTime", "uUnderwater"] },
+    rays: { vs: QUAD_VS, fs: RAYS_FS, uniforms: ["uSceneTex", "uDepthTex", "uSunUv"] },
+    comp: {
+        vs: QUAD_VS,
+        fs: COMPOSITE_FS,
+        uniforms: ["uSceneTex", "uBloomTex", "uRaysTex", "uRaysColor", "uTime", "uUnderwater"]
+    },
     wire: { vs: WIRE_VS, fs: WIRE_FS, uniforms: ["uViewProj", "uBlockPos"] }
 };
 

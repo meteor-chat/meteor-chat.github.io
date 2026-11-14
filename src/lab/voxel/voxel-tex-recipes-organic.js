@@ -3,7 +3,7 @@ import { hash2 } from "./voxel-noise.js";
 import { tileFbm, tileNoise } from "./voxel-tex-noise.js";
 import { palettePick, shade } from "./voxel-tex-palette.js";
 
-const BARK = [[44, 30, 20], [64, 44, 28], [84, 58, 36], [104, 74, 46], [124, 90, 56]];
+const BARK = [[70, 48, 32], [92, 64, 40], [114, 80, 50], [136, 98, 62], [158, 118, 76]];
 const WOOD = [[128, 96, 58], [152, 116, 70], [172, 134, 84], [190, 152, 98]];
 const LEAF = [[22, 58, 22], [34, 84, 28], [50, 112, 34], [76, 144, 42], [112, 176, 56]];
 const CACTUS = [[40, 92, 40], [56, 118, 48], [74, 144, 58], [98, 168, 72]];

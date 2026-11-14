@@ -27,7 +27,7 @@ vec3 shadeSurface(vec3 albedo, vec3 n, vec3 v, float rough, float shadow) {
     float skyLevel = vLight.x;
     float sunVis = skyLevel * sunPower() * shadow;
     float ndl = max(dot(n, uSunDir), 0.0);
-    vec3 sun = uSunTint * (ndl * sunVis * 1.7 * mix(1.0, vAo, 0.5));
+    vec3 sun = uSunTint * (ndl * sunVis * 1.45 * mix(1.0, vAo, 0.5));
     float hemi = n.y * 0.5 + 0.5;
     float skyLum = dot(uSkyColor, vec3(0.3, 0.59, 0.11));
     vec3 skyAmb = mix(uSkyColor, vec3(skyLum), 0.55) * 0.95 + vec3(0.05);

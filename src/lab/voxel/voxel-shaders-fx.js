@@ -42,18 +42,57 @@ void main() {
     fragColor = vec4(sum, 1.0);
 }`;
 
+export const RAYS_FS = `#version 300 es
+precision highp float;
+
+in vec2 vUv;
+uniform sampler2D uSceneTex;
+uniform sampler2D uDepthTex;
+uniform vec2 uSunUv;
+out vec4 fragColor;
+
+float raySource(vec2 uv) {
+    float sky = step(0.99999, texture(uDepthTex, uv).r);
+    float luma = dot(texture(uSceneTex, uv).rgb, vec3(0.2126, 0.7152, 0.0722));
+    return sky * min(max(luma - 0.7, 0.0), 6.0);
+}
+
+void main() {
+    vec2 delta = (uSunUv - vUv) * (0.9 / 28.0);
+    vec2 uv = vUv;
+    float illum = 1.0;
+    float sum = 0.0;
+    for (int i = 0; i < 28; i += 1) {
+        uv += delta;
+        sum += raySource(uv) * illum;
+        illum *= 0.955;
+    }
+    fragColor = vec4(vec3(sum / 28.0), 1.0);
+}`;
+
 export const COMPOSITE_FS = `#version 300 es
 precision highp float;
 
 in vec2 vUv;
 uniform sampler2D uSceneTex;
 uniform sampler2D uBloomTex;
+uniform sampler2D uRaysTex;
+uniform vec3 uRaysColor;
 uniform float uTime;
 uniform float uUnderwater;
 out vec4 fragColor;
 
 vec3 acesTone(vec3 x) {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
+}
+
+vec3 colorGrade(vec3 c) {
+    float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    c = mix(vec3(luma), c, 1.1);
+    c = mix(c, c * c * (3.0 - 2.0 * c), 0.3);
+    vec3 shadowTint = vec3(0.93, 0.99, 1.07);
+    vec3 highTint = vec3(1.05, 1.02, 0.95);
+    return clamp(c * mix(shadowTint, highTint, smoothstep(0.1, 0.8, luma)), 0.0, 1.0);
 }
 
 void main() {
@@ -64,16 +103,18 @@ void main() {
     }
     vec3 sceneCol = texture(uSceneTex, uv).rgb;
     vec3 bloomCol = texture(uBloomTex, uv).rgb;
-    vec3 hdr = sceneCol + bloomCol * 0.58;
+    vec3 hdr = sceneCol + bloomCol * 0.58 + uRaysColor * texture(uRaysTex, uv).r;
     if (uUnderwater > 0.5) {
         float vig = dot(vUv - 0.5, vUv - 0.5);
         hdr = mix(hdr * vec3(0.42, 0.78, 0.96), vec3(0.05, 0.24, 0.38), clamp(vig * 0.95, 0.0, 0.65));
     }
     vec3 ldr = acesTone(hdr);
     ldr = pow(max(ldr, vec3(1e-4)), vec3(1.0 / 2.2));
+    ldr = colorGrade(ldr);
+    vec2 centered = vUv - 0.5;
+    ldr *= 1.0 - dot(centered, centered) * 0.55;
     fragColor = vec4(ldr, 1.0);
 }`;
-
 export const WIRE_VS = `#version 300 es
 precision highp float;
 

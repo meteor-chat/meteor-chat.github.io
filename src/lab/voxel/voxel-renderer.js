@@ -10,6 +10,7 @@ import {
 } from "./voxel-gl-utils.js";
 import { createMeshStore } from "./voxel-mesh-store.js";
 import { createShadowController } from "./voxel-shadow-math.js";
+import { projectSunToScreen, raysStrength } from "./voxel-sun-screen.js";
 import { drawShadowMap } from "./voxel-shadow-pass.js";
 import {
     beginWorldPass,
@@ -45,6 +46,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         disposeFboTarget(gl, targets.bloomA);
         disposeFboTarget(gl, targets.bloomB);
         disposeFboTarget(gl, targets.depthCopy);
+        disposeFboTarget(gl, targets.rays);
         targets = null;
     };
 
@@ -57,7 +59,8 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             scene: createFboTarget(gl, w, h, res.floatExt, true),
             bloomA: createFboTarget(gl, bw, bh, res.floatExt, false),
             bloomB: createFboTarget(gl, bw, bh, res.floatExt, false),
-            depthCopy: createDepthOnlyTarget(gl, w, h)
+            depthCopy: createDepthOnlyTarget(gl, w, h),
+            rays: createFboTarget(gl, bw, bh, res.floatExt, false)
         };
     };
 
@@ -120,7 +123,6 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         gl.clearColor(atmo.horizonColor[0], atmo.horizonColor[1], atmo.horizonColor[2], 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        drawSky(gl, res, cam, atmo, timeSec);
         beginWorldPass(gl, res, cam, eye, atmo, timeSec, fogRange, {
             shadow: shadow.frame,
             depthTex: targets.depthCopy.depthTex,
@@ -129,9 +131,17 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         });
         const opaqueStats = drawOpaque(gl, res, visible.opaque);
         drawWire(gl, res, cam, targetHit);
+        drawSky(gl, res, cam, atmo, timeSec);
         blitSceneDepth(gl, targets, w, h);
         const glassStats = drawTranslucent(gl, res, visible.translucent);
-        drawPostFx(gl, res, targets, w, h, timeSec, underwater);
+        const sun = projectSunToScreen(cam.viewProj, eye, rawAtmo.sunDir);
+        const strength = raysStrength(rawAtmo.sunDir, sun.visibility);
+        drawPostFx(gl, res, targets, w, h, timeSec, underwater, {
+            raysOn: strength > 0.001 && !underwater,
+            raysStrength: strength,
+            sunUv: [sun.u, sun.v],
+            tint: atmo.sunTint
+        });
         if (timer) timer.end();
 
         return {

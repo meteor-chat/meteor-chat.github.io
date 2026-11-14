@@ -109,6 +109,7 @@ void main() {
 
     vec3 v = normalize(uCamPos - vWorldPos);
     vec3 albedo = pow(tex.rgb, vec3(2.2));
+    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.72);
     vec3 col;
     float alpha = tex.a;
 
