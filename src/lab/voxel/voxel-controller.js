@@ -1,5 +1,6 @@
 import { BLOCK, HOTBAR_ITEMS } from "./voxel-blocks.js";
-import { buildCameraBasis, stepPlayerPhysics } from "./voxel-camera.js";
+import { buildCameraBasis } from "./voxel-camera.js";
+import { stepPlayerPhysics } from "./voxel-physics.js";
 import { bindVisibility, createVoxelInput } from "./voxel-input.js";
 import { createQualityController } from "./voxel-quality.js";
 import { raycastVoxel } from "./voxel-raycast.js";
