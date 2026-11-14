@@ -1,0 +1,50 @@
+import { BLOCK, isSolid } from "./voxel-blocks.js";
+import { MAX_CATS } from "./voxel-mob-cat-model.js";
+import { createCat, stepCat } from "./voxel-mob-cat-ai.js";
+
+const COVER_SCAN = 14;
+const COVERED_LIGHT = 0.32;
+const LIGHT_RATE = 4;
+
+function isCover(id) {
+    return isSolid(id) || id === BLOCK.LEAVES;
+}
+
+export function skyLightAt(pos, getBlock) {
+    const x = Math.floor(pos[0]);
+    const z = Math.floor(pos[2]);
+    const start = Math.floor(pos[1] + 0.9);
+    for (let i = 0; i < COVER_SCAN; i += 1) {
+        if (isCover(getBlock(x, start + i, z))) return COVERED_LIGHT;
+    }
+    return 1;
+}
+
+export function createMobSystem({ getBlock, rng }) {
+    const cats = [];
+    const ctx = { rng, playerPos: [0, 0, 0], getBlock, frozen: false };
+
+    const spawnCat = (x, y, z, variant) => {
+        if (cats.length >= MAX_CATS) return null;
+        const cat = createCat(x, y, z, variant, rng);
+        cat.sky = skyLightAt(cat.pos, getBlock);
+        cats.push(cat);
+        return cat;
+    };
+
+    const removeCat = (cat) => {
+        const index = cats.indexOf(cat);
+        if (index >= 0) cats.splice(index, 1);
+    };
+
+    const update = (dt, playerPos) => {
+        ctx.playerPos = playerPos;
+        const blend = Math.min(1, LIGHT_RATE * dt);
+        for (const cat of cats) {
+            stepCat(cat, dt, ctx);
+            cat.sky += (skyLightAt(cat.pos, getBlock) - cat.sky) * blend;
+        }
+    };
+
+    return { cats, spawnCat, removeCat, update, clear: () => cats.splice(0, cats.length) };
+}

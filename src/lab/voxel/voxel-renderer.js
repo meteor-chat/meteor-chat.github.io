@@ -9,10 +9,12 @@ import {
     linearizeAtmosphere
 } from "./voxel-gl-utils.js";
 import { createMeshStore } from "./voxel-mesh-store.js";
+import { drawMobs } from "./voxel-mob-render.js";
 import { createShadowController } from "./voxel-shadow-math.js";
 import { projectSunToScreen, raysStrength } from "./voxel-sun-screen.js";
 import { drawShadowMap } from "./voxel-shadow-pass.js";
 import {
+    beginMobPass,
     beginWorldPass,
     blitSceneDepth,
     drawOpaque,
@@ -97,7 +99,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
     const flushUploads = () => store.flush(true);
     const unloadColumn = (cx, cz) => store.unloadColumn(cx, cz);
 
-    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater) => {
+    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater, mobs = []) => {
         const w = canvas.width;
         const h = canvas.height;
         if (lost || w < 2 || h < 2 || gl.isContextLost()) return EMPTY_STATS;
@@ -123,13 +125,19 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         gl.clearColor(atmo.horizonColor[0], atmo.horizonColor[1], atmo.horizonColor[2], 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        beginWorldPass(gl, res, cam, eye, atmo, timeSec, fogRange, {
+        const passExtras = {
             shadow: shadow.frame,
             depthTex: targets.depthCopy.depthTex,
             width: w,
             height: h
-        });
+        };
+        beginWorldPass(gl, res, cam, eye, atmo, timeSec, fogRange, passExtras);
         const opaqueStats = drawOpaque(gl, res, visible.opaque);
+        let mobStats = { drawCalls: 0, triCount: 0 };
+        if (mobs.length > 0) {
+            beginMobPass(gl, res, cam, eye, atmo, timeSec, fogRange, passExtras);
+            mobStats = drawMobs(gl, res.mobGeo, mobs, timeSec, eye);
+        }
         drawWire(gl, res, cam, targetHit);
         drawSky(gl, res, cam, atmo, timeSec);
         blitSceneDepth(gl, targets, w, h);
@@ -145,9 +153,9 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         if (timer) timer.end();
 
         return {
-            drawCalls: opaqueStats.drawCalls + glassStats.drawCalls,
+            drawCalls: opaqueStats.drawCalls + glassStats.drawCalls + mobStats.drawCalls,
             culledSubs: visible.culled,
-            triCount: opaqueStats.triCount + glassStats.triCount,
+            triCount: opaqueStats.triCount + glassStats.triCount + mobStats.triCount,
             uploads: upload.uploads,
             queued: upload.remaining,
             gpuMs: timer ? timer.getMs() : null

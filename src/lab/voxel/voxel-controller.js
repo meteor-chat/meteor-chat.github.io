@@ -2,6 +2,8 @@ import { BLOCK, HOTBAR_ITEMS } from "./voxel-blocks.js";
 import { buildCameraBasis } from "./voxel-camera.js";
 import { stepPlayerPhysics } from "./voxel-physics.js";
 import { bindVisibility, createVoxelInput } from "./voxel-input.js";
+import { createMobSystem } from "./voxel-mob-system.js";
+import { mulberry32 } from "./voxel-noise.js";
 import { createQualityController } from "./voxel-quality.js";
 import { raycastVoxel } from "./voxel-raycast.js";
 import { createVoxelRenderer } from "./voxel-renderer.js";
@@ -76,6 +78,7 @@ export function createVoxelApp(root) {
     let paused = false;
     let lastTime = performance.now();
 
+    const mobs = createMobSystem({ getBlock: world.getBlock, rng: mulberry32(seed ^ 0x2f6b9a1d) });
     const hud = createVoxelHud(root, atlas, state, player, canvas);
 
     const uploadMeshes = (urgent) => {
@@ -132,6 +135,7 @@ export function createVoxelApp(root) {
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.025) % 1;
 
         stepPlayerPhysics(player, input.keys, dt, world.getBlock);
+        mobs.update(dt, player.pos);
 
         const unloaded = world.updateAround(player.pos[0], player.pos[2]);
         for (const u of unloaded) {
@@ -147,7 +151,7 @@ export function createVoxelApp(root) {
         const cam = buildCameraBasis(eye, player.yaw, player.pitch, (70 * Math.PI) / 180, aspect);
 
         if (renderer) {
-            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged);
+            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.cats);
         }
 
         state.frameCount += 1;
@@ -185,10 +189,12 @@ export function createVoxelApp(root) {
         state,
         player,
         world,
+        mobs,
         pause: pauseLoop,
         resume: resumeLoop,
         destroy() {
             state.destroyed = true;
+            mobs.clear();
             cancelAnimationFrame(rafId);
             unbindVisibility();
             input.destroy();

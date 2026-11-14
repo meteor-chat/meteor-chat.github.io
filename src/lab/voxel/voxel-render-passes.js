@@ -26,30 +26,26 @@ export function drawSky(gl, res, cam, atmo, timeSec) {
     gl.depthMask(true);
 }
 
-export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
-    const shadowFrame = extras.shadow;
-    const { program, u } = res.world;
-    gl.enable(gl.DEPTH_TEST);
-    gl.enable(gl.CULL_FACE);
-    gl.depthMask(true);
-    gl.useProgram(program);
+function bindSceneTextures(gl, res, extras) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, res.texArray);
-    gl.uniform1i(u.uTexArray, 0);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, res.texData);
-    gl.uniform1i(u.uTexData, 2);
     gl.activeTexture(gl.TEXTURE3);
     gl.bindTexture(gl.TEXTURE_2D, res.shadowTarget.tex);
-    gl.uniform1i(u.uShadowMap, 3);
-    gl.uniformMatrix4fv(u.uShadowMat, false, shadowFrame.viewProj);
-    gl.uniform3fv(u.uShadowCenter, shadowFrame.center);
-    gl.uniform2f(u.uShadowParams, 1 / shadowFrame.mapSize, shadowFrame.radius);
     gl.activeTexture(gl.TEXTURE4);
     gl.bindTexture(gl.TEXTURE_2D, extras.depthTex);
-    gl.uniform1i(u.uSceneDepth, 4);
-    gl.uniform2f(u.uResolution, extras.width, extras.height);
     gl.activeTexture(gl.TEXTURE0);
+}
+
+function setSharedUniforms(gl, u, frame, atmo, timeSec, fog) {
+    const { cam, eye, shadow } = frame;
+    gl.uniform1i(u.uTexArray, 0);
+    gl.uniform1i(u.uTexData, 2);
+    gl.uniform1i(u.uShadowMap, 3);
+    gl.uniformMatrix4fv(u.uShadowMat, false, shadow.viewProj);
+    gl.uniform3fv(u.uShadowCenter, shadow.center);
+    gl.uniform2f(u.uShadowParams, 1 / shadow.mapSize, shadow.radius);
     gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
     gl.uniform3fv(u.uCamPos, eye);
     setAtmosphere(gl, u, atmo, timeSec);
@@ -57,6 +53,26 @@ export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
     gl.uniform1f(u.uFogEnd, fog[1]);
 }
 
+export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
+    const { program, u } = res.world;
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.depthMask(true);
+    gl.useProgram(program);
+    bindSceneTextures(gl, res, extras);
+    gl.uniform1i(u.uSceneDepth, 4);
+    gl.uniform2f(u.uResolution, extras.width, extras.height);
+    setSharedUniforms(gl, u, { cam, eye, shadow: extras.shadow }, atmo, timeSec, fog);
+}
+
+export function beginMobPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
+    const { program, u } = res.mob;
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
+    gl.depthMask(true);
+    gl.useProgram(program);
+    setSharedUniforms(gl, u, { cam, eye, shadow: extras.shadow }, atmo, timeSec, fog);
+}
 function drawLayer(gl, res, entries, layer) {
     const uOrigin = res.world.u.uChunkOrigin;
     let drawCalls = 0;

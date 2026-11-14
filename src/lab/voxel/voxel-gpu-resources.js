@@ -1,4 +1,5 @@
 import { createUniformCache, linkProgram } from "./voxel-gl-utils.js";
+import { createMobGeometry, destroyMobGeometry } from "./voxel-mob-render.js";
 import {
     BLOOM_BLUR_FS,
     BLOOM_EXTRACT_FS,
@@ -8,6 +9,7 @@ import {
     WIRE_FS,
     WIRE_VS
 } from "./voxel-shaders-fx.js";
+import { MOB_FS, MOB_VS } from "./voxel-shaders-mob.js";
 import { SHADOW_FS, SHADOW_VS } from "./voxel-shaders-shadow.js";
 import { SKY_FS, SKY_VS } from "./voxel-shaders-sky.js";
 import { WORLD_FS, WORLD_VS } from "./voxel-shaders-world.js";
@@ -30,9 +32,16 @@ const WORLD_UNIFORMS = [
     ...ATMOSPHERE_UNIFORMS
 ];
 
+const MOB_UNIFORMS = [
+    "uTexArray", "uTexData", "uViewProj", "uCamPos", "uFogStart", "uFogEnd",
+    "uShadowMap", "uShadowMat", "uShadowCenter", "uShadowParams",
+    ...ATMOSPHERE_UNIFORMS
+];
+
 export const PROGRAM_SPECS = {
     sky: { vs: SKY_VS, fs: SKY_FS, uniforms: SKY_UNIFORMS },
     world: { vs: WORLD_VS, fs: WORLD_FS, uniforms: WORLD_UNIFORMS },
+    mob: { vs: MOB_VS, fs: MOB_FS, uniforms: MOB_UNIFORMS },
     shadow: { vs: SHADOW_VS, fs: SHADOW_FS, uniforms: ["uLightViewProj", "uChunkOrigin", "uTexArray"] },
     extract: { vs: QUAD_VS, fs: BLOOM_EXTRACT_FS, uniforms: ["uSceneTex"] },
     blur: { vs: QUAD_VS, fs: BLOOM_BLUR_FS, uniforms: ["uTex", "uStep"] },
@@ -64,6 +73,7 @@ export function createGpuResources(gl, atlas) {
         texArray: createVoxelTextureArray(gl, atlas),
         texData: createVoxelDataArray(gl, atlas),
         shadowTarget: createShadowTarget(gl, SHADOW_MAP_SIZE),
+        mobGeo: createMobGeometry(gl),
         quadVao: gl.createVertexArray(),
         wireVao,
         wireBuf
@@ -76,6 +86,7 @@ export function destroyGpuResources(gl, res) {
     gl.deleteTexture(res.texArray);
     gl.deleteTexture(res.texData);
     disposeShadowTarget(gl, res.shadowTarget);
+    destroyMobGeometry(gl, res.mobGeo);
     gl.deleteVertexArray(res.quadVao);
     gl.deleteVertexArray(res.wireVao);
     gl.deleteBuffer(res.wireBuf);
