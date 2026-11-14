@@ -12,6 +12,23 @@ function steerSwim(player, moveF, stepDt) {
     player.vel[1] += (target - player.vel[1]) * blend;
 }
 
+const LIFT_STEP = 0.25;
+const LAND_MAX_LIFT = 1.0;
+const WATER_MAX_LIFT = 3.2;
+const AUTO_JUMP_MAX_RISE_SPEED = 2;
+
+function autoJump(player, inWater, tx, tz, getBlock) {
+    if (player.vel[1] > AUTO_JUMP_MAX_RISE_SPEED) return;
+    if (!player.onGround && !inWater) return;
+    const maxLift = inWater ? WATER_MAX_LIFT : LAND_MAX_LIFT;
+    for (let lift = LIFT_STEP; lift <= maxLift + 1e-6; lift += LIFT_STEP) {
+        if (collidesAABB(tx, player.pos[1] + lift, tz, getBlock)) continue;
+        player.vel[1] = inWater ? 6 + lift * 3.5 : Math.sqrt(-2 * GRAVITY * (lift + 0.25));
+        player.onGround = false;
+        return;
+    }
+}
+
 export function collidesAABB(px, py, pz, getBlock) {
     const hw = 0.28;
     const h = 1.68;
@@ -94,10 +111,14 @@ export function stepPlayerPhysics(player, keys, dt, getBlock) {
     const nx = player.pos[0] + vx * stepDt;
     if (!collidesAABB(nx, player.pos[1], player.pos[2], getBlock)) {
         player.pos[0] = nx;
+    } else if (moveF > 0) {
+        autoJump(player, inWater, nx, player.pos[2], getBlock);
     }
     const nz = player.pos[2] + vz * stepDt;
     if (!collidesAABB(player.pos[0], player.pos[1], nz, getBlock)) {
         player.pos[2] = nz;
+    } else if (moveF > 0) {
+        autoJump(player, inWater, player.pos[0], nz, getBlock);
     }
 
     const ny = player.pos[1] + player.vel[1] * stepDt;

@@ -61,6 +61,71 @@ describe("walking physics", () => {
     });
 });
 
+describe("auto jump", () => {
+    const step = (height) => (x, y, z) => (z <= -1 && y < GROUND + height ? BLOCK.STONE : BLOCK.AIR);
+
+    it("climbs a one block ledge while moving forward", () => {
+        const player = makePlayer();
+        run(player, ["KeyW"], makeWorld(step(1)), 1.5);
+        expect(player.pos[1]).toBeCloseTo(GROUND + 1, 1);
+        expect(player.pos[2]).toBeLessThan(-1);
+    });
+
+    it("does not climb a two block wall", () => {
+        const player = makePlayer();
+        run(player, ["KeyW"], makeWorld(step(2)), 2);
+        expect(player.pos[1]).toBeCloseTo(GROUND, 1);
+        expect(player.pos[2]).toBeGreaterThan(-1.4);
+    });
+
+    it("does not auto jump when moving backward or sideways", () => {
+        const behind = (x, y, z) => (z >= 1 && y < GROUND + 1 ? BLOCK.STONE : BLOCK.AIR);
+        const back = makePlayer();
+        run(back, ["KeyS"], makeWorld(behind), 1.5);
+        expect(back.pos[1]).toBeCloseTo(GROUND, 1);
+        const side = (x, y) => (x >= 1 && y < GROUND + 1 ? BLOCK.STONE : BLOCK.AIR);
+        const strafe = makePlayer();
+        run(strafe, ["KeyD"], makeWorld(side), 1.5);
+        expect(strafe.pos[1]).toBeCloseTo(GROUND, 1);
+    });
+
+    it("does not auto jump in fly mode", () => {
+        const player = makePlayer({ flyMode: true, pos: [0.5, GROUND, 0.5] });
+        run(player, ["KeyW"], makeWorld(step(1)), 0.5);
+        expect(player.pos[1]).toBe(GROUND);
+    });
+
+    it("does not stack impulses while already rising", () => {
+        const player = makePlayer({ vel: [0, 6, 0] });
+        run(player, ["KeyW"], makeWorld(step(1)), 0.02);
+        expect(player.vel[1]).toBeLessThan(6);
+    });
+
+    it.each([1 / 30, 1 / 60, 1 / 144])("climbs out of the water onto a ledge one block above the surface at dt %f", (dt) => {
+        const surface = GROUND + 6;
+        const ledge = (x, y, z) => {
+            if (z <= -1 && y < surface + 1) return BLOCK.STONE;
+            return y >= GROUND && y < surface ? BLOCK.WATER : BLOCK.AIR;
+        };
+        const player = makePlayer({ pos: [0.5, surface - 1.6, 0.5], pitch: 0 });
+        run(player, ["KeyW"], makeWorld(ledge), 3, dt);
+        expect(player.pos[1]).toBeGreaterThanOrEqual(surface + 1 - 0.05);
+        expect(player.pos[2]).toBeLessThan(-1);
+    });
+
+    it("does not leave the water through a ledge that is too high", () => {
+        const surface = GROUND + 6;
+        const tall = (x, y, z) => {
+            if (z <= -1 && y < surface + 3) return BLOCK.STONE;
+            return y >= GROUND && y < surface ? BLOCK.WATER : BLOCK.AIR;
+        };
+        const player = makePlayer({ pos: [0.5, surface - 1.6, 0.5], pitch: 0 });
+        run(player, ["KeyW"], makeWorld(tall), 3);
+        expect(player.pos[1]).toBeLessThan(surface + 1);
+        expect(player.pos[2]).toBeGreaterThan(-1.4);
+    });
+});
+
 describe("fly mode", () => {
     it("ignores gravity", () => {
         const player = makePlayer({ flyMode: true, pos: [0.5, 40, 0.5] });
