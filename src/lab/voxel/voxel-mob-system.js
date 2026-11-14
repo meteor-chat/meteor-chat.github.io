@@ -20,6 +20,18 @@ export function skyLightAt(pos, getBlock) {
     return 1;
 }
 
+const GROUND_SCAN = 8;
+
+export function groundBelow(pos, getBlock) {
+    const x = Math.floor(pos[0]);
+    const z = Math.floor(pos[2]);
+    const top = Math.floor(pos[1] - 0.01);
+    for (let i = 0; i < GROUND_SCAN; i += 1) {
+        if (isSolid(getBlock(x, top - i, z))) return top - i + 1;
+    }
+    return pos[1] - GROUND_SCAN - 1;
+}
+
 export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
     const cats = [];
     const ctx = { rng, playerPos: [0, 0, 0], getBlock, frozen: false };
@@ -28,6 +40,7 @@ export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
         if (cats.length >= MAX_CATS) return null;
         const cat = createCat(x, y, z, variant, rng);
         cat.sky = skyLightAt(cat.pos, getBlock);
+        cat.groundY = groundBelow(cat.pos, getBlock);
         cats.push(cat);
         return cat;
     };
@@ -44,6 +57,7 @@ export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
             ctx.frozen = !isLoaded(cat.pos[0], cat.pos[2]);
             stepCat(cat, dt, ctx);
             cat.sky += (skyLightAt(cat.pos, getBlock) - cat.sky) * blend;
+            cat.groundY = groundBelow(cat.pos, getBlock);
         }
     };
 

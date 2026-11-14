@@ -39,14 +39,28 @@ describe("mob rendering", () => {
         expect(mock.calls("bufferSubData")).toBe(0);
     });
 
-    it("draws every cat in one upload and one draw call", () => {
+    it("draws every cat in one upload and one draw call plus one batched shadow upload", () => {
         const { mock, frame } = fixture();
         const base = frame([]);
         const uploadsBefore = mock.calls("bufferSubData");
         const stats = frame([catAt(10, 6), catAt(12, 8), catAt(6, 10)]);
-        expect(mock.calls("bufferSubData")).toBe(uploadsBefore + 1);
+        expect(mock.calls("bufferSubData")).toBe(uploadsBefore + 2);
         expect(stats.drawCalls).toBe(base.drawCalls + 1);
         expect(stats.triCount).toBeGreaterThan(base.triCount);
+    });
+
+    it("skips the blob shadow batch at night but still draws the cats", () => {
+        const mock = createMockGl();
+        const canvas = document.createElement("canvas");
+        canvas.width = 320;
+        canvas.height = 200;
+        canvas.getContext = () => mock.gl;
+        const renderer = createVoxelRenderer(canvas, atlas, {});
+        const uploads = mock.calls("bufferSubData");
+        renderer.renderFrame(cam, [8, 50, 8], 1, 0.88, null, false, [catAt(10, 6)]);
+        expect(mock.calls("bufferSubData")).toBe(uploads + 1);
+        renderer.renderFrame(cam, [8, 50, 8], 1, 0.3, null, false, [catAt(10, 6)]);
+        expect(mock.calls("bufferSubData")).toBe(uploads + 3);
     });
 
     it("limits the batch to the maximum number of cats and ignores far away ones", () => {
@@ -68,7 +82,7 @@ describe("mob rendering", () => {
         expect(mock.calls("createBuffer")).toBeGreaterThan(buffersBefore);
         const uploads = mock.calls("bufferSubData");
         frame([catAt(10, 6)]);
-        expect(mock.calls("bufferSubData")).toBe(uploads + 1);
+        expect(mock.calls("bufferSubData")).toBe(uploads + 2);
     });
 
     it("frees the mob geometry on destroy", () => {

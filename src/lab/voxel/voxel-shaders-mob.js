@@ -70,3 +70,31 @@ void main() {
     col = mix(col, skyGradient(normalize(vWorldPos - uCamPos)), fogT);
     fragColor = vec4(col, 1.0);
 }`;
+
+export const BLOB_VS = `#version 300 es
+precision highp float;
+
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aData;
+
+uniform mat4 uViewProj;
+
+out vec3 vData;
+
+void main() {
+    vData = aData;
+    gl_Position = uViewProj * vec4(aPos, 1.0);
+}`;
+
+export const BLOB_FS = `#version 300 es
+precision highp float;
+
+in vec3 vData;
+
+out vec4 fragColor;
+
+void main() {
+    float r = length(vData.xy);
+    float a = (1.0 - smoothstep(0.25, 1.0, r)) * vData.z;
+    fragColor = vec4(0.0, 0.0, 0.0, a);
+}`;

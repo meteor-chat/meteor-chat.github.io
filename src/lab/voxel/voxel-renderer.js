@@ -9,6 +9,7 @@ import {
     linearizeAtmosphere
 } from "./voxel-gl-utils.js";
 import { createMeshStore } from "./voxel-mesh-store.js";
+import { drawBlobShadows, sunPowerOf } from "./voxel-mob-blob.js";
 import { drawMobs } from "./voxel-mob-render.js";
 import { createShadowController } from "./voxel-shadow-math.js";
 import { projectSunToScreen, raysStrength } from "./voxel-sun-screen.js";
@@ -137,6 +138,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         if (mobs.length > 0) {
             beginMobPass(gl, res, cam, eye, atmo, timeSec, fogRange, passExtras);
             mobStats = drawMobs(gl, res.mobGeo, mobs, timeSec, eye);
+            drawBlobShadows(gl, res, cam, mobs, eye, { sunPower: sunPowerOf(rawAtmo.sunDir[1]), fog: fogRange });
         }
         drawWire(gl, res, cam, targetHit);
         drawSky(gl, res, cam, atmo, timeSec);
