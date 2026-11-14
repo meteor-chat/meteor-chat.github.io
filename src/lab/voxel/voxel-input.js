@@ -56,9 +56,10 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
     };
 
     const onMouseMove = (e) => {
+        const sens = state.settings ? state.settings.sensitivity : 1;
         if (isLocked()) {
-            player.yaw += e.movementX * 0.0024;
-            player.pitch = clampPitch(player.pitch - e.movementY * 0.0024);
+            player.yaw += e.movementX * 0.0024 * sens;
+            player.pitch = clampPitch(player.pitch - e.movementY * 0.0024 * sens);
             return;
         }
         if (!dragging) return;
@@ -67,8 +68,8 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
         if (Math.hypot(dx, dy) > 3) dragMoved = true;
         lastX = e.clientX;
         lastY = e.clientY;
-        player.yaw += dx * 0.0045;
-        player.pitch = clampPitch(player.pitch - dy * 0.0045);
+        player.yaw += dx * 0.0045 * sens;
+        player.pitch = clampPitch(player.pitch - dy * 0.0045 * sens);
     };
 
     const onMouseUp = (e) => {

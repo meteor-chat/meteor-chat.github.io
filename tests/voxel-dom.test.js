@@ -130,4 +130,34 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(app.state.timeOfDay).toBeCloseTo(0.88, 2);
         expect(nightBtn.getAttribute("aria-pressed")).toBe("true");
     });
+
+    it("toggles the settings panel and drives sensitivity and field of view from the sliders", () => {
+        const root = document.getElementById("voxel-app-root");
+        app = createVoxelApp(root);
+
+        expect(app.state.settings.sensitivity).toBe(1);
+        expect(app.state.settings.fov).toBe(70);
+
+        const panel = root.querySelector("[data-voxel-settings]");
+        const toggle = root.querySelector("[data-voxel-settings-toggle]");
+        expect(panel.hidden).toBe(true);
+        toggle.click();
+        expect(panel.hidden).toBe(false);
+        expect(toggle.getAttribute("aria-expanded")).toBe("true");
+
+        const sens = root.querySelector("[data-voxel-sens]");
+        sens.value = "2.5";
+        sens.dispatchEvent(new window.Event("input"));
+        expect(app.state.settings.sensitivity).toBeCloseTo(2.5, 5);
+        expect(root.querySelector("[data-voxel-sens-val]").textContent).toBe("2.5");
+
+        const fov = root.querySelector("[data-voxel-fov]");
+        fov.value = "95";
+        fov.dispatchEvent(new window.Event("input"));
+        expect(app.state.settings.fov).toBe(95);
+        expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("95");
+
+        toggle.click();
+        expect(panel.hidden).toBe(true);
+    });
 });

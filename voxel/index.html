@@ -58,9 +58,22 @@ body { background: #09131f; }
             <button type="button" class="voxel-btn" data-voxel-time="0.62" aria-pressed="false">Sunset</button>
             <button type="button" class="voxel-btn" data-voxel-time="0.88" aria-pressed="false">Night</button>
             <button type="button" class="voxel-btn" data-voxel-cycle aria-pressed="false">Auto</button>
+            <button type="button" class="voxel-btn" data-voxel-settings-toggle aria-expanded="false" aria-controls="voxel-settings">Settings</button>
             <a href="/lab" class="voxel-back-btn" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="34" height="34"></a>
         </div>
     </header>
+
+    <section class="voxel-settings" id="voxel-settings" data-voxel-settings aria-label="Pengaturan" hidden>
+        <label class="voxel-setting">
+            <span class="voxel-setting-row"><span>Sensitivitas Mouse</span><span data-voxel-sens-val>1.0</span></span>
+            <input type="range" min="0.2" max="3" step="0.1" value="1" data-voxel-sens>
+        </label>
+        <label class="voxel-setting">
+            <span class="voxel-setting-row"><span>Field of View</span><span data-voxel-fov-val>70</span></span>
+            <input type="range" min="50" max="100" step="1" value="70" data-voxel-fov>
+        </label>
+        <p class="voxel-setting-hint">Tahan Alt untuk berjalan pelan.</p>
+    </section>
 
     <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Pilihan Blok"></nav>
 </main>

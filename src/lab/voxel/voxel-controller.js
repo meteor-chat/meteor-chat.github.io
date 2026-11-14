@@ -65,6 +65,8 @@ export function createVoxelApp(root) {
         stats: { drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null }
     };
 
+    state.settings = { sensitivity: 1, fov: 70 };
+
     const player = {
         pos: [8.5, spawnY, 8.5],
         vel: [0, 0, 0],
@@ -153,7 +155,7 @@ export function createVoxelApp(root) {
         const look = getLookVector(player.yaw, player.pitch);
         const hit = raycastVoxel(eye, look, 8.5, world.getBlock);
         const aspect = canvas.width / Math.max(1, canvas.height);
-        const cam = buildCameraBasis(eye, player.yaw, player.pitch, (70 * Math.PI) / 180, aspect);
+        const cam = buildCameraBasis(eye, player.yaw, player.pitch, (state.settings.fov * Math.PI) / 180, aspect);
 
         if (renderer) {
             state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.cats);

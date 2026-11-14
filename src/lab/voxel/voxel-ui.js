@@ -84,6 +84,34 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
         });
     });
 
+    const settingsPanel = root.querySelector("[data-voxel-settings]");
+    const settingsToggle = root.querySelector("[data-voxel-settings-toggle]");
+    if (settingsPanel && settingsToggle) {
+        settingsToggle.addEventListener("click", () => {
+            const open = settingsPanel.hidden;
+            settingsPanel.hidden = !open;
+            settingsToggle.setAttribute("aria-expanded", String(open));
+        });
+    }
+    const bindRange = (sel, valSel, apply, format) => {
+        const input = root.querySelector(sel);
+        const label = root.querySelector(valSel);
+        if (!input) return;
+        const sync = () => {
+            const value = Number(input.value);
+            apply(value);
+            if (label) label.textContent = format(value);
+        };
+        input.addEventListener("input", sync);
+        sync();
+    };
+    bindRange("[data-voxel-sens]", "[data-voxel-sens-val]", (v) => {
+        state.settings.sensitivity = v;
+    }, (v) => v.toFixed(1));
+    bindRange("[data-voxel-fov]", "[data-voxel-fov-val]", (v) => {
+        state.settings.fov = v;
+    }, (v) => String(Math.round(v)));
+
     const updateTelemetry = (columnCount) => {
         const setTxt = (sel, val) => {
             const el = root.querySelector(sel);
