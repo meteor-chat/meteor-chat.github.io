@@ -20,7 +20,7 @@ export function skyLightAt(pos, getBlock) {
     return 1;
 }
 
-export function createMobSystem({ getBlock, rng }) {
+export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
     const cats = [];
     const ctx = { rng, playerPos: [0, 0, 0], getBlock, frozen: false };
 
@@ -41,6 +41,7 @@ export function createMobSystem({ getBlock, rng }) {
         ctx.playerPos = playerPos;
         const blend = Math.min(1, LIGHT_RATE * dt);
         for (const cat of cats) {
+            ctx.frozen = !isLoaded(cat.pos[0], cat.pos[2]);
             stepCat(cat, dt, ctx);
             cat.sky += (skyLightAt(cat.pos, getBlock) - cat.sky) * blend;
         }
