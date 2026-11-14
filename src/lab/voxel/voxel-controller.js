@@ -139,7 +139,7 @@ export function createVoxelApp(root) {
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.025) % 1;
 
         stepPlayerPhysics(player, input.keys, dt, world.getBlock);
-        mobs.update(dt, player.pos);
+        mobs.update(dt);
         catSpawner.update(dt, player.pos, player.yaw);
 
         const unloaded = world.updateAround(player.pos[0], player.pos[2]);

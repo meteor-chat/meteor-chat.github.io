@@ -34,7 +34,7 @@ export function groundBelow(pos, getBlock) {
 
 export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
     const cats = [];
-    const ctx = { rng, playerPos: [0, 0, 0], getBlock, frozen: false };
+    const ctx = { rng, getBlock, frozen: false };
 
     const spawnCat = (x, y, z, variant) => {
         if (cats.length >= MAX_CATS) return null;
@@ -50,8 +50,7 @@ export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
         if (index >= 0) cats.splice(index, 1);
     };
 
-    const update = (dt, playerPos) => {
-        ctx.playerPos = playerPos;
+    const update = (dt) => {
         const blend = Math.min(1, LIGHT_RATE * dt);
         for (const cat of cats) {
             ctx.frozen = !isLoaded(cat.pos[0], cat.pos[2]);

@@ -1,17 +1,12 @@
 import { CAT_HALF_WIDTH, CAT_HEIGHT, stepMobPhysics } from "./voxel-mob-physics.js";
 
-export const CAT_STATE = Object.freeze({ IDLE: "idle", WALK: "walk", SIT: "sit", FLEE: "flee" });
-export const FLEE_START = 5;
-export const FLEE_END = 7;
+export const CAT_STATE = Object.freeze({ IDLE: "idle", WALK: "walk", SIT: "sit" });
 
 const WALK_SPEED = 1.6;
-const FLEE_SPEED = 4.4;
 const TURN_RATE = 7;
 const SIT_RATE = 4;
 const STRIDE = 3.4;
-const VERTICAL_RANGE = 6;
 const TAU = Math.PI * 2;
-const DETOUR_TIME = 0.7;
 
 const between = (rng, min, max) => min + rng() * (max - min);
 
@@ -36,7 +31,6 @@ export function createCat(x, y, z, variant, rng) {
         onGround: false,
         inWater: false,
         blocked: false,
-        detour: 0,
         state: CAT_STATE.IDLE,
         timer: between(rng, 1, 3),
         speed: 0,
@@ -62,34 +56,12 @@ function chooseNext(cat, rng) {
     }
 }
 
-function playerThreat(cat, player) {
-    const dx = cat.pos[0] - player[0];
-    const dz = cat.pos[2] - player[2];
-    const limit = cat.state === CAT_STATE.FLEE ? FLEE_END : FLEE_START;
-    const near = Math.hypot(dx, dz) < limit && Math.abs(cat.pos[1] - player[1]) < VERTICAL_RANGE;
-    return { near, dx, dz };
-}
-
 function deflect(cat, rng) {
     const side = rng() < 0.5 ? -1 : 1;
     cat.targetYaw = cat.yaw + side * (Math.PI * 0.5 + rng() * 0.8);
 }
 
 function updateIntent(cat, dt, ctx) {
-    const threat = playerThreat(cat, ctx.playerPos);
-    if (threat.near) {
-        if (cat.state !== CAT_STATE.FLEE) enter(cat, CAT_STATE.FLEE, 0, FLEE_SPEED);
-        if (cat.detour > 0) {
-            cat.detour -= dt;
-        } else if (cat.blocked) {
-            deflect(cat, ctx.rng);
-            cat.detour = DETOUR_TIME;
-        } else if (threat.dx !== 0 || threat.dz !== 0) {
-            cat.targetYaw = Math.atan2(threat.dx, -threat.dz);
-        }
-        return;
-    }
-    if (cat.state === CAT_STATE.FLEE) enter(cat, CAT_STATE.IDLE, between(ctx.rng, 1, 3), 0);
     cat.timer -= dt;
     if (cat.blocked && cat.state === CAT_STATE.WALK) deflect(cat, ctx.rng);
     if (cat.timer <= 0) chooseNext(cat, ctx.rng);

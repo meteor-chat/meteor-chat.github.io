@@ -1,13 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { BLOCK } from "../src/lab/voxel/voxel-blocks.js";
-import { CAT_STATE, FLEE_END, FLEE_START, createCat, stepCat } from "../src/lab/voxel/voxel-mob-cat-ai.js";
+import { CAT_STATE, createCat, stepCat } from "../src/lab/voxel/voxel-mob-cat-ai.js";
 import { mulberry32 } from "../src/lab/voxel/voxel-noise.js";
 
 const GROUND = 10;
 const flat = (x, y) => (y < GROUND ? BLOCK.STONE : BLOCK.AIR);
 
-function makeCtx(seed, playerPos, getBlock = flat) {
-    return { rng: mulberry32(seed), playerPos, getBlock, frozen: false };
+function makeCtx(seed, getBlock = flat) {
+    return { rng: mulberry32(seed), getBlock, frozen: false };
 }
 
 function simulate(cat, ctx, seconds, dt = 1 / 60, onStep = () => {}) {
@@ -26,49 +26,38 @@ describe("cat ai", () => {
         expect(cat.variant).toBe("orange");
     });
 
-    it("visits idle, walk and sit states while the player is far away", () => {
+    it("only ever visits idle, walk and sit states", () => {
         const cat = createCat(0.5, GROUND, 0.5, "black", mulberry32(7));
         const seen = new Set();
-        simulate(cat, makeCtx(7, [80, GROUND, 80]), 90, 1 / 30, (c) => seen.add(c.state));
+        simulate(cat, makeCtx(7), 90, 1 / 30, (c) => seen.add(c.state));
         expect(seen.has(CAT_STATE.IDLE)).toBe(true);
         expect(seen.has(CAT_STATE.WALK)).toBe(true);
         expect(seen.has(CAT_STATE.SIT)).toBe(true);
-        expect(seen.has(CAT_STATE.FLEE)).toBe(false);
+        expect([...seen].every((s) => Object.values(CAT_STATE).includes(s))).toBe(true);
     });
 
-    it("flees from a nearby player and increases the distance", () => {
+    it("keeps wandering normally and does not react to a nearby player", () => {
         const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(3));
-        const player = [0.5 + 3, GROUND, 0.5];
-        const ctx = makeCtx(3, player);
-        simulate(cat, ctx, 0.3);
-        expect(cat.state).toBe(CAT_STATE.FLEE);
-        const before = Math.hypot(cat.pos[0] - player[0], cat.pos[2] - player[2]);
-        simulate(cat, ctx, 1.5);
-        const after = Math.hypot(cat.pos[0] - player[0], cat.pos[2] - player[2]);
-        expect(after).toBeGreaterThan(before);
-        expect(cat.pos[0]).toBeLessThan(0.5);
+        const ctx = makeCtx(3);
+        const seen = new Set();
+        simulate(cat, ctx, 30, 1 / 30, (c) => seen.add(c.state));
+        expect(seen.has(CAT_STATE.WALK)).toBe(true);
+        expect(cat.state).not.toBe("flee");
+        expect(Object.values(CAT_STATE)).toContain(cat.state);
     });
 
-    it("stops fleeing once the player is beyond the release distance", () => {
-        const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(5));
-        const player = [0.5 + FLEE_START - 1, GROUND, 0.5];
-        const ctx = makeCtx(5, player);
-        simulate(cat, ctx, 0.3);
-        expect(cat.state).toBe(CAT_STATE.FLEE);
-        player[0] = 0.5 + FLEE_END + 2;
-        simulate(cat, ctx, 0.2);
-        expect(cat.state).not.toBe(CAT_STATE.FLEE);
-    });
-
-    it("ignores a player on a very different height", () => {
-        const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(5));
-        simulate(cat, makeCtx(5, [2, GROUND + 30, 0.5]), 0.5);
-        expect(cat.state).not.toBe(CAT_STATE.FLEE);
+    it("behaves the same whether or not a player stands right next to it", () => {
+        const lone = createCat(0.5, GROUND, 0.5, "orange", mulberry32(14));
+        const crowded = createCat(0.5, GROUND, 0.5, "orange", mulberry32(14));
+        simulate(lone, makeCtx(14), 20, 1 / 30);
+        simulate(crowded, { ...makeCtx(14), playerPos: [1.2, GROUND, 0.5] }, 20, 1 / 30);
+        expect(crowded.pos).toEqual(lone.pos);
+        expect(crowded.state).toBe(lone.state);
     });
 
     it("sits without moving and blends the sit pose in", () => {
         const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(9));
-        const ctx = makeCtx(9, [80, GROUND, 80]);
+        const ctx = makeCtx(9);
         simulate(cat, ctx, 0.1);
         cat.state = CAT_STATE.SIT;
         cat.timer = 5;
@@ -84,15 +73,15 @@ describe("cat ai", () => {
     it("is deterministic for the same seed", () => {
         const a = createCat(0.5, GROUND, 0.5, "orange", mulberry32(11));
         const b = createCat(0.5, GROUND, 0.5, "orange", mulberry32(11));
-        simulate(a, makeCtx(11, [60, GROUND, 60]), 20, 1 / 30);
-        simulate(b, makeCtx(11, [60, GROUND, 60]), 20, 1 / 30);
+        simulate(a, makeCtx(11), 20, 1 / 30);
+        simulate(b, makeCtx(11), 20, 1 / 30);
         expect(a.pos).toEqual(b.pos);
         expect(a.state).toBe(b.state);
     });
 
     it("does not move while frozen", () => {
         const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(2));
-        const ctx = makeCtx(2, [80, GROUND, 80]);
+        const ctx = makeCtx(2);
         ctx.frozen = true;
         const start = [...cat.pos];
         simulate(cat, ctx, 3);
@@ -102,7 +91,7 @@ describe("cat ai", () => {
     it("does not pass through a wall while wandering", () => {
         const wall = (x, y, z) => (z <= -2 && y < GROUND + 3 ? BLOCK.STONE : flat(x, y));
         const cat = createCat(0.5, GROUND, 0.5, "orange", mulberry32(4));
-        const ctx = makeCtx(4, [80, GROUND, 80], wall);
+        const ctx = makeCtx(4, wall);
         cat.state = CAT_STATE.WALK;
         cat.timer = 30;
         cat.speed = 1.6;
@@ -112,11 +101,15 @@ describe("cat ai", () => {
         expect(cat.pos[1]).toBeCloseTo(GROUND, 3);
     });
 
-    it("escapes a wall in its way while fleeing", () => {
+    it("turns away from a wall it keeps bumping into", () => {
         const wall = (x, y, z) => (z <= -2 && y < GROUND + 3 ? BLOCK.STONE : flat(x, y));
         const cat = createCat(0.5, GROUND, -0.4, "orange", mulberry32(6));
-        const player = [0.5, GROUND, 2.5];
-        simulate(cat, makeCtx(6, player, wall), 4, 1 / 30);
+        cat.state = CAT_STATE.WALK;
+        cat.timer = 30;
+        cat.speed = 1.6;
+        cat.yaw = 0;
+        cat.targetYaw = 0;
+        simulate(cat, makeCtx(6, wall), 4, 1 / 30);
         expect(cat.pos[2]).toBeGreaterThan(-1.8);
         expect(Number.isFinite(cat.pos[0])).toBe(true);
     });

@@ -47,18 +47,21 @@ describe("mob system", () => {
         const cat = system.spawnCat(0.5, GROUND, 0.5, "calico");
         expect(cat.sky).toBeLessThan(0.5);
         cat.sky = 1;
-        for (let i = 0; i < 30; i += 1) system.update(1 / 30, [90, GROUND, 90]);
+        for (let i = 0; i < 30; i += 1) system.update(1 / 30);
         expect(cat.pos[1]).toBeCloseTo(GROUND, 3);
         expect(cat.sky).toBeLessThan(0.5);
         expect(cat.sky).toBeGreaterThan(0.3);
     });
 
-    it("makes cats flee a nearby player through the shared update", () => {
+    it("wanders cats through the shared update without reacting to the player", () => {
         const system = makeSystem();
         const cat = system.spawnCat(0.5, GROUND, 0.5, "orange");
-        const player = [3.5, GROUND, 0.5];
-        for (let i = 0; i < 10; i += 1) system.update(1 / 30, player);
-        expect(cat.state).toBe("flee");
-        expect(cat.pos[0]).toBeLessThan(0.5);
+        const seen = new Set();
+        for (let i = 0; i < 300; i += 1) {
+            system.update(1 / 30);
+            seen.add(cat.state);
+        }
+        expect(seen.has("walk")).toBe(true);
+        expect(seen.has("flee")).toBe(false);
     });
 });
