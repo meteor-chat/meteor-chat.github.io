@@ -78,7 +78,7 @@ describe("cat model", () => {
         }
     });
 
-    it("uses the face texture on exactly one head quad and the fur texture elsewhere", () => {
+    it("uses the face texture on the head and snout front quads and the fur texture elsewhere", () => {
         for (const variant of Object.keys(CAT_LAYERS)) {
             const { out } = build(makeCat({ variant }));
             const layers = new Map();
@@ -87,10 +87,27 @@ describe("cat model", () => {
                 layers.set(layer, (layers.get(layer) || 0) + 1);
             }
             expect([...layers.keys()].sort()).toEqual([CAT_LAYERS[variant].fur, CAT_LAYERS[variant].face].sort());
-            expect(layers.get(CAT_LAYERS[variant].face), variant).toBe(6);
+            expect(layers.get(CAT_LAYERS[variant].face), variant).toBe(12);
         }
         expect(CAT_LAYERS.orange.fur).toBe(TEX.CAT_FUR_ORANGE);
         expect(CAT_LAYERS.sand.face).toBe(TEX.CAT_FACE_SAND);
+    });
+
+    it("features a protruding 3D snout box in front of the head", () => {
+        const cat = makeCat({ yaw: 0 });
+        const { out } = build(cat);
+        let minZ = Infinity;
+        let headZ = Infinity;
+        for (let i = 0; i < VERTS_PER_CAT; i += 1) {
+            const v = vertex(out, i);
+            minZ = Math.min(minZ, v.pos[2]);
+            if (v.pos[1] > 20.45 && v.pos[1] < 20.55 && Math.abs(v.pos[0] - 10.5) > 0.08) {
+                headZ = Math.min(headZ, v.pos[2]);
+            }
+        }
+        expect(minZ).toBeLessThan(headZ);
+        expect(cat.pos[2] - minZ).toBeGreaterThan(0.53);
+        expect(cat.pos[2] - minZ).toBeLessThan(0.58);
     });
 
     it("faces forward along the yaw direction", () => {

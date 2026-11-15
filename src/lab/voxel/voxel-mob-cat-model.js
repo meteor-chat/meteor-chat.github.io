@@ -28,6 +28,7 @@ const PIVOTS = {
 const PARTS = [
     { min: [-0.14, 0.18, -0.26], max: [0.14, 0.42, 0.26], chain: ["body"] },
     { min: [-0.13, 0.34, -0.5], max: [0.13, 0.58, -0.24], chain: ["head", "body"], head: true },
+    { min: [-0.065, 0.35, -0.55], max: [0.065, 0.44, -0.5], chain: ["head", "body"], snout: true },
     { min: [-0.11, 0.58, -0.42], max: [-0.04, 0.65, -0.35], chain: ["head", "body"] },
     { min: [0.04, 0.58, -0.42], max: [0.11, 0.65, -0.35], chain: ["head", "body"] },
     { min: [-0.125, 0, -0.24], max: [-0.035, 0.2, -0.15], chain: ["legFL", "body"] },
@@ -145,8 +146,16 @@ function emitFace(out, cursor, args) {
         placeInWorld(cat, pose, part.chain, local, true, c, s, placed);
         const du = sign < 0 ? 1 - cu : cu;
         const full = part.head && k === 2 && sign < 0;
-        const u = full ? du : du * sizeU * UV_SCALE;
-        const v = full ? cv : cv * sizeV * UV_SCALE;
+        const snoutFront = part.snout && k === 2 && sign < 0;
+        let u = du * sizeU * UV_SCALE;
+        let v = cv * sizeV * UV_SCALE;
+        if (full) {
+            u = du;
+            v = cv;
+        } else if (snoutFront) {
+            u = 0.25 + du * 0.5;
+            v = 0.12 + cv * 0.33;
+        }
         return [placed[0], placed[1], placed[2], u, v];
     });
     let o = cursor;
@@ -168,7 +177,7 @@ export function buildCatVertices(cat, timeSec, out, offset) {
     for (const part of PARTS) {
         for (let k = 0; k < 3; k += 1) {
             for (const sign of [1, -1]) {
-                const front = part.head && k === 2 && sign < 0;
+                const front = (part.head || part.snout) && k === 2 && sign < 0;
                 const layer = front ? layers.face : layers.fur;
                 cursor = emitFace(out, cursor, { cat, pose, part, layer, sky, k, sign, c, s });
             }
