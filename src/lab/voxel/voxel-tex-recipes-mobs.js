@@ -16,6 +16,8 @@ const EYES = {
 };
 const NOSE = [226, 150, 156];
 const MOUTH = [70, 40, 44];
+const BEAK = [[218, 142, 34], [238, 168, 48], [252, 192, 68], [255, 214, 98]];
+const WATTLE = [[168, 28, 32], [204, 38, 44], [232, 54, 58], [248, 82, 86]];
 
 const baseTone = (p) => tileFbm(p.u, p.v, 4, 3, p.seed) * 0.5 + p.px * 0.5;
 
@@ -73,6 +75,29 @@ function faceOf(fur, variant) {
     };
 }
 
+const chickenFeather = (p) => {
+    const base = baseTone(p);
+    return [...palettePick(WHITE, 0.45 + base * 0.55, p.x, p.y), 255, 0.35 + base * 0.4, 0.9, 0];
+};
+
+const chickenFace = (p) => {
+    if (inBox(p, 2, 8, 3, 9) || inBox(p, 12, 8, 13, 9)) {
+        const pupil = p.x === 2 || p.x === 13;
+        return pupil ? [18, 18, 22, 255, 0.3, 0.3, 0] : [248, 248, 250, 255, 0.35, 0.3, 0.1];
+    }
+    return chickenFeather(p);
+};
+
+const chickenBeak = (p) => {
+    const base = baseTone(p);
+    return [...palettePick(BEAK, 0.35 + base * 0.65, p.x, p.y), 255, 0.45 + base * 0.4, 0.85, 0];
+};
+
+const chickenWattle = (p) => {
+    const base = baseTone(p);
+    return [...palettePick(WATTLE, 0.35 + base * 0.65, p.x, p.y), 255, 0.4 + base * 0.4, 0.7, 0];
+};
+
 export const MOB_RECIPES = {
     [TEX.CAT_FUR_ORANGE]: { seed: 201, fn: furOrange, bump: 1.2 },
     [TEX.CAT_FUR_BLACK]: { seed: 202, fn: furBlack, bump: 1.0 },
@@ -83,5 +108,9 @@ export const MOB_RECIPES = {
     [TEX.CAT_FACE_BLACK]: { seed: 202, fn: faceOf(furBlack, "black"), bump: 1.0 },
     [TEX.CAT_FACE_CALICO]: { seed: 203, fn: faceOf(furCalico, "calico"), bump: 1.2 },
     [TEX.CAT_FACE_WHITE]: { seed: 204, fn: faceOf(furWhite, "white"), bump: 1.0 },
-    [TEX.CAT_FACE_SAND]: { seed: 205, fn: faceOf(furSand, "sand"), bump: 1.0 }
+    [TEX.CAT_FACE_SAND]: { seed: 205, fn: faceOf(furSand, "sand"), bump: 1.0 },
+    [TEX.CHICKEN_FEATHER]: { seed: 251, fn: chickenFeather, bump: 1.0 },
+    [TEX.CHICKEN_FACE]: { seed: 252, fn: chickenFace, bump: 1.0 },
+    [TEX.CHICKEN_BEAK]: { seed: 253, fn: chickenBeak, bump: 0.8 },
+    [TEX.CHICKEN_WATTLE]: { seed: 254, fn: chickenWattle, bump: 0.8 }
 };

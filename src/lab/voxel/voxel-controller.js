@@ -3,7 +3,7 @@ import { buildCameraBasis } from "./voxel-camera.js";
 import { stepPlayerPhysics } from "./voxel-physics.js";
 import { bindVisibility, createVoxelInput } from "./voxel-input.js";
 import { createMobSystem } from "./voxel-mob-system.js";
-import { createCatSpawner } from "./voxel-mob-spawn.js";
+import { createCatSpawner, createChickenSpawner } from "./voxel-mob-spawn.js";
 import { mulberry32 } from "./voxel-noise.js";
 import { createQualityController } from "./voxel-quality.js";
 import { raycastVoxel } from "./voxel-raycast.js";
@@ -85,6 +85,7 @@ export function createVoxelApp(root) {
     const isColumnLoaded = (wx, wz) => Boolean(world.getColumn(Math.floor(wx / 16), Math.floor(wz / 16)));
     const mobs = createMobSystem({ getBlock: world.getBlock, rng: mobRng, isLoaded: isColumnLoaded });
     const catSpawner = createCatSpawner({ mobs, world, seed, rng: mobRng });
+    const chickenSpawner = createChickenSpawner({ mobs, world, seed, rng: mobRng });
     const hud = createVoxelHud(root, atlas, state, player, canvas);
 
     const uploadMeshes = (urgent) => {
@@ -143,6 +144,7 @@ export function createVoxelApp(root) {
         stepPlayerPhysics(player, input.keys, dt, world.getBlock);
         mobs.update(dt);
         catSpawner.update(dt, player.pos, player.yaw);
+        chickenSpawner.update(dt, player.pos, player.yaw);
 
         const unloaded = world.updateAround(player.pos[0], player.pos[2]);
         for (const u of unloaded) {
@@ -158,7 +160,7 @@ export function createVoxelApp(root) {
         const cam = buildCameraBasis(eye, player.yaw, player.pitch, (state.settings.fov * Math.PI) / 180, aspect);
 
         if (renderer) {
-            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.cats);
+            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.all);
         }
 
         state.frameCount += 1;

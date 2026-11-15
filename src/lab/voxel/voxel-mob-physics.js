@@ -3,8 +3,12 @@ import { collidesAABB } from "./voxel-physics.js";
 
 export const CAT_HALF_WIDTH = 0.25;
 export const CAT_HEIGHT = 0.62;
+export const CHICKEN_HALF_WIDTH = 0.20;
+export const CHICKEN_HEIGHT = 0.50;
 
 const GRAVITY = -24;
+const GLIDE_GRAVITY = -6;
+const MAX_GLIDE_FALL = -2.2;
 const MAX_DROP = 2;
 const HOP_LIFT = 1.0;
 const HOP_VELOCITY = 7.6;
@@ -74,6 +78,8 @@ export function stepMobPhysics(mob, dt, wishX, wishZ, getBlock) {
     mob.inWater = cell(getBlock, pos[0], pos[1] + 0.2, pos[2]) === BLOCK.WATER;
     if (mob.inWater) {
         mob.vel[1] += (SWIM_RISE - mob.vel[1]) * Math.min(1, 6 * stepDt);
+    } else if (mob.slowFall && mob.vel[1] < 0) {
+        mob.vel[1] = Math.max(MAX_GLIDE_FALL, mob.vel[1] + GLIDE_GRAVITY * stepDt);
     } else {
         mob.vel[1] += GRAVITY * stepDt;
     }

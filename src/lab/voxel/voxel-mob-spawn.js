@@ -89,3 +89,43 @@ export function createCatSpawner({ mobs, world, seed, rng }) {
 
     return { update, trySpawn, isLoaded };
 }
+
+export const MIN_CHICKEN_SPACING = 3;
+export const SPAWN_CHICKEN_CAP = 6;
+
+export function createChickenSpawner({ mobs, world, seed, rng }) {
+    const isLoaded = (wx, wz) => Boolean(world.getColumn(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
+    const ctx = { seed, getBlock: world.getBlock, isLoaded };
+    let timer = SPAWN_INTERVAL * 0.75;
+
+    const crowded = (x, z) => mobs.chickens.some((c) => Math.hypot(c.pos[0] - x, c.pos[2] - z) < MIN_CHICKEN_SPACING);
+
+    const trySpawn = (playerPos, yaw) => {
+        const angle = rng() * Math.PI * 2;
+        const dist = SPAWN_MIN_DIST + rng() * (SPAWN_MAX_DIST - SPAWN_MIN_DIST);
+        const x = Math.floor(playerPos[0] + Math.cos(angle) * dist) + 0.5;
+        const z = Math.floor(playerPos[2] + Math.sin(angle) * dist) + 0.5;
+        if (yaw !== undefined && inViewCone(playerPos, yaw, x, z)) return null;
+        if (crowded(x, z)) return null;
+        const site = findSpawnSurface(x, z, ctx);
+        if (!site || site.biome !== "grass") return null;
+        return mobs.spawnChicken(x, site.y, z, "white");
+    };
+
+    const despawnFar = (playerPos) => {
+        for (const chicken of [...mobs.chickens]) {
+            const far = Math.hypot(chicken.pos[0] - playerPos[0], chicken.pos[2] - playerPos[2]) > DESPAWN_DIST;
+            if (far || !isLoaded(chicken.pos[0], chicken.pos[2]) || chicken.pos[1] < 2) mobs.removeChicken(chicken);
+        }
+    };
+
+    const update = (dt, playerPos, yaw) => {
+        despawnFar(playerPos);
+        timer -= dt;
+        if (timer > 0) return;
+        timer = SPAWN_INTERVAL;
+        if (mobs.chickens.length < SPAWN_CHICKEN_CAP) trySpawn(playerPos, yaw);
+    };
+
+    return { update, trySpawn, isLoaded };
+}

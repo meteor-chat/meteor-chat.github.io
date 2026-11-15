@@ -4,7 +4,7 @@ import { MOB_RECIPES } from "./voxel-tex-recipes-mobs.js";
 import { ORGANIC_RECIPES } from "./voxel-tex-recipes-organic.js";
 import { TERRAIN_RECIPES } from "./voxel-tex-recipes-terrain.js";
 
-const LAYER_COUNT = 28;
+const LAYER_COUNT = 32;
 const RECIPES = { ...TERRAIN_RECIPES, ...ORGANIC_RECIPES, ...FX_RECIPES, ...MOB_RECIPES };
 
 export function generateVoxelAtlasData() {

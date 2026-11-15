@@ -1,6 +1,8 @@
 import { BLOCK, isSolid } from "./voxel-blocks.js";
 import { MAX_CATS } from "./voxel-mob-cat-model.js";
 import { createCat, stepCat } from "./voxel-mob-cat-ai.js";
+import { MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
+import { createChicken, stepChicken } from "./voxel-mob-chicken-ai.js";
 
 const COVER_SCAN = 14;
 const COVERED_LIGHT = 0.32;
@@ -34,6 +36,7 @@ export function groundBelow(pos, getBlock) {
 
 export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
     const cats = [];
+    const chickens = [];
     const ctx = { rng, getBlock, frozen: false };
 
     const spawnCat = (x, y, z, variant) => {
@@ -45,9 +48,23 @@ export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
         return cat;
     };
 
+    const spawnChicken = (x, y, z, variant = "white") => {
+        if (chickens.length >= MAX_CHICKENS) return null;
+        const chicken = createChicken(x, y, z, variant, rng);
+        chicken.sky = skyLightAt(chicken.pos, getBlock);
+        chicken.groundY = groundBelow(chicken.pos, getBlock);
+        chickens.push(chicken);
+        return chicken;
+    };
+
     const removeCat = (cat) => {
         const index = cats.indexOf(cat);
         if (index >= 0) cats.splice(index, 1);
+    };
+
+    const removeChicken = (chicken) => {
+        const index = chickens.indexOf(chicken);
+        if (index >= 0) chickens.splice(index, 1);
     };
 
     const update = (dt) => {
@@ -58,7 +75,30 @@ export function createMobSystem({ getBlock, rng, isLoaded = () => true }) {
             cat.sky += (skyLightAt(cat.pos, getBlock) - cat.sky) * blend;
             cat.groundY = groundBelow(cat.pos, getBlock);
         }
+        for (const chicken of chickens) {
+            ctx.frozen = !isLoaded(chicken.pos[0], chicken.pos[2]);
+            stepChicken(chicken, dt, ctx);
+            chicken.sky += (skyLightAt(chicken.pos, getBlock) - chicken.sky) * blend;
+            chicken.groundY = groundBelow(chicken.pos, getBlock);
+        }
     };
 
-    return { cats, spawnCat, removeCat, update, clear: () => cats.splice(0, cats.length) };
+    const clear = () => {
+        cats.splice(0, cats.length);
+        chickens.splice(0, chickens.length);
+    };
+
+    return {
+        cats,
+        chickens,
+        get all() {
+            return [...cats, ...chickens];
+        },
+        spawnCat,
+        spawnChicken,
+        removeCat,
+        removeChicken,
+        update,
+        clear
+    };
 }

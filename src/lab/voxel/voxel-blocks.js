@@ -51,7 +51,11 @@ export const TEX = {
     CAT_FACE_BLACK: 24,
     CAT_FACE_CALICO: 25,
     CAT_FACE_WHITE: 26,
-    CAT_FACE_SAND: 27
+    CAT_FACE_SAND: 27,
+    CHICKEN_FEATHER: 28,
+    CHICKEN_FACE: 29,
+    CHICKEN_BEAK: 30,
+    CHICKEN_WATTLE: 31
 };
 
 export const HOTBAR_ITEMS = [

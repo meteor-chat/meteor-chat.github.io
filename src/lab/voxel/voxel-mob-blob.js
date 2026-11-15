@@ -1,12 +1,16 @@
 import { MAX_CATS } from "./voxel-mob-cat-model.js";
+import { MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
 
 export const BLOB_FLOATS_PER_VERTEX = 6;
 export const BLOB_VERTS_PER_CAT = 6;
+export const BLOB_TOTAL_MOBS = MAX_CATS + MAX_CHICKENS;
 
 const BLOB_STRENGTH = 0.46;
 const BLOB_LIFT = 0.02;
 const HALF_LENGTH = 0.55;
 const HALF_WIDTH = 0.34;
+const CHICKEN_HALF_LENGTH = 0.28;
+const CHICKEN_HALF_WIDTH = 0.24;
 const SIT_SHRINK = 0.2;
 const FADE_HEIGHT = 2.5;
 const DRAW_DISTANCE = 64;
@@ -33,18 +37,21 @@ export function blobAlpha(cat, distance, sunPower, fog) {
     return BLOB_STRENGTH * sunPower * lift * fogFade(distance, fog);
 }
 
-function writeBlob(stage, cursor, cat, alpha) {
-    const ground = cat.groundY === undefined ? cat.pos[1] : cat.groundY;
-    const scale = 1 - SIT_SHRINK * (cat.anim ? cat.anim.sit : 0);
-    const c = Math.cos(cat.yaw);
-    const s = Math.sin(cat.yaw);
+function writeBlob(stage, cursor, mob, alpha) {
+    const ground = mob.groundY === undefined ? mob.pos[1] : mob.groundY;
+    const isChicken = mob.kind === "chicken";
+    const hw = isChicken ? CHICKEN_HALF_WIDTH : HALF_WIDTH;
+    const hl = isChicken ? CHICKEN_HALF_LENGTH : HALF_LENGTH;
+    const scale = isChicken ? 1 : 1 - SIT_SHRINK * (mob.anim ? mob.anim.sit : 0);
+    const c = Math.cos(mob.yaw);
+    const s = Math.sin(mob.yaw);
     let o = cursor;
     for (const [lx, lz] of LOCAL) {
-        const x = lx * HALF_WIDTH * scale;
-        const z = lz * HALF_LENGTH * scale;
-        stage[o] = cat.pos[0] + x * c - z * s;
+        const x = lx * hw * scale;
+        const z = lz * hl * scale;
+        stage[o] = mob.pos[0] + x * c - z * s;
         stage[o + 1] = ground + BLOB_LIFT;
-        stage[o + 2] = cat.pos[2] + x * s + z * c;
+        stage[o + 2] = mob.pos[2] + x * s + z * c;
         stage[o + 3] = lx;
         stage[o + 4] = lz;
         stage[o + 5] = alpha;
@@ -53,17 +60,22 @@ function writeBlob(stage, cursor, cat, alpha) {
     return o;
 }
 
-export function fillBlobStage(cats, eye, sunPower, fog, stage) {
+export function fillBlobStage(mobs, eye, sunPower, fog, stage) {
     let cursor = 0;
     let count = 0;
+    let catCount = 0;
+    let chickenCount = 0;
     if (sunPower <= 0.001) return { count, floats: cursor };
-    for (const cat of cats) {
-        if (count >= MAX_CATS) break;
-        const distance = Math.hypot(cat.pos[0] - eye[0], cat.pos[1] - eye[1], cat.pos[2] - eye[2]);
+    for (const mob of mobs) {
+        const isChicken = mob.kind === "chicken";
+        if (isChicken ? chickenCount >= MAX_CHICKENS : catCount >= MAX_CATS) continue;
+        const distance = Math.hypot(mob.pos[0] - eye[0], mob.pos[1] - eye[1], mob.pos[2] - eye[2]);
         if (distance > DRAW_DISTANCE) continue;
-        const alpha = blobAlpha(cat, distance, sunPower, fog);
+        const alpha = blobAlpha(mob, distance, sunPower, fog);
         if (alpha <= 0.002) continue;
-        cursor = writeBlob(stage, cursor, cat, alpha);
+        cursor = writeBlob(stage, cursor, mob, alpha);
+        if (isChicken) chickenCount += 1;
+        else catCount += 1;
         count += 1;
     }
     return { count, floats: cursor };
@@ -75,13 +87,13 @@ export function createBlobGeometry(gl) {
     const stride = BLOB_FLOATS_PER_VERTEX * FLOAT_BYTES;
     gl.bindVertexArray(vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, MAX_CATS * BLOB_VERTS_PER_CAT * stride, gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, BLOB_TOTAL_MOBS * BLOB_VERTS_PER_CAT * stride, gl.DYNAMIC_DRAW);
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, stride, 0);
     gl.enableVertexAttribArray(1);
     gl.vertexAttribPointer(1, 3, gl.FLOAT, false, stride, 3 * FLOAT_BYTES);
     gl.bindVertexArray(null);
-    return { vao, buf, stage: new Float32Array(MAX_CATS * BLOB_VERTS_PER_CAT * BLOB_FLOATS_PER_VERTEX) };
+    return { vao, buf, stage: new Float32Array(BLOB_TOTAL_MOBS * BLOB_VERTS_PER_CAT * BLOB_FLOATS_PER_VERTEX) };
 }
 
 export function destroyBlobGeometry(gl, geometry) {
