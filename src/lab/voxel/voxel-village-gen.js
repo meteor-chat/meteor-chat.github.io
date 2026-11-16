@@ -1,5 +1,5 @@
 import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SEA_LEVEL, chunkIndex } from "./voxel-blocks.js";
-import { buildCottage, buildFarm, buildFountain, buildLamp, buildTower } from "./voxel-village-blueprints.js";
+import { buildArchBridge, buildCottage, buildFarm, buildFountain, buildLamp, buildTower, buildWindmill } from "./voxel-village-blueprints.js";
 import { sampleColumnMeta } from "./voxel-world-gen.js";
 
 const STARTER_VX = 36;
@@ -58,7 +58,6 @@ function getVillagePlan(vx, vz, seed) {
     const cottages = [
         { x: vx - 15, z: vz - 15, w: 6, d: 6, chimney: true },
         { x: vx + 9, z: vz - 15, w: 7, d: 6, chimney: true },
-        { x: vx - 15, z: vz + 9, w: 6, d: 6, chimney: false },
         { x: vx + 9, z: vz + 9, w: 6, d: 6, chimney: true }
     ];
     for (const c of cottages) {
@@ -66,22 +65,30 @@ function getVillagePlan(vx, vz, seed) {
         clearZones.push({ x0: c.x, z0: c.z, x1: c.x + c.w - 1, z1: c.z + c.d - 1, y0: baseY + 1, y1: baseY + 7 });
     }
 
+    blocks.push(...buildWindmill(vx - 16, baseY, vz + 9));
+    clearZones.push({ x0: vx - 18, z0: vz + 7, x1: vx - 10, z1: vz + 15, y0: baseY + 1, y1: baseY + 14 });
+
     blocks.push(...buildTower(vx + 14, baseY, vz - 5));
     clearZones.push({ x0: vx + 14, z0: vz - 5, x1: vx + 18, z1: vz - 1, y0: baseY + 1, y1: baseY + 16 });
 
     blocks.push(...buildFarm(vx - 16, baseY, vz - 5, 6, 7));
-    clearZones.push({ x0: vx - 16, z0: vz - 5, x1: vx - 11, z1: vz + 1, y0: baseY + 1, y1: baseY + 4 });
+    clearZones.push({ x0: vx - 16, z0: vz - 5, x1: vx - 10, z1: vz + 1, y0: baseY + 1, y1: baseY + 4 });
+
+    blocks.push(...buildArchBridge(vx, baseY, vz - 25, 7));
+    clearZones.push({ x0: vx - 2, z0: vz - 25, x1: vx + 2, z1: vz - 19, y0: baseY + 1, y1: baseY + 4 });
 
     for (let z = vz - 18; z <= vz + 18; z += 1) {
         if (z >= vz - 3 && z <= vz + 3) continue;
         for (let dx = -1; dx <= 1; dx += 1) {
-            blocks.push({ dx: vx + dx, dy: baseY, dz: z, id: dx === 0 ? BLOCK.STONE : BLOCK.DIRT });
+            const blkId = dx === 0 ? BLOCK.COBBLESTONE : BLOCK.STONE_BRICK;
+            blocks.push({ dx: vx + dx, dy: baseY, dz: z, id: blkId });
         }
     }
     for (let x = vx - 18; x <= vx + 18; x += 1) {
         if (x >= vx - 3 && x <= vx + 3) continue;
         for (let dz = -1; dz <= 1; dz += 1) {
-            blocks.push({ dx: x, dy: baseY, dz: vz + dz, id: dz === 0 ? BLOCK.STONE : BLOCK.DIRT });
+            const blkId = dz === 0 ? BLOCK.COBBLESTONE : BLOCK.STONE_BRICK;
+            blocks.push({ dx: x, dy: baseY, dz: vz + dz, id: blkId });
         }
     }
 
@@ -157,14 +164,14 @@ export function applyVillageToColumn(blocks, cx, cz, seed) {
                     let groundY = 0;
                     for (let y = plan.baseY; y >= 1; y -= 1) {
                         const cur = blocks[chunkIndex(lx, y, lz)];
-                        if (cur === BLOCK.STONE || cur === BLOCK.DIRT || cur === BLOCK.GRASS) {
+                        if (cur === BLOCK.STONE || cur === BLOCK.DIRT || cur === BLOCK.GRASS || cur === BLOCK.STONE_BRICK) {
                             groundY = y;
                             break;
                         }
                     }
                     if (groundY < plan.baseY) {
                         for (let y = groundY + 1; y < plan.baseY; y += 1) {
-                            blocks[chunkIndex(lx, y, lz)] = BLOCK.STONE;
+                            blocks[chunkIndex(lx, y, lz)] = BLOCK.STONE_BRICK;
                         }
                     }
                 }
