@@ -75,6 +75,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             "tests/voxel-mob-spawn.test.js",
             "tests/voxel-mob-blob.test.js",
             "tests/voxel-mob-chicken.test.js",
+            "tests/voxel-village.test.js",
             "tests/helpers/mock-gl.js"
         ];
         const slashLineRe = new RegExp("(^|\\s)/" + "/");

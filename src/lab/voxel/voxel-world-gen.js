@@ -1,5 +1,6 @@
 import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SEA_LEVEL, chunkIndex } from "./voxel-blocks.js";
 import { fbm2, fbm3, mulberry32, noise3, ridged2 } from "./voxel-noise.js";
+import { applyVillageToColumn, isVillageArea } from "./voxel-village-gen.js";
 
 export function sampleColumnMeta(wx, wz, seed) {
     const warpX = fbm2(wx * 0.008, wz * 0.008, 2, seed + 11) * 14;
@@ -111,8 +112,13 @@ export function generateColumn(cx, cz, seed = 2026) {
         }
     }
 
+    applyVillageToColumn(blocks, cx, cz, seed);
+
     for (let lz = 2; lz <= CHUNK_SIZE - 3; lz += 1) {
         for (let lx = 2; lx <= CHUNK_SIZE - 3; lx += 1) {
+            const wx = cx * CHUNK_SIZE + lx;
+            const wz = cz * CHUNK_SIZE + lz;
+            if (isVillageArea(wx, wz, seed)) continue;
             const surf = surfaces[lx + (lz << 4)];
             const biome = biomes[lx + (lz << 4)];
             const topId = blocks[chunkIndex(lx, surf, lz)];
