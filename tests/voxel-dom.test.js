@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { readFileSync, existsSync, readdirSync } from "fs";
 import { createVoxelApp } from "../src/lab/voxel/voxel-controller.js";
+import { hourToTimeOfDay, timeOfDayToHour } from "../src/lab/voxel/voxel-ui.js";
 
 function createMock2dContext() {
     const noop = () => {};
@@ -158,6 +159,20 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         fov.dispatchEvent(new window.Event("input"));
         expect(app.state.settings.fov).toBe(95);
         expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("95");
+
+        const hour = root.querySelector("[data-voxel-hour]");
+        expect(hour.getAttribute("min")).toBe("1");
+        expect(hour.getAttribute("max")).toBe("24");
+        expect(hour.getAttribute("step")).toBe("1");
+        hour.value = "18";
+        hour.dispatchEvent(new window.Event("input"));
+        expect(app.state.autoCycle).toBe(false);
+        expect(app.state.timeOfDay).toBeCloseTo(0.65, 2);
+        expect(root.querySelector("[data-voxel-hour-val]").textContent).toBe("Jam 18");
+        expect(timeOfDayToHour(hourToTimeOfDay(6))).toBe(6);
+        expect(timeOfDayToHour(hourToTimeOfDay(12))).toBe(12);
+        expect(timeOfDayToHour(hourToTimeOfDay(18))).toBe(18);
+        expect(timeOfDayToHour(hourToTimeOfDay(24))).toBe(24);
 
         toggle.click();
         expect(panel.hidden).toBe(true);

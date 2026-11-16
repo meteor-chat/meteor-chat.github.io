@@ -1,6 +1,18 @@
 import { HOTBAR_ITEMS } from "./voxel-blocks.js";
 import { drawHotbarBlockIcon } from "./voxel-textures.js";
 
+export function hourToTimeOfDay(hour) {
+    return (((hour - 6) / 24 + 0.15) % 1 + 1) % 1;
+}
+
+export function timeOfDayToHour(timeOfDay) {
+    const raw = ((timeOfDay - 0.15) % 1 + 1) % 1;
+    let h = Math.round(raw * 24 + 6);
+    if (h > 24) h -= 24;
+    if (h <= 0) h += 24;
+    return h;
+}
+
 export function createVoxelHud(root, atlas, state, player, canvas) {
     const hotbarEl = root.querySelector("[data-voxel-hotbar]");
     const slotBtns = [];
@@ -32,6 +44,9 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
         });
     }
 
+    const hourInput = root.querySelector("[data-voxel-hour]");
+    const hourVal = root.querySelector("[data-voxel-hour-val]");
+
     function syncHud() {
         slotBtns.forEach((btn, idx) => {
             const active = idx === state.selectedSlot;
@@ -55,6 +70,11 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
             const active = !state.autoCycle && Math.abs(state.timeOfDay - val) < 0.05;
             btn.setAttribute("aria-pressed", String(active));
         });
+        if (hourInput && hourVal) {
+            const currentHour = timeOfDayToHour(state.timeOfDay);
+            if (document.activeElement !== hourInput) hourInput.value = String(currentHour);
+            hourVal.textContent = `Jam ${currentHour}`;
+        }
     }
 
     const bindClick = (sel, fn) => {
@@ -111,6 +131,15 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
     bindRange("[data-voxel-fov]", "[data-voxel-fov-val]", (v) => {
         state.settings.fov = v;
     }, (v) => String(Math.round(v)));
+
+    if (hourInput) {
+        hourInput.addEventListener("input", () => {
+            const h = Math.min(24, Math.max(1, Math.round(Number(hourInput.value))));
+            state.autoCycle = false;
+            state.timeOfDay = hourToTimeOfDay(h);
+            syncHud();
+        });
+    }
 
     const updateTelemetry = (columnCount) => {
         const setTxt = (sel, val) => {
