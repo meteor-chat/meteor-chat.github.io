@@ -65,7 +65,7 @@ export function createVoxelApp(root) {
         stats: { drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null }
     };
 
-    state.settings = { sensitivity: 1, fov: 70, viewRadius: 6 };
+    state.settings = { sensitivity: 1, fov: 70, viewRadius: 6, resMode: "auto", lockedRes: 1.0 };
 
     const player = {
         pos: [8.5, spawnY, 8.5],
@@ -90,6 +90,15 @@ export function createVoxelApp(root) {
         onViewDistance: (radius) => {
             world.setViewRadius(radius);
             if (renderer) renderer.setFogRange(radius * 10, radius * 16);
+        },
+        onResolutionChange: () => {
+            if (state.settings.resMode === "lock") {
+                state.renderScale = state.settings.lockedRes;
+            } else {
+                quality.reset();
+                state.renderScale = quality.getScale();
+            }
+            handleResize();
         }
     });
 
@@ -143,7 +152,11 @@ export function createVoxelApp(root) {
         const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) * 0.001));
         lastTime = now;
         state.timeSec += dt;
-        state.renderScale = quality.update(dt);
+        if (state.settings.resMode === "lock") {
+            state.renderScale = state.settings.lockedRes;
+        } else {
+            state.renderScale = quality.update(dt);
+        }
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.025) % 1;
 
         stepPlayerPhysics(player, input.keys, dt, world.getBlock);

@@ -46,6 +46,24 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
 
     const hourInput = root.querySelector("[data-voxel-hour]");
     const hourVal = root.querySelector("[data-voxel-hour-val]");
+    const resAutoBtn = root.querySelector("[data-voxel-res-auto]");
+    const resLockBtn = root.querySelector("[data-voxel-res-lock]");
+    const resSlider = root.querySelector("[data-voxel-res-slider]");
+    const resVal = root.querySelector("[data-voxel-res-val]");
+
+    function syncResUi() {
+        if (!state.settings) return;
+        const isLock = state.settings.resMode === "lock";
+        if (resAutoBtn) resAutoBtn.setAttribute("aria-pressed", String(!isLock));
+        if (resLockBtn) resLockBtn.setAttribute("aria-pressed", String(isLock));
+        const pct = Math.round((state.settings.lockedRes ?? 1) * 100);
+        if (resSlider && document.activeElement !== resSlider) {
+            resSlider.value = String(pct);
+        }
+        if (resVal) {
+            resVal.textContent = isLock ? `Kunci ${pct}%` : "Auto";
+        }
+    }
 
     function syncHud() {
         slotBtns.forEach((btn, idx) => {
@@ -75,6 +93,7 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
             if (document.activeElement !== hourInput) hourInput.value = String(currentHour);
             hourVal.textContent = `Jam ${currentHour}`;
         }
+        syncResUi();
     }
 
     const bindClick = (sel, fn) => {
@@ -142,6 +161,34 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
             state.autoCycle = false;
             state.timeOfDay = hourToTimeOfDay(h);
             syncHud();
+        });
+    }
+
+    if (resAutoBtn) {
+        resAutoBtn.addEventListener("click", () => {
+            if (!state.settings) state.settings = {};
+            state.settings.resMode = "auto";
+            syncResUi();
+            if (hooks.onResolutionChange) hooks.onResolutionChange();
+        });
+    }
+
+    if (resLockBtn) {
+        resLockBtn.addEventListener("click", () => {
+            if (!state.settings) state.settings = {};
+            state.settings.resMode = "lock";
+            syncResUi();
+            if (hooks.onResolutionChange) hooks.onResolutionChange();
+        });
+    }
+
+    if (resSlider) {
+        resSlider.addEventListener("input", () => {
+            if (!state.settings) state.settings = {};
+            state.settings.resMode = "lock";
+            state.settings.lockedRes = Number(resSlider.value) / 100;
+            syncResUi();
+            if (hooks.onResolutionChange) hooks.onResolutionChange();
         });
     }
 

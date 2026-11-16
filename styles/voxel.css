@@ -251,6 +251,17 @@
     color: #38bdf8;
 }
 
+.voxel-res-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.voxel-res-btn {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
 .voxel-setting input[type="range"] {
     width: 100%;
     accent-color: #38bdf8;

@@ -183,6 +183,35 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(app.state.settings.viewRadius).toBe(7);
         expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("7 Chunk (112m)");
 
+        const resAutoBtn = root.querySelector("[data-voxel-res-auto]");
+        const resLockBtn = root.querySelector("[data-voxel-res-lock]");
+        const resSlider = root.querySelector("[data-voxel-res-slider]");
+        const resVal = root.querySelector("[data-voxel-res-val]");
+
+        expect(app.state.settings.resMode).toBe("auto");
+        expect(app.state.settings.lockedRes).toBe(1.0);
+        expect(resAutoBtn.getAttribute("aria-pressed")).toBe("true");
+        expect(resLockBtn.getAttribute("aria-pressed")).toBe("false");
+        expect(resVal.textContent).toBe("Auto");
+
+        resLockBtn.click();
+        expect(app.state.settings.resMode).toBe("lock");
+        expect(resLockBtn.getAttribute("aria-pressed")).toBe("true");
+        expect(resAutoBtn.getAttribute("aria-pressed")).toBe("false");
+        expect(resVal.textContent).toBe("Kunci 100%");
+
+        resSlider.value = "75";
+        resSlider.dispatchEvent(new window.Event("input"));
+        expect(app.state.settings.resMode).toBe("lock");
+        expect(app.state.settings.lockedRes).toBeCloseTo(0.75, 5);
+        expect(resVal.textContent).toBe("Kunci 75%");
+
+        resAutoBtn.click();
+        expect(app.state.settings.resMode).toBe("auto");
+        expect(resAutoBtn.getAttribute("aria-pressed")).toBe("true");
+        expect(resLockBtn.getAttribute("aria-pressed")).toBe("false");
+        expect(resVal.textContent).toBe("Auto");
+
         toggle.click();
         expect(panel.hidden).toBe(true);
     });

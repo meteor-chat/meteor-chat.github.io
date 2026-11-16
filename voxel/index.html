@@ -80,6 +80,14 @@ body { background: #09131f; }
             <span class="voxel-setting-row"><span>Jarak Pandang</span><span data-voxel-dist-val>6 Chunk (96m)</span></span>
             <input type="range" min="3" max="8" step="1" value="6" data-voxel-dist>
         </label>
+        <div class="voxel-setting">
+            <span class="voxel-setting-row"><span>Resolusi Render</span><span data-voxel-res-val>Auto</span></span>
+            <div class="voxel-res-buttons">
+                <button type="button" class="voxel-btn voxel-res-btn" data-voxel-res-auto aria-pressed="true">Auto</button>
+                <button type="button" class="voxel-btn voxel-res-btn" data-voxel-res-lock aria-pressed="false">Kunci</button>
+            </div>
+            <input type="range" min="50" max="100" step="5" value="100" data-voxel-res-slider>
+        </div>
         <p class="voxel-setting-hint">Tahan Shift untuk berjalan pelan.</p>
     </section>
 
