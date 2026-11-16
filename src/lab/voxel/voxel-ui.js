@@ -13,7 +13,7 @@ export function timeOfDayToHour(timeOfDay) {
     return h;
 }
 
-export function createVoxelHud(root, atlas, state, player, canvas) {
+export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
     const hotbarEl = root.querySelector("[data-voxel-hotbar]");
     const slotBtns = [];
     if (hotbarEl) {
@@ -131,6 +131,10 @@ export function createVoxelHud(root, atlas, state, player, canvas) {
     bindRange("[data-voxel-fov]", "[data-voxel-fov-val]", (v) => {
         state.settings.fov = v;
     }, (v) => String(Math.round(v)));
+    bindRange("[data-voxel-dist]", "[data-voxel-dist-val]", (v) => {
+        state.settings.viewRadius = v;
+        if (hooks.onViewDistance) hooks.onViewDistance(v);
+    }, (v) => `${Math.round(v)} Chunk (${Math.round(v) * 16}m)`);
 
     if (hourInput) {
         hourInput.addEventListener("input", () => {

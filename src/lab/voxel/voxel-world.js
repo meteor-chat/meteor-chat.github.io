@@ -13,7 +13,7 @@ import {
 
 export function createVoxelWorld(options = {}) {
     const seed = options.seed ?? 2026;
-    const viewRadius = options.viewRadius ?? 3;
+    let viewRadius = options.viewRadius ?? 6;
     const columns = new Map();
     const pendingGen = new Set();
     const dirtySubs = new Map();
@@ -260,6 +260,8 @@ export function createVoxelWorld(options = {}) {
         remeshAll,
         warmAreaSync,
         getColumnCount: () => columns.size,
+        setViewRadius: (r) => { viewRadius = Math.max(2, Math.min(10, Math.floor(r))); },
+        getViewRadius: () => viewRadius,
         destroy
     };
 }

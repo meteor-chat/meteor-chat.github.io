@@ -27,8 +27,8 @@ import {
 
 export { computeSkyAtmosphere };
 
-const DEFAULT_FOG = [24, 48];
-const DEFAULT_SHADOW_RADIUS = 56;
+const DEFAULT_FOG = [60, 96];
+const DEFAULT_SHADOW_RADIUS = 72;
 const EMPTY_STATS = Object.freeze({ drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null });
 
 export function createVoxelRenderer(canvas, atlas, hooks = {}) {
@@ -37,7 +37,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
 
     let res = createGpuResources(gl, atlas);
     const store = createMeshStore(gl, hooks.store);
-    const fogRange = hooks.fogRange || DEFAULT_FOG;
+    const fogRange = hooks.fogRange ? [...hooks.fogRange] : [...DEFAULT_FOG];
     const shadowCtl = createShadowController({ radius: hooks.shadowRadius || DEFAULT_SHADOW_RADIUS, mapSize: SHADOW_MAP_SIZE });
     let timer = createGpuTimer(gl);
     let targets = null;
@@ -180,6 +180,11 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         renderFrame,
         destroy,
         isLost: () => lost,
-        meshCount: () => store.size()
+        meshCount: () => store.size(),
+        setFogRange: (near, far) => {
+            fogRange[0] = near;
+            fogRange[1] = far;
+        },
+        getFogRange: () => [...fogRange]
     };
 }

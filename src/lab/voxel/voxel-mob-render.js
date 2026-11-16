@@ -1,7 +1,7 @@
 import { buildCatVertices, FLOATS_PER_CAT, FLOATS_PER_VERTEX, MAX_CATS } from "./voxel-mob-cat-model.js";
 import { buildChickenVertices, FLOATS_PER_CHICKEN, MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
 
-const MOB_DRAW_DISTANCE = 64;
+const MOB_DRAW_DISTANCE = 96;
 const FLOAT_BYTES = 4;
 const TOTAL_FLOATS = MAX_CATS * FLOATS_PER_CAT + MAX_CHICKENS * FLOATS_PER_CHICKEN;
 const NO_DRAW = Object.freeze({ drawCalls: 0, triCount: 0 });

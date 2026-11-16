@@ -174,6 +174,15 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(timeOfDayToHour(hourToTimeOfDay(18))).toBe(18);
         expect(timeOfDayToHour(hourToTimeOfDay(24))).toBe(24);
 
+        const dist = root.querySelector("[data-voxel-dist]");
+        expect(dist.getAttribute("min")).toBe("3");
+        expect(dist.getAttribute("max")).toBe("8");
+        expect(dist.getAttribute("step")).toBe("1");
+        dist.value = "7";
+        dist.dispatchEvent(new window.Event("input"));
+        expect(app.state.settings.viewRadius).toBe(7);
+        expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("7 Chunk (112m)");
+
         toggle.click();
         expect(panel.hidden).toBe(true);
     });

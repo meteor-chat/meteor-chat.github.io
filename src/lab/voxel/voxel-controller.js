@@ -28,7 +28,7 @@ export function createVoxelApp(root) {
 
     const seed = 2026;
     const atlas = generateVoxelAtlasData();
-    const viewRadius = 3;
+    const viewRadius = 6;
     const world = createVoxelWorld({ seed, viewRadius });
     const fallbackBanner = root.querySelector("[data-voxel-fallback]");
     const lostBanner = root.querySelector("[data-voxel-context-lost]");
@@ -37,7 +37,7 @@ export function createVoxelApp(root) {
     };
     const quality = createQualityController();
     const renderer = createVoxelRenderer(canvas, atlas, {
-        fogRange: [viewRadius * 8, viewRadius * 16],
+        fogRange: [viewRadius * 10, viewRadius * 16],
         onContextLost: () => setLostBanner(true),
         onContextRestored: () => {
             setLostBanner(false);
@@ -65,7 +65,7 @@ export function createVoxelApp(root) {
         stats: { drawCalls: 0, culledSubs: 0, triCount: 0, uploads: 0, queued: 0, gpuMs: null }
     };
 
-    state.settings = { sensitivity: 1, fov: 70 };
+    state.settings = { sensitivity: 1, fov: 70, viewRadius: 6 };
 
     const player = {
         pos: [8.5, spawnY, 8.5],
@@ -86,7 +86,12 @@ export function createVoxelApp(root) {
     const mobs = createMobSystem({ getBlock: world.getBlock, rng: mobRng, isLoaded: isColumnLoaded });
     const catSpawner = createCatSpawner({ mobs, world, seed, rng: mobRng });
     const chickenSpawner = createChickenSpawner({ mobs, world, seed, rng: mobRng });
-    const hud = createVoxelHud(root, atlas, state, player, canvas);
+    const hud = createVoxelHud(root, atlas, state, player, canvas, {
+        onViewDistance: (radius) => {
+            world.setViewRadius(radius);
+            if (renderer) renderer.setFogRange(radius * 10, radius * 16);
+        }
+    });
 
     const uploadMeshes = (urgent) => {
         for (const msg of world.consumeMeshes()) {

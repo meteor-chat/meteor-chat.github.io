@@ -88,7 +88,7 @@ export function stepPlayerPhysics(player, keys, dt, getBlock) {
         return;
     }
 
-    const sneaking = keys.has("AltLeft") || keys.has("AltRight");
+    const sneaking = keys.has("ShiftLeft") || keys.has("ShiftRight");
     const walkSpeed = (inWater ? SWIM_SPEED : 6.2) * (sneaking ? SNEAK_FACTOR : 1);
     const vx = wishX * walkSpeed;
     const vz = wishZ * walkSpeed;

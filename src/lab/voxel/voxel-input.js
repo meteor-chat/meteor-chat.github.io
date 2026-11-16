@@ -42,7 +42,7 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
 
     const onMouseDown = (e) => {
         if (isLocked()) {
-            performBlockAction(e.button === 2 || e.shiftKey || state.actionMode === "place");
+            performBlockAction(e.button === 2 || state.actionMode === "place");
             return;
         }
         if (e.button === 2) {
@@ -74,7 +74,7 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
 
     const onMouseUp = (e) => {
         if (dragging && !dragMoved && e.button === 0) {
-            performBlockAction(e.shiftKey || state.actionMode === "place");
+            performBlockAction(state.actionMode === "place");
         }
         dragging = false;
     };
