@@ -52,15 +52,7 @@ body { background: #09131f; }
             </div>
         </div>
         <div class="voxel-actions">
-            <button type="button" class="voxel-btn" data-voxel-lock>FPS Lock</button>
-            <button type="button" class="voxel-btn" data-voxel-fly aria-pressed="true">Mode: Fly</button>
-            <button type="button" class="voxel-btn" data-voxel-action aria-pressed="false">Click: Break</button>
-            <button type="button" class="voxel-btn" data-voxel-time="0.28" aria-pressed="true">Day</button>
-            <button type="button" class="voxel-btn" data-voxel-time="0.62" aria-pressed="false">Sunset</button>
-            <button type="button" class="voxel-btn" data-voxel-time="0.88" aria-pressed="false">Night</button>
-            <button type="button" class="voxel-btn" data-voxel-cycle aria-pressed="false">Auto</button>
             <button type="button" class="voxel-btn" data-voxel-settings-toggle aria-expanded="false" aria-controls="voxel-settings">Settings</button>
-            <a href="/lab" class="voxel-back-btn" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="Kembali" width="34" height="34"></a>
         </div>
     </header>
 
@@ -78,6 +70,21 @@ body { background: #09131f; }
                 <button type="button" class="voxel-btn" data-voxel-ui-toggle="hotbar" aria-pressed="true">Bar Item</button>
             </div>
         </div>
+        <div class="voxel-setting">
+            <span class="voxel-setting-title">Kontrol</span>
+            <div class="voxel-toggle-grid">
+                <button type="button" class="voxel-btn" data-voxel-lock>FPS Lock</button>
+                <button type="button" class="voxel-btn" data-voxel-fly aria-pressed="true">Mode: Fly</button>
+                <button type="button" class="voxel-btn" data-voxel-action aria-pressed="false">Click: Break</button>
+            </div>
+            <div class="voxel-toggle-grid">
+                <button type="button" class="voxel-btn" data-voxel-time="0.28" aria-pressed="true">Day</button>
+                <button type="button" class="voxel-btn" data-voxel-time="0.62" aria-pressed="false">Sunset</button>
+                <button type="button" class="voxel-btn" data-voxel-time="0.88" aria-pressed="false">Night</button>
+                <button type="button" class="voxel-btn" data-voxel-cycle aria-pressed="false">Auto</button>
+            </div>
+        </div>
+        <span class="voxel-setting-title">Kamera dan Dunia</span>
         <label class="voxel-setting">
             <span class="voxel-setting-row"><span>Sensitivitas Mouse</span><span data-voxel-sens-val>1.0</span></span>
             <input type="range" min="0.2" max="3" step="0.1" value="1" data-voxel-sens>
@@ -103,6 +110,7 @@ body { background: #09131f; }
             <input type="range" min="50" max="100" step="5" value="100" data-voxel-res-slider>
         </div>
         <p class="voxel-setting-hint">Tahan Shift untuk berjalan pelan.</p>
+        <a href="/lab" class="voxel-back-link" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="" width="20" height="20"><span>Kembali ke Lab</span></a>
     </section>
 
     <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Pilihan Blok"></nav>

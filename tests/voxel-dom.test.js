@@ -79,6 +79,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             "tests/voxel-mob-blob.test.js",
             "tests/voxel-mob-chicken.test.js",
             "tests/voxel-ui-layout.test.js",
+            "tests/voxel-settings-css.test.js",
             "tests/voxel-village.test.js",
             "tests/helpers/mock-gl.js"
         ];
@@ -246,5 +247,44 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         app = createVoxelApp(rootAgain);
         expect(rootAgain.querySelector("[data-voxel-stats]").classList.contains("voxel-ui-off")).toBe(true);
         expect(rootAgain.querySelector("[data-voxel-hotbar]").classList.contains("voxel-ui-off")).toBe(true);
+    });
+    it("keeps only the settings button visible in the header and moves every control into the panel", () => {
+        const root = document.getElementById("voxel-app-root");
+        const header = root.querySelector(".voxel-hud-top");
+        const panel = root.querySelector("[data-voxel-settings]");
+        const headerButtons = header.querySelectorAll("button, a");
+        expect(headerButtons).toHaveLength(1);
+        expect(headerButtons[0].hasAttribute("data-voxel-settings-toggle")).toBe(true);
+        expect(panel.hidden).toBe(true);
+
+        const inPanel = [
+            "[data-voxel-lock]",
+            "[data-voxel-fly]",
+            "[data-voxel-action]",
+            '[data-voxel-time="0.28"]',
+            '[data-voxel-time="0.62"]',
+            '[data-voxel-time="0.88"]',
+            "[data-voxel-cycle]",
+            'a[href="/lab"]'
+        ];
+        for (const selector of inPanel) {
+            expect(panel.querySelector(selector), selector).not.toBeNull();
+            expect(header.querySelector(selector), selector).toBeNull();
+        }
+        expect(panel.querySelector('a[href="/lab"] img').getAttribute("src")).toContain("back.svg");
+    });
+
+    it("still drives fly mode, click mode, and time presets from inside the panel", () => {
+        const root = document.getElementById("voxel-app-root");
+        app = createVoxelApp(root);
+        const panel = root.querySelector("[data-voxel-settings]");
+        panel.querySelector("[data-voxel-fly]").click();
+        expect(app.player.flyMode).toBe(false);
+        panel.querySelector("[data-voxel-action]").click();
+        expect(app.state.actionMode).toBe("place");
+        panel.querySelector('[data-voxel-time="0.62"]').click();
+        expect(app.state.timeOfDay).toBeCloseTo(0.62, 2);
+        panel.querySelector("[data-voxel-cycle]").click();
+        expect(app.state.autoCycle).toBe(true);
     });
 });

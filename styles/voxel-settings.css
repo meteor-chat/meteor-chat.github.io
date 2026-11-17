@@ -6,13 +6,19 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: 236px;
+    width: 252px;
+    max-height: calc(100dvh - 76px);
+    overflow-y: auto;
     padding: 14px 16px;
     border-radius: 12px;
     background: rgba(9, 19, 31, 0.92);
     border: 1px solid rgba(148, 163, 184, 0.28);
     backdrop-filter: blur(8px);
     pointer-events: auto;
+}
+
+.voxel-settings[hidden] {
+    display: none;
 }
 
 .voxel-setting {
@@ -79,6 +85,27 @@
     font-size: 11px;
 }
 
+.voxel-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #e2e8f0;
+    text-decoration: none;
+}
+
+.voxel-back-link img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.voxel-back-link:hover {
+    color: #38bdf8;
+}
+
 @media (max-width: 720px) {
-    .voxel-settings { right: 8px; width: calc(100vw - 16px); max-width: 236px; }
+    .voxel-settings { right: 8px; width: calc(100vw - 16px); max-width: 252px; }
 }

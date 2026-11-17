@@ -127,22 +127,6 @@
     color: #e0f2fe;
 }
 
-.voxel-back-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-}
-
-.voxel-back-btn img {
-    display: block;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-}
-
 .voxel-hotbar {
     position: fixed;
     left: 50%;
