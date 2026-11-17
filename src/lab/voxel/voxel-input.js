@@ -36,6 +36,16 @@ export function createVoxelInput({ canvas, player, state, hud, performBlockActio
         } else if (e.code === "KeyF") {
             player.flyMode = !player.flyMode;
             hud.syncHud();
+        } else if (hud.layout && !e.repeat) {
+            if (e.code === "F1") {
+                e.preventDefault();
+                hud.layout.toggleHideAll();
+            } else if (e.code === "F3") {
+                e.preventDefault();
+                hud.layout.toggle("stats");
+            } else if (e.code === "KeyH") {
+                hud.layout.toggle("hotbar");
+            }
         }
     };
     const onKeyUp = (e) => keys.delete(e.code);

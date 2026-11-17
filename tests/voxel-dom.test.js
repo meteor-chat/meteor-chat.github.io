@@ -80,6 +80,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             "tests/voxel-mob-chicken.test.js",
             "tests/voxel-ui-layout.test.js",
             "tests/voxel-settings-css.test.js",
+            "tests/voxel-ui-shortcuts.test.js",
             "tests/voxel-village.test.js",
             "tests/helpers/mock-gl.js"
         ];
