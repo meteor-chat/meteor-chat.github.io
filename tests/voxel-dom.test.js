@@ -17,6 +17,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
     let app = null;
 
     beforeEach(() => {
+        window.localStorage.clear();
         document.documentElement.innerHTML = readFileSync("voxel.html", "utf8");
         window.HTMLCanvasElement.prototype.getContext = function getMockCtx(kind) {
             if (kind === "2d") return createMock2dContext();
@@ -53,6 +54,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         const files = [
             ...readdirSync("src/lab/voxel").map((f) => `src/lab/voxel/${f}`),
             "styles/voxel.css",
+            "styles/voxel-settings.css",
             "styles/voxel-guard.css",
             "voxel.html",
             "voxel/index.html",
@@ -76,6 +78,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             "tests/voxel-mob-spawn.test.js",
             "tests/voxel-mob-blob.test.js",
             "tests/voxel-mob-chicken.test.js",
+            "tests/voxel-ui-layout.test.js",
             "tests/voxel-village.test.js",
             "tests/helpers/mock-gl.js"
         ];
@@ -214,5 +217,34 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
 
         toggle.click();
         expect(panel.hidden).toBe(true);
+    });
+    it("offers the four interface conditions from the settings panel and remembers them", () => {
+        const root = document.getElementById("voxel-app-root");
+        app = createVoxelApp(root);
+        const stats = root.querySelector("[data-voxel-stats]");
+        const hotbar = root.querySelector("[data-voxel-hotbar]");
+        const settingsBtn = root.querySelector("[data-voxel-settings-toggle]");
+        const hidden = (el) => el.classList.contains("voxel-ui-off");
+        const choose = (name) => root.querySelector(`[data-voxel-ui-preset="${name}"]`).click();
+
+        expect(hidden(stats)).toBe(false);
+        expect(hidden(hotbar)).toBe(false);
+        choose("clear");
+        expect([hidden(stats), hidden(hotbar)]).toEqual([true, true]);
+        choose("bar");
+        expect([hidden(stats), hidden(hotbar)]).toEqual([true, false]);
+        choose("stats");
+        expect([hidden(stats), hidden(hotbar)]).toEqual([false, true]);
+        choose("full");
+        expect([hidden(stats), hidden(hotbar)]).toEqual([false, false]);
+        expect(hidden(settingsBtn)).toBe(false);
+
+        choose("clear");
+        app.destroy();
+        document.documentElement.innerHTML = readFileSync("voxel.html", "utf8");
+        const rootAgain = document.getElementById("voxel-app-root");
+        app = createVoxelApp(rootAgain);
+        expect(rootAgain.querySelector("[data-voxel-stats]").classList.contains("voxel-ui-off")).toBe(true);
+        expect(rootAgain.querySelector("[data-voxel-hotbar]").classList.contains("voxel-ui-off")).toBe(true);
     });
 });

@@ -8,6 +8,7 @@
 <title>Voxel World 3D - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
 <link rel="stylesheet" href="./styles/voxel.css">
+<link rel="stylesheet" href="./styles/voxel-settings.css">
 <link rel="stylesheet" href="./styles/voxel-guard.css">
 <style>
 @font-face {
@@ -41,7 +42,7 @@ body { background: #09131f; }
     <header class="voxel-hud-top">
         <div class="voxel-brand">
             <h1 class="voxel-title">VOXEL WORLD</h1>
-            <div class="voxel-stats">
+            <div class="voxel-stats" data-voxel-stats>
                 <span class="voxel-stat-pill" data-tel-fps>60 FPS</span>
                 <span class="voxel-stat-pill" data-tel-coords>8, 52, 8</span>
                 <span class="voxel-stat-pill" data-tel-chunks>9 cols</span>
@@ -64,6 +65,19 @@ body { background: #09131f; }
     </header>
 
     <section class="voxel-settings" id="voxel-settings" data-voxel-settings aria-label="Pengaturan" hidden>
+        <div class="voxel-setting">
+            <span class="voxel-setting-title">Tampilan</span>
+            <div class="voxel-toggle-grid">
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="clear" aria-pressed="false">Bersih</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="bar" aria-pressed="false">Bar</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="stats" aria-pressed="false">Statistik</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="full" aria-pressed="true">Penuh</button>
+            </div>
+            <div class="voxel-toggle-grid">
+                <button type="button" class="voxel-btn" data-voxel-ui-toggle="stats" aria-pressed="true">Statistik</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-toggle="hotbar" aria-pressed="true">Bar Item</button>
+            </div>
+        </div>
         <label class="voxel-setting">
             <span class="voxel-setting-row"><span>Sensitivitas Mouse</span><span data-voxel-sens-val>1.0</span></span>
             <input type="range" min="0.2" max="3" step="0.1" value="1" data-voxel-sens>

@@ -1,5 +1,6 @@
 import { HOTBAR_ITEMS } from "./voxel-blocks.js";
 import { drawHotbarBlockIcon } from "./voxel-textures.js";
+import { createUiLayout } from "./voxel-ui-layout.js";
 
 export function hourToTimeOfDay(hour) {
     return (((hour - 6) / 24 + 0.15) % 1 + 1) % 1;
@@ -192,7 +193,10 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
         });
     }
 
+    const layout = createUiLayout({ root, state, storage: hooks.storage });
+
     const updateTelemetry = (columnCount) => {
+        if (!layout.visibility().stats) return;
         const setTxt = (sel, val) => {
             const el = root.querySelector(sel);
             if (el) el.textContent = val;
@@ -210,5 +214,5 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
         }
     };
 
-    return { syncHud, updateTelemetry };
+    return { syncHud, updateTelemetry, layout };
 }

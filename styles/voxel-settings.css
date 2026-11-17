@@ -1,0 +1,84 @@
+.voxel-settings {
+    position: fixed;
+    top: 60px;
+    right: 14px;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 236px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: rgba(9, 19, 31, 0.92);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    backdrop-filter: blur(8px);
+    pointer-events: auto;
+}
+
+.voxel-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px;
+    color: #e2e8f0;
+}
+
+.voxel-setting-row {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+}
+
+.voxel-setting-row span:last-child {
+    font-family: "Roboto Mono", monospace;
+    color: #38bdf8;
+}
+
+.voxel-res-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.voxel-res-btn {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.voxel-setting input[type="range"] {
+    width: 100%;
+    accent-color: #38bdf8;
+    cursor: pointer;
+}
+
+.voxel-setting-hint {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.voxel-ui-off {
+    display: none !important;
+}
+
+.voxel-setting-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.voxel-toggle-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.voxel-toggle-grid .voxel-btn {
+    padding: 4px 9px;
+    font-size: 11px;
+}
+
+@media (max-width: 720px) {
+    .voxel-settings { right: 8px; width: calc(100vw - 16px); max-width: 236px; }
+}
