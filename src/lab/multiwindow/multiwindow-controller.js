@@ -1,0 +1,167 @@
+import { createWindowManager } from "./window-manager.js";
+import { getProceduralTime, createParticleSwarm, updateParticleSwarm } from "./multiwindow-math.js";
+import { createMultiwindowRenderer } from "./multiwindow-renderer.js";
+
+export function createMultiwindowApp(root = document.body) {
+    const canvas = root.querySelector("canvas[data-multiwindow-canvas]") || root.querySelector("canvas");
+    if (!canvas) return null;
+
+    const state = {
+        geometryType: "box",
+        showBeams: true,
+        showParticles: true,
+        theme: "cyberpunk",
+        running: true
+    };
+
+    const particles = createParticleSwarm(64);
+    const renderer = createMultiwindowRenderer(canvas);
+
+    const idEl = root.querySelector("[data-multiwindow-id]");
+    const countEl = root.querySelector("[data-multiwindow-count]");
+    const coordsEl = root.querySelector("[data-multiwindow-coords]");
+    const geoBtns = root.querySelectorAll("[data-multiwindow-geo]");
+    const beamBtn = root.querySelector("[data-multiwindow-beam]");
+    const partBtn = root.querySelector("[data-multiwindow-particle]");
+    const themeBtn = root.querySelector("[data-multiwindow-theme]");
+    const openBtn = root.querySelector("[data-multiwindow-open]");
+    const resetBtn = root.querySelector("[data-multiwindow-reset]");
+
+    const syncHud = (windows, shape) => {
+        if (idEl) idEl.textContent = String(manager.getThisWindowId());
+        if (countEl) countEl.textContent = String(windows.length);
+        if (coordsEl) coordsEl.textContent = `X: ${Math.round(shape.x)}, Y: ${Math.round(shape.y)}`;
+        if (beamBtn) beamBtn.setAttribute("aria-pressed", String(state.showBeams));
+        if (partBtn) partBtn.setAttribute("aria-pressed", String(state.showParticles));
+        geoBtns.forEach((btn) => {
+            const match = btn.getAttribute("data-multiwindow-geo") === state.geometryType;
+            btn.setAttribute("aria-pressed", String(match));
+        });
+    };
+
+    const manager = createWindowManager({
+        metaData: { geometryType: state.geometryType, theme: state.theme },
+        onWindowsChange: (windows) => {
+            const curWin = manager.getThisWindowData();
+            if (curWin && curWin.metaData) {
+                if (curWin.metaData.geometryType) state.geometryType = curWin.metaData.geometryType;
+                if (curWin.metaData.theme) state.theme = curWin.metaData.theme;
+            }
+            syncHud(windows, manager.getShape());
+        },
+        onShapeChange: (shape) => {
+            syncHud(manager.getWindows(), shape);
+        }
+    });
+
+    manager.init({ geometryType: state.geometryType, theme: state.theme });
+
+    const handleResize = () => {
+        if (!canvas) return;
+        const w = window.innerWidth || 800;
+        const h = window.innerHeight || 600;
+        const dpr = window.devicePixelRatio || 1;
+        renderer.resize(w, h, dpr);
+    };
+
+    if (typeof window !== "undefined") {
+        window.addEventListener("resize", handleResize);
+        handleResize();
+    }
+
+    if (openBtn) {
+        openBtn.addEventListener("click", () => {
+            const cur = manager.getShape();
+            const nextX = cur.x + 80;
+            const nextY = cur.y + 80;
+            const w = Math.min(540, cur.w);
+            const h = Math.min(540, cur.h);
+            const features = `width=${w},height=${h},left=${nextX},top=${nextY},resizable=yes,scrollbars=no`;
+            const href = window.location.pathname.includes("multiwindow") ? window.location.href : "/multiwindow";
+            window.open(href, "_blank", features);
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            manager.clearAll();
+            syncHud(manager.getWindows(), manager.getShape());
+        });
+    }
+
+    geoBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const geo = btn.getAttribute("data-multiwindow-geo");
+            if (geo) {
+                state.geometryType = geo;
+                manager.setMetaData({ geometryType: geo });
+                syncHud(manager.getWindows(), manager.getShape());
+            }
+        });
+    });
+
+    if (beamBtn) {
+        beamBtn.addEventListener("click", () => {
+            state.showBeams = !state.showBeams;
+            syncHud(manager.getWindows(), manager.getShape());
+        });
+    }
+
+    if (partBtn) {
+        partBtn.addEventListener("click", () => {
+            state.showParticles = !state.showParticles;
+            syncHud(manager.getWindows(), manager.getShape());
+        });
+    }
+
+    if (themeBtn) {
+        themeBtn.addEventListener("click", () => {
+            const themes = ["cyberpunk", "solar", "emerald", "violet"];
+            const nextIdx = (themes.indexOf(state.theme) + 1) % themes.length;
+            state.theme = themes[nextIdx];
+            manager.setMetaData({ theme: state.theme });
+            syncHud(manager.getWindows(), manager.getShape());
+        });
+    }
+
+    let rafId = 0;
+    const tick = () => {
+        if (!state.running) return;
+        const time = getProceduralTime();
+        const { sceneOffset } = manager.update(true);
+        const windows = manager.getWindows();
+
+        if (state.showParticles) {
+            updateParticleSwarm(particles, windows, time);
+        }
+
+        renderer.render(windows, sceneOffset, state, time, particles);
+        syncHud(windows, manager.getShape());
+
+        if (typeof requestAnimationFrame !== "undefined") {
+            rafId = requestAnimationFrame(tick);
+        }
+    };
+
+    tick();
+
+    const destroy = () => {
+        state.running = false;
+        if (rafId && typeof cancelAnimationFrame !== "undefined") {
+            cancelAnimationFrame(rafId);
+        }
+        if (typeof window !== "undefined") {
+            window.removeEventListener("resize", handleResize);
+        }
+        manager.destroy();
+        renderer.destroy();
+    };
+
+    return {
+        manager,
+        renderer,
+        state,
+        syncHud,
+        destroy
+    };
+}

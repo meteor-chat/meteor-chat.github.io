@@ -1,0 +1,249 @@
+:root {
+    --mw-bg: #070a10;
+    --mw-panel: rgba(13, 20, 36, 0.82);
+    --mw-border: rgba(79, 195, 247, 0.28);
+    --mw-border-active: rgba(79, 195, 247, 0.75);
+    --mw-text: #e6f1ff;
+    --mw-text-muted: #8aa2c8;
+    --mw-accent: #00e5ff;
+    --mw-accent-glow: rgba(0, 229, 255, 0.35);
+    --mw-btn-bg: rgba(26, 38, 64, 0.65);
+    --mw-btn-hover: rgba(38, 56, 92, 0.9);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--mw-bg);
+    color: var(--mw-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+}
+
+.multiwindow-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+canvas[data-multiwindow-canvas] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 1;
+}
+
+.multiwindow-header {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.multiwindow-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--mw-panel);
+    border: 1px solid var(--mw-border);
+    backdrop-filter: blur(10px);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.multiwindow-back:hover {
+    transform: scale(1.06);
+    border-color: var(--mw-border-active);
+}
+
+.multiwindow-back img {
+    width: 18px;
+    height: 18px;
+    filter: invert(1);
+}
+
+.multiwindow-title-wrap {
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+.multiwindow-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+    text-shadow: 0 0 12px var(--mw-accent-glow);
+}
+
+.multiwindow-subtitle {
+    font-size: 0.74rem;
+    color: var(--mw-text-muted);
+}
+
+.multiwindow-hud {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+    background: var(--mw-panel);
+    border: 1px solid var(--mw-border);
+    border-radius: 12px;
+    padding: 14px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.multiwindow-stats {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.multiwindow-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    font-size: 0.74rem;
+    color: var(--mw-text-muted);
+}
+
+.multiwindow-pill strong {
+    color: var(--mw-accent);
+}
+
+.multiwindow-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.multiwindow-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--mw-border);
+    background: var(--mw-btn-bg);
+    color: var(--mw-text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.multiwindow-btn:hover {
+    background: var(--mw-btn-hover);
+    border-color: var(--mw-border-active);
+}
+
+.multiwindow-btn-primary {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.28), rgba(0, 150, 255, 0.35));
+    border-color: var(--mw-accent);
+    color: #fff;
+    box-shadow: 0 0 14px var(--mw-accent-glow);
+}
+
+.multiwindow-btn-primary:hover {
+    background: linear-gradient(135deg, rgba(0, 229, 255, 0.45), rgba(0, 150, 255, 0.55));
+}
+
+.multiwindow-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.multiwindow-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mw-text-muted);
+    font-weight: 600;
+}
+
+.multiwindow-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.multiwindow-btn-toggle {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--mw-text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.multiwindow-btn-toggle:hover {
+    border-color: var(--mw-border);
+    color: var(--mw-text);
+}
+
+.multiwindow-btn-toggle[aria-pressed="true"] {
+    background: rgba(0, 229, 255, 0.18);
+    border-color: var(--mw-accent);
+    color: #fff;
+    box-shadow: 0 0 10px var(--mw-accent-glow);
+}
+
+.multiwindow-hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    background: rgba(13, 20, 36, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.76rem;
+    color: var(--mw-text-muted);
+    backdrop-filter: blur(8px);
+}
+
+@media (max-width: 600px) {
+    .multiwindow-hud {
+        top: auto;
+        bottom: 16px;
+        right: 12px;
+        left: 12px;
+        max-width: none;
+    }
+    .multiwindow-hint {
+        display: none;
+    }
+}

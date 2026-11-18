@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Multiple Window 3D Scene - Meteor Lab</title>
+    <link rel="icon" type="image/svg+xml" href="assets/svg/favicon.svg">
+    <link rel="stylesheet" href="styles/multiwindow.css">
+</head>
+<body>
+    <div class="multiwindow-container">
+        <canvas data-multiwindow-canvas></canvas>
+
+        <header class="multiwindow-header">
+            <a href="/lab" class="multiwindow-back" aria-label="Kembali ke Lab">
+                <img src="assets/svg/back.svg" alt="" width="20" height="20">
+            </a>
+            <div class="multiwindow-title-wrap">
+                <h1 class="multiwindow-title">Multiple Window 3D Scene</h1>
+                <span class="multiwindow-subtitle">Sinkronisasi Semesta 3D Lintas Jendela Peramban</span>
+            </div>
+        </header>
+
+        <aside class="multiwindow-hud" aria-label="Panel Pengaturan Multi Window">
+            <div class="multiwindow-stats">
+                <span class="multiwindow-pill">Jendela: <strong data-multiwindow-id>1</strong></span>
+                <span class="multiwindow-pill">Aktif: <strong data-multiwindow-count>1</strong></span>
+                <span class="multiwindow-pill" data-multiwindow-coords>X: 0, Y: 0</span>
+            </div>
+
+            <div class="multiwindow-actions">
+                <button type="button" class="multiwindow-btn multiwindow-btn-primary" data-multiwindow-open>+ Jendela Baru</button>
+                <button type="button" class="multiwindow-btn" data-multiwindow-reset>Reset</button>
+            </div>
+
+            <div class="multiwindow-section">
+                <span class="multiwindow-label">Bentuk Geometri 3D</span>
+                <div class="multiwindow-btn-group" role="group" aria-label="Pilihan Bentuk Geometri">
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-geo="box" aria-pressed="true">Kubus</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-geo="icosahedron" aria-pressed="false">Kristal</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-geo="torusknot" aria-pressed="false">Torus</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-geo="sphere" aria-pressed="false">Bola</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-geo="core" aria-pressed="false">Reaktor</button>
+                </div>
+            </div>
+
+            <div class="multiwindow-section">
+                <span class="multiwindow-label">Efek & Visual</span>
+                <div class="multiwindow-btn-group" role="group" aria-label="Pengaturan Efek">
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-beam aria-pressed="true">Berkas Laser</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-particle aria-pressed="true">Partikel</button>
+                    <button type="button" class="multiwindow-btn-toggle" data-multiwindow-theme>Ganti Tema</button>
+                </div>
+            </div>
+        </aside>
+
+        <div class="multiwindow-hint">
+            Buka beberapa jendela atau klik <strong>+ Jendela Baru</strong> lalu geser jendela di layar
+        </div>
+    </div>
+
+    <script type="module">
+        import { createMultiwindowApp } from "./src/lab/multiwindow/multiwindow-controller.js";
+        createMultiwindowApp(document.body);
+    </script>
+</body>
+</html>
