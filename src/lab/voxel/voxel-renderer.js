@@ -100,7 +100,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
     const flushUploads = () => store.flush(true);
     const unloadColumn = (cx, cz) => store.unloadColumn(cx, cz);
 
-    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater, mobs = []) => {
+    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater, mobs = [], rainIntensity = 0) => {
         const w = canvas.width;
         const h = canvas.height;
         if (lost || w < 2 || h < 2 || gl.isContextLost()) return EMPTY_STATS;
@@ -111,7 +111,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             timer.begin();
         }
         const upload = store.flush();
-        const rawAtmo = computeSkyAtmosphere(timeOfDay);
+        const rawAtmo = computeSkyAtmosphere(timeOfDay, rainIntensity);
         const atmo = linearizeAtmosphere(rawAtmo);
         const shadow = shadowCtl.update(rawAtmo.sunDir, eye, store.version());
         if (shadow.refresh && rawAtmo.sunDir[1] > -0.05) {
@@ -126,19 +126,23 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         gl.clearColor(atmo.horizonColor[0], atmo.horizonColor[1], atmo.horizonColor[2], 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+        const curFog = [
+            fogRange[0] * (1 - rainIntensity * 0.55),
+            fogRange[1] * (1 - rainIntensity * 0.42)
+        ];
         const passExtras = {
             shadow: shadow.frame,
             depthTex: targets.depthCopy.depthTex,
             width: w,
             height: h
         };
-        beginWorldPass(gl, res, cam, eye, atmo, timeSec, fogRange, passExtras);
+        beginWorldPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
         const opaqueStats = drawOpaque(gl, res, visible.opaque);
         let mobStats = { drawCalls: 0, triCount: 0 };
         if (mobs.length > 0) {
-            beginMobPass(gl, res, cam, eye, atmo, timeSec, fogRange, passExtras);
+            beginMobPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
             mobStats = drawMobs(gl, res.mobGeo, mobs, timeSec, eye);
-            drawBlobShadows(gl, res, cam, mobs, eye, { sunPower: sunPowerOf(rawAtmo.sunDir[1]), fog: fogRange });
+            drawBlobShadows(gl, res, cam, mobs, eye, { sunPower: sunPowerOf(rawAtmo.sunDir[1]), fog: curFog });
         }
         drawWire(gl, res, cam, targetHit);
         drawSky(gl, res, cam, atmo, timeSec);
@@ -147,10 +151,11 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         const sun = projectSunToScreen(cam.viewProj, eye, rawAtmo.sunDir);
         const strength = raysStrength(rawAtmo.sunDir, sun.visibility);
         drawPostFx(gl, res, targets, w, h, timeSec, underwater, {
-            raysOn: strength > 0.001 && !underwater,
-            raysStrength: strength,
+            raysOn: strength > 0.001 && !underwater && rainIntensity < 0.2,
+            raysStrength: strength * (1 - rainIntensity),
             sunUv: [sun.u, sun.v],
-            tint: atmo.sunTint
+            tint: atmo.sunTint,
+            rainIntensity
         });
         if (timer) timer.end();
 

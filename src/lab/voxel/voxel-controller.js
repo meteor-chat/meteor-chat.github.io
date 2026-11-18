@@ -55,6 +55,8 @@ export function createVoxelApp(root) {
         timeSec: 0,
         timeOfDay: 0.28,
         autoCycle: false,
+        rain: false,
+        rainIntensity: 0,
         selectedSlot: 6,
         actionMode: "break",
         destroyed: false,
@@ -158,6 +160,8 @@ export function createVoxelApp(root) {
             state.renderScale = quality.update(dt);
         }
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.025) % 1;
+        const targetRain = state.rain ? 1 : 0;
+        state.rainIntensity += (targetRain - state.rainIntensity) * Math.min(1, dt * 1.8);
 
         stepPlayerPhysics(player, input.keys, dt, world.getBlock);
         mobs.update(dt);
@@ -178,7 +182,7 @@ export function createVoxelApp(root) {
         const cam = buildCameraBasis(eye, player.yaw, player.pitch, (state.settings.fov * Math.PI) / 180, aspect);
 
         if (renderer) {
-            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.all);
+            state.stats = renderer.renderFrame(cam, eye, state.timeSec, state.timeOfDay, hit, player.submerged, mobs.all, state.rainIntensity);
         }
 
         state.frameCount += 1;

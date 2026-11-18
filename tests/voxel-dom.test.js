@@ -266,6 +266,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             '[data-voxel-time="0.62"]',
             '[data-voxel-time="0.88"]',
             "[data-voxel-cycle]",
+            "[data-voxel-rain]",
             'a[href="/lab"]'
         ];
         for (const selector of inPanel) {
@@ -287,5 +288,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(app.state.timeOfDay).toBeCloseTo(0.62, 2);
         panel.querySelector("[data-voxel-cycle]").click();
         expect(app.state.autoCycle).toBe(true);
+        panel.querySelector("[data-voxel-rain]").click();
+        expect(app.state.rain).toBe(true);
     });
 });

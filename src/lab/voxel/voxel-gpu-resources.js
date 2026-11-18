@@ -25,7 +25,7 @@ const WIRE_VERTS = new Float32Array([
     0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1
 ]);
 
-const ATMOSPHERE_UNIFORMS = ["uSunDir", "uSunTint", "uSkyColor", "uHorizonColor", "uDayIntensity", "uTime"];
+const ATMOSPHERE_UNIFORMS = ["uSunDir", "uSunTint", "uSkyColor", "uHorizonColor", "uDayIntensity", "uTime", "uRainIntensity"];
 const SKY_UNIFORMS = ["uCamForward", "uCamRight", "uCamUp", "uTanFov", ...ATMOSPHERE_UNIFORMS];
 const WORLD_UNIFORMS = [
     "uTexArray", "uTexData", "uViewProj", "uCamPos", "uFogStart", "uFogEnd", "uChunkOrigin",
@@ -51,7 +51,7 @@ export const PROGRAM_SPECS = {
     comp: {
         vs: QUAD_VS,
         fs: COMPOSITE_FS,
-        uniforms: ["uSceneTex", "uBloomTex", "uRaysTex", "uRaysColor", "uTime", "uUnderwater"]
+        uniforms: ["uSceneTex", "uBloomTex", "uRaysTex", "uRaysColor", "uTime", "uUnderwater", "uRainIntensity"]
     },
     wire: { vs: WIRE_VS, fs: WIRE_FS, uniforms: ["uViewProj", "uBlockPos"] }
 };

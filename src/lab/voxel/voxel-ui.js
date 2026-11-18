@@ -94,6 +94,9 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
             if (document.activeElement !== hourInput) hourInput.value = String(currentHour);
             hourVal.textContent = `Jam ${currentHour}`;
         }
+        root.querySelectorAll("[data-voxel-rain]").forEach((btn) => {
+            btn.setAttribute("aria-pressed", String(Boolean(state.rain)));
+        });
         syncResUi();
     }
 
@@ -120,6 +123,12 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
         btn.addEventListener("click", () => {
             state.autoCycle = false;
             state.timeOfDay = Number(btn.dataset.voxelTime);
+            syncHud();
+        });
+    });
+    root.querySelectorAll("[data-voxel-rain]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            state.rain = !state.rain;
             syncHud();
         });
     });

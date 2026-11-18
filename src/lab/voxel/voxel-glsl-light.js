@@ -24,6 +24,27 @@ vec3 mapNormal(uint face, vec4 data) {
 
 export const GLSL_SURFACE_LIGHT = `
 vec3 shadeSurface(vec3 albedo, vec3 n, vec3 v, float rough, float shadow) {
+    float skyRain = smoothstep(0.25, 0.75, vLight.x) * uRainIntensity;
+    float isTop = clamp(n.y * 2.0 - 1.0, 0.0, 1.0);
+    float pNoise = fbm2(vWorldPos.xz * 0.35);
+    float puddle = smoothstep(0.46, 0.68, pNoise) * isTop * skyRain;
+    float wet = clamp(skyRain * (0.65 + 0.35 * isTop) + puddle * 0.45, 0.0, 1.0);
+
+    if (puddle > 0.02) {
+        vec2 ripUv = vWorldPos.xz * 3.5;
+        vec2 cell = floor(ripUv);
+        vec2 f = fract(ripUv) - 0.5;
+        float waveTime = fract(uTime * 3.5 + hash21(cell));
+        float ringDist = length(f);
+        float ripple = sin(ringDist * 28.0 - waveTime * 14.0) * exp(-ringDist * 4.0) * (1.0 - waveTime);
+        vec2 ripDir = normalize(f + 1e-4) * ripple * 0.07 * puddle;
+        n = normalize(n + vec3(ripDir.x, 0.0, ripDir.y));
+    }
+
+    vec3 diffAlbedo = albedo * mix(vec3(1.0), vec3(0.55, 0.55, 0.58), wet * 0.85);
+    float wetRough = mix(rough, 0.12, wet * 0.7);
+    wetRough = mix(wetRough, 0.02, puddle);
+
     float skyLevel = vLight.x;
     float sunVis = skyLevel * sunPower() * shadow;
     float ndl = max(dot(n, uSunDir), 0.0);
@@ -38,12 +59,30 @@ vec3 shadeSurface(vec3 albedo, vec3 n, vec3 v, float rough, float shadow) {
     vec3 moon = vec3(0.35, 0.45, 0.8) * max(dot(n, -uSunDir), 0.0) * night * skyLevel * 0.35;
     float flicker = 0.94 + 0.06 * sin(uTime * 7.1 + vWorldPos.x + vWorldPos.z);
     vec3 blk = vec3(1.5, 0.76, 0.34) * pow(max(vLight.y, 1e-4), 1.8) * flicker * (0.4 + 0.6 * vAo) * 1.5;
-    vec3 col = albedo * (sun + amb + moon + blk);
-    if (rough < 0.7) {
+    vec3 col = diffAlbedo * (sun + amb + moon + blk);
+
+    if (wetRough < 0.7) {
         vec3 h = normalize(uSunDir + v);
-        float gloss = pow(max(dot(n, h), 0.0), mix(12.0, 120.0, 1.0 - rough));
-        col += uSunTint * gloss * (1.0 - rough) * ndl * sunVis * 0.7;
+        float gloss = pow(max(dot(n, h), 0.0), mix(12.0, 180.0, 1.0 - wetRough));
+        col += uSunTint * gloss * (1.0 - wetRough) * ndl * sunVis * 0.8;
     }
+
+    if (wet > 0.01) {
+        float ndv = max(dot(n, v), 0.0);
+        float fresnel = 0.04 + 0.96 * pow(clamp(1.0 - ndv, 0.0, 1.0), 5.0);
+        vec3 reflDir = reflect(-v, n);
+        vec3 skyRefl = skyGradient(reflDir);
+        col = mix(col, skyRefl, wet * fresnel * (1.0 - wetRough * 0.75));
+
+        float blkLvl = pow(max(vLight.y, 0.0), 1.5);
+        if (blkLvl > 0.005) {
+            vec3 lanternCol = vec3(2.1, 1.1, 0.4);
+            vec3 halfLantern = normalize(v + vec3(0.0, 1.0, 0.0));
+            float lanternSpec = pow(max(dot(n, halfLantern), 0.0), mix(6.0, 50.0, 1.0 - wetRough));
+            col += lanternCol * blkLvl * lanternSpec * (0.8 + 1.6 * puddle);
+        }
+    }
+
     return col;
 }
 

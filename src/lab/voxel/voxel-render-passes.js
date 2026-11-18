@@ -5,6 +5,7 @@ function setAtmosphere(gl, u, atmo, timeSec) {
     gl.uniform3fv(u.uHorizonColor, atmo.horizonColor);
     gl.uniform1f(u.uDayIntensity, atmo.dayIntensity);
     gl.uniform1f(u.uTime, timeSec);
+    gl.uniform1f(u.uRainIntensity, atmo.rainIntensity || 0);
 }
 
 export function drawSky(gl, res, cam, atmo, timeSec) {
@@ -174,6 +175,7 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     gl.uniform1i(comp.u.uBloomTex, 1);
     gl.uniform1f(comp.u.uTime, timeSec);
     gl.uniform1f(comp.u.uUnderwater, underwater ? 1 : 0);
+    gl.uniform1f(comp.u.uRainIntensity, post.rainIntensity || 0);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, targets.rays.tex);
     gl.uniform1i(comp.u.uRaysTex, 2);

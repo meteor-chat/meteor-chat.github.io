@@ -1,4 +1,4 @@
-import { GLSL_ATMOSPHERE } from "./voxel-glsl-common.js";
+import { GLSL_ATMOSPHERE, GLSL_NOISE } from "./voxel-glsl-common.js";
 import { GLSL_SURFACE_LIGHT } from "./voxel-glsl-light.js";
 import { GLSL_SHADOW } from "./voxel-glsl-shadow.js";
 
@@ -50,6 +50,7 @@ flat in float vLayer;
 
 out vec4 fragColor;
 
+${GLSL_NOISE}
 ${GLSL_SHADOW}
 ${GLSL_SURFACE_LIGHT}
 

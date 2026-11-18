@@ -5,9 +5,10 @@ uniform vec3 uSkyColor;
 uniform vec3 uHorizonColor;
 uniform float uDayIntensity;
 uniform float uTime;
+uniform float uRainIntensity;
 
 float sunPower() {
-    return smoothstep(-0.04, 0.22, uSunDir.y);
+    return smoothstep(-0.04, 0.22, uSunDir.y) * (1.0 - uRainIntensity * 0.85);
 }
 
 vec3 skyGradient(vec3 dir) {
@@ -15,6 +16,7 @@ vec3 skyGradient(vec3 dir) {
     vec3 col = mix(uHorizonColor, uSkyColor, lift);
     float sunDot = max(dot(dir, uSunDir), 0.0);
     float glow = pow(sunDot, 6.0) * 0.12 + pow(sunDot, 48.0) * 0.55;
+    glow *= 1.0 - uRainIntensity * 0.9;
     return col + uSunTint * glow * (0.25 + 0.75 * uDayIntensity);
 }
 `;

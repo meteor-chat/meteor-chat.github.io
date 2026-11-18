@@ -80,19 +80,30 @@ uniform sampler2D uRaysTex;
 uniform vec3 uRaysColor;
 uniform float uTime;
 uniform float uUnderwater;
+uniform float uRainIntensity;
 out vec4 fragColor;
 
 vec3 acesTone(vec3 x) {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
 
-vec3 colorGrade(vec3 c) {
+vec3 colorGrade(vec3 c, float rain) {
     float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    c = mix(vec3(luma), c, 1.1);
-    c = mix(c, c * c * (3.0 - 2.0 * c), 0.3);
-    vec3 shadowTint = vec3(0.93, 0.99, 1.07);
-    vec3 highTint = vec3(1.05, 1.02, 0.95);
+    c = mix(vec3(luma), c, mix(1.1, 0.92, rain));
+    c = mix(c, c * c * (3.0 - 2.0 * c), mix(0.3, 0.45, rain));
+    vec3 shadowTint = mix(vec3(0.93, 0.99, 1.07), vec3(0.85, 0.92, 1.05), rain);
+    vec3 highTint = mix(vec3(1.05, 1.02, 0.95), vec3(1.08, 1.04, 0.96), rain);
     return clamp(c * mix(shadowTint, highTint, smoothstep(0.1, 0.8, luma)), 0.0, 1.0);
+}
+
+float rainStreak(vec2 uv, float speed, float scale, float slant) {
+    vec2 st = vec2(uv.x * scale + uv.y * slant, (uv.y - uTime * speed) * scale * 2.5);
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+    float h = fract(sin(dot(i, vec2(12.9898, 78.233))) * 43758.5453);
+    float streak = smoothstep(0.85, 0.98, h) * smoothstep(0.0, 0.1, f.x) * smoothstep(1.0, 0.9, f.x);
+    float tail = pow(f.y, 2.5);
+    return streak * tail;
 }
 
 void main() {
@@ -100,6 +111,15 @@ void main() {
     if (uUnderwater > 0.5) {
         uv.x += sin(uv.y * 22.0 + uTime * 3.8) * 0.0045;
         uv.y += cos(uv.x * 18.0 + uTime * 3.1) * 0.0035;
+    } else if (uRainIntensity > 0.05) {
+        vec2 dropUv = vUv * 14.0;
+        vec2 dId = floor(dropUv);
+        float dRnd = fract(sin(dot(dId, vec2(27.1, 83.3))) * 41235.1);
+        if (dRnd > 0.93) {
+            vec2 dF = fract(dropUv) - 0.5;
+            float drop = smoothstep(0.35, 0.05, length(dF));
+            uv += normalize(dF + 1e-4) * drop * 0.005 * uRainIntensity;
+        }
     }
     vec3 sceneCol = texture(uSceneTex, uv).rgb;
     vec3 bloomCol = texture(uBloomTex, uv).rgb;
@@ -110,9 +130,20 @@ void main() {
     }
     vec3 ldr = acesTone(hdr);
     ldr = pow(max(ldr, vec3(1e-4)), vec3(1.0 / 2.2));
-    ldr = colorGrade(ldr);
+    ldr = colorGrade(ldr, uRainIntensity);
+
+    if (uRainIntensity > 0.02 && uUnderwater < 0.5) {
+        float s1 = rainStreak(vUv, 5.2, 70.0, 0.22);
+        float s2 = rainStreak(vUv + 0.37, 8.5, 140.0, 0.22);
+        float s3 = rainStreak(vUv + 0.71, 12.0, 260.0, 0.22);
+        float totalRain = (s1 * 0.45 + s2 * 0.35 + s3 * 0.2) * uRainIntensity;
+        vec3 rainCol = vec3(0.75, 0.82, 0.92) * (0.4 + 0.6 * dot(ldr, vec3(0.333)));
+        ldr += rainCol * totalRain * 0.75;
+    }
+
     vec2 centered = vUv - 0.5;
-    ldr *= 1.0 - dot(centered, centered) * 0.55;
+    float vigK = mix(0.55, 0.78, uRainIntensity);
+    ldr *= 1.0 - dot(centered, centered) * vigK;
     fragColor = vec4(ldr, 1.0);
 }`;
 export const WIRE_VS = `#version 300 es

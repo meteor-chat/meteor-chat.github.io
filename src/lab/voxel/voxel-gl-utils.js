@@ -35,7 +35,7 @@ function mix3(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 }
 
-export function computeSkyAtmosphere(timeOfDay) {
+export function computeSkyAtmosphere(timeOfDay, rainIntensity = 0) {
     const angle = (timeOfDay - 0.15) * Math.PI * 2;
     const sunDir = [Math.cos(angle) * 0.72, Math.sin(angle), 0.44];
     const len = Math.hypot(sunDir[0], sunDir[1], sunDir[2]);
@@ -58,7 +58,23 @@ export function computeSkyAtmosphere(timeOfDay) {
     const horizonColor = mix3(baseHoriz, [0.96, 0.52, 0.28], sunsetT * 0.85);
 
     const sunTint = mix3([1.0, 0.95, 0.88], [1.0, 0.52, 0.22], sunsetT);
-    return { sunDir, dayIntensity, skyColor, horizonColor, sunTint };
+
+    const rain = Math.max(0, Math.min(1, rainIntensity));
+    const stormSky = mix3([0.02, 0.03, 0.05], [0.14, 0.17, 0.22], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
+    const stormHoriz = mix3([0.03, 0.04, 0.06], [0.24, 0.26, 0.30], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
+    const finalSky = mix3(skyColor, stormSky, rain);
+    const finalHoriz = mix3(horizonColor, stormHoriz, rain);
+    const finalSunTint = mix3(sunTint, [0.65, 0.70, 0.78], rain * 0.85);
+    const finalDay = dayIntensity * (1 - rain * 0.65);
+
+    return {
+        sunDir,
+        dayIntensity: finalDay,
+        skyColor: finalSky,
+        horizonColor: finalHoriz,
+        sunTint: finalSunTint,
+        rainIntensity: rain
+    };
 }
 
 const toLinear = (c) => [Math.pow(c[0], 2.2), Math.pow(c[1], 2.2), Math.pow(c[2], 2.2)];
@@ -69,7 +85,8 @@ export function linearizeAtmosphere(atmo) {
         dayIntensity: atmo.dayIntensity,
         skyColor: toLinear(atmo.skyColor),
         horizonColor: toLinear(atmo.horizonColor),
-        sunTint: toLinear(atmo.sunTint)
+        sunTint: toLinear(atmo.sunTint),
+        rainIntensity: atmo.rainIntensity || 0
     };
 }
 
