@@ -104,7 +104,7 @@ vec3 colorGrade(vec3 c, float rain) {
 
 float calcLinearDepth(float zBuf) {
     float z = zBuf * 2.0 - 1.0;
-    return 0.2 / (1000.1 - z * 999.9);
+    return 90.0 / (450.1 - z * 449.9);
 }
 
 float dropSlice(vec3 p, float scale, float speed, float threshold) {

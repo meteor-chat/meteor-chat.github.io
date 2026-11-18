@@ -14,7 +14,7 @@ export function multiplyMat4(a, b) {
 }
 
 export const CAMERA_NEAR = 0.1;
-export const CAMERA_FAR = 260;
+export const CAMERA_FAR = 450;
 
 export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_NEAR, far = CAMERA_FAR) {
     const cp = Math.cos(pitch);
@@ -51,7 +51,8 @@ export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_
         1
     ]);
 
-    const f = 1 / Math.tan(fovRad * 0.5);
+    const safeFov = Math.min(Math.PI * 0.985, Math.max(0.1, fovRad));
+    const f = 1 / Math.tan(safeFov * 0.5);
     const nf = 1 / (near - far);
     const proj = new Float32Array([
         f / aspect, 0, 0, 0,
@@ -65,7 +66,7 @@ export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_
         forward,
         right,
         up,
-        tanHalfFov: [Math.tan(fovRad * 0.5) * aspect, Math.tan(fovRad * 0.5)]
+        tanHalfFov: [Math.tan(safeFov * 0.5) * aspect, Math.tan(safeFov * 0.5)]
     };
 }
 

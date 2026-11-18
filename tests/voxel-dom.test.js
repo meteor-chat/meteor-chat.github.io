@@ -160,10 +160,11 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(root.querySelector("[data-voxel-sens-val]").textContent).toBe("2.5");
 
         const fov = root.querySelector("[data-voxel-fov]");
-        fov.value = "95";
+        expect(fov.getAttribute("max")).toBe("180");
+        fov.value = "180";
         fov.dispatchEvent(new window.Event("input"));
-        expect(app.state.settings.fov).toBe(95);
-        expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("95");
+        expect(app.state.settings.fov).toBe(180);
+        expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("180");
 
         const hour = root.querySelector("[data-voxel-hour]");
         expect(hour.getAttribute("min")).toBe("1");
@@ -181,12 +182,12 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
 
         const dist = root.querySelector("[data-voxel-dist]");
         expect(dist.getAttribute("min")).toBe("3");
-        expect(dist.getAttribute("max")).toBe("8");
+        expect(dist.getAttribute("max")).toBe("16");
         expect(dist.getAttribute("step")).toBe("1");
-        dist.value = "7";
+        dist.value = "16";
         dist.dispatchEvent(new window.Event("input"));
-        expect(app.state.settings.viewRadius).toBe(7);
-        expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("7 Chunk (112m)");
+        expect(app.state.settings.viewRadius).toBe(16);
+        expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("16 Chunk (256m)");
 
         const resAutoBtn = root.querySelector("[data-voxel-res-auto]");
         const resLockBtn = root.querySelector("[data-voxel-res-lock]");

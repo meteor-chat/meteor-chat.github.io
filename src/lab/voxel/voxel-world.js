@@ -260,7 +260,7 @@ export function createVoxelWorld(options = {}) {
         remeshAll,
         warmAreaSync,
         getColumnCount: () => columns.size,
-        setViewRadius: (r) => { viewRadius = Math.max(2, Math.min(10, Math.floor(r))); },
+        setViewRadius: (r) => { viewRadius = Math.max(2, Math.min(16, Math.floor(r))); },
         getViewRadius: () => viewRadius,
         destroy
     };
