@@ -160,11 +160,11 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(root.querySelector("[data-voxel-sens-val]").textContent).toBe("2.5");
 
         const fov = root.querySelector("[data-voxel-fov]");
-        expect(fov.getAttribute("max")).toBe("180");
-        fov.value = "180";
+        expect(fov.getAttribute("max")).toBe("120");
+        fov.value = "120";
         fov.dispatchEvent(new window.Event("input"));
-        expect(app.state.settings.fov).toBe(180);
-        expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("180");
+        expect(app.state.settings.fov).toBe(120);
+        expect(root.querySelector("[data-voxel-fov-val]").textContent).toBe("120");
 
         const hour = root.querySelector("[data-voxel-hour]");
         expect(hour.getAttribute("min")).toBe("1");
