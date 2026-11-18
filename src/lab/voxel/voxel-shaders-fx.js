@@ -95,10 +95,10 @@ vec3 acesTone(vec3 x) {
 
 vec3 colorGrade(vec3 c, float rain) {
     float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    c = mix(vec3(luma), c, mix(1.1, 0.92, rain));
-    c = mix(c, c * c * (3.0 - 2.0 * c), mix(0.3, 0.45, rain));
-    vec3 shadowTint = mix(vec3(0.93, 0.99, 1.07), vec3(0.85, 0.92, 1.05), rain);
-    vec3 highTint = mix(vec3(1.05, 1.02, 0.95), vec3(1.08, 1.04, 0.96), rain);
+    c = mix(vec3(luma), c, mix(1.10, 0.95, rain));
+    c = mix(c, c * c * (3.0 - 2.0 * c), mix(0.28, 0.16, rain));
+    vec3 shadowTint = mix(vec3(0.95, 0.98, 1.03), vec3(0.92, 0.95, 1.02), rain);
+    vec3 highTint = mix(vec3(1.03, 1.01, 0.97), vec3(1.02, 1.02, 1.00), rain);
     return clamp(c * mix(shadowTint, highTint, smoothstep(0.1, 0.8, luma)), 0.0, 1.0);
 }
 
@@ -108,13 +108,14 @@ float calcLinearDepth(float zBuf) {
 }
 
 float dropSlice(vec3 p, float scale, float speed, float threshold) {
-    vec2 st = vec2(p.x * scale + p.z * (scale * 0.35) + uTime * 1.5, (p.y - uTime * speed) * (scale * 2.5));
+    vec2 st = vec2(p.x * scale + p.z * (scale * 0.28) + uTime * 1.8, (p.y - uTime * speed) * (scale * 3.4));
     vec2 cell = floor(st);
     vec2 f = fract(st);
     float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
     if (h < threshold) return 0.0;
-    float profile = smoothstep(0.0, 0.2, f.x) * smoothstep(1.0, 0.8, f.x);
-    return profile * pow(f.y, 2.6);
+    float profile = exp(-abs(f.x - 0.5) * 14.0);
+    float lenProfile = smoothstep(0.0, 0.22, f.y) * pow(1.0 - f.y, 0.6);
+    return profile * lenProfile;
 }
 
 void main() {
@@ -122,15 +123,6 @@ void main() {
     if (uUnderwater > 0.5) {
         uv.x += sin(uv.y * 22.0 + uTime * 3.8) * 0.0045;
         uv.y += cos(uv.x * 18.0 + uTime * 3.1) * 0.0035;
-    } else if (uRainIntensity > 0.05) {
-        vec2 dropUv = vUv * 14.0;
-        vec2 dId = floor(dropUv);
-        float dRnd = fract(sin(dot(dId, vec2(27.1, 83.3))) * 41235.1);
-        if (dRnd > 0.93) {
-            vec2 dF = fract(dropUv) - 0.5;
-            float drop = smoothstep(0.35, 0.05, length(dF));
-            uv += normalize(dF + 1e-4) * drop * 0.005 * uRainIntensity;
-        }
     }
     vec3 sceneCol = texture(uSceneTex, uv).rgb;
     vec3 bloomCol = texture(uBloomTex, uv).rgb;
@@ -150,9 +142,9 @@ void main() {
         float sceneDist = calcLinearDepth(rawDepth);
 
         float rAccum = 0.0;
-        const float dists[4] = float[4](1.8, 4.5, 10.0, 20.0);
-        const float scales[4] = float[4](2.8, 1.8, 1.2, 0.8);
-        const float speeds[4] = float[4](32.0, 28.0, 25.0, 22.0);
+        const float dists[4] = float[4](1.8, 4.2, 9.5, 18.0);
+        const float scales[4] = float[4](3.2, 2.0, 1.3, 0.85);
+        const float speeds[4] = float[4](34.0, 30.0, 26.0, 22.0);
         const float thrs[4] = float[4](0.88, 0.85, 0.82, 0.80);
         const float weights[4] = float[4](0.40, 0.30, 0.20, 0.15);
 
@@ -164,12 +156,12 @@ void main() {
             }
         }
 
-        vec3 rainColor = mix(vec3(0.85, 0.90, 0.98), vec3(0.65, 0.70, 0.80), smoothstep(0.0, 20.0, sceneDist));
-        ldr += rainColor * rAccum * uRainIntensity * 1.35;
+        vec3 rainColor = mix(vec3(0.90, 0.94, 1.0), vec3(0.72, 0.78, 0.86), smoothstep(0.0, 20.0, sceneDist));
+        ldr += rainColor * rAccum * uRainIntensity * 0.85;
     }
 
     vec2 centered = vUv - 0.5;
-    float vigK = mix(0.55, 0.78, uRainIntensity);
+    float vigK = mix(0.55, 0.68, uRainIntensity);
     ldr *= 1.0 - dot(centered, centered) * vigK;
     fragColor = vec4(ldr, 1.0);
 }`;

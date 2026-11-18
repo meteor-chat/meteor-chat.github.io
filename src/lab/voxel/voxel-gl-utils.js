@@ -60,12 +60,12 @@ export function computeSkyAtmosphere(timeOfDay, rainIntensity = 0) {
     const sunTint = mix3([1.0, 0.95, 0.88], [1.0, 0.52, 0.22], sunsetT);
 
     const rain = Math.max(0, Math.min(1, rainIntensity));
-    const stormSky = mix3([0.02, 0.03, 0.05], [0.14, 0.17, 0.22], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
-    const stormHoriz = mix3([0.03, 0.04, 0.06], [0.24, 0.26, 0.30], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
+    const stormSky = mix3([0.03, 0.04, 0.07], [0.44, 0.48, 0.54], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
+    const stormHoriz = mix3([0.04, 0.05, 0.09], [0.55, 0.58, 0.62], Math.max(0, Math.min(1, (elev + 0.12) * 1.8)));
     const finalSky = mix3(skyColor, stormSky, rain);
     const finalHoriz = mix3(horizonColor, stormHoriz, rain);
-    const finalSunTint = mix3(sunTint, [0.65, 0.70, 0.78], rain * 0.85);
-    const finalDay = dayIntensity * (1 - rain * 0.65);
+    const finalSunTint = mix3(sunTint, [0.75, 0.78, 0.84], rain * 0.75);
+    const finalDay = dayIntensity * (1 - rain * 0.32);
 
     return {
         sunDir,
