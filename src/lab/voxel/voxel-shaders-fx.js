@@ -77,10 +77,16 @@ in vec2 vUv;
 uniform sampler2D uSceneTex;
 uniform sampler2D uBloomTex;
 uniform sampler2D uRaysTex;
+uniform sampler2D uDepthTex;
 uniform vec3 uRaysColor;
 uniform float uTime;
 uniform float uUnderwater;
 uniform float uRainIntensity;
+uniform vec3 uCamPos;
+uniform vec3 uCamForward;
+uniform vec3 uCamRight;
+uniform vec3 uCamUp;
+uniform vec2 uTanFov;
 out vec4 fragColor;
 
 vec3 acesTone(vec3 x) {
@@ -96,14 +102,19 @@ vec3 colorGrade(vec3 c, float rain) {
     return clamp(c * mix(shadowTint, highTint, smoothstep(0.1, 0.8, luma)), 0.0, 1.0);
 }
 
-float rainStreak(vec2 uv, float speed, float scale, float slant) {
-    vec2 st = vec2(uv.x * scale + uv.y * slant, (uv.y - uTime * speed) * scale * 2.5);
-    vec2 i = floor(st);
+float calcLinearDepth(float zBuf) {
+    float z = zBuf * 2.0 - 1.0;
+    return 0.2 / (1000.1 - z * 999.9);
+}
+
+float dropSlice(vec3 p, float scale, float speed, float threshold) {
+    vec2 st = vec2(p.x * scale + p.z * (scale * 0.35) + uTime * 1.5, (p.y - uTime * speed) * (scale * 2.5));
+    vec2 cell = floor(st);
     vec2 f = fract(st);
-    float h = fract(sin(dot(i, vec2(12.9898, 78.233))) * 43758.5453);
-    float streak = smoothstep(0.85, 0.98, h) * smoothstep(0.0, 0.1, f.x) * smoothstep(1.0, 0.9, f.x);
-    float tail = pow(f.y, 2.5);
-    return streak * tail;
+    float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+    if (h < threshold) return 0.0;
+    float profile = smoothstep(0.0, 0.2, f.x) * smoothstep(1.0, 0.8, f.x);
+    return profile * pow(f.y, 2.6);
 }
 
 void main() {
@@ -132,13 +143,29 @@ void main() {
     ldr = pow(max(ldr, vec3(1e-4)), vec3(1.0 / 2.2));
     ldr = colorGrade(ldr, uRainIntensity);
 
-    if (uRainIntensity > 0.02 && uUnderwater < 0.5) {
-        float s1 = rainStreak(vUv, 5.2, 70.0, 0.22);
-        float s2 = rainStreak(vUv + 0.37, 8.5, 140.0, 0.22);
-        float s3 = rainStreak(vUv + 0.71, 12.0, 260.0, 0.22);
-        float totalRain = (s1 * 0.45 + s2 * 0.35 + s3 * 0.2) * uRainIntensity;
-        vec3 rainCol = vec3(0.75, 0.82, 0.92) * (0.4 + 0.6 * dot(ldr, vec3(0.333)));
-        ldr += rainCol * totalRain * 0.75;
+    if (uRainIntensity > 0.01 && uUnderwater < 0.5) {
+        vec2 ndc = vUv * 2.0 - 1.0;
+        vec3 ray = normalize(uCamForward + uCamRight * (ndc.x * uTanFov.x) + uCamUp * (ndc.y * uTanFov.y));
+        float rawDepth = texture(uDepthTex, vUv).r;
+        float sceneDist = calcLinearDepth(rawDepth);
+
+        float rAccum = 0.0;
+        const float dists[4] = float[4](1.8, 4.5, 10.0, 20.0);
+        const float scales[4] = float[4](2.8, 1.8, 1.2, 0.8);
+        const float speeds[4] = float[4](32.0, 28.0, 25.0, 22.0);
+        const float thrs[4] = float[4](0.88, 0.85, 0.82, 0.80);
+        const float weights[4] = float[4](0.40, 0.30, 0.20, 0.15);
+
+        for (int i = 0; i < 4; i += 1) {
+            float d = dists[i];
+            if (d < sceneDist) {
+                vec3 p = uCamPos + ray * d;
+                rAccum += dropSlice(p, scales[i], speeds[i], thrs[i]) * weights[i];
+            }
+        }
+
+        vec3 rainColor = mix(vec3(0.85, 0.90, 0.98), vec3(0.65, 0.70, 0.80), smoothstep(0.0, 20.0, sceneDist));
+        ldr += rainColor * rAccum * uRainIntensity * 1.35;
     }
 
     vec2 centered = vUv - 0.5;

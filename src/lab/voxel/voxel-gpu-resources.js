@@ -51,7 +51,11 @@ export const PROGRAM_SPECS = {
     comp: {
         vs: QUAD_VS,
         fs: COMPOSITE_FS,
-        uniforms: ["uSceneTex", "uBloomTex", "uRaysTex", "uRaysColor", "uTime", "uUnderwater", "uRainIntensity"]
+        uniforms: [
+            "uSceneTex", "uBloomTex", "uRaysTex", "uDepthTex", "uRaysColor",
+            "uTime", "uUnderwater", "uRainIntensity", "uCamPos", "uCamForward",
+            "uCamRight", "uCamUp", "uTanFov"
+        ]
     },
     wire: { vs: WIRE_VS, fs: WIRE_FS, uniforms: ["uViewProj", "uBlockPos"] }
 };

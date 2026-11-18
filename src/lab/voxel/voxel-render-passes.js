@@ -179,6 +179,14 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, targets.rays.tex);
     gl.uniform1i(comp.u.uRaysTex, 2);
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, scene.depthTex);
+    gl.uniform1i(comp.u.uDepthTex, 3);
+    if (post.camPos) gl.uniform3fv(comp.u.uCamPos, post.camPos);
+    if (post.camForward) gl.uniform3fv(comp.u.uCamForward, post.camForward);
+    if (post.camRight) gl.uniform3fv(comp.u.uCamRight, post.camRight);
+    if (post.camUp) gl.uniform3fv(comp.u.uCamUp, post.camUp);
+    if (post.tanFov) gl.uniform2fv(comp.u.uTanFov, post.tanFov);
     const k = post.raysOn ? post.raysStrength : 0;
     gl.uniform3f(comp.u.uRaysColor, post.tint[0] * k, post.tint[1] * k, post.tint[2] * k);
     gl.drawArrays(gl.TRIANGLES, 0, 3);

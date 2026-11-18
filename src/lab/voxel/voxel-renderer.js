@@ -155,7 +155,12 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             raysStrength: strength * (1 - rainIntensity),
             sunUv: [sun.u, sun.v],
             tint: atmo.sunTint,
-            rainIntensity
+            rainIntensity,
+            camPos: eye,
+            camForward: cam.forward,
+            camRight: cam.right,
+            camUp: cam.up,
+            tanFov: cam.tanHalfFov
         });
         if (timer) timer.end();
 

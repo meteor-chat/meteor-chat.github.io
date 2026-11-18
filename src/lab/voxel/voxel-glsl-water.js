@@ -19,6 +19,27 @@ vec3 waterSurface(vec3 albedo, vec3 v, out float alpha) {
     float t = uTime;
     float gx = noise2d(p * 0.8 + vec2(t * 0.30, t * 0.18)) + 0.5 * noise2d(p * 2.1 - vec2(t * 0.45, t * 0.33)) - 0.75;
     float gz = noise2d(p * 0.8 + vec2(9.3 - t * 0.22, 4.1 + t * 0.27)) + 0.5 * noise2d(p * 2.1 + vec2(t * 0.41, 1.7 - t * 0.37)) - 0.75;
+    if (uRainIntensity > 0.02) {
+        vec2 ripUv = p * 2.2;
+        vec2 rCell = floor(ripUv);
+        vec2 rF = fract(ripUv) - 0.5;
+        vec2 ripDir = vec2(0.0);
+        for (int dy = -1; dy <= 1; dy += 1) {
+            for (int dx = -1; dx <= 1; dx += 1) {
+                vec2 cellOff = vec2(float(dx), float(dy));
+                vec2 cId = rCell + cellOff;
+                float dHash = hash21(cId);
+                float dAge = fract(t * 1.8 + dHash * 7.3);
+                vec2 dPos = (vec2(hash21(cId + 1.3), hash21(cId + 4.7)) - 0.5) * 0.7;
+                vec2 toD = rF - cellOff - dPos;
+                float dLen = length(toD);
+                float wave = sin((dLen - dAge * 0.9) * 36.0) * smoothstep(0.22, 0.0, abs(dLen - dAge * 0.9)) * (1.0 - dAge);
+                ripDir += normalize(toD + 1e-4) * wave;
+            }
+        }
+        gx += ripDir.x * 0.28 * uRainIntensity;
+        gz += ripDir.y * 0.28 * uRainIntensity;
+    }
     vec3 n = normalize(FACE_N[vFace] + vec3(gx, 0.0, gz) * 0.45);
     vec3 r = reflect(-v, n);
     float fresnel = 0.02 + 0.98 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
