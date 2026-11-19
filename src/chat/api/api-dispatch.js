@@ -55,14 +55,37 @@ export function rankModelsByIntent(modelList, queryType, tiers = MODEL_TIERS) {
     }
     return ordered;
 }
-export function selectModels(modelList, queryType, currentIndex = 0, count = 3) {
-    const ranked = rankModelsByIntent(modelList, queryType);
+function splitByTier(modelList, queryType, tiers) {
+    const isHeavy = queryType === "heavy";
+    const inPool = (list) => list.filter((m) => modelList.includes(m));
+    const known = new Set([...tiers.heavy, ...tiers.fast, ...tiers.last]);
+    const extras = modelList.filter((m) => !known.has(m));
+    return {
+        primary: inPool(isHeavy ? tiers.heavy : tiers.fast),
+        rest: [...inPool(isHeavy ? tiers.fast : tiers.heavy), ...inPool(tiers.last), ...extras]
+    };
+}
+
+export function selectModels(modelList, queryType, currentIndex = 0, count = 3, excluded = [], tiers = MODEL_TIERS) {
+    const ranked = rankModelsByIntent(modelList, queryType, tiers);
     if (ranked.length === 0) return { models: [], nextIndex: 0 };
     const num = Math.min(count, ranked.length);
-    const selected = [];
-    for (let i = 0; i < num; i++) {
-        selected.push(ranked[(currentIndex + i) % ranked.length]);
+    const skip = new Set(excluded);
+    const split = splitByTier(modelList, queryType, tiers);
+    let primary = split.primary.filter((m) => !skip.has(m));
+    let rest = split.rest.filter((m) => !skip.has(m));
+    if (primary.length + rest.length === 0) {
+        primary = split.primary;
+        rest = split.rest;
     }
-    const nextIndex = (currentIndex + 1) % ranked.length;
+    const selected = [];
+    for (let i = 0; i < Math.min(num, primary.length); i++) {
+        selected.push(primary[(currentIndex + i) % primary.length]);
+    }
+    for (const m of [...rest, ...ranked]) {
+        if (selected.length >= num) break;
+        if (!selected.includes(m)) selected.push(m);
+    }
+    const nextIndex = (currentIndex + num) % Math.max(1, primary.length);
     return { models: selected, nextIndex };
 }
