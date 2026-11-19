@@ -89,3 +89,27 @@ export function selectModels(modelList, queryType, currentIndex = 0, count = 3, 
     const nextIndex = (currentIndex + num) % Math.max(1, primary.length);
     return { models: selected, nextIndex };
 }
+
+export const MODEL_COOLDOWN = Object.freeze({ rate_limit: 60000, server_error: 30000 });
+
+export function createModelHealth(now = () => Date.now()) {
+    const failures = new Map();
+    const excluded = () => {
+        const current = now();
+        const out = [];
+        for (const [model, h] of failures) {
+            if (current - h.failedAt >= h.cooldown) failures.delete(model);
+            else out.push(model);
+        }
+        return out;
+    };
+    return {
+        markFailed(models, cooldownMs) {
+            const failedAt = now();
+            for (const model of models) failures.set(model, { failedAt, cooldown: cooldownMs });
+        },
+        isCooling: (model) => excluded().includes(model),
+        excluded,
+        clear: () => failures.clear()
+    };
+}

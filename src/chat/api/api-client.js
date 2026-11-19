@@ -6,15 +6,16 @@ import { stripThinkTags, getMaxTokens, getQueryType } from "../../core/text-util
 import { trimMessages, getScheduleContext, getLastUserText } from "../history.js";
 import { ensureJadwal } from "../../core/template-loader.js";
 import { getFeatureContext } from "../feature-context.js";
-import { createTwoTierTimeoutSignal, selectModels } from "./api-dispatch.js";
+import { createModelHealth, createTwoTierTimeoutSignal, MODEL_COOLDOWN, selectModels } from "./api-dispatch.js";
 
 export class ApiError extends Error {
-    constructor(message, status, type, cooldown = 0) {
+    constructor(message, status, type, cooldown = 0, scope = "upstream") {
         super(message);
         this.name = "ApiError";
         this.status = status;
         this.type = type;
         this.cooldown = cooldown;
+        this.scope = scope;
     }
 }
 
@@ -32,6 +33,7 @@ export function classifyError(status, retryAfterHeader, errorBody = "") {
     }
     if (status === 429) {
         let cd = KEY_COOLDOWN.rate_limit;
+        const platform = (/free-models-per-|requests per (day|minute)|daily/i).test(errorBody);
         if ((/free-models-per-day|daily|requests per day/i).test(errorBody)) {
             cd = KEY_COOLDOWN.auth_error;
         } else if (retryAfterHeader) {
@@ -40,7 +42,7 @@ export function classifyError(status, retryAfterHeader, errorBody = "") {
                 cd = Math.min(parsed * 1000, 60000);
             }
         }
-        return new ApiError("Terlalu banyak request (429).", status, "RATE_LIMIT", cd);
+        return new ApiError("Terlalu banyak request (429).", status, "RATE_LIMIT", cd, platform ? "platform" : "upstream");
     }
     if (status >= 500) {
         return new ApiError(`Gangguan server dari provider (${status}).`, status, "SERVER", KEY_COOLDOWN.server_error);
@@ -49,7 +51,18 @@ export function classifyError(status, retryAfterHeader, errorBody = "") {
 }
 
 const keyHealth = new Map();
+const modelHealth = createModelHealth();
 let currentModelIndex = 0;
+
+export function getModelCooldowns() {
+    return modelHealth.excluded();
+}
+
+export function resetApiHealth() {
+    keyHealth.clear();
+    modelHealth.clear();
+    currentModelIndex = 0;
+}
 
 export async function callChatAPI(messages, onChunk) {
     if (CONFIG_API_KEYS.length === 0) throw new Error("Belum ada API key yang dikonfigurasi.");
@@ -97,7 +110,7 @@ export async function callChatAPI(messages, onChunk) {
         if (availableKeys.length === 0) break;
         const entry = availableKeys[attempts % availableKeys.length];
         const maxTokens = Math.max(getMaxTokens(lastText), 1500);
-        const { models: selectedModels, nextIndex } = selectModels(modelList, queryType, currentModelIndex, 3);
+        const { models: selectedModels, nextIndex } = selectModels(modelList, queryType, currentModelIndex, 3, modelHealth.excluded());
         currentModelIndex = nextIndex;
 
         const payload = {
@@ -132,6 +145,11 @@ export async function callChatAPI(messages, onChunk) {
                 const retryAfter = res.headers.get("Retry-After");
                 const apiErr = classifyError(res.status, retryAfter, errBody);
                 lastError = apiErr;
+                if (apiErr.type === "RATE_LIMIT" && apiErr.scope === "upstream") {
+                    modelHealth.markFailed(selectedModels, MODEL_COOLDOWN.rate_limit);
+                } else if (apiErr.type === "SERVER") {
+                    modelHealth.markFailed(selectedModels, MODEL_COOLDOWN.server_error);
+                }
                 if (apiErr.type === "FATAL") {
                     throw apiErr;
                 }
