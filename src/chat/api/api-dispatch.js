@@ -1,3 +1,5 @@
+import { MODEL_TIERS } from "../../core/config.js";
+
 export function createTwoTierTimeoutSignal(firstByteMs = 8000, inStreamMs = 15000, parentSignal) {
     const controller = new AbortController();
     let timeoutId;
@@ -38,26 +40,12 @@ export function createTwoTierTimeoutSignal(firstByteMs = 8000, inStreamMs = 1500
     };
 }
 
-export function rankModelsByIntent(modelList, queryType) {
+export function rankModelsByIntent(modelList, queryType, tiers = MODEL_TIERS) {
     if (!modelList || modelList.length === 0) return [];
     const isHeavy = queryType === "heavy";
-    const fastList = [
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "dots-studio/dots-3-note-preview:free",
-        "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "cohere/north-mini-code:free",
-        "poolside/laguna-xs-2.1:free",
-        "poolside/laguna-s-2.1:free"
-    ];
-    const heavyList = [
-        "nvidia/nemotron-3-ultra-550b-a55b:free",
-        "cohere/north-mini-code:free",
-        "dots-studio/dots-3-note-preview:free",
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "poolside/laguna-s-2.1:free",
-        "poolside/laguna-xs-2.1:free"
-    ];
-    const priority = isHeavy ? [...heavyList, ...fastList] : [...fastList, ...heavyList];
+    const priority = isHeavy
+        ? [...tiers.heavy, ...tiers.fast, ...tiers.last]
+        : [...tiers.fast, ...tiers.heavy, ...tiers.last];
     const ordered = [];
     for (const m of priority) {
         if (modelList.includes(m) && !ordered.includes(m)) ordered.push(m);
@@ -67,7 +55,6 @@ export function rankModelsByIntent(modelList, queryType) {
     }
     return ordered;
 }
-
 export function selectModels(modelList, queryType, currentIndex = 0, count = 3) {
     const ranked = rankModelsByIntent(modelList, queryType);
     if (ranked.length === 0) return { models: [], nextIndex: 0 };
