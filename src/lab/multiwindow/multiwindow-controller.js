@@ -1,5 +1,5 @@
 import { createWindowManager } from "./window-manager.js";
-import { getProceduralTime, createParticleSwarm, updateParticleSwarm } from "./multiwindow-math.js";
+import { getProceduralTime } from "./multiwindow-math.js";
 import { createMultiwindowRenderer } from "./multiwindow-renderer.js";
 
 export function createMultiwindowApp(root = document.body) {
@@ -7,14 +7,13 @@ export function createMultiwindowApp(root = document.body) {
     if (!canvas) return null;
 
     const state = {
-        geometryType: "box",
+        geometryType: "wormhole",
         showBeams: true,
         showParticles: true,
-        theme: "cyberpunk",
+        theme: "staal",
         running: true
     };
 
-    const particles = createParticleSwarm(64);
     const renderer = createMultiwindowRenderer(canvas);
 
     const idEl = root.querySelector("[data-multiwindow-id]");
@@ -116,7 +115,7 @@ export function createMultiwindowApp(root = document.body) {
 
     if (themeBtn) {
         themeBtn.addEventListener("click", () => {
-            const themes = ["cyberpunk", "solar", "emerald", "violet"];
+            const themes = ["staal", "cyberpunk", "solar", "emerald"];
             const nextIdx = (themes.indexOf(state.theme) + 1) % themes.length;
             state.theme = themes[nextIdx];
             manager.setMetaData({ theme: state.theme });
@@ -131,11 +130,7 @@ export function createMultiwindowApp(root = document.body) {
         const { sceneOffset } = manager.update(true);
         const windows = manager.getWindows();
 
-        if (state.showParticles) {
-            updateParticleSwarm(particles, windows, time);
-        }
-
-        renderer.render(windows, sceneOffset, state, time, particles);
+        renderer.render(windows, sceneOffset, state, time);
         syncHud(windows, manager.getShape());
 
         if (typeof requestAnimationFrame !== "undefined") {

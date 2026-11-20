@@ -21,7 +21,7 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: var(--mw-bg);
+    background: radial-gradient(circle at 50% 50%, #060912 0%, #010204 100%);
     color: var(--mw-text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     user-select: none;

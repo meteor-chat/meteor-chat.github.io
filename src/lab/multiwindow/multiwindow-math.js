@@ -22,10 +22,7 @@ export function multiplyMatrix(a, b) {
     const out = new Float32Array(16);
     for (let c = 0; c < 4; c += 1) {
         for (let r = 0; r < 4; r += 1) {
-            out[c * 4 + r] = a[r] * b[c * 4]
-                + a[4 + r] * b[c * 4 + 1]
-                + a[8 + r] * b[c * 4 + 2]
-                + a[12 + r] * b[c * 4 + 3];
+            out[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
         }
     }
     return out;
@@ -38,20 +35,16 @@ export function createTransformMatrix(tx, ty, tz, rx, ry, rz, sx = 1, sy = 1, sz
     const sy_ = Math.sin(ry);
     const cz = Math.cos(rz);
     const sz_ = Math.sin(rz);
-
     const m = new Float32Array(16);
     m[0] = (cy * cz) * sx;
     m[1] = (cy * sz_) * sx;
     m[2] = (-sy_) * sx;
-
     m[4] = (sx_ * sy_ * cz - cx * sz_) * sy;
     m[5] = (sx_ * sy_ * sz_ + cx * cz) * sy;
     m[6] = (sx_ * cy) * sy;
-
     m[8] = (cx * sy_ * cz + sx_ * sz_) * sz;
     m[9] = (cx * sy_ * sz_ - sx_ * cz) * sz;
     m[10] = (cx * cy) * sz;
-
     m[12] = tx;
     m[13] = ty;
     m[14] = tz;
@@ -59,15 +52,43 @@ export function createTransformMatrix(tx, ty, tz, rx, ry, rz, sx = 1, sy = 1, sz
     return m;
 }
 
+export function getWindowColors(index, theme = "staal") {
+    const palettes = {
+        staal: [
+            { outer: [0.0, 0.95, 0.46], core: [1.0, 0.09, 0.28] },
+            { outer: [1.0, 0.09, 0.28], core: [0.0, 0.95, 0.46] },
+            { outer: [0.08, 0.85, 1.0], core: [1.0, 0.55, 0.0] },
+            { outer: [1.0, 0.55, 0.0], core: [0.08, 0.85, 1.0] }
+        ],
+        cyberpunk: [
+            { outer: [0.1, 0.88, 1.0], core: [0.95, 0.15, 0.85] },
+            { outer: [0.95, 0.15, 0.85], core: [0.1, 0.88, 1.0] },
+            { outer: [1.0, 0.85, 0.1], core: [0.2, 0.4, 1.0] },
+            { outer: [0.2, 0.4, 1.0], core: [1.0, 0.85, 0.1] }
+        ],
+        solar: [
+            { outer: [1.0, 0.72, 0.12], core: [1.0, 0.18, 0.1] },
+            { outer: [1.0, 0.18, 0.1], core: [1.0, 0.72, 0.12] }
+        ],
+        emerald: [
+            { outer: [0.0, 0.98, 0.6], core: [0.2, 0.6, 1.0] },
+            { outer: [0.2, 0.6, 1.0], core: [0.0, 0.98, 0.6] }
+        ]
+    };
+    const list = palettes[theme] || palettes.staal;
+    return list[index % list.length];
+}
+
+export function getWindowColor(index, theme = "staal") {
+    return getWindowColors(index, theme).outer;
+}
+
 export function buildCubeVertices(s = 100) {
     const h = s * 0.5;
     const v = [
-        [-h, -h, -h], [h, -h, -h], [h, -h, -h], [h, h, -h],
-        [h, h, -h], [-h, h, -h], [-h, h, -h], [-h, -h, -h],
-        [-h, -h, h], [h, -h, h], [h, -h, h], [h, h, h],
-        [h, h, h], [-h, h, h], [-h, h, h], [-h, -h, h],
-        [-h, -h, -h], [-h, -h, h], [h, -h, -h], [h, -h, h],
-        [h, h, -h], [h, h, h], [-h, h, -h], [-h, h, h]
+        [-h, -h, -h], [h, -h, -h], [h, -h, -h], [h, h, -h], [h, h, -h], [-h, h, -h], [-h, h, -h], [-h, -h, -h],
+        [-h, -h, h], [h, -h, h], [h, -h, h], [h, h, h], [h, h, h], [-h, h, h], [-h, h, h], [-h, -h, h],
+        [-h, -h, -h], [-h, -h, h], [h, -h, -h], [h, -h, h], [h, h, -h], [h, h, h], [-h, h, -h], [-h, h, h]
     ];
     return new Float32Array(v.flat());
 }
@@ -82,17 +103,12 @@ export function buildIcosahedronVertices(r = 75) {
     const len = Math.hypot(1, t);
     const normPts = pts.map(([x, y, z]) => [(x / len) * r, (y / len) * r, (z / len) * r]);
     const edges = [
-        [0, 11], [0, 5], [0, 1], [0, 7], [0, 10],
-        [1, 5], [5, 11], [11, 10], [10, 7], [7, 1],
-        [3, 9], [3, 4], [3, 2], [3, 6], [3, 8],
-        [4, 9], [9, 8], [8, 6], [6, 2], [2, 4],
-        [1, 9], [5, 4], [11, 2], [10, 6], [7, 8],
-        [1, 8], [5, 9], [11, 4], [10, 2], [7, 6]
+        [0, 11], [0, 5], [0, 1], [0, 7], [0, 10], [1, 5], [5, 11], [11, 10], [10, 7], [7, 1],
+        [3, 9], [3, 4], [3, 2], [3, 6], [3, 8], [4, 9], [9, 8], [8, 6], [6, 2], [2, 4],
+        [1, 9], [5, 4], [11, 2], [10, 6], [7, 8], [1, 8], [5, 9], [11, 4], [10, 2], [7, 6]
     ];
     const out = [];
-    for (const [a, b] of edges) {
-        out.push(...normPts[a], ...normPts[b]);
-    }
+    for (const [a, b] of edges) out.push(...normPts[a], ...normPts[b]);
     return new Float32Array(out);
 }
 
@@ -101,17 +117,10 @@ export function buildTorusKnotVertices(r = 65, tube = 22, p = 2, q = 3, seg = 12
     for (let i = 0; i < seg; i += 1) {
         const phi = (i / seg) * Math.PI * 2;
         const r_ = r + tube * Math.cos(q * phi);
-        const x = r_ * Math.cos(p * phi);
-        const y = r_ * Math.sin(p * phi);
-        const z = tube * Math.sin(q * phi);
-        pts.push([x, y, z]);
+        pts.push([r_ * Math.cos(p * phi), r_ * Math.sin(p * phi), tube * Math.sin(q * phi)]);
     }
     const out = [];
-    for (let i = 0; i < seg; i += 1) {
-        const a = pts[i];
-        const b = pts[(i + 1) % seg];
-        out.push(...a, ...b);
-    }
+    for (let i = 0; i < seg; i += 1) out.push(...pts[i], ...pts[(i + 1) % seg]);
     return new Float32Array(out);
 }
 
@@ -124,17 +133,7 @@ export function buildSphereVertices(r = 75, latCount = 8, lonCount = 12) {
         for (let j = 0; j < lonCount; j += 1) {
             const th1 = (j / lonCount) * Math.PI * 2;
             const th2 = ((j + 1) / lonCount) * Math.PI * 2;
-            out.push(rad * Math.cos(th1), y, rad * Math.sin(th1));
-            out.push(rad * Math.cos(th2), y, rad * Math.sin(th2));
-        }
-    }
-    for (let i = 0; i < lonCount; i += 1) {
-        const theta = (i / lonCount) * Math.PI * 2;
-        for (let j = 0; j < latCount; j += 1) {
-            const p1 = (j / latCount) * Math.PI;
-            const p2 = ((j + 1) / latCount) * Math.PI;
-            out.push(r * Math.sin(p1) * Math.cos(theta), r * Math.cos(p1), r * Math.sin(p1) * Math.sin(theta));
-            out.push(r * Math.sin(p2) * Math.cos(theta), r * Math.cos(p2), r * Math.sin(p2) * Math.sin(theta));
+            out.push(rad * Math.cos(th1), y, rad * Math.sin(th1), rad * Math.cos(th2), y, rad * Math.sin(th2));
         }
     }
     return new Float32Array(out);
@@ -146,16 +145,9 @@ export function buildCoreVertices(r = 55, h = 110, seg = 16) {
     for (let i = 0; i < seg; i += 1) {
         const th1 = (i / seg) * Math.PI * 2;
         const th2 = ((i + 1) / seg) * Math.PI * 2;
-        const x1 = r * Math.cos(th1);
-        const z1 = r * Math.sin(th1);
-        const x2 = r * Math.cos(th2);
-        const z2 = r * Math.sin(th2);
-        out.push(x1, -hh, z1, x2, -hh, z2);
-        out.push(x1, 0, z1, x2, 0, z2);
-        out.push(x1, hh, z1, x2, hh, z2);
-        if (i % 2 === 0) {
-            out.push(x1, -hh, z1, x1, hh, z1);
-        }
+        out.push(r * Math.cos(th1), -hh, r * Math.sin(th1), r * Math.cos(th2), -hh, r * Math.sin(th2));
+        out.push(r * Math.cos(th1), 0, r * Math.sin(th1), r * Math.cos(th2), 0, r * Math.sin(th2));
+        out.push(r * Math.cos(th1), hh, r * Math.sin(th1), r * Math.cos(th2), hh, r * Math.sin(th2));
     }
     return new Float32Array(out);
 }
@@ -172,66 +164,101 @@ export function getGeometryVertices(type, size = 110) {
     }
 }
 
-export function hslToRgb(h, s, l) {
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const hp = (h % 360) / 60;
-    const x = c * (1 - Math.abs((hp % 2) - 1));
-    let r = 0;
-    let g = 0;
-    let b = 0;
-    if (hp >= 0 && hp < 1) { r = c; g = x; }
-    else if (hp >= 1 && hp < 2) { r = x; g = c; }
-    else if (hp >= 2 && hp < 3) { g = c; b = x; }
-    else if (hp >= 3 && hp < 4) { g = x; b = c; }
-    else if (hp >= 4 && hp < 5) { r = x; b = c; }
-    else if (hp >= 5 && hp < 6) { r = c; b = x; }
-    const m = l - c * 0.5;
-    return [r + m, g + m, b + m];
+export function appendOrbParticles(out, cx, cy, radius, count, time, colOuter, colCore) {
+    const phiGold = Math.PI * (3 - Math.sqrt(5));
+    const outerCount = Math.floor(count * 0.68);
+    for (let i = 0; i < outerCount; i += 1) {
+        const y = 1 - (i / (outerCount - 1)) * 2;
+        const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
+        const theta = phiGold * i + time * 0.45;
+        const noise = 1 + 0.16 * Math.sin(3 * theta + time * 1.5) * Math.cos(4 * y - time);
+        const r = radius * noise;
+        const sz = 6.0 + 3.0 * Math.sin(i * 1.7 + time * 2);
+        out.push(cx + Math.cos(theta) * radiusAtY * r, cy + y * r, Math.sin(theta) * radiusAtY * r, colOuter[0], colOuter[1], colOuter[2], sz);
+    }
+    const coreCount = count - outerCount;
+    const coreR = radius * 0.42;
+    for (let i = 0; i < coreCount; i += 1) {
+        const y = 1 - (i / (coreCount - 1)) * 2;
+        const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
+        const theta = phiGold * i - time * 0.75;
+        const noise = 1 + 0.12 * Math.sin(5 * theta - time * 2);
+        const r = coreR * noise;
+        const sz = 5.0 + 3.5 * Math.cos(i * 2.3 + time * 3);
+        out.push(cx + Math.cos(theta) * radiusAtY * r, cy + y * r, Math.sin(theta) * radiusAtY * r, colCore[0], colCore[1], colCore[2], sz);
+    }
 }
 
-export function getWindowColor(index, theme = "cyberpunk") {
-    if (theme === "solar") {
-        return hslToRgb(30 + (index * 25) % 45, 0.95, 0.55);
-    }
-    if (theme === "emerald") {
-        return hslToRgb(140 + (index * 30) % 50, 0.90, 0.52);
-    }
-    if (theme === "violet") {
-        return hslToRgb(270 + (index * 35) % 60, 0.90, 0.58);
-    }
-    return hslToRgb((index * 65 + 180) % 360, 0.95, 0.56);
-}
-
-export function createParticleSwarm(count = 72) {
-    const data = new Float32Array(count * 6);
+export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, colB, radius = 135) {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len = Math.hypot(dx, dy);
+    if (len < 10) return;
+    const nx = -dy / len;
+    const ny = dx / len;
     for (let i = 0; i < count; i += 1) {
-        data[i * 6] = (Math.random() - 0.5) * 600;
-        data[i * 6 + 1] = (Math.random() - 0.5) * 600;
-        data[i * 6 + 2] = (Math.random() - 0.5) * 200;
-        data[i * 6 + 3] = (Math.random() - 0.5) * 40;
-        data[i * 6 + 4] = (Math.random() - 0.5) * 40;
-        data[i * 6 + 5] = Math.random();
+        const u = (i / count + (time * 0.15) % 1) % 1;
+        const pxBase = ax + dx * u;
+        const pyBase = ay + dy * u;
+        const dCenter = Math.abs(u - 0.5) * 2;
+        const neckFactor = 0.22 + 0.78 * Math.pow(dCenter, 2.2);
+        const wave = 1 + 0.18 * Math.sin(u * 14 - time * 4.5);
+        const r = radius * neckFactor * wave;
+        const angle = u * Math.PI * 10 + (i * 0.618033) * Math.PI * 2 + time * 2.5;
+        const cr = colA[0] * (1 - u) + colB[0] * u;
+        const cg = colA[1] * (1 - u) + colB[1] * u;
+        const cb = colA[2] * (1 - u) + colB[2] * u;
+        const sz = 5.5 + 3.0 * Math.sin(u * Math.PI);
+        out.push(pxBase + Math.cos(angle) * nx * r, pyBase + Math.cos(angle) * ny * r, Math.sin(angle) * r, cr, cg, cb, sz);
     }
-    return data;
 }
 
-export function updateParticleSwarm(data, windows, time) {
-    if (!windows.length) return;
-    const count = data.length / 6;
+export function generateWormholeSceneData(windows, sceneOffset, time, theme = "staal") {
+    const out = [];
+    if (!Array.isArray(windows) || windows.length === 0) return new Float32Array(0);
+    for (let i = 0; i < windows.length; i += 1) {
+        const win = windows[i];
+        const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
+        const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
+        const cols = getWindowColors(i, theme);
+        appendOrbParticles(out, cx, cy, 130, 480, time + i * 2, cols.outer, cols.core);
+    }
+    if (windows.length > 1) {
+        for (let i = 0; i < windows.length; i += 1) {
+            for (let j = i + 1; j < windows.length; j += 1) {
+                const wa = windows[i].shape;
+                const wb = windows[j].shape;
+                const ax = wa.x + wa.w * 0.5 + sceneOffset.x;
+                const ay = wa.y + wa.h * 0.5 + sceneOffset.y;
+                const bx = wb.x + wb.w * 0.5 + sceneOffset.x;
+                const by = wb.y + wb.h * 0.5 + sceneOffset.y;
+                const colA = getWindowColors(i, theme).outer;
+                const colB = getWindowColors(j, theme).outer;
+                appendBridgeParticles(out, ax, ay, bx, by, 650, time, colA, colB, 130);
+            }
+        }
+    }
+    return new Float32Array(out);
+}
+
+export function createParticleSwarm(count = 64) {
+    const out = new Float32Array(count * 6);
     for (let i = 0; i < count; i += 1) {
-        const off = i * 6;
-        const targetWin = windows[i % windows.length];
-        const tx = targetWin.shape.x + targetWin.shape.w * 0.5;
-        const ty = targetWin.shape.y + targetWin.shape.h * 0.5;
-        const phase = time * 1.5 + data[off + 5] * Math.PI * 2;
-        const orbitR = 120 + 30 * Math.sin(phase * 0.7);
+        out[i * 6] = (Math.random() - 0.5) * 800;
+        out[i * 6 + 1] = (Math.random() - 0.5) * 600;
+        out[i * 6 + 2] = (Math.random() - 0.5) * 200;
+        out[i * 6 + 3] = (Math.random() - 0.5) * 40;
+        out[i * 6 + 4] = (Math.random() - 0.5) * 40;
+        out[i * 6 + 5] = (Math.random() - 0.5) * 20;
+    }
+    return out;
+}
 
-        const goalX = tx + Math.cos(phase) * orbitR;
-        const goalY = ty + Math.sin(phase) * orbitR;
-        const goalZ = Math.sin(phase * 1.3) * 60;
-
-        data[off] += (goalX - data[off]) * 0.04;
-        data[off + 1] += (goalY - data[off + 1]) * 0.04;
-        data[off + 2] += (goalZ - data[off + 2]) * 0.04;
+export function updateParticleSwarm(particles, windows, time) {
+    if (!particles) return;
+    const count = particles.length / 6;
+    for (let i = 0; i < count; i += 1) {
+        particles[i * 6] += Math.sin(time + i) * 0.6;
+        particles[i * 6 + 1] += Math.cos(time + i * 1.3) * 0.6;
     }
 }

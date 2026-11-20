@@ -35,8 +35,8 @@ export function areWindowListsDifferent(a, b) {
 
 export function createWindowManager(options = {}) {
     const hasStorage = typeof localStorage !== "undefined";
-    const hasBroadcast = typeof BroadcastChannel !== "undefined";
-    let channel = hasBroadcast ? new BroadcastChannel(CHANNEL_NAME) : null;
+    const hasBroadcast = typeof globalThis.BroadcastChannel !== "undefined";
+    let channel = hasBroadcast ? new globalThis.BroadcastChannel(CHANNEL_NAME) : null;
     let windows = [];
     let id = 0;
     let metaData = options.metaData || {};

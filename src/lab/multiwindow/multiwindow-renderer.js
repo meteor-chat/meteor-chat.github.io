@@ -3,26 +3,38 @@ import {
     createTransformMatrix,
     multiplyMatrix,
     getGeometryVertices,
-    getWindowColor
+    getWindowColors,
+    generateWormholeSceneData
 } from "./multiwindow-math.js";
 
-const VS_SOURCE = `#version 300 es
-precision highp float;
-layout(location = 0) in vec3 aPos;
+const VS_SRC = `
+attribute vec3 aPos;
+attribute vec3 aColor;
+attribute float aSize;
 uniform mat4 uMvp;
+varying vec3 vColor;
 void main() {
     gl_Position = uMvp * vec4(aPos, 1.0);
-    gl_PointSize = 4.0;
+    gl_PointSize = clamp(aSize, 2.0, 32.0);
+    vColor = aColor;
 }
 `;
 
-const FS_SOURCE = `#version 300 es
+const FS_SRC = `
 precision highp float;
-uniform vec3 uColor;
+varying vec3 vColor;
 uniform float uAlpha;
-out vec4 fragColor;
+uniform float uMode;
 void main() {
-    fragColor = vec4(uColor, uAlpha);
+    if (uMode < 0.5) {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float dist = length(coord) * 2.0;
+        if (dist > 1.0) discard;
+        float glow = exp(-2.2 * dist * dist) * (1.0 - dist);
+        gl_FragColor = vec4(vColor, glow * uAlpha);
+    } else {
+        gl_FragColor = vec4(vColor, uAlpha);
+    }
 }
 `;
 
@@ -66,31 +78,36 @@ export function createMultiwindowRenderer(canvas) {
 
     let program = null;
     let uMvpLoc = null;
-    let uColorLoc = null;
     let uAlphaLoc = null;
-    let vao = null;
+    let uModeLoc = null;
+    let aPosLoc = -1;
+    let aColorLoc = -1;
+    let aSizeLoc = -1;
+
+    let wormholeVbo = null;
     let lineVbo = null;
-    let beamVbo = null;
-    let particleVbo = null;
+    let lineColorVbo = null;
+    let lineSizeVbo = null;
     const geoBuffers = new Map();
 
     if (gl) {
-        program = createProgram(gl, VS_SOURCE, FS_SOURCE);
+        program = createProgram(gl, VS_SRC, FS_SRC);
         if (program) {
             uMvpLoc = gl.getUniformLocation(program, "uMvp");
-            uColorLoc = gl.getUniformLocation(program, "uColor");
             uAlphaLoc = gl.getUniformLocation(program, "uAlpha");
-            vao = gl.createVertexArray ? gl.createVertexArray() : null;
-            if (vao) gl.bindVertexArray(vao);
+            uModeLoc = gl.getUniformLocation(program, "uMode");
+            aPosLoc = gl.getAttribLocation(program, "aPos");
+            aColorLoc = gl.getAttribLocation(program, "aColor");
+            aSizeLoc = gl.getAttribLocation(program, "aSize");
+
+            wormholeVbo = gl.createBuffer();
             lineVbo = gl.createBuffer();
-            beamVbo = gl.createBuffer();
-            particleVbo = gl.createBuffer();
-            gl.enableVertexAttribArray(0);
-            if (vao) gl.bindVertexArray(null);
+            lineColorVbo = gl.createBuffer();
+            lineSizeVbo = gl.createBuffer();
         }
     }
 
-    const getOrCreateGeoBuffer = (type, size = 110) => {
+    const getOrCreateGeo = (type, size = 110) => {
         const key = `${type}_${size}`;
         if (geoBuffers.has(key)) return geoBuffers.get(key);
         const data = getGeometryVertices(type, size);
@@ -105,22 +122,31 @@ export function createMultiwindowRenderer(canvas) {
         return record;
     };
 
-    const render2DFallback = (ctx, windows, sceneOffset, state, time) => {
-        ctx.fillStyle = "#090d16";
+    const render2DFallback = (ctx, windows, sceneOffset, state, _time) => {
+        ctx.fillStyle = "#030408";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.save();
         ctx.translate(sceneOffset.x, sceneOffset.y);
 
-        if (state.showBeams && windows.length > 1) {
-            ctx.strokeStyle = "rgba(79, 195, 247, 0.45)";
-            ctx.lineWidth = 2;
+        if (windows.length > 1) {
             for (let i = 0; i < windows.length; i += 1) {
                 for (let j = i + 1; j < windows.length; j += 1) {
                     const wa = windows[i].shape;
                     const wb = windows[j].shape;
+                    const ax = wa.x + wa.w * 0.5;
+                    const ay = wa.y + wa.h * 0.5;
+                    const bx = wb.x + wb.w * 0.5;
+                    const by = wb.y + wb.h * 0.5;
+                    const grad = ctx.createLinearGradient(ax, ay, bx, by);
+                    const ca = getWindowColors(i, state.theme).outer;
+                    const cb = getWindowColors(j, state.theme).outer;
+                    grad.addColorStop(0, `rgba(${Math.floor(ca[0]*255)}, ${Math.floor(ca[1]*255)}, ${Math.floor(ca[2]*255)}, 0.6)`);
+                    grad.addColorStop(1, `rgba(${Math.floor(cb[0]*255)}, ${Math.floor(cb[1]*255)}, ${Math.floor(cb[2]*255)}, 0.6)`);
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = 14;
                     ctx.beginPath();
-                    ctx.moveTo(wa.x + wa.w * 0.5, wa.y + wa.h * 0.5);
-                    ctx.lineTo(wb.x + wb.w * 0.5, wb.y + wb.h * 0.5);
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(bx, by);
                     ctx.stroke();
                 }
             }
@@ -130,23 +156,20 @@ export function createMultiwindowRenderer(canvas) {
             const win = windows[i];
             const cx = win.shape.x + win.shape.w * 0.5;
             const cy = win.shape.y + win.shape.h * 0.5;
-            const col = getWindowColor(i, state.theme);
-            const r255 = Math.floor(col[0] * 255);
-            const g255 = Math.floor(col[1] * 255);
-            const b255 = Math.floor(col[2] * 255);
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.rotate(time * 0.5 + i * 0.3);
-            ctx.strokeStyle = `rgb(${r255}, ${g255}, ${b255})`;
-            ctx.lineWidth = 2.5;
-            const s = 90 + i * 15;
-            ctx.strokeRect(-s * 0.5, -s * 0.5, s, s);
-            ctx.restore();
+            const cols = getWindowColors(i, state.theme);
+            const radGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 120);
+            radGrad.addColorStop(0, `rgba(${Math.floor(cols.core[0]*255)}, ${Math.floor(cols.core[1]*255)}, ${Math.floor(cols.core[2]*255)}, 0.95)`);
+            radGrad.addColorStop(0.5, `rgba(${Math.floor(cols.outer[0]*255)}, ${Math.floor(cols.outer[1]*255)}, ${Math.floor(cols.outer[2]*255)}, 0.75)`);
+            radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+            ctx.fillStyle = radGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+            ctx.fill();
         }
         ctx.restore();
     };
 
-    const render = (windows, sceneOffset, state, time, particles) => {
+    const render = (windows, sceneOffset, state, time) => {
         if (!gl || !program) {
             const ctx = canvas.getContext ? canvas.getContext("2d") : null;
             if (ctx) render2DFallback(ctx, windows, sceneOffset, state, time);
@@ -156,86 +179,70 @@ export function createMultiwindowRenderer(canvas) {
         const w = canvas.width;
         const h = canvas.height;
         gl.viewport(0, 0, w, h);
-        gl.clearColor(0.035, 0.05, 0.085, 1.0);
+        gl.clearColor(0.015, 0.02, 0.035, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
         gl.disable(gl.DEPTH_TEST);
 
         gl.useProgram(program);
-        if (vao) gl.bindVertexArray(vao);
-
         const ortho = createOrthoMatrix(w, h, -2000, 2000);
+        gl.uniformMatrix4fv(uMvpLoc, false, ortho);
 
-        if (state.showBeams && windows.length > 1) {
-            const beamPoints = [];
-            for (let i = 0; i < windows.length; i += 1) {
-                for (let j = i + 1; j < windows.length; j += 1) {
-                    const wa = windows[i].shape;
-                    const wb = windows[j].shape;
-                    const ax = wa.x + wa.w * 0.5 + sceneOffset.x;
-                    const ay = wa.y + wa.h * 0.5 + sceneOffset.y;
-                    const bx = wb.x + wb.w * 0.5 + sceneOffset.x;
-                    const by = wb.y + wb.h * 0.5 + sceneOffset.y;
-                    beamPoints.push(ax, ay, 0, bx, by, 0);
-                }
+        const geoType = state.geometryType || "wormhole";
+        if (geoType === "wormhole") {
+            const wormholeData = generateWormholeSceneData(windows, sceneOffset, time, state.theme);
+            if (wormholeData.length > 0) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, wormholeVbo);
+                gl.bufferData(gl.ARRAY_BUFFER, wormholeData, gl.DYNAMIC_DRAW);
+
+                gl.enableVertexAttribArray(aPosLoc);
+                gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 28, 0);
+
+                gl.enableVertexAttribArray(aColorLoc);
+                gl.vertexAttribPointer(aColorLoc, 3, gl.FLOAT, false, 28, 12);
+
+                gl.enableVertexAttribArray(aSizeLoc);
+                gl.vertexAttribPointer(aSizeLoc, 1, gl.FLOAT, false, 28, 24);
+
+                gl.uniform1f(uModeLoc, 0.0);
+                gl.uniform1f(uAlphaLoc, 0.96);
+                gl.drawArrays(gl.POINTS, 0, wormholeData.length / 7);
+
+                gl.disableVertexAttribArray(aColorLoc);
+                gl.disableVertexAttribArray(aSizeLoc);
             }
-            if (beamPoints.length > 0) {
-                const beamData = new Float32Array(beamPoints);
-                gl.bindBuffer(gl.ARRAY_BUFFER, beamVbo);
-                gl.bufferData(gl.ARRAY_BUFFER, beamData, gl.DYNAMIC_DRAW);
-                gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-                gl.uniformMatrix4fv(uMvpLoc, false, ortho);
-                gl.uniform3f(uColorLoc, 0.35, 0.78, 1.0);
-                const pulse = 0.45 + 0.25 * Math.sin(time * 4.0);
-                gl.uniform1f(uAlphaLoc, pulse);
-                gl.drawArrays(gl.LINES, 0, beamPoints.length / 3);
-            }
-        }
-
-        const geoType = state.geometryType || "box";
-        for (let i = 0; i < windows.length; i += 1) {
-            const win = windows[i];
-            const size = 100 + (i % 4) * 15;
-            const geo = getOrCreateGeoBuffer(geoType, size);
-            if (!geo.buffer) continue;
-
-            const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
-            const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
-            const rx = time * 0.65 + i * 0.4;
-            const ry = time * 0.85 + i * 0.25;
-            const rz = time * 0.35;
-
-            const model = createTransformMatrix(cx, cy, 0, rx, ry, rz);
-            const mvp = multiplyMatrix(ortho, model);
-
-            const col = getWindowColor(i, state.theme);
-            gl.bindBuffer(gl.ARRAY_BUFFER, geo.buffer);
-            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-            gl.uniformMatrix4fv(uMvpLoc, false, mvp);
-            gl.uniform3f(uColorLoc, col[0], col[1], col[2]);
+        } else {
+            gl.uniform1f(uModeLoc, 1.0);
             gl.uniform1f(uAlphaLoc, 0.95);
-            gl.drawArrays(gl.LINES, 0, geo.count);
-        }
+            gl.disableVertexAttribArray(aColorLoc);
+            gl.disableVertexAttribArray(aSizeLoc);
 
-        if (state.showParticles && particles && particles.length > 0) {
-            const count = particles.length / 6;
-            const pts = new Float32Array(count * 3);
-            for (let i = 0; i < count; i += 1) {
-                pts[i * 3] = particles[i * 6] + sceneOffset.x;
-                pts[i * 3 + 1] = particles[i * 6 + 1] + sceneOffset.y;
-                pts[i * 3 + 2] = particles[i * 6 + 2];
+            for (let i = 0; i < windows.length; i += 1) {
+                const win = windows[i];
+                const geo = getOrCreateGeo(geoType, 120);
+                if (!geo.buffer) continue;
+
+                const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
+                const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
+                const rx = time * 0.65 + i * 0.4;
+                const ry = time * 0.85 + i * 0.25;
+                const rz = time * 0.35;
+
+                const model = createTransformMatrix(cx, cy, 0, rx, ry, rz);
+                const mvp = multiplyMatrix(ortho, model);
+                gl.uniformMatrix4fv(uMvpLoc, false, mvp);
+
+                const col = getWindowColors(i, state.theme).outer;
+                gl.vertexAttrib3f(aColorLoc, col[0], col[1], col[2]);
+                gl.vertexAttrib1f(aSizeLoc, 1.0);
+
+                gl.bindBuffer(gl.ARRAY_BUFFER, geo.buffer);
+                gl.enableVertexAttribArray(aPosLoc);
+                gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 0, 0);
+                gl.drawArrays(gl.LINES, 0, geo.count);
             }
-            gl.bindBuffer(gl.ARRAY_BUFFER, particleVbo);
-            gl.bufferData(gl.ARRAY_BUFFER, pts, gl.DYNAMIC_DRAW);
-            gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
-            gl.uniformMatrix4fv(uMvpLoc, false, ortho);
-            gl.uniform3f(uColorLoc, 0.9, 0.95, 1.0);
-            gl.uniform1f(uAlphaLoc, 0.7);
-            gl.drawArrays(gl.POINTS, 0, count);
         }
-
-        if (vao) gl.bindVertexArray(null);
     };
 
     const resize = (width, height, dpr = 1) => {
@@ -249,9 +256,10 @@ export function createMultiwindowRenderer(canvas) {
             if (record.buffer) gl.deleteBuffer(record.buffer);
         }
         geoBuffers.clear();
+        if (wormholeVbo) gl.deleteBuffer(wormholeVbo);
         if (lineVbo) gl.deleteBuffer(lineVbo);
-        if (beamVbo) gl.deleteBuffer(beamVbo);
-        if (particleVbo) gl.deleteBuffer(particleVbo);
+        if (lineColorVbo) gl.deleteBuffer(lineColorVbo);
+        if (lineSizeVbo) gl.deleteBuffer(lineSizeVbo);
         if (program) gl.deleteProgram(program);
     };
 
