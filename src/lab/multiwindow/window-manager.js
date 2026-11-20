@@ -8,11 +8,17 @@ export function getWindowShape() {
     if (typeof window === "undefined") {
         return { x: 0, y: 0, w: 800, h: 600 };
     }
-    const x = typeof window.screenX === "number" ? window.screenX : (window.screenLeft || 0);
-    const y = typeof window.screenY === "number" ? window.screenY : (window.screenTop || 0);
-    const w = window.innerWidth || 800;
-    const h = window.innerHeight || 600;
-    return { x, y, w, h };
+    const rawX = typeof window.screenX === "number" ? window.screenX : (window.screenLeft || 0);
+    const rawY = typeof window.screenY === "number" ? window.screenY : (window.screenTop || 0);
+    const innerW = window.innerWidth || 800;
+    const innerH = window.innerHeight || 600;
+    const outerW = typeof window.outerWidth === "number" ? window.outerWidth : innerW;
+    const outerH = typeof window.outerHeight === "number" ? window.outerHeight : innerH;
+    const chromeX = Math.max(0, (outerW - innerW) / 2);
+    const chromeY = Math.max(0, outerH - innerH);
+    const x = Math.round(rawX + chromeX);
+    const y = Math.round(rawY + chromeY);
+    return { x, y, w: innerW, h: innerH };
 }
 
 export function pruneStaleWindows(windows, maxAgeMs = STALE_TIMEOUT_MS, now = Date.now()) {

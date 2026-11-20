@@ -127,7 +127,7 @@ export function createMultiwindowApp(root = document.body) {
     const tick = () => {
         if (!state.running) return;
         const time = getProceduralTime();
-        const { sceneOffset } = manager.update(true);
+        const { sceneOffset } = manager.update(false);
         const windows = manager.getWindows();
 
         renderer.render(windows, sceneOffset, state, time);

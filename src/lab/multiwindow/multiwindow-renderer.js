@@ -12,10 +12,11 @@ attribute vec3 aPos;
 attribute vec3 aColor;
 attribute float aSize;
 uniform mat4 uMvp;
+uniform float uDpr;
 varying vec3 vColor;
 void main() {
     gl_Position = uMvp * vec4(aPos, 1.0);
-    gl_PointSize = clamp(aSize, 2.0, 32.0);
+    gl_PointSize = clamp(aSize * uDpr, 2.0, 48.0);
     vColor = aColor;
 }
 `;
@@ -80,6 +81,7 @@ export function createMultiwindowRenderer(canvas) {
 
     let program = null;
     let uMvpLoc = null;
+    let uDprLoc = null;
     let uAlphaLoc = null;
     let uModeLoc = null;
     let aPosLoc = -1;
@@ -96,6 +98,7 @@ export function createMultiwindowRenderer(canvas) {
         program = createProgram(gl, VS_SRC, FS_SRC);
         if (program) {
             uMvpLoc = gl.getUniformLocation(program, "uMvp");
+            uDprLoc = gl.getUniformLocation(program, "uDpr");
             uAlphaLoc = gl.getUniformLocation(program, "uAlpha");
             uModeLoc = gl.getUniformLocation(program, "uMode");
             aPosLoc = gl.getAttribLocation(program, "aPos");
@@ -108,6 +111,10 @@ export function createMultiwindowRenderer(canvas) {
             lineSizeVbo = gl.createBuffer();
         }
     }
+
+    let cssW = 800;
+    let cssH = 600;
+    let currentDpr = 1;
 
     const getOrCreateGeo = (type, size = 110) => {
         const key = `${type}_${size}`;
@@ -128,6 +135,7 @@ export function createMultiwindowRenderer(canvas) {
         ctx.fillStyle = "#030408";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.save();
+        if (typeof ctx.scale === "function") ctx.scale(currentDpr, currentDpr);
         ctx.translate(sceneOffset.x, sceneOffset.y);
 
         if (windows.length > 1) {
@@ -188,8 +196,9 @@ export function createMultiwindowRenderer(canvas) {
         gl.disable(gl.DEPTH_TEST);
 
         gl.useProgram(program);
-        const ortho = createOrthoMatrix(w, h, -2000, 2000);
+        const ortho = createOrthoMatrix(cssW, cssH, -2000, 2000);
         gl.uniformMatrix4fv(uMvpLoc, false, ortho);
+        if (uDprLoc) gl.uniform1f(uDprLoc, currentDpr);
 
         const geoType = state.geometryType || "wormhole";
         if (geoType === "wormhole") {
@@ -248,6 +257,9 @@ export function createMultiwindowRenderer(canvas) {
     };
 
     const resize = (width, height, dpr = 1) => {
+        cssW = width;
+        cssH = height;
+        currentDpr = dpr;
         canvas.width = Math.floor(width * dpr);
         canvas.height = Math.floor(height * dpr);
     };

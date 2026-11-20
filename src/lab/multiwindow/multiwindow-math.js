@@ -200,16 +200,16 @@ export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, co
     const ny = dx / len;
     for (let i = 0; i < count; i += 1) {
         const isForward = i % 2 === 0;
-        const speed = isForward ? 0.18 : -0.18;
+        const speed = isForward ? 0.16 : -0.16;
         const uRaw = (i / count + time * speed) % 1.0;
         const u = uRaw < 0 ? uRaw + 1.0 : uRaw;
         const pxBase = ax + dx * u;
         const pyBase = ay + dy * u;
         const dCenter = Math.abs(u - 0.5) * 2.0;
-        const neckFactor = 0.28 + 0.72 * (dCenter * dCenter);
+        const neckFactor = 0.35 + 0.65 * (dCenter * dCenter);
         const fracR = Math.sqrt(((i * 1.618033) % 1));
-        const r = radius * neckFactor * fracR * (1.0 + 0.12 * Math.sin(u * 12.0 - time * 3.0));
-        const angle = u * Math.PI * 8.0 + (i * 2.399963) + time * (isForward ? 1.8 : -1.8);
+        const r = radius * neckFactor * fracR * (1.0 + 0.08 * Math.sin(u * Math.PI * 4.0 - time * 2.0));
+        const angle = u * Math.PI * 4.0 + (i * 2.399963) + time * (isForward ? 1.5 : -1.5);
         const rx = Math.cos(angle) * nx * r;
         const ry = Math.cos(angle) * ny * r;
         const rz = Math.sin(angle) * r;
@@ -233,7 +233,7 @@ export function generateWormholeSceneData(windows, sceneOffset, time, theme = "s
         const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
         const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
         const cols = getWindowColors(i, theme);
-        appendOrbParticles(out, cx, cy, 140, 1200, time + i * 2, cols.outer, cols.core);
+        appendOrbParticles(out, cx, cy, 140, 1400, time + i * 2, cols.outer, cols.core);
     }
     if (sorted.length > 1) {
         for (let i = 0; i < sorted.length; i += 1) {
@@ -246,7 +246,7 @@ export function generateWormholeSceneData(windows, sceneOffset, time, theme = "s
                 const by = wb.y + wb.h * 0.5 + sceneOffset.y;
                 const colA = getWindowColors(i, theme).outer;
                 const colB = getWindowColors(j, theme).outer;
-                appendBridgeParticles(out, ax, ay, bx, by, 3200, time, colA, colB, 140);
+                appendBridgeParticles(out, ax, ay, bx, by, 4000, time, colA, colB, 140);
             }
         }
     }
