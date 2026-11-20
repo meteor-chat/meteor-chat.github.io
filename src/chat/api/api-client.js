@@ -67,7 +67,6 @@ export function resetApiHealth() {
 export async function callChatAPI(messages, onChunk) {
     if (CONFIG_API_KEYS.length === 0) throw new Error("Belum ada API key yang dikonfigurasi.");
     let sysContent = SYSTEM_MESSAGE;
-    const sysMsg = { role: "system", content: sysContent };
     const trimmed = trimMessages(messages);
     const lastText = getLastUserText(messages);
     const now = new Date();
@@ -87,12 +86,8 @@ export async function callChatAPI(messages, onChunk) {
     if (featureText) {
         contextSuffix += `\n[System Note: Panduan fitur web Meteor:\n${featureText}]`;
     }
-    const apiMessages = trimmed.map((msg, i) => {
-        if (i === trimmed.length - 1 && msg.role === "user") {
-            return { ...msg, content: msg.content + contextSuffix };
-        }
-        return msg;
-    });
+    const sysMsg = { role: "system", content: sysContent + contextSuffix };
+    const apiMessages = trimmed;
     state.abortController = new AbortController();
     const provider = PROVIDERS.openrouter;
     const modelList = provider.models;
@@ -163,7 +158,7 @@ export async function callChatAPI(messages, onChunk) {
                 continue;
             }
             keyHealth.delete(entry.key);
-            const { usage, finishReason, reasoning } = await parseStream(res.body, (chunk) => {
+            const { usage, finishReason } = await parseStream(res.body, (chunk) => {
                 receivedChunks = true;
                 fullText += chunk;
                 const visibleText = stripThinkTags(fullText);
@@ -173,13 +168,6 @@ export async function callChatAPI(messages, onChunk) {
             });
             clear();
             let cleanText = stripThinkTags(fullText);
-            if (!cleanText && reasoning) {
-                const cleanReasoning = stripThinkTags(reasoning);
-                if (cleanReasoning) {
-                    cleanText = cleanReasoning;
-                    onChunk(cleanText);
-                }
-            }
             if (!cleanText) {
                 lastError = new ApiError("Pesan kosong dari provider.", 204, "EMPTY");
                 continue;
