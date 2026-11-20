@@ -166,30 +166,32 @@ export function getGeometryVertices(type, size = 110) {
 
 export function appendOrbParticles(out, cx, cy, radius, count, time, colOuter, colCore) {
     const phiGold = Math.PI * (3 - Math.sqrt(5));
-    const outerCount = Math.floor(count * 0.68);
+    const outerCount = Math.floor(count * 0.7);
     for (let i = 0; i < outerCount; i += 1) {
         const y = 1 - (i / (outerCount - 1)) * 2;
         const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
-        const theta = phiGold * i + time * 0.45;
-        const noise = 1 + 0.16 * Math.sin(3 * theta + time * 1.5) * Math.cos(4 * y - time);
-        const r = radius * noise;
-        const sz = 6.0 + 3.0 * Math.sin(i * 1.7 + time * 2);
+        const theta = phiGold * i + time * 0.4;
+        const volFrac = 0.55 + 0.45 * Math.sqrt(((i * 1.3247) % 1));
+        const noise = 1 + 0.15 * Math.sin(3 * theta + time * 1.5) * Math.cos(4 * y - time);
+        const r = radius * volFrac * noise;
+        const sz = 5.0 + 3.0 * Math.sin(i * 1.7 + time * 2);
         out.push(cx + Math.cos(theta) * radiusAtY * r, cy + y * r, Math.sin(theta) * radiusAtY * r, colOuter[0], colOuter[1], colOuter[2], sz);
     }
     const coreCount = count - outerCount;
-    const coreR = radius * 0.42;
+    const coreR = radius * 0.44;
     for (let i = 0; i < coreCount; i += 1) {
         const y = 1 - (i / (coreCount - 1)) * 2;
         const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
-        const theta = phiGold * i - time * 0.75;
+        const theta = phiGold * i - time * 0.7;
+        const volFrac = 0.3 + 0.7 * Math.sqrt(((i * 1.4142) % 1));
         const noise = 1 + 0.12 * Math.sin(5 * theta - time * 2);
-        const r = coreR * noise;
-        const sz = 5.0 + 3.5 * Math.cos(i * 2.3 + time * 3);
+        const r = coreR * volFrac * noise;
+        const sz = 5.5 + 3.0 * Math.cos(i * 2.3 + time * 3);
         out.push(cx + Math.cos(theta) * radiusAtY * r, cy + y * r, Math.sin(theta) * radiusAtY * r, colCore[0], colCore[1], colCore[2], sz);
     }
 }
 
-export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, colB, radius = 135) {
+export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, colB, radius = 140) {
     const dx = bx - ax;
     const dy = by - ay;
     const len = Math.hypot(dx, dy);
@@ -197,44 +199,54 @@ export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, co
     const nx = -dy / len;
     const ny = dx / len;
     for (let i = 0; i < count; i += 1) {
-        const u = (i / count + (time * 0.15) % 1) % 1;
+        const isForward = i % 2 === 0;
+        const speed = isForward ? 0.18 : -0.18;
+        const uRaw = (i / count + time * speed) % 1.0;
+        const u = uRaw < 0 ? uRaw + 1.0 : uRaw;
         const pxBase = ax + dx * u;
         const pyBase = ay + dy * u;
-        const dCenter = Math.abs(u - 0.5) * 2;
-        const neckFactor = 0.22 + 0.78 * Math.pow(dCenter, 2.2);
-        const wave = 1 + 0.18 * Math.sin(u * 14 - time * 4.5);
-        const r = radius * neckFactor * wave;
-        const angle = u * Math.PI * 10 + (i * 0.618033) * Math.PI * 2 + time * 2.5;
-        const cr = colA[0] * (1 - u) + colB[0] * u;
-        const cg = colA[1] * (1 - u) + colB[1] * u;
-        const cb = colA[2] * (1 - u) + colB[2] * u;
-        const sz = 5.5 + 3.0 * Math.sin(u * Math.PI);
-        out.push(pxBase + Math.cos(angle) * nx * r, pyBase + Math.cos(angle) * ny * r, Math.sin(angle) * r, cr, cg, cb, sz);
+        const dCenter = Math.abs(u - 0.5) * 2.0;
+        const neckFactor = 0.28 + 0.72 * (dCenter * dCenter);
+        const fracR = Math.sqrt(((i * 1.618033) % 1));
+        const r = radius * neckFactor * fracR * (1.0 + 0.12 * Math.sin(u * 12.0 - time * 3.0));
+        const angle = u * Math.PI * 8.0 + (i * 2.399963) + time * (isForward ? 1.8 : -1.8);
+        const rx = Math.cos(angle) * nx * r;
+        const ry = Math.cos(angle) * ny * r;
+        const rz = Math.sin(angle) * r;
+        const baseCol = isForward ? colA : colB;
+        const blendCol = isForward ? colB : colA;
+        const blendRatio = isForward ? u : (1.0 - u);
+        const cr = baseCol[0] * (1.0 - blendRatio) + blendCol[0] * blendRatio;
+        const cg = baseCol[1] * (1.0 - blendRatio) + blendCol[1] * blendRatio;
+        const cb = baseCol[2] * (1.0 - blendRatio) + blendCol[2] * blendRatio;
+        const sz = (fracR < 0.35 ? 6.5 : 4.5) + 2.5 * Math.sin(u * Math.PI);
+        out.push(pxBase + rx, pyBase + ry, rz, cr, cg, cb, sz);
     }
 }
 
 export function generateWormholeSceneData(windows, sceneOffset, time, theme = "staal") {
     const out = [];
     if (!Array.isArray(windows) || windows.length === 0) return new Float32Array(0);
-    for (let i = 0; i < windows.length; i += 1) {
-        const win = windows[i];
+    const sorted = [...windows].sort((a, b) => a.id - b.id);
+    for (let i = 0; i < sorted.length; i += 1) {
+        const win = sorted[i];
         const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
         const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
         const cols = getWindowColors(i, theme);
-        appendOrbParticles(out, cx, cy, 130, 480, time + i * 2, cols.outer, cols.core);
+        appendOrbParticles(out, cx, cy, 140, 1200, time + i * 2, cols.outer, cols.core);
     }
-    if (windows.length > 1) {
-        for (let i = 0; i < windows.length; i += 1) {
-            for (let j = i + 1; j < windows.length; j += 1) {
-                const wa = windows[i].shape;
-                const wb = windows[j].shape;
+    if (sorted.length > 1) {
+        for (let i = 0; i < sorted.length; i += 1) {
+            for (let j = i + 1; j < sorted.length; j += 1) {
+                const wa = sorted[i].shape;
+                const wb = sorted[j].shape;
                 const ax = wa.x + wa.w * 0.5 + sceneOffset.x;
                 const ay = wa.y + wa.h * 0.5 + sceneOffset.y;
                 const bx = wb.x + wb.w * 0.5 + sceneOffset.x;
                 const by = wb.y + wb.h * 0.5 + sceneOffset.y;
                 const colA = getWindowColors(i, theme).outer;
                 const colB = getWindowColors(j, theme).outer;
-                appendBridgeParticles(out, ax, ay, bx, by, 650, time, colA, colB, 130);
+                appendBridgeParticles(out, ax, ay, bx, by, 3200, time, colA, colB, 140);
             }
         }
     }

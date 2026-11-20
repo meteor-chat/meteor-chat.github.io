@@ -31,7 +31,9 @@ void main() {
         float dist = length(coord) * 2.0;
         if (dist > 1.0) discard;
         float glow = exp(-2.2 * dist * dist) * (1.0 - dist);
-        gl_FragColor = vec4(vColor, glow * uAlpha);
+        float core = smoothstep(0.35, 0.0, dist);
+        vec3 finalCol = mix(vColor, vec3(1.0), core * 0.75);
+        gl_FragColor = vec4(finalCol, glow * uAlpha);
     } else {
         gl_FragColor = vec4(vColor, uAlpha);
     }

@@ -239,7 +239,7 @@ export function createWindowManager(options = {}) {
         init,
         update,
         setMetaData,
-        getWindows: () => [...windows],
+        getWindows: () => [...windows].sort((a, b) => a.id - b.id),
         getThisWindowId: () => id,
         getThisWindowData: () => windows.find((w) => w.id === id) || null,
         getShape: () => ({ ...shape }),
