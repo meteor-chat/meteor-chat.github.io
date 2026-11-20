@@ -62,6 +62,14 @@ describe("getMaxTokens & getQueryType", () => {
         expect(getMaxTokens("Jelaskan perbedaan fotosintesis dan kemosintesis")).toBe(1024);
     });
 
+    it("classifies procedural and recipe queries as standard", () => {
+        expect(getQueryType("cara membuat nasi goreng")).toBe("standard");
+        expect(getMaxTokens("cara membuat nasi goreng")).toBe(1024);
+        expect(getQueryType("resep sambal matah")).toBe("standard");
+        expect(getQueryType("tutorial git rebase")).toBe("standard");
+        expect(getQueryType("panduan konfigurasi ssh")).toBe("standard");
+    });
+
     it("classifies heavy code requests and returns 2560 tokens", () => {
         expect(getQueryType("Tolong buatkan kode python")).toBe("heavy");
         expect(getMaxTokens("Tolong buatkan kode python")).toBe(2560);

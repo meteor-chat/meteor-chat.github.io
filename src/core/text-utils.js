@@ -94,7 +94,11 @@ export function getQueryType(text) {
     });
     if (isHeavy) return "heavy";
 
-    const explainKeywords = ["jelaskan", "explain", "mengapa", "kenapa", "bagaimana", "bandingkan", "analisis", "uraikan", "ceritakan", "langkah", "steps"];
+    const explainKeywords = [
+        "jelaskan", "explain", "mengapa", "kenapa", "bagaimana", "bandingkan",
+        "analisis", "uraikan", "ceritakan", "langkah", "steps", "cara", "resep",
+        "tutorial", "panduan", "tahapan", "metode", "tips"
+    ];
     const wantsExplanation = explainKeywords.some((kw) => {
         const regex = new RegExp(`\\b${kw}\\b`, "i");
         return regex.test(lower);
