@@ -38,7 +38,13 @@ function showContinueButton(label = "▶ Lanjutkan") {
     btn.textContent = label;
     btn.addEventListener("click", () => {
         btn.remove();
-        sendMessage("Lanjutkan dari titik terakhir.");
+        const lastMsg = state.messages[state.messages.length - 1];
+        const snippet = lastMsg && lastMsg.content ? lastMsg.content.trim().slice(-60) : "";
+        if (snippet) {
+            sendMessage(`Lanjutkan dari teks terakhir yang terpotong ini: "${snippet}". Sambung langsung tanpa mengulang dari awal.`);
+        } else {
+            sendMessage("Lanjutkan dari titik terakhir.");
+        }
     });
     refs.conversationEl.appendChild(btn);
     scrollToBottom();

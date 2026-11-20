@@ -77,7 +77,7 @@ export async function callChatAPI(messages, onChunk) {
     let contextSuffix = `\n\n[System Note: Waktu saat ini adalah ${timeStr}]`;
     let hasSchedule = false;
     if (!state.jadwalData) await ensureJadwal();
-    const scheduleText = getScheduleContext(lastText, state.jadwalData);
+    const scheduleText = getScheduleContext(lastText, state.jadwalData, messages);
     if (scheduleText) {
         contextSuffix += `\n[System Note: Berikut adalah data jadwal kuliah saat ini:\n${scheduleText}]`;
         hasSchedule = true;
@@ -119,7 +119,7 @@ export async function callChatAPI(messages, onChunk) {
         };
         let receivedChunks = false;
         let fullText = "";
-        const { signal, resetTimeout, clear } = createTwoTierTimeoutSignal(8000, 15000, state.abortController.signal);
+        const { signal, resetTimeout, clear } = createTwoTierTimeoutSignal(10000, 30000, state.abortController.signal);
         try {
             attempts++;
             const headers = {

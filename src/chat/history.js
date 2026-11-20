@@ -90,14 +90,25 @@ export function formatScheduleCompact(jadwalData, days) {
     }
     return lines.length > 0 ? lines.join("\n") : null;
 }
-export function getScheduleContext(text, jadwalData) {
+export function getScheduleContext(text, jadwalData, messages = []) {
     if (!jadwalData) return null;
-    const lower = text.toLowerCase();
+    const lower = (text || "").toLowerCase();
+
+    const isContinuation = /^(lanjutkan|lanjut|teruskan|sambung|continue|next)\b/i.test(lower) ||
+        /\b(titik\s+terakhir|teks\s+terakhir|terpotong|lanjutan)\b/i.test(lower);
+
+    let combinedText = lower;
+    if (isContinuation && Array.isArray(messages) && messages.length > 0) {
+        const recent = messages.slice(-4).map(m => m.content || "").join(" ").toLowerCase();
+        combinedText = `${lower} ${recent}`;
+    }
+
     const hasStrong = JADWAL_KEYWORDS.some(kw => {
         const regex = new RegExp(`\\b${kw.replace(/ /g, "\\s+")}\\b`, "i");
-        return regex.test(lower);
+        return regex.test(combinedText);
     });
     if (!hasStrong) return null;
+
     const today = new Date();
     const todayName = HARI[today.getDay()];
     const tomorrowName = HARI[(today.getDay() + 1) % 7];
@@ -109,6 +120,18 @@ export function getScheduleContext(text, jadwalData) {
         const regex = new RegExp(`\\b${h}\\b`, "i");
         if (regex.test(lower)) targetDays.add(h);
     }
+
+    if (isContinuation && targetDays.size === 0 && Array.isArray(messages) && messages.length > 0) {
+        const recent = messages.slice(-4).map(m => m.content || "").join(" ").toLowerCase();
+        if (/\bhari\s+ini\b/.test(recent)) targetDays.add(todayName);
+        if (/\bbesok\b/.test(recent)) targetDays.add(tomorrowName);
+        for (const h of HARI) {
+            if (h === "minggu") continue;
+            const regex = new RegExp(`\\b${h}\\b`, "i");
+            if (regex.test(recent)) targetDays.add(h);
+        }
+    }
+
     const days = targetDays.size > 0 ? [...targetDays] : null;
     return formatScheduleCompact(jadwalData, days);
 }

@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
     compressUserMessage,
     compressAssistantMessage,
-    trimMessages
+    trimMessages,
+    getScheduleContext
 } from "../src/chat/history.js";
 
 describe("history compression", () => {
@@ -46,5 +47,54 @@ describe("history compression", () => {
         expect(trimmed[0].content).not.toContain("Halo bot");
         expect(trimmed[1].content).toContain("[kode]");
         expect(trimmed[4].content).toBe("Dan Dijkstra?");
+    });
+
+    describe("getScheduleContext", () => {
+        const dummyJadwal = {
+            senin: [
+                { nama_mata_kuliah: "implementasi dan pengujian perangkat lunak", jam: "11:30:00 - 14:30:00", lokasi: "DC-201" }
+            ],
+            selasa: [
+                { nama_mata_kuliah: "manajemen projek tik", jam: "07:30:00 - 10:30:00", lokasi: "REK-402" }
+            ]
+        };
+
+        it("returns schedule when query contains strong schedule keywords", () => {
+            const res = getScheduleContext("jadwal kuliah?", dummyJadwal);
+            expect(res).toContain("Senin 11:30-14:30 implementasi dan pengujian perangkat lunak DC-201");
+            expect(res).toContain("Selasa 07:30-10:30 manajemen projek tik REK-402");
+        });
+
+        it("returns null for unrelated queries", () => {
+            expect(getScheduleContext("halo apa kabar?", dummyJadwal)).toBeNull();
+            expect(getScheduleContext("bagaimana cuaca hari ini?", dummyJadwal)).toBeNull();
+        });
+
+        it("filters by day when specific day is mentioned", () => {
+            const res = getScheduleContext("jadwal kuliah hari senin?", dummyJadwal);
+            expect(res).toContain("Senin 11:30-14:30");
+            expect(res).not.toContain("Selasa");
+        });
+
+        it("preserves schedule context on continuation prompts with message history", () => {
+            const history = [
+                { role: "user", content: "jadwal kuliah?" },
+                { role: "assistant", content: "Jadwal Kuliah:\nSenin | 11:30 – 14:30 | Implementasi dan Penguj" }
+            ];
+            const res = getScheduleContext("Lanjutkan dari titik terakhir.", dummyJadwal, history);
+            expect(res).not.toBeNull();
+            expect(res).toContain("Senin 11:30-14:30 implementasi dan pengujian perangkat lunak DC-201");
+        });
+
+        it("preserves specific day filter on continuation prompts", () => {
+            const history = [
+                { role: "user", content: "jadwal hari senin?" },
+                { role: "assistant", content: "Senin: Implementasi dan Penguj" }
+            ];
+            const res = getScheduleContext("Lanjutkan", dummyJadwal, history);
+            expect(res).not.toBeNull();
+            expect(res).toContain("Senin 11:30-14:30");
+            expect(res).not.toContain("Selasa");
+        });
     });
 });

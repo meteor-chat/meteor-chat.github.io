@@ -1,6 +1,6 @@
 import { MODEL_TIERS } from "../../core/config.js";
 
-export function createTwoTierTimeoutSignal(firstByteMs = 8000, inStreamMs = 15000, parentSignal) {
+export function createTwoTierTimeoutSignal(firstByteMs = 10000, inStreamMs = 30000, parentSignal) {
     const controller = new AbortController();
     let timeoutId;
 
