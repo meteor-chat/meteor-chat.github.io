@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
+    <title>Web to Markdown Studio - Meteor Lab</title>
+    <link rel="icon" type="image/svg+xml" href="assets/svg/favicon.svg">
+    <link rel="stylesheet" href="styles/reader.css">
+</head>
+<body>
+    <div class="reader-container">
+        <header class="reader-header">
+            <a href="/lab" class="reader-back" aria-label="Kembali ke Lab">
+                <img src="assets/svg/back.svg" alt="" width="20" height="20">
+            </a>
+            <div class="reader-title-wrap">
+                <h1>Web to Markdown Studio</h1>
+                <span class="reader-subtitle">Ekstraksi Konten Web & Reader Mode Bersih Bebas Iklan</span>
+            </div>
+        </header>
+
+        <section class="reader-input-card" aria-label="Input Sumber Artikel">
+            <div class="reader-input-tabs" role="tablist">
+                <button type="button" class="reader-tab-btn" data-reader-tab="url" role="tab" aria-selected="true">Alamat URL Web</button>
+                <button type="button" class="reader-tab-btn" data-reader-tab="html" role="tab" aria-selected="false">Tempel Kode HTML</button>
+            </div>
+
+            <div id="reader-url-wrap" class="reader-input-field-wrap">
+                <input type="url" id="reader-url-input" class="reader-input" placeholder="https://contoh-website.com/artikel-menarik" aria-label="URL artikel web">
+                <button type="button" class="reader-btn-primary" data-reader-action="extract">Ekstrak Konten</button>
+            </div>
+
+            <div id="reader-html-wrap" class="reader-input-field-wrap" style="display: none; flex-direction: column;">
+                <textarea id="reader-html-input" class="reader-input reader-textarea-input" placeholder="Tempelkan kode HTML halaman web atau artikel di sini..." aria-label="Kode HTML artikel"></textarea>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="button" class="reader-btn-primary" data-reader-action="extract">Ekstrak HTML</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="reader-config-bar" aria-label="Pengaturan Preset dan Opsi">
+            <div class="reader-config-group">
+                <span class="reader-config-label">Format Preset:</span>
+                <button type="button" class="reader-pill" data-reader-preset="custom" aria-pressed="true">Kustom</button>
+                <button type="button" class="reader-pill" data-reader-preset="minimal" aria-pressed="false">Minimalis</button>
+                <button type="button" class="reader-pill" data-reader-preset="pkm" aria-pressed="false">PKM / Obsidian</button>
+            </div>
+
+            <div class="reader-config-group">
+                <span class="reader-config-label">Opsi:</span>
+                <button type="button" class="reader-pill" data-reader-opt="frontmatter" aria-pressed="true">Frontmatter</button>
+                <button type="button" class="reader-pill" data-reader-opt="images" aria-pressed="true">Gambar</button>
+                <button type="button" class="reader-pill" data-reader-opt="links" aria-pressed="true">Tautan</button>
+                <button type="button" class="reader-pill" data-reader-opt="tables" aria-pressed="true">Tabel</button>
+            </div>
+        </section>
+
+        <div class="reader-mobile-view-tabs" role="tablist">
+            <button type="button" class="reader-tab-btn" data-reader-view="editor" role="tab" aria-selected="true">Editor Raw</button>
+            <button type="button" class="reader-tab-btn" data-reader-view="preview" role="tab" aria-selected="false">Pratinjau</button>
+        </div>
+
+        <main class="reader-studio">
+            <div class="reader-pane reader-pane-editor" data-active="true">
+                <div class="reader-pane-header">
+                    <span>Markdown Raw Editor</span>
+                    <div class="reader-actions">
+                        <button type="button" class="reader-btn-action" data-reader-action="copy">Salin</button>
+                        <button type="button" class="reader-btn-action" data-reader-action="download">Unduh .md</button>
+                        <button type="button" class="reader-btn-action" data-reader-action="chat">Rangkum di Chat</button>
+                    </div>
+                </div>
+                <textarea id="reader-editor" class="reader-editor-textarea" placeholder="Konten Markdown akan muncul di sini... Anda juga dapat mengeditnya secara langsung." aria-label="Editor Markdown"></textarea>
+                <div class="reader-stats-bar">
+                    <span>Kata: <strong data-reader-stat="words">0</strong></span>
+                    <span>Karakter: <strong data-reader-stat="chars">0</strong></span>
+                    <span>Estimasi Baca: <strong data-reader-stat="time">0 mnt</strong></span>
+                </div>
+            </div>
+
+            <div class="reader-pane reader-pane-preview" data-active="false">
+                <div class="reader-pane-header">
+                    <span>Pratinjau Artikel Bersih</span>
+                </div>
+                <div id="reader-preview" class="reader-preview-content">
+                    <p class="reader-placeholder">Hasil ekstraksi artikel akan tampil di sini...</p>
+                </div>
+            </div>
+        </main>
+
+        <div id="reader-toast" class="reader-toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script type="module">
+        import { createReaderApp } from "./src/lab/reader/reader-controller.js";
+        createReaderApp(document.body);
+    </script>
+</body>
+</html>
