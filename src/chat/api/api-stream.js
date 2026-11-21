@@ -4,6 +4,7 @@ export async function parseStream(body, onChunk, onActivity) {
     let buffer = "";
     let usage = null;
     let finishReason = null;
+    let model = null;
     let reasoningBuffer = "";
     function handleLine(line) {
         const trimmed = line.trim();
@@ -12,7 +13,7 @@ export async function parseStream(body, onChunk, onActivity) {
             let parsed = null;
             try {
                 parsed = JSON.parse(trimmed);
-            } catch (e) {
+            } catch {
                 return;
             }
             if (parsed && parsed.error) throw new Error(parsed.error.message || "Stream error");
@@ -25,7 +26,7 @@ export async function parseStream(body, onChunk, onActivity) {
         let parsed = null;
         try {
             parsed = JSON.parse(data);
-        } catch (e) {
+        } catch {
             return;
         }
         if (parsed.error) {
@@ -48,6 +49,9 @@ export async function parseStream(body, onChunk, onActivity) {
         if (parsed.usage) {
             usage = parsed.usage;
         }
+        if (parsed.model && !model) {
+            model = parsed.model;
+        }
     }
     while (true) {
         const { done, value } = await reader.read();
@@ -63,5 +67,5 @@ export async function parseStream(body, onChunk, onActivity) {
     if (buffer.trim()) {
         handleLine(buffer);
     }
-    return { usage, finishReason, reasoning: reasoningBuffer };
+    return { usage, finishReason, model, reasoning: reasoningBuffer };
 }

@@ -158,7 +158,7 @@ export async function callChatAPI(messages, onChunk) {
                 continue;
             }
             keyHealth.delete(entry.key);
-            const { usage, finishReason } = await parseStream(res.body, (chunk) => {
+            const { usage, finishReason, model } = await parseStream(res.body, (chunk) => {
                 receivedChunks = true;
                 fullText += chunk;
                 const visibleText = stripThinkTags(fullText);
@@ -179,11 +179,14 @@ export async function callChatAPI(messages, onChunk) {
                     completion_tokens: usage.completion_tokens,
                     total_tokens: usage.total_tokens,
                     hasSchedule,
-                    provider: entry.provider
+                    provider: entry.provider,
+                    model,
+                    finishReason,
+                    reasoning_tokens: usage.completion_tokens_details?.reasoning_tokens ?? 0
                 };
                 state.usageLog.push(logEntry);
             }
-            return { text: cleanText, usage, finishReason };
+            return { text: cleanText, usage, finishReason, model };
         } catch (e) {
             clear();
             if (state.abortController.signal.aborted) {
