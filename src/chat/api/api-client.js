@@ -1,8 +1,8 @@
-import { PROVIDERS, SYSTEM_MESSAGE, CONFIG_API_KEYS } from "../../core/config.js";
+import { PROVIDERS, SYSTEM_MESSAGE, CONFIG_API_KEYS, CHOICE_GUIDE } from "../../core/config.js";
 import { getOrderedKeys } from "./api-keys.js";
 import { state } from "../../core/app-state.js";
 import { parseStream } from "./api-stream.js";
-import { stripThinkTags, getMaxTokens, getQueryType } from "../../core/text-utils.js";
+import { stripThinkTags, getMaxTokens, getQueryType, isChoiceQuery } from "../../core/text-utils.js";
 import { trimMessages, getScheduleContext, getLastUserText } from "../history.js";
 import { ensureJadwal } from "../../core/template-loader.js";
 import { getFeatureContext } from "../feature-context.js";
@@ -75,6 +75,7 @@ export async function callChatAPI(messages, onChunk) {
         hour: "2-digit", minute: "2-digit"
     });
     let contextSuffix = `\n\n[System Note: Waktu saat ini adalah ${timeStr}]`;
+    if (isChoiceQuery(lastText)) contextSuffix += "\n" + CHOICE_GUIDE;
     let hasSchedule = false;
     if (!state.jadwalData) await ensureJadwal();
     const scheduleText = getScheduleContext(lastText, state.jadwalData, messages);

@@ -80,6 +80,25 @@ export function stripThinkTags(text) {
     return stripRawThinking(cleaned).trim();
 }
 
+const CHOICE_PATTERNS = [
+    /\blebih\s+baik\b/i,
+    /\bmending\b/i,
+    /\bsebaiknya\b/i,
+    /\bbagusan\b/i,
+    /\benakan\b/i,
+    /\bvs\b/i,
+    /\bversus\b/i,
+    /\bdibandingkan?\b/i,
+    /\bperbedaan\b/i,
+    /\bbedanya\b/i,
+    /\bpilih\s+(yang\s+)?mana\b/i
+];
+
+export function isChoiceQuery(text) {
+    const trimmed = (text || "").trim();
+    if (!trimmed) return false;
+    return CHOICE_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
 export function getQueryType(text) {
     const trimmed = (text || "").trim();
     if (!trimmed) return "micro";
@@ -103,7 +122,7 @@ export function getQueryType(text) {
         const regex = new RegExp(`\\b${kw}\\b`, "i");
         return regex.test(lower);
     });
-    if (wantsExplanation) return "standard";
+    if (wantsExplanation || isChoiceQuery(trimmed)) return "standard";
 
     const words = trimmed.split(/\s+/);
     if (words.length <= 6 && trimmed.length <= 45) {
