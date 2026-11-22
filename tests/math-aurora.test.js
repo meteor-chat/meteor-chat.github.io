@@ -21,8 +21,6 @@ describe("Math Aurora Background Engine Unit Tests", () => {
             restore: vi.fn(),
             moveTo: vi.fn(),
             lineTo: vi.fn(),
-            bezierCurveTo: vi.fn(),
-            ellipse: vi.fn(),
             closePath: vi.fn(),
             stroke: vi.fn(),
             setTransform: vi.fn(),

@@ -3,181 +3,181 @@ let activeCanvas = null;
 let resizeHandler = null;
 let visibilityHandler = null;
 let stars = [];
+let mountainPoints = [];
 
 function createStars(width, height) {
-    const count = Math.max(70, Math.min(150, Math.floor((width * height) / 10000)));
+    const count = Math.max(80, Math.min(180, Math.floor((width * height) / 8000)));
     const list = [];
     for (let i = 0; i < count; i++) {
         list.push({
             x: Math.random() * width,
-            y: Math.random() * height,
-            r: Math.random() * 0.9 + 0.35,
-            baseAlpha: Math.random() * 0.5 + 0.2,
-            speed: Math.random() * 0.0015 + 0.0008,
+            y: Math.random() * (height * 0.85),
+            r: Math.random() * 1.2 + 0.4,
+            baseAlpha: Math.random() * 0.6 + 0.25,
+            speed: Math.random() * 0.002 + 0.001,
             phase: Math.random() * Math.PI * 2
         });
     }
     return list;
 }
 
-function drawCurtain(ctx, width, height, time, config) {
-    const {
-        anchorXRatio,
-        baseWidthRatio,
-        swaySpeed,
-        swayAmplitude,
-        curtainTop,
-        curtainBottom,
-        filamentCount,
-        colorBase,
-        colorMid,
-        colorPeak,
-        colorTop
-    } = config;
-
-    const anchorX = width * anchorXRatio;
-    const curtainWidth = width * baseWidthRatio;
-    const sway = Math.sin(time * swaySpeed + config.phase) * swayAmplitude * width;
-    const centerX = anchorX + sway;
-
-    const yStart = height * curtainTop;
-    const yEnd = height * curtainBottom;
-    const curtainHeight = yEnd - yStart;
-
-    const ambientGrad = ctx.createLinearGradient(centerX, yStart, centerX, yEnd);
-    ambientGrad.addColorStop(0, "rgba(2, 6, 23, 0)");
-    ambientGrad.addColorStop(0.25, colorTop);
-    ambientGrad.addColorStop(0.55, colorMid);
-    ambientGrad.addColorStop(0.85, colorPeak);
-    ambientGrad.addColorStop(1, colorBase);
-
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-
-    ctx.fillStyle = ambientGrad;
-    ctx.beginPath();
-    const halfW = curtainWidth * 0.65;
-    ctx.ellipse(centerX, yStart + curtainHeight * 0.55, halfW, curtainHeight * 0.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    const filamentStep = curtainWidth / filamentCount;
-    for (let i = 0; i < filamentCount; i++) {
-        const xOffset = (i - filamentCount / 2) * filamentStep;
-        const filamentTime = time * 0.001;
-        const waveX = Math.sin(filamentTime * 0.8 + i * 0.4) * 14;
-        const xBase = centerX + xOffset + waveX;
-
-        const pulse = Math.sin(time * 0.0012 + i * 0.6) * 0.35 + 0.65;
-        if (pulse <= 0.05) continue;
-
-        const filTop = yStart + Math.sin(i * 0.5 + time * 0.0006) * 35;
-        const filGrad = ctx.createLinearGradient(xBase, filTop, xBase, yEnd);
-        filGrad.addColorStop(0, "rgba(6, 182, 212, 0)");
-        filGrad.addColorStop(0.2, colorTop);
-        filGrad.addColorStop(0.5, colorMid);
-        filGrad.addColorStop(0.8, colorPeak);
-        filGrad.addColorStop(1, "rgba(2, 6, 23, 0)");
-
-        ctx.strokeStyle = filGrad;
-        ctx.lineWidth = Math.max(1.5, filamentStep * 0.9);
-        ctx.beginPath();
-        ctx.moveTo(xBase, yEnd);
-
-        const cp1x = xBase + Math.sin(time * 0.0007 + i * 0.3) * 22;
-        const cp1y = yStart + curtainHeight * 0.65;
-        const cp2x = xBase - Math.cos(time * 0.0009 + i * 0.4) * 18;
-        const cp2y = yStart + curtainHeight * 0.35;
-
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, xBase + Math.sin(time * 0.001 + i) * 10, filTop);
-        ctx.stroke();
+function createMountains(width, height) {
+    const points = [];
+    const baseY = height * 0.86;
+    const step = 40;
+    const steps = Math.ceil(width / step) + 2;
+    for (let i = 0; i <= steps; i++) {
+        const x = i * step;
+        const peak = Math.sin(i * 0.35) * 45 + Math.cos(i * 0.8) * 25 + Math.sin(i * 1.5) * 12;
+        points.push({ x, y: baseY - Math.abs(peak) });
     }
-
-    ctx.restore();
+    return points;
 }
 
 function renderFrame(ctx, width, height, time) {
     ctx.clearRect(0, 0, width, height);
 
-    const spaceGrad = ctx.createLinearGradient(0, 0, 0, height);
-    spaceGrad.addColorStop(0, "#010308");
-    spaceGrad.addColorStop(0.4, "#020713");
-    spaceGrad.addColorStop(0.75, "#030a1c");
-    spaceGrad.addColorStop(1, "#02050e");
-    ctx.fillStyle = spaceGrad;
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+    skyGrad.addColorStop(0, "#01040a");
+    skyGrad.addColorStop(0.35, "#030a18");
+    skyGrad.addColorStop(0.7, "#041428");
+    skyGrad.addColorStop(1, "#020712");
+    ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, width, height);
-
-    ctx.fillStyle = "rgba(6, 182, 212, 0.04)";
-    ctx.beginPath();
-    ctx.ellipse(width * 0.45, height * 0.45, width * 0.5, height * 0.35, 0, 0, Math.PI * 2);
-    ctx.fill();
 
     for (let i = 0; i < stars.length; i++) {
         const star = stars[i];
-        const alpha = Math.max(0.08, Math.min(0.85, star.baseAlpha + Math.sin(time * star.speed + star.phase) * 0.28));
+        const alpha = Math.max(0.1, Math.min(0.95, star.baseAlpha + Math.sin(time * star.speed + star.phase) * 0.35));
         ctx.fillStyle = `rgba(224, 242, 254, ${alpha})`;
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    const curtains = [
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+
+    const ribbons = [
         {
-            anchorXRatio: 0.24,
-            baseWidthRatio: 0.22,
-            swaySpeed: 0.00028,
-            swayAmplitude: 0.04,
-            phase: 0.2,
-            curtainTop: 0.05,
-            curtainBottom: 0.82,
-            filamentCount: 22,
-            colorBase: "rgba(2, 6, 23, 0)",
-            colorPeak: "rgba(14, 165, 233, 0.42)",
-            colorMid: "rgba(6, 182, 212, 0.48)",
-            colorTop: "rgba(34, 211, 238, 0.28)"
+            baseY: height * 0.32,
+            height: height * 0.28,
+            speed1: 0.00045,
+            speed2: 0.0003,
+            k1: 0.0018,
+            k2: 0.0042,
+            colorTop: "rgba(14, 165, 233, 0)",
+            colorMid: "rgba(6, 182, 212, 0.28)",
+            colorCore: "rgba(34, 211, 238, 0.45)",
+            colorBot: "rgba(13, 148, 136, 0.08)"
         },
         {
-            anchorXRatio: 0.54,
-            baseWidthRatio: 0.26,
-            swaySpeed: 0.00035,
-            swayAmplitude: 0.055,
-            phase: 1.8,
-            curtainTop: 0.02,
-            curtainBottom: 0.88,
-            filamentCount: 26,
-            colorBase: "rgba(4, 12, 32, 0)",
-            colorPeak: "rgba(20, 184, 166, 0.45)",
-            colorMid: "rgba(45, 212, 191, 0.52)",
-            colorTop: "rgba(56, 189, 248, 0.35)"
+            baseY: height * 0.42,
+            height: height * 0.32,
+            speed1: 0.0006,
+            speed2: 0.0004,
+            k1: 0.0022,
+            k2: 0.0055,
+            colorTop: "rgba(56, 189, 248, 0)",
+            colorMid: "rgba(20, 184, 166, 0.35)",
+            colorCore: "rgba(45, 212, 191, 0.52)",
+            colorBot: "rgba(67, 56, 202, 0.12)"
         },
         {
-            anchorXRatio: 0.82,
-            baseWidthRatio: 0.2,
-            swaySpeed: 0.00022,
-            swayAmplitude: 0.035,
-            phase: 3.4,
-            curtainTop: 0.08,
-            curtainBottom: 0.78,
-            filamentCount: 18,
-            colorBase: "rgba(2, 6, 23, 0)",
-            colorPeak: "rgba(59, 130, 246, 0.38)",
-            colorMid: "rgba(79, 70, 229, 0.32)",
-            colorTop: "rgba(125, 211, 252, 0.22)"
+            baseY: height * 0.25,
+            height: height * 0.24,
+            speed1: 0.00035,
+            speed2: 0.0005,
+            k1: 0.0015,
+            k2: 0.0035,
+            colorTop: "rgba(99, 102, 241, 0)",
+            colorMid: "rgba(56, 189, 248, 0.22)",
+            colorCore: "rgba(125, 211, 252, 0.38)",
+            colorBot: "rgba(2, 6, 23, 0)"
         }
     ];
 
-    for (let c = 0; c < curtains.length; c++) {
-        drawCurtain(ctx, width, height, time, curtains[c]);
+    const stepX = 14;
+    for (let r = 0; r < ribbons.length; r++) {
+        const rb = ribbons[r];
+        const pointsBottom = [];
+        const pointsTop = [];
+
+        for (let x = 0; x <= width + stepX; x += stepX) {
+            const wave1 = Math.sin(x * rb.k1 + time * rb.speed1) * 38;
+            const wave2 = Math.cos(x * rb.k2 - time * rb.speed2) * 22;
+            const wave3 = Math.sin(x * 0.0008 + time * 0.0002) * 16;
+            const yBot = rb.baseY + wave1 + wave2 + wave3;
+            const curtainVar = Math.sin(x * 0.006 + time * 0.0008) * 18;
+            const yTop = Math.max(10, yBot - rb.height + curtainVar);
+
+            pointsBottom.push({ x, y: yBot });
+            pointsTop.push({ x, y: yTop });
+        }
+
+        const grad = ctx.createLinearGradient(0, rb.baseY - rb.height, 0, rb.baseY + 40);
+        grad.addColorStop(0, rb.colorTop);
+        grad.addColorStop(0.35, rb.colorMid);
+        grad.addColorStop(0.7, rb.colorCore);
+        grad.addColorStop(1, rb.colorBot);
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(pointsBottom[0].x, pointsBottom[0].y);
+        for (let i = 1; i < pointsBottom.length; i++) {
+            ctx.lineTo(pointsBottom[i].x, pointsBottom[i].y);
+        }
+        for (let i = pointsTop.length - 1; i >= 0; i--) {
+            ctx.lineTo(pointsTop[i].x, pointsTop[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+
+        const rayCount = 18;
+        const raySpacing = width / rayCount;
+        for (let j = 0; j < rayCount; j++) {
+            const rx = (j * raySpacing + (time * 0.015 * (r + 1))) % width;
+            const rayAlpha = Math.max(0, Math.sin(j * 1.3 + time * 0.001) * 0.12);
+            if (rayAlpha > 0.01) {
+                const rayGrad = ctx.createLinearGradient(rx, rb.baseY - rb.height, rx, rb.baseY);
+                rayGrad.addColorStop(0, "rgba(34, 211, 238, 0)");
+                rayGrad.addColorStop(0.5, `rgba(165, 243, 252, ${rayAlpha})`);
+                rayGrad.addColorStop(1, "rgba(6, 182, 212, 0)");
+                ctx.fillStyle = rayGrad;
+                ctx.fillRect(rx - 8, rb.baseY - rb.height, 16, rb.height);
+            }
+        }
     }
 
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    const atmosphereGlow = ctx.createLinearGradient(0, height * 0.5, 0, height);
-    atmosphereGlow.addColorStop(0, "rgba(6, 182, 212, 0)");
-    atmosphereGlow.addColorStop(0.5, "rgba(6, 182, 212, 0.06)");
-    atmosphereGlow.addColorStop(1, "rgba(3, 105, 161, 0.12)");
-    ctx.fillStyle = atmosphereGlow;
-    ctx.fillRect(0, height * 0.5, width, height * 0.5);
     ctx.restore();
+
+    if (mountainPoints.length > 0) {
+        const horizonGlow = ctx.createLinearGradient(0, height * 0.78, 0, height * 0.88);
+        horizonGlow.addColorStop(0, "rgba(6, 182, 212, 0)");
+        horizonGlow.addColorStop(0.5, "rgba(6, 182, 212, 0.08)");
+        horizonGlow.addColorStop(1, "rgba(2, 6, 23, 0.6)");
+        ctx.fillStyle = horizonGlow;
+        ctx.fillRect(0, height * 0.78, width, height * 0.1);
+
+        ctx.fillStyle = "#02050e";
+        ctx.beginPath();
+        ctx.moveTo(0, height);
+        ctx.lineTo(0, mountainPoints[0].y);
+        for (let i = 1; i < mountainPoints.length; i++) {
+            ctx.lineTo(mountainPoints[i].x, mountainPoints[i].y);
+        }
+        ctx.lineTo(width, height);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(34, 211, 238, 0.08)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(mountainPoints[0].x, mountainPoints[0].y);
+        for (let i = 1; i < mountainPoints.length; i++) {
+            ctx.lineTo(mountainPoints[i].x, mountainPoints[i].y);
+        }
+        ctx.stroke();
+    }
 }
 
 export function initMathAurora(canvas) {
@@ -203,6 +203,7 @@ export function initMathAurora(canvas) {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         stars = createStars(width, height);
+        mountainPoints = createMountains(width, height);
     }
 
     resize();
@@ -263,4 +264,5 @@ export function destroyMathAurora() {
     }
     activeCanvas = null;
     stars = [];
+    mountainPoints = [];
 }
