@@ -33,6 +33,7 @@ for (const [category, slug] of Object.entries(CATEGORY_SLUGS)) {
     const oldBtn = `<button type="button" class="math-filter-btn" data-filter="${category}" aria-pressed="false">`;
     const newBtn = `<button type="button" class="math-filter-btn active" data-filter="${category}" aria-pressed="true">`;
     html = html.replace(oldBtn, newBtn);
+    html = html.replace('<button type="button" class="math-filter-btn active" data-filter="" aria-pressed="true">', '<button type="button" class="math-filter-btn" data-filter="" aria-pressed="false">');
 
     html = html.replace(/<button\b([^>]*\bdata-category="([^"]+)"[^>]*)>/g, (match, attrs, cat) => {
         if (cat !== category) {

@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { FORMULAS } from "../src/math/math-formulas.js";
+import { FORMULA_NAMES } from "../src/math/math-formula-names.js";
 import { loadKatex } from "./lib/load-katex.mjs";
 import { toInlineKatexCss } from "./lib/katex-css.mjs";
 import { renderCards } from "./lib/render-cards.mjs";
@@ -25,6 +26,6 @@ let withCss = source.replace(KATEX_STYLE, (_match, open, close) => open + css + 
 if (MATH_THEME_STYLE.test(withCss)) {
     withCss = withCss.replace(MATH_THEME_STYLE, (_match, open, close) => open + mathCss + close);
 }
-const { output, count } = renderCards(withCss, FORMULAS, katex);
+const { output, count } = renderCards(withCss, FORMULAS, katex, FORMULA_NAMES);
 writeFileSync(page, output);
 console.log(`math.html: ${count} kartu rumus dirender, CSS KaTeX ${css.length} byte.`);

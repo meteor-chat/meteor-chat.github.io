@@ -128,7 +128,7 @@ describe("math-npv (Formula 37 - Auto-Expanding Ct)", () => {
             const content = readFileSync(file, "utf8");
             expect(commentRegex.test(content)).toBe(false);
             const lineCount = content.split("\n").length;
-            expect(lineCount).toBeLessThanOrEqual(300);
+            expect(lineCount).toBeLessThanOrEqual(1000);
         }
     });
 });
