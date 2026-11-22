@@ -5,6 +5,7 @@ import { evaluateCubeCritical, renderCubeCriticalCards } from "../src/math/geome
 import {
     setCubeProjection,
     setCubeHighlight,
+    resetCubeRotation,
     getCube3dState
 } from "../src/math/geometry/cube-3d.js";
 
@@ -110,7 +111,7 @@ describe("cube-3d math calculations and scientific analysis", () => {
         expect(container.innerHTML).toContain("Perambatan Ketidakpastian Pengukuran Fisik");
     });
 
-    it("toggles 3D projection and spotlight element states", () => {
+    it("toggles 3D projection, spotlight element states, and resets rotation", () => {
         setCubeProjection("orthographic");
         expect(getCube3dState().projection).toBe("orthographic");
         setCubeProjection("perspective");
@@ -128,9 +129,11 @@ describe("cube-3d math calculations and scientific analysis", () => {
         expect(getCube3dState().highlight).toBe("pr");
         setCubeHighlight("all");
         expect(getCube3dState().highlight).toBe("all");
+
+        expect(() => resetCubeRotation()).not.toThrow();
     });
 
-    it("verifies math.html contains enhanced scientific geometry layout and uniform back button", () => {
+    it("verifies math.html contains enhanced scientific geometry layout and controls", () => {
         const html = fs.readFileSync("math.html", "utf8");
         expect(html).toContain('id="math-calc-form-23"');
         expect(html).toContain('id="cube-calc-layout"');
@@ -145,9 +148,26 @@ describe("cube-3d math calculations and scientific analysis", () => {
         expect(html).toContain('id="cube-btn-spot-ds"');
         expect(html).toContain('id="cube-btn-spot-dr"');
         expect(html).toContain('id="cube-btn-spot-bd"');
+        expect(html).toContain('id="cube-preset-1"');
+        expect(html).toContain('id="cube-preset-6"');
+        expect(html).toContain('id="cube-preset-9"');
+        expect(html).toContain('id="cube-preset-12"');
+        expect(html).toContain('id="cube-btn-dec"');
+        expect(html).toContain('id="cube-btn-inc"');
+        expect(html).toContain('id="cube-btn-reset-rot"');
         expect(html).toContain('id="cube-chart-canvas"');
         expect(html).toContain('id="cube-critical-container"');
         expect(html).toContain('id="btn-math-calc-back-23"');
         expect(html).toContain('<img src="./assets/svg/back.svg" alt="Kembali" width="36" height="36">');
+        expect(html).toContain('href="./styles/cube.css"');
+    });
+
+    it("verifies math/g/1/index.html is synced with the enhanced 3D cube interface", () => {
+        const routeHtml = fs.readFileSync("math/g/1/index.html", "utf8");
+        expect(routeHtml).toContain('id="math-calc-form-23"');
+        expect(routeHtml).toContain('id="cube-canvas"');
+        expect(routeHtml).toContain('id="cube-preset-6"');
+        expect(routeHtml).toContain('id="cube-btn-reset-rot"');
+        expect(routeHtml).toContain('href="./styles/cube.css"');
     });
 });

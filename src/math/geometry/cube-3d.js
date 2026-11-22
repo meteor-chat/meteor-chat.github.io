@@ -8,14 +8,8 @@ import {
 } from "./cube-overlays.js";
 
 const VERTICES = [
-    [-1, -1, -1],
-    [ 1, -1, -1],
-    [ 1,  1, -1],
-    [-1,  1, -1],
-    [-1, -1,  1],
-    [ 1, -1,  1],
-    [ 1,  1,  1],
-    [-1,  1,  1]
+    [-1, -1, -1], [ 1, -1, -1], [ 1,  1, -1], [-1,  1, -1],
+    [-1, -1,  1], [ 1, -1,  1], [ 1,  1,  1], [-1,  1,  1]
 ];
 
 const EDGES = [
@@ -25,12 +19,8 @@ const EDGES = [
 ];
 
 const FACES = [
-    [0, 1, 2, 3],
-    [5, 4, 7, 6],
-    [4, 0, 3, 7],
-    [1, 5, 6, 2],
-    [3, 2, 6, 7],
-    [4, 5, 1, 0]
+    [0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7],
+    [1, 5, 6, 2], [3, 2, 6, 7], [4, 5, 1, 0]
 ];
 
 function createAxisAngleMatrix(x, y, z, angle) {
@@ -38,9 +28,9 @@ function createAxisAngleMatrix(x, y, z, angle) {
     const s = Math.sin(angle);
     const t = 1 - c;
     return [
-        [t * x * x + c,     t * x * y - s * z, t * x * z + s * y],
-        [t * x * y + s * z, t * y * y + c,     t * y * z - s * x],
-        [t * x * z - s * y, t * y * z + s * x, t * z * z + c    ]
+        [t * x * x + c, t * x * y - s * z, t * x * z + s * y],
+        [t * x * y + s * z, t * y * y + c, t * y * z - s * x],
+        [t * x * z - s * y, t * y * z + s * x, t * z * z + c]
     ];
 }
 
@@ -55,11 +45,7 @@ function multiplyMatrix(a, b) {
 }
 
 function orthonormalize(m) {
-    let [v0, v1, v2] = [
-        [m[0][0], m[1][0], m[2][0]],
-        [m[0][1], m[1][1], m[2][1]],
-        [m[0][2], m[1][2], m[2][2]]
-    ];
+    let [v0, v1, v2] = [[m[0][0], m[1][0], m[2][0]], [m[0][1], m[1][1], m[2][1]], [m[0][2], m[1][2], m[2][2]]];
     const norm = (v) => {
         const l = Math.hypot(v[0], v[1], v[2]) || 1;
         return [v[0] / l, v[1] / l, v[2] / l];
@@ -68,22 +54,15 @@ function orthonormalize(m) {
     v0 = norm(v0);
     const d01 = dot(v0, v1);
     v1 = norm([v1[0] - d01 * v0[0], v1[1] - d01 * v0[1], v1[2] - d01 * v0[2]]);
-    v2 = norm([
-        v0[1] * v1[2] - v0[2] * v1[1],
-        v0[2] * v1[0] - v0[0] * v1[2],
-        v0[0] * v1[1] - v0[1] * v1[0]
-    ]);
-    return [
-        [v0[0], v1[0], v2[0]],
-        [v0[1], v1[1], v2[1]],
-        [v0[2], v1[2], v2[2]]
-    ];
+    v2 = norm([v0[1] * v1[2] - v0[2] * v1[1], v0[2] * v1[0] - v0[0] * v1[2], v0[0] * v1[1] - v0[1] * v1[0]]);
+    return [[v0[0], v1[0], v2[0]], [v0[1], v1[1], v2[1]], [v0[2], v1[2], v2[2]]];
 }
 
-let rotationMatrix = multiplyMatrix(
+const DEFAULT_ROTATION = multiplyMatrix(
     createAxisAngleMatrix(1, 0, 0, 0.45),
     createAxisAngleMatrix(0, 1, 0, -0.65)
 );
+let rotationMatrix = DEFAULT_ROTATION;
 
 let currentCanvas = null;
 let currentGetValue = null;
@@ -92,6 +71,11 @@ let lastX = 0;
 let lastY = 0;
 let projectionMode = "perspective";
 let highlightElement = "all";
+
+export function resetCubeRotation() {
+    rotationMatrix = DEFAULT_ROTATION;
+    renderCube();
+}
 
 export function setCubeProjection(mode) {
     projectionMode = mode === "orthographic" ? "orthographic" : "perspective";
@@ -107,6 +91,19 @@ export function getCube3dState() {
     return { projection: projectionMode, highlight: highlightElement };
 }
 
+function drawFloorReticle(ctx, cx, cy, cubeSize) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + cubeSize * 1.48, cubeSize * 1.15, cubeSize * 0.32, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(14, 165, 233, 0.05)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(14, 165, 233, 0.18)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 5]);
+    ctx.stroke();
+    ctx.restore();
+}
+
 export function renderCube() {
     if (!currentCanvas) return;
     const ctx = currentCanvas.getContext("2d");
@@ -120,6 +117,7 @@ export function renderCube() {
     const cubeSize = Math.min(w, h) * (isOrtho ? 0.25 : 0.22);
 
     ctx.clearRect(0, 0, w, h);
+    drawFloorReticle(ctx, cx, cy, cubeSize);
 
     const rotVerts = VERTICES.map((v) => {
         const x = v[0] * rotationMatrix[0][0] + v[1] * rotationMatrix[0][1] + v[2] * rotationMatrix[0][2];
@@ -151,7 +149,7 @@ export function renderCube() {
         ctx.closePath();
 
         if (highlightElement === "lp") {
-            ctx.fillStyle = `rgba(56, 189, 248, ${Math.min(sf.shade * 0.42, 0.65)})`;
+            ctx.fillStyle = `rgba(245, 158, 11, ${Math.min(sf.shade * 0.45, 0.68)})`;
         } else {
             ctx.fillStyle = sf.z > 0
                 ? `rgba(56, 189, 248, ${sf.shade * 0.28})`
@@ -161,7 +159,7 @@ export function renderCube() {
     });
 
     const edgeWidth = highlightElement === "pr" ? 3.5 : 2.5;
-    ctx.strokeStyle = highlightElement === "pr" ? "#38bdf8" : "rgba(56, 189, 248, 0.85)";
+    ctx.strokeStyle = highlightElement === "pr" ? "#10b981" : "rgba(56, 189, 248, 0.85)";
     ctx.lineWidth = edgeWidth;
     ctx.lineCap = "round";
 
@@ -176,7 +174,7 @@ export function renderCube() {
 
     const vertRadius = highlightElement === "pr" ? 4.5 : 3;
     projVerts.forEach((p) => {
-        ctx.fillStyle = highlightElement === "pr" ? "#fbbf24" : "#e0f2fe";
+        ctx.fillStyle = highlightElement === "pr" ? "#34d399" : "#e0f2fe";
         ctx.beginPath();
         ctx.arc(p.x, p.y, vertRadius, 0, Math.PI * 2);
         ctx.fill();

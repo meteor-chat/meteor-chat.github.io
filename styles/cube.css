@@ -1,0 +1,48 @@
+.cube-calc-container { width: 100%; max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 18px; box-sizing: border-box; }
+.cube-badge-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 9999px; padding: 3px 12px; margin-bottom: 6px; user-select: none; }
+.cube-top-deck { width: 100%; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 12px 18px; display: flex; justify-content: center; align-items: center; overflow-x: auto; box-sizing: border-box; }
+.cube-sci-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; width: 100%; background: rgba(15, 23, 42, 0.45); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 8px 12px; gap: 10px; box-sizing: border-box; }
+.cube-toolbar-group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.cube-toolbar-label { font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; user-select: none; }
+.cube-segmented-group { display: inline-flex; align-items: center; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 2px; gap: 2px; }
+.cube-spotlight-btn, .cube-preset-btn, .cube-stepper-btn, .cube-reset-btn { background: transparent; border: 1px solid transparent; color: #cbd5e1; border-radius: 6px; padding: 5px 9px; font-size: 11px; font-weight: 600; cursor: pointer; user-select: none; transition-property: transform, opacity, background-color, border-color, box-shadow, color; transition-duration: 0.16s; transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.cube-spotlight-btn:hover, .cube-preset-btn:hover { background: rgba(255, 255, 255, 0.08); color: #ffffff; border-color: rgba(255, 255, 255, 0.15); }
+.cube-spotlight-btn:active, .cube-preset-btn:active, .cube-stepper-btn:active, .cube-reset-btn:active { transform: scale(0.96); }
+.cube-spotlight-btn.active { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.45); color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+.cube-preset-btn { padding: 4px 8px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); }
+.cube-preset-btn.active { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.5); color: #fbbf24; }
+.cube-calc-scroll-wrapper { width: 100%; overflow-x: auto; display: flex; justify-content: center; padding: 10px 0; box-sizing: border-box; }
+.cube-calc-layout { position: relative; display: flex; align-items: center; justify-content: center; gap: 32px; width: 100%; max-width: 980px; margin: 10px auto 0; flex-shrink: 0; }
+.cube-left-card { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 18px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); z-index: 2; flex-shrink: 0; }
+.cube-stepper-wrap { display: flex; align-items: center; gap: 6px; }
+.cube-stepper-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; font-size: 16px; color: #ffffff; }
+.cube-stepper-btn:hover { background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; }
+.cube-io-input { font-size: 17px; font-weight: 600; color: #ffffff; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 6px 10px; width: 74px; text-align: center; font-variant-numeric: tabular-nums; outline: none; transition-property: border-color, box-shadow; transition-duration: 0.18s; }
+.cube-io-input:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25); }
+.cube-range-slider { width: 100%; cursor: pointer; accent-color: #38bdf8; margin-top: 4px; }
+.cube-center-panel { position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 2; }
+.cube-3d-canvas { width: 340px; height: 340px; max-width: 340px; aspect-ratio: 1; display: block; background: radial-gradient(circle at center, rgba(30, 41, 59, 0.3) 0%, rgba(10, 15, 30, 0.7) 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; cursor: grab; touch-action: none; user-select: none; box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.5); }
+.cube-3d-canvas.is-grabbing { cursor: grabbing !important; }
+.cube-reset-btn { position: absolute; top: 10px; right: 10px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); font-size: 11px; padding: 3px 8px; z-index: 4; }
+.cube-drag-hint { position: absolute; bottom: 10px; font-size: 10px; color: #64748b; pointer-events: none; text-transform: uppercase; letter-spacing: 0.5px; user-select: none; z-index: 4; }
+.cube-telemetry-deck { display: flex; flex-direction: column; gap: 8px; width: 270px; flex-shrink: 0; z-index: 2; }
+.cube-telemetry-card { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; cursor: pointer; user-select: none; transition-property: transform, border-color, box-shadow, background-color; transition-duration: 0.18s; transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+.cube-telemetry-card:hover { transform: translateY(-2px); border-color: rgba(56, 189, 248, 0.35); background: rgba(30, 41, 59, 0.6); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+.cube-telemetry-card:active { transform: scale(0.97); }
+.cube-telemetry-card.active { border-color: rgba(56, 189, 248, 0.55); background: rgba(56, 189, 248, 0.12); box-shadow: 0 0 14px rgba(56, 189, 248, 0.2); }
+.cube-card-left { display: flex; flex-direction: column; gap: 2px; }
+.cube-card-name { font-size: 13px; color: #f1f5f9; font-weight: 500; }
+.cube-card-formula { font-size: 11px; color: #94a3b8; font-family: monospace; }
+.cube-card-right { display: flex; align-items: baseline; gap: 4px; }
+.cube-card-val { font-size: 16px; font-weight: 600; color: #ffffff; font-variant-numeric: tabular-nums; }
+.cube-card-unit { font-size: 11px; color: #64748b; }
+.cube-chart-wrap, .cube-critical-wrap { width: 100%; max-width: 980px; margin: 12px auto 0; box-sizing: border-box; }
+.cube-step-card { background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px 18px; margin-top: 12px; }
+.cube-step-title { font-size: 13px; font-weight: 600; color: #f8fafc; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; text-wrap: balance; }
+.cube-step-content { font-size: 12px; color: #cbd5e1; line-height: 1.6; text-wrap: pretty; }
+@media (max-width: 768px) {
+    .cube-calc-layout { flex-direction: column; gap: 16px; }
+    .cube-lines-svg, .cube-anim-canvas { display: none !important; }
+    .cube-left-card, .cube-telemetry-deck { width: 100%; max-width: 340px; }
+    .cube-3d-canvas { width: 100% !important; max-width: 280px !important; height: auto !important; }
+}

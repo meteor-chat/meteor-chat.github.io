@@ -69,6 +69,25 @@ export function drawCubeScalingChart(currentS) {
     ctx.restore();
 
     const steps = 60;
+    const fillArea = (colorStop, fn) => {
+        ctx.beginPath();
+        ctx.moveTo(toPx(0), toPy(0));
+        for (let i = 0; i <= steps; i++) {
+            const s = (i / steps) * sMax;
+            ctx.lineTo(toPx(s), toPy(fn(s)));
+        }
+        ctx.lineTo(toPx(sMax), toPy(0));
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+        grad.addColorStop(0, colorStop);
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = grad;
+        ctx.fill();
+    };
+
+    fillArea("rgba(56, 189, 248, 0.15)", (s) => Math.pow(s, 3));
+    fillArea("rgba(245, 158, 11, 0.12)", (s) => 6 * Math.pow(s, 2));
+
     const drawCurve = (color, lw, fn) => {
         ctx.strokeStyle = color;
         ctx.lineWidth = lw;
@@ -91,15 +110,20 @@ export function drawCubeScalingChart(currentS) {
     if (sMax >= 6) {
         const crossPx = toPx(6);
         const crossPy = toPy(216);
+        ctx.fillStyle = "rgba(244, 63, 94, 0.3)";
+        ctx.beginPath();
+        ctx.arc(crossPx, crossPy, 8, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.fillStyle = "#f43f5e";
         ctx.beginPath();
         ctx.arc(crossPx, crossPy, 4.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = "#fda4af";
-        ctx.font = "9px monospace";
+        ctx.font = "bold 9px monospace";
         ctx.textAlign = "left";
-        ctx.fillText("Titik Silang (s=6, Lp=V=216)", crossPx + 8, crossPy - 4);
+        ctx.fillText("Titik Silang (s=6, Lp=V=216)", crossPx + 10, crossPy - 4);
     }
 
     if (currentS > 0 && currentS <= sMax) {

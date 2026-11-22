@@ -1,5 +1,5 @@
 import { refs } from "../../core/dom-refs.js";
-import { initCube, renderCube, setCubeProjection, setCubeHighlight } from "../geometry/cube-3d.js";
+import { initCube, renderCube, setCubeProjection, setCubeHighlight, resetCubeRotation } from "../geometry/cube-3d.js";
 import { initCubeAnimation, triggerCubeAnimation } from "../geometry/cube-animation.js";
 import { computeCubeMetrics } from "../geometry/cube-metrics.js";
 import { renderCubeCriticalCards } from "../geometry/cube-critical.js";
@@ -111,6 +111,15 @@ export function applyCubeResultsToDOM(metrics) {
     drawCubeScalingChart(metrics.sisi);
 }
 
+function updatePresetButtons(val) {
+    const num = parseFloat(val);
+    const presets = document.querySelectorAll(".cube-preset-btn");
+    presets.forEach((btn) => {
+        const targetS = parseFloat(btn.dataset.s);
+        btn.classList.toggle("active", Math.abs(num - targetS) < 0.01);
+    });
+}
+
 function onCubeInputBlur() {
     if (!refs.cubeInSisi) return;
     const raw = refs.cubeInSisi.value.trim();
@@ -131,6 +140,7 @@ export function calculateMath23() {
     if (rangeSlider && rangeSlider.value !== raw) {
         rangeSlider.value = metrics.sisi;
     }
+    updatePresetButtons(metrics.sisi);
 
     if (window.innerWidth <= 768) {
         displayedSisi = metrics.sisiText;
@@ -142,11 +152,7 @@ export function calculateMath23() {
     const seq = ++pulseSequence;
 
     triggerCubeAnimation({
-        payload: {
-            seq: seq,
-            sisiText: metrics.sisiText,
-            metrics: metrics
-        },
+        payload: { seq, sisiText: metrics.sisiText, metrics },
         onReachCube: (payload) => {
             if (payload && payload.seq >= lastCubeSeq) {
                 lastCubeSeq = payload.seq;
@@ -186,8 +192,42 @@ function initCubeControls() {
             btn.classList.add("active");
             const target = btn.dataset.target || "all";
             setCubeHighlight(target);
+            updateCardActiveState(target);
         });
     });
+
+    const presets = document.querySelectorAll(".cube-preset-btn");
+    presets.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            if (!refs.cubeInSisi) return;
+            refs.cubeInSisi.value = btn.dataset.s;
+            calculateMath23();
+        });
+    });
+
+    const btnDec = document.getElementById("cube-btn-dec");
+    const btnInc = document.getElementById("cube-btn-inc");
+    if (btnDec && refs.cubeInSisi) {
+        btnDec.addEventListener("click", () => {
+            const cur = parseFloat(refs.cubeInSisi.value) || 12;
+            const next = Math.max(cur <= 2 ? cur - 0.5 : cur - 1, 0.5);
+            refs.cubeInSisi.value = String(next);
+            calculateMath23();
+        });
+    }
+    if (btnInc && refs.cubeInSisi) {
+        btnInc.addEventListener("click", () => {
+            const cur = parseFloat(refs.cubeInSisi.value) || 12;
+            const next = Math.min(cur + 1, 25);
+            refs.cubeInSisi.value = String(next);
+            calculateMath23();
+        });
+    }
+
+    const btnResetRot = document.getElementById("cube-btn-reset-rot");
+    if (btnResetRot) {
+        btnResetRot.addEventListener("click", () => resetCubeRotation());
+    }
 
     const rangeSlider = document.getElementById("cube-range-sisi");
     if (rangeSlider && refs.cubeInSisi) {
@@ -206,12 +246,21 @@ function initCubeControls() {
             row.addEventListener("click", () => {
                 const target = map[idx] || "all";
                 setCubeHighlight(target);
-                spotButtons.forEach((b) => {
-                    b.classList.toggle("active", b.dataset.target === target);
-                });
+                spotButtons.forEach((b) => b.classList.toggle("active", b.dataset.target === target));
+                updateCardActiveState(target);
             });
         });
     }
+}
+
+function updateCardActiveState(target) {
+    const rightPanel = document.getElementById("cube-right-panel");
+    if (!rightPanel) return;
+    const rows = rightPanel.querySelectorAll(".cube-out-row");
+    const map = ["all", "lp", "pr", "ds", "dr", "bd"];
+    rows.forEach((row, idx) => {
+        row.classList.toggle("active", map[idx] === target);
+    });
 }
 
 export function initCubeView() {
@@ -239,6 +288,7 @@ export function initCubeView() {
     }
     const metrics = computeCubeMetrics(initialVal);
     applyCubeResultsToDOM(metrics);
+    updatePresetButtons(initialVal);
     renderCube();
     requestAnimationFrame(updateCubeLines);
 }
