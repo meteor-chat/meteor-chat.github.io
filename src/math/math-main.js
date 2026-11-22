@@ -1,7 +1,6 @@
 import { initFilters, applyFilter } from "./math-filter.js";
 import { parseFormulaUrl, parseCategoryUrl } from "./math-routes.js";
 import { initCubeThumbnail } from "./geometry/cube-thumb.js?v=2";
-import { initMathAurora } from "./math-aurora.js";
 
 const KATEX_HREF = new URL("../../vendor/katex/katex.min.js", import.meta.url).href;
 const CONTROLLER_GRAPH = [
@@ -126,10 +125,6 @@ function handleRoute() {
 
 initFilters();
 initCubeThumbnail();
-const auroraCanvas = document.getElementById("math-aurora-canvas");
-if (auroraCanvas) {
-    initMathAurora(auroraCanvas);
-}
 const grid = document.querySelector(".math-grid");
 if (grid) bindGrid(grid);
 prefetchWhenIdle();
