@@ -63,6 +63,7 @@ for (let id = 1; id <= 38; id++) {
 
     const name = FORMULA_NAMES[id] || "Math";
     let html = mathHtml.replace(/<title>[\s\S]*?<\/title>/, `<title>${name} - Meteor</title>`);
+    html = html.replace('<canvas id="math-aurora-bg" class="math-aurora-bg" aria-hidden="true"></canvas>', '<canvas id="math-aurora-bg" class="math-aurora-bg hidden" aria-hidden="true"></canvas>');
     html = html.replace('<div id="math-menu-view">', '<div id="math-menu-view" class="hidden">');
     html = html.replace('<div id="math-calc-view" class="hidden">', '<div id="math-calc-view">');
 
