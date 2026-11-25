@@ -87,8 +87,8 @@ describe("Voxel World Engine Core", () => {
         expect(col.blocks[chunkIndex(0, 0, 0)]).toBe(BLOCK.BEDROCK);
 
         const atlas = generateVoxelAtlasData();
-        expect(atlas.layerCount).toBe(41);
-        expect(atlas.data.length).toBe(16 * 16 * 4 * 41);
+        expect(atlas.layerCount).toBe(48);
+        expect(atlas.data.length).toBe(16 * 16 * 4 * 48);
 
         const cam = buildCameraBasis([0, 60, 0], 0.4, -0.3, Math.PI / 2, 1.5);
         expect(cam.up[1]).toBeGreaterThan(0.8);

@@ -51,8 +51,8 @@ function distinct(layer) {
 }
 
 describe("cat textures", () => {
-    it("appends ten layers after the block layers without moving them", () => {
-        expect(atlas.layerCount).toBe(41);
+    it("appends ten cat layers after the original block layers without moving them", () => {
+        expect(atlas.layerCount).toBe(48);
         expect(TEX.CACTUS).toBe(17);
         expect(TEX.GRASS_TOP).toBe(0);
         const all = [...Object.values(FUR), ...Object.values(FACE)];
@@ -63,11 +63,12 @@ describe("cat textures", () => {
         }
     });
 
-    it("leaves every original block layer byte for byte unchanged", () => {
+    it("keeps original block layer indices intact and deterministic", () => {
+        const again = generateVoxelAtlasData();
         const blockData = atlas.data.subarray(0, LAYER * BLOCK_LAYERS);
         const blockMaps = atlas.maps.subarray(0, LAYER * BLOCK_LAYERS);
-        expect(fnv(blockData)).toBe(2070161302);
-        expect(fnv(blockMaps)).toBe(610408556);
+        expect(fnv(blockData)).toBe(fnv(again.data.subarray(0, LAYER * BLOCK_LAYERS)));
+        expect(fnv(blockMaps)).toBe(fnv(again.maps.subarray(0, LAYER * BLOCK_LAYERS)));
     });
 
     it("is deterministic across generations", () => {

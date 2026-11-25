@@ -90,6 +90,13 @@ export function matchPreset(ui) {
 export function createUiLayout({ root, state, storage = getSafeStorage() }) {
     state.ui = loadUi(storage);
     const ui = state.ui;
+    const cleanups = [];
+
+    const listen = (el, type, fn) => {
+        if (!el) return;
+        el.addEventListener(type, fn);
+        cleanups.push(() => el.removeEventListener(type, fn));
+    };
 
     const setHidden = (el, hidden) => {
         if (el) el.classList.toggle(HIDDEN_CLASS, hidden);
@@ -146,17 +153,22 @@ export function createUiLayout({ root, state, storage = getSafeStorage() }) {
     };
 
     root.querySelectorAll("[data-voxel-ui-toggle]").forEach((btn) => {
-        btn.addEventListener("click", () => toggle(btn.dataset.voxelUiToggle));
+        listen(btn, "click", () => toggle(btn.dataset.voxelUiToggle));
     });
     root.querySelectorAll("[data-voxel-ui-item]").forEach((btn) => {
-        btn.addEventListener("click", () => toggleItem(btn.dataset.voxelUiItem));
+        listen(btn, "click", () => toggleItem(btn.dataset.voxelUiItem));
     });
     root.querySelectorAll("[data-voxel-ui-preset]").forEach((btn) => {
-        btn.addEventListener("click", () => setPreset(btn.dataset.voxelUiPreset));
+        listen(btn, "click", () => setPreset(btn.dataset.voxelUiPreset));
     });
-    const hideAllBtn = root.querySelector("[data-voxel-ui-hideall]");
-    if (hideAllBtn) hideAllBtn.addEventListener("click", toggleHideAll);
+    listen(root.querySelector("[data-voxel-ui-hideall]"), "click", toggleHideAll);
 
     apply();
-    return { apply, toggle, toggleItem, setPreset, toggleHideAll, visibility: () => effectiveVisibility(ui) };
+
+    const destroy = () => {
+        for (const fn of cleanups) fn();
+        cleanups.length = 0;
+    };
+
+    return { apply, toggle, toggleItem, setPreset, toggleHideAll, visibility: () => effectiveVisibility(ui), destroy };
 }

@@ -5,7 +5,7 @@ import { ORGANIC_RECIPES } from "./voxel-tex-recipes-organic.js";
 import { TERRAIN_RECIPES } from "./voxel-tex-recipes-terrain.js";
 import { VILLAGE_RECIPES } from "./voxel-tex-recipes-village.js";
 
-const LAYER_COUNT = 41;
+const LAYER_COUNT = 48;
 const RECIPES = {
     ...TERRAIN_RECIPES,
     ...ORGANIC_RECIPES,
@@ -20,19 +20,31 @@ export function generateVoxelAtlasData() {
     for (let layer = 0; layer < LAYER_COUNT; layer += 1) {
         const recipe = RECIPES[layer];
         if (recipe) {
-            writeLayer(data, maps, layer, renderRecipe(recipe), recipe.bump);
+            writeLayer(data, maps, layer, renderRecipe(recipe), recipe.bump, Boolean(recipe.clampV));
         }
     }
     return { data, maps, tileSize: TILE, layerCount: LAYER_COUNT };
 }
 
-function uploadArray(gl, atlas, bytes) {
+function applyAnisotropy(gl) {
+    if (typeof gl.getExtension !== "function") return;
+    const ext =
+        gl.getExtension("EXT_texture_filter_anisotropic") ||
+        gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic") ||
+        gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
+    if (!ext || typeof gl.getParameter !== "function" || typeof gl.texParameterf !== "function") return;
+    const max = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 1;
+    gl.texParameterf(gl.TEXTURE_2D_ARRAY, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, max));
+}
+
+function uploadArray(gl, atlas, bytes, useSrgb) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
+    const internalFormat = useSrgb && gl.SRGB8_ALPHA8 ? gl.SRGB8_ALPHA8 : gl.RGBA8;
     gl.texImage3D(
         gl.TEXTURE_2D_ARRAY,
         0,
-        gl.RGBA8,
+        internalFormat,
         atlas.tileSize,
         atlas.tileSize,
         atlas.layerCount,
@@ -46,15 +58,16 @@ function uploadArray(gl, atlas, bytes) {
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    applyAnisotropy(gl);
     return tex;
 }
 
 export function createVoxelTextureArray(gl, atlas) {
-    return uploadArray(gl, atlas, atlas.data);
+    return uploadArray(gl, atlas, atlas.data, true);
 }
 
 export function createVoxelDataArray(gl, atlas) {
-    return uploadArray(gl, atlas, atlas.maps);
+    return uploadArray(gl, atlas, atlas.maps, false);
 }
 
 export function drawHotbarBlockIcon(canvas, atlas, texLayer) {
@@ -68,10 +81,11 @@ export function drawHotbarBlockIcon(canvas, atlas, texLayer) {
         for (let x = 0; x < s; x += 1) {
             const src = layerOffset + (srcY * s + x) * 4;
             const dst = (y * s + x) * 4;
+            const a = atlas.data[src + 3];
             img.data[dst] = atlas.data[src];
             img.data[dst + 1] = atlas.data[src + 1];
             img.data[dst + 2] = atlas.data[src + 2];
-            img.data[dst + 3] = Math.max(175, atlas.data[src + 3]);
+            img.data[dst + 3] = a === 0 ? 0 : Math.max(155, a);
         }
     }
     const off = document.createElement("canvas");

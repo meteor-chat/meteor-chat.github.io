@@ -240,7 +240,6 @@ describe("Voxel controller loop pausing", () => {
 
     beforeEach(() => {
         document.documentElement.innerHTML = readFileSync("voxel.html", "utf8");
-        window.HTMLCanvasElement.prototype.getContext = () => null;
         vi.stubGlobal("requestAnimationFrame", vi.fn(() => 41));
         vi.stubGlobal("cancelAnimationFrame", vi.fn());
     });
@@ -251,16 +250,25 @@ describe("Voxel controller loop pausing", () => {
         vi.unstubAllGlobals();
     });
 
-    it("cancels the frame request when hidden and schedules again when visible, idempotently", () => {
+    it("cancels the frame request when paused and schedules again when resumed, idempotently", () => {
+        const mock = createMockGl();
+        window.HTMLCanvasElement.prototype.getContext = (kind) => (kind === "webgl2" ? mock.gl : null);
         app = createVoxelApp(document.getElementById("voxel-app-root"));
         const raf = globalThis.requestAnimationFrame;
         const caf = globalThis.cancelAnimationFrame;
         const scheduled = raf.mock.calls.length;
+        expect(scheduled).toBeGreaterThan(0);
         app.pause();
         app.pause();
         expect(caf).toHaveBeenCalledTimes(1);
         app.resume();
         app.resume();
         expect(raf.mock.calls.length).toBe(scheduled + 1);
+    });
+
+    it("does not start a render loop when WebGL 2 is unavailable", () => {
+        window.HTMLCanvasElement.prototype.getContext = () => null;
+        app = createVoxelApp(document.getElementById("voxel-app-root"));
+        expect(globalThis.requestAnimationFrame).not.toHaveBeenCalled();
     });
 });

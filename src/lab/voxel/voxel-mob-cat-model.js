@@ -1,7 +1,7 @@
 import { TEX } from "./voxel-blocks.js";
 
 export const MAX_CATS = 8;
-export const FLOATS_PER_VERTEX = 10;
+export const FLOATS_PER_VERTEX = 11;
 export const VERTS_PER_BOX = 36;
 
 export const CAT_LAYERS = Object.freeze({
@@ -13,7 +13,7 @@ export const CAT_LAYERS = Object.freeze({
 });
 
 const UV_SCALE = 2;
-const SIT_DROP = 0.18;
+const SIT_DROP = 0.165;
 const PIVOTS = {
     body: [0, 0.18, 0.24],
     head: [0, 0.42, -0.28],
@@ -26,17 +26,17 @@ const PIVOTS = {
 };
 
 const PARTS = [
-    { min: [-0.14, 0.18, -0.26], max: [0.14, 0.42, 0.26], chain: ["body"] },
-    { min: [-0.13, 0.34, -0.5], max: [0.13, 0.58, -0.24], chain: ["head", "body"], head: true },
-    { min: [-0.065, 0.35, -0.55], max: [0.065, 0.44, -0.5], chain: ["head", "body"], snout: true },
-    { min: [-0.11, 0.58, -0.42], max: [-0.04, 0.65, -0.35], chain: ["head", "body"] },
-    { min: [0.04, 0.58, -0.42], max: [0.11, 0.65, -0.35], chain: ["head", "body"] },
-    { min: [-0.125, 0, -0.24], max: [-0.035, 0.2, -0.15], chain: ["legFL", "body"] },
-    { min: [0.035, 0, -0.24], max: [0.125, 0.2, -0.15], chain: ["legFR", "body"] },
-    { min: [-0.125, 0, 0.15], max: [-0.035, 0.2, 0.24], chain: ["legBL", "body"] },
-    { min: [0.035, 0, 0.15], max: [0.125, 0.2, 0.24], chain: ["legBR", "body"] },
-    { min: [-0.04, 0.3, 0.26], max: [0.04, 0.38, 0.46], chain: ["tail1", "body"] },
-    { min: [-0.035, 0.3, 0.46], max: [0.035, 0.37, 0.66], chain: ["tail2", "tail1", "body"] }
+    { min: [-0.14, 0.18, -0.26], max: [0.14, 0.42, 0.26], chain: ["body"], uvOff: [0, 0] },
+    { min: [-0.13, 0.34, -0.5], max: [0.13, 0.58, -0.24], chain: ["head", "body"], head: true, uvOff: [0.12, 0.08] },
+    { min: [-0.065, 0.35, -0.55], max: [0.065, 0.45, -0.5], chain: ["head", "body"], snout: true, uvOff: [0, 0] },
+    { min: [-0.11, 0.58, -0.42], max: [-0.04, 0.65, -0.35], chain: ["head", "body"], uvOff: [0.22, 0.3] },
+    { min: [0.04, 0.58, -0.42], max: [0.11, 0.65, -0.35], chain: ["head", "body"], uvOff: [0.35, 0.18] },
+    { min: [-0.125, 0, -0.24], max: [-0.035, 0.2, -0.15], chain: ["legFL", "body"], uvOff: [0.05, 0.4] },
+    { min: [0.035, 0, -0.24], max: [0.125, 0.2, -0.15], chain: ["legFR", "body"], uvOff: [0.28, 0.12] },
+    { min: [-0.125, 0, 0.15], max: [-0.035, 0.2, 0.24], chain: ["legBL", "body"], uvOff: [0.18, 0.35] },
+    { min: [0.035, 0, 0.15], max: [0.125, 0.2, 0.24], chain: ["legBR", "body"], uvOff: [0.4, 0.22] },
+    { min: [-0.04, 0.3, 0.26], max: [0.04, 0.38, 0.46], chain: ["tail1", "body"], uvOff: [0.32, 0.05] },
+    { min: [-0.035, 0.3, 0.46], max: [0.035, 0.37, 0.66], chain: ["tail2", "tail1", "body"], uvOff: [0.1, 0.28] }
 ];
 
 export const BOXES_PER_CAT = PARTS.length;
@@ -48,23 +48,27 @@ const AXES = [[1, 2], [2, 0], [0, 1]];
 const scratch = [0, 0, 0];
 
 export function catPose(cat, timeSec) {
-    const { phase, moving, sit } = cat.anim;
-    const seed = cat.pos[0] * 1.7 + cat.pos[2] * 0.9;
+    const { phase, moving, sit, headYaw = 0 } = cat.anim;
+    const seed = cat.phaseSeed !== undefined ? cat.phaseSeed : 0;
     const stride = Math.sin(phase) * 0.85 * moving * (1 - sit);
-    const bodyPitch = 0.45 * sit;
+    const bodyPitch = 0.42 * sit;
     const fore = -bodyPitch;
-    const hind = -bodyPitch + 1.9 * sit;
+    const hind = -bodyPitch + 1.52 * sit;
     const sway = Math.sin(timeSec * 1.8 + seed);
+    const idleHeadY = Math.sin(timeSec * 0.8 + seed) * 0.28 * (1 - moving * 0.7);
     return {
         drop: -SIT_DROP * sit,
         body: { rx: bodyPitch, ry: 0 },
-        head: { rx: -bodyPitch * 0.8 + Math.sin(timeSec * 2 + seed) * 0.02, ry: Math.sin(timeSec * 0.8 + seed) * 0.3 * (1 - moving * 0.7) },
+        head: {
+            rx: -bodyPitch * 0.8 + Math.sin(timeSec * 2 + seed) * 0.02,
+            ry: headYaw !== 0 ? headYaw : idleHeadY
+        },
         legFL: { rx: fore + stride, ry: 0 },
         legFR: { rx: fore - stride, ry: 0 },
         legBL: { rx: hind - stride, ry: 0 },
         legBR: { rx: hind + stride, ry: 0 },
-        tail1: { rx: 0.25 - 0.8 * moving - 0.4 * sit, ry: sway * (0.25 + 0.15 * (1 - moving)) },
-        tail2: { rx: -0.3 * moving + 0.1 * sit, ry: Math.sin(timeSec * 2.4 + seed + 1) * 0.35 }
+        tail1: { rx: 0.25 - 0.65 * moving - 0.72 * sit, ry: sway * (0.25 + 0.15 * (1 - moving)) },
+        tail2: { rx: -0.25 * moving - 0.22 * sit, ry: Math.sin(timeSec * 2.4 + seed + 1) * 0.35 }
     };
 }
 
@@ -97,7 +101,7 @@ function rotateStage(name, pose, v, translate) {
     }
 }
 
-function writeVertex(out, o, px, py, pz, normal, u, v, layer, sky) {
+function writeVertex(out, o, px, py, pz, normal, u, v, layer, sky, blk) {
     out[o] = px;
     out[o + 1] = py;
     out[o + 2] = pz;
@@ -108,6 +112,7 @@ function writeVertex(out, o, px, py, pz, normal, u, v, layer, sky) {
     out[o + 7] = v;
     out[o + 8] = layer;
     out[o + 9] = sky;
+    out[o + 10] = blk;
 }
 
 function placeInWorld(cat, pose, chain, local, isPoint, c, s, dest) {
@@ -126,9 +131,16 @@ const placed = [0, 0, 0];
 const placedNormal = [0, 0, 0];
 const local = [0, 0, 0];
 const localNormal = [0, 0, 0];
+const faceVerts = [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0]
+];
+const QUAD_IDX = [0, 1, 2, 0, 2, 3];
 
 function emitFace(out, cursor, args) {
-    const { cat, pose, part, layer, sky, k, sign, c, s } = args;
+    const { cat, pose, part, layer, sky, blk, k, sign, c, s } = args;
     const [uAxis, vAxis] = AXES[k];
     localNormal[0] = 0;
     localNormal[1] = 0;
@@ -138,8 +150,10 @@ function emitFace(out, cursor, args) {
     const order = sign > 0 ? [0, 1, 2, 3] : [0, 3, 2, 1];
     const sizeU = part.max[uAxis] - part.min[uAxis];
     const sizeV = part.max[vAxis] - part.min[vAxis];
-    const verts = order.map((index) => {
-        const [cu, cv] = CORNERS[index];
+    const uvShift = cat.variant === "calico" && part.uvOff ? part.uvOff : [0, 0];
+
+    for (let idx = 0; idx < 4; idx += 1) {
+        const [cu, cv] = CORNERS[order[idx]];
         local[k] = sign > 0 ? part.max[k] : part.min[k];
         local[uAxis] = cu ? part.max[uAxis] : part.min[uAxis];
         local[vAxis] = cv ? part.max[vAxis] : part.min[vAxis];
@@ -147,21 +161,33 @@ function emitFace(out, cursor, args) {
         const du = sign < 0 ? 1 - cu : cu;
         const full = part.head && k === 2 && sign < 0;
         const snoutFront = part.snout && k === 2 && sign < 0;
-        let u = du * sizeU * UV_SCALE;
-        let v = cv * sizeV * UV_SCALE;
+        let u;
+        let v;
         if (full) {
             u = du;
             v = cv;
         } else if (snoutFront) {
-            u = 0.25 + du * 0.5;
-            v = 0.12 + cv * 0.33;
+            u = 0.34 + du * 0.32;
+            v = 0.22 + cv * 0.26;
+        } else if (k === 0) {
+            u = cv * sizeV * UV_SCALE + uvShift[0];
+            v = du * sizeU * UV_SCALE + uvShift[1];
+        } else {
+            u = du * sizeU * UV_SCALE + uvShift[0];
+            v = cv * sizeV * UV_SCALE + uvShift[1];
         }
-        return [placed[0], placed[1], placed[2], u, v];
-    });
+        const dst = faceVerts[idx];
+        dst[0] = placed[0];
+        dst[1] = placed[1];
+        dst[2] = placed[2];
+        dst[3] = u;
+        dst[4] = v;
+    }
+
     let o = cursor;
-    for (const i of [0, 1, 2, 0, 2, 3]) {
-        const vert = verts[i];
-        writeVertex(out, o, vert[0], vert[1], vert[2], placedNormal, vert[3], vert[4], layer, sky);
+    for (let t = 0; t < 6; t += 1) {
+        const vert = faceVerts[QUAD_IDX[t]];
+        writeVertex(out, o, vert[0], vert[1], vert[2], placedNormal, vert[3], vert[4], layer, sky, blk);
         o += FLOATS_PER_VERTEX;
     }
     return o;
@@ -171,6 +197,7 @@ export function buildCatVertices(cat, timeSec, out, offset) {
     const pose = catPose(cat, timeSec);
     const layers = CAT_LAYERS[cat.variant] || CAT_LAYERS.orange;
     const sky = cat.sky === undefined ? 1 : cat.sky;
+    const blk = cat.blk === undefined ? 0 : cat.blk;
     const c = Math.cos(cat.yaw);
     const s = Math.sin(cat.yaw);
     let cursor = offset;
@@ -179,7 +206,7 @@ export function buildCatVertices(cat, timeSec, out, offset) {
             for (const sign of [1, -1]) {
                 const front = (part.head || part.snout) && k === 2 && sign < 0;
                 const layer = front ? layers.face : layers.fur;
-                cursor = emitFace(out, cursor, { cat, pose, part, layer, sky, k, sign, c, s });
+                cursor = emitFace(out, cursor, { cat, pose, part, layer, sky, blk, k, sign, c, s });
             }
         }
     }

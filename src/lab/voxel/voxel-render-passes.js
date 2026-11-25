@@ -1,3 +1,8 @@
+import { HAND_VERTEX_STRIDE } from "./voxel-hand.js";
+import { PARTICLE_STRIDE } from "./voxel-particles.js";
+
+const ZERO_HAND_LIGHT = new Float32Array([0, 0, 0, 0]);
+
 function setAtmosphere(gl, u, atmo, timeSec) {
     gl.uniform3fv(u.uSunDir, atmo.sunDir);
     gl.uniform3fv(u.uSunTint, atmo.sunTint);
@@ -40,7 +45,7 @@ function bindSceneTextures(gl, res, extras) {
 }
 
 function setSharedUniforms(gl, u, frame, atmo, timeSec, fog) {
-    const { cam, eye, shadow } = frame;
+    const { cam, eye, shadow, underwater, handLight } = frame;
     gl.uniform1i(u.uTexArray, 0);
     gl.uniform1i(u.uTexData, 2);
     gl.uniform1i(u.uShadowMap, 3);
@@ -49,6 +54,8 @@ function setSharedUniforms(gl, u, frame, atmo, timeSec, fog) {
     gl.uniform2f(u.uShadowParams, 1 / shadow.mapSize, shadow.radius);
     gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
     gl.uniform3fv(u.uCamPos, eye);
+    gl.uniform1f(u.uUnderwater, underwater ? 1 : 0);
+    gl.uniform4fv(u.uHandLight, handLight || ZERO_HAND_LIGHT);
     setAtmosphere(gl, u, atmo, timeSec);
     gl.uniform1f(u.uFogStart, fog[0]);
     gl.uniform1f(u.uFogEnd, fog[1]);
@@ -63,7 +70,30 @@ export function beginWorldPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
     bindSceneTextures(gl, res, extras);
     gl.uniform1i(u.uSceneDepth, 4);
     gl.uniform2f(u.uResolution, extras.width, extras.height);
-    setSharedUniforms(gl, u, { cam, eye, shadow: extras.shadow }, atmo, timeSec, fog);
+    setSharedUniforms(
+        gl,
+        u,
+        { cam, eye, shadow: extras.shadow, underwater: extras.underwater, handLight: extras.handLight },
+        atmo,
+        timeSec,
+        fog
+    );
+}
+
+export function beginCutoutPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
+    const { program, u } = res.cutout;
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.depthMask(true);
+    gl.useProgram(program);
+    setSharedUniforms(
+        gl,
+        u,
+        { cam, eye, shadow: extras.shadow, underwater: extras.underwater, handLight: extras.handLight },
+        atmo,
+        timeSec,
+        fog
+    );
 }
 
 export function beginMobPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
@@ -72,10 +102,17 @@ export function beginMobPass(gl, res, cam, eye, atmo, timeSec, fog, extras) {
     gl.enable(gl.CULL_FACE);
     gl.depthMask(true);
     gl.useProgram(program);
-    setSharedUniforms(gl, u, { cam, eye, shadow: extras.shadow }, atmo, timeSec, fog);
+    setSharedUniforms(
+        gl,
+        u,
+        { cam, eye, shadow: extras.shadow, underwater: extras.underwater, handLight: extras.handLight },
+        atmo,
+        timeSec,
+        fog
+    );
 }
-function drawLayer(gl, res, entries, layer) {
-    const uOrigin = res.world.u.uChunkOrigin;
+
+function drawLayer(gl, uOrigin, entries, layer) {
     let drawCalls = 0;
     let triCount = 0;
     for (const entry of entries) {
@@ -91,17 +128,96 @@ function drawLayer(gl, res, entries, layer) {
 }
 
 export function drawOpaque(gl, res, entries) {
-    return drawLayer(gl, res, entries, "opq");
+    return drawLayer(gl, res.world.u.uChunkOrigin, entries, "opq");
+}
+
+export function drawCutout(gl, res, entries) {
+    if (entries.length === 0) return { drawCalls: 0, triCount: 0 };
+    const stats = drawLayer(gl, res.cutout.u.uChunkOrigin, entries, "cut");
+    gl.enable(gl.CULL_FACE);
+    return stats;
 }
 
 export function drawWire(gl, res, cam, hit) {
     if (!hit || !hit.hit) return;
     const { program, u } = res.wire;
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
     gl.useProgram(program);
     gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
     gl.uniform3f(u.uBlockPos, hit.vx, hit.vy, hit.vz);
     gl.bindVertexArray(res.wireVao);
     gl.drawArrays(gl.LINES, 0, 24);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+}
+
+export function drawCrack(gl, res, cam, hit, progress) {
+    if (!hit || !hit.hit || progress <= 0.01) return;
+    const { program, u } = res.crack;
+    gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    gl.enable(gl.CULL_FACE);
+    gl.useProgram(program);
+    gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
+    gl.uniform3f(u.uBlockPos, hit.vx, hit.vy, hit.vz);
+    gl.uniform1f(u.uProgress, Math.min(1, progress));
+    gl.bindVertexArray(res.crackVao);
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+}
+
+export function drawParticles(gl, res, cam, particles, dayIntensity) {
+    if (!particles || particles.vertCount <= 0) return;
+    const { program, u } = res.particle;
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+    gl.useProgram(program);
+    gl.uniformMatrix4fv(u.uViewProj, false, cam.viewProj);
+    gl.uniform1f(u.uLightScale, 0.35 + 0.85 * dayIntensity);
+    gl.bindVertexArray(res.particleVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, res.particleBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, particles.data, 0, particles.vertCount * PARTICLE_STRIDE);
+    gl.drawArrays(gl.TRIANGLES, 0, particles.vertCount);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+    gl.enable(gl.CULL_FACE);
+}
+
+export function drawHand(gl, res, cam, handInfo, tint) {
+    if (!handInfo || !handInfo.mesh || handInfo.mesh.length === 0 || !cam.proj) return;
+    if (res.handBlockId !== handInfo.blockId) {
+        res.handBlockId = handInfo.blockId;
+        res.handVertCount = Math.floor(handInfo.mesh.length / HAND_VERTEX_STRIDE);
+        gl.bindBuffer(gl.ARRAY_BUFFER, res.handBuf);
+        gl.bufferData(gl.ARRAY_BUFFER, handInfo.mesh, gl.STATIC_DRAW);
+    }
+    if (res.handVertCount <= 0) return;
+    const { program, u } = res.hand;
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthMask(true);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.CULL_FACE);
+    gl.depthRange(0, 0.08);
+    gl.useProgram(program);
+    gl.uniformMatrix4fv(u.uProj, false, cam.proj);
+    gl.uniformMatrix4fv(u.uModel, false, handInfo.model);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D_ARRAY, res.texArray);
+    gl.uniform1i(u.uTexArray, 0);
+    gl.uniform3fv(u.uHandTint, tint);
+    gl.bindVertexArray(res.handVao);
+    gl.drawArrays(gl.TRIANGLES, 0, res.handVertCount);
+    gl.depthRange(0, 1);
+    gl.enable(gl.CULL_FACE);
 }
 
 export function blitSceneDepth(gl, targets, w, h) {
@@ -112,20 +228,25 @@ export function blitSceneDepth(gl, targets, w, h) {
 }
 
 export function drawTranslucent(gl, res, entries) {
+    if (entries.length === 0) return { drawCalls: 0, triCount: 0 };
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
     gl.disable(gl.CULL_FACE);
     gl.useProgram(res.world.program);
-    const stats = drawLayer(gl, res, entries, "trn");
+    const stats = drawLayer(gl, res.world.u.uChunkOrigin, entries, "trn");
     gl.depthMask(true);
     gl.disable(gl.BLEND);
-    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.CULL_FACE);
     return stats;
 }
 
 export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     const { scene, bloomA, bloomB } = targets;
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.CULL_FACE);
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, bloomA.fbo);
     gl.viewport(0, 0, bloomA.w, bloomA.h);
     gl.useProgram(res.extract.program);
@@ -163,6 +284,7 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
         gl.uniform2f(rays.u.uSunUv, post.sunUv[0], post.sunUv[1]);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
+
     const comp = res.comp;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, w, h);
@@ -173,9 +295,12 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, bloomA.tex);
     gl.uniform1i(comp.u.uBloomTex, 1);
+    gl.uniform2f(comp.u.uTexelSize, 1 / w, 1 / h);
     gl.uniform1f(comp.u.uTime, timeSec);
     gl.uniform1f(comp.u.uUnderwater, underwater ? 1 : 0);
     gl.uniform1f(comp.u.uRainIntensity, post.rainIntensity || 0);
+    gl.uniform1f(comp.u.uRainVis, post.rainVis !== undefined ? post.rainVis : 1);
+    gl.uniform1f(comp.u.uDayIntensity, post.dayIntensity !== undefined ? post.dayIntensity : 1);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, targets.rays.tex);
     gl.uniform1i(comp.u.uRaysTex, 2);

@@ -23,10 +23,12 @@ export function createGpuTimer(gl) {
     };
 
     const poll = () => {
+        if (inFlight.length === 0) return;
+        const disjoint = Boolean(gl.getParameter(ext.GPU_DISJOINT_EXT));
         while (inFlight.length > 0) {
             const query = inFlight[0];
             if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) break;
-            if (!gl.getParameter(ext.GPU_DISJOINT_EXT)) {
+            if (!disjoint) {
                 const ms = gl.getQueryParameter(query, gl.QUERY_RESULT) / NS_PER_MS;
                 smoothedMs = smoothedMs === null ? ms : smoothedMs + (ms - smoothedMs) * SMOOTHING;
             }
@@ -36,8 +38,10 @@ export function createGpuTimer(gl) {
     };
 
     const dispose = () => {
-        if (active) gl.endQuery(ext.TIME_ELAPSED_EXT);
-        if (active) gl.deleteQuery(active);
+        if (active) {
+            gl.endQuery(ext.TIME_ELAPSED_EXT);
+            gl.deleteQuery(active);
+        }
         for (const query of inFlight) gl.deleteQuery(query);
         active = null;
         inFlight.length = 0;

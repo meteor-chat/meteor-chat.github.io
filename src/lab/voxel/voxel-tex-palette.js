@@ -4,7 +4,7 @@ export function bayer(x, y) {
     return (BAYER4[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
 }
 
-export function palettePick(stops, t, x, y, spread = 0.55) {
+export function palettePick(stops, t, x, y, spread = 0.26) {
     const last = stops.length - 1;
     const clamped = Math.max(0, Math.min(1, t));
     const f = clamped * last + (bayer(x, y) - 0.5) * spread;

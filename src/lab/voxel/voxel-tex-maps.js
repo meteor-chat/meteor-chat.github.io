@@ -5,6 +5,7 @@ const FIELDS = 7;
 
 const toByte = (value) => Math.max(0, Math.min(255, Math.round(value)));
 const wrapIndex = (i) => (i + TILE) % TILE;
+const clampIndex = (i) => Math.max(0, Math.min(TILE - 1, i));
 
 export function renderRecipe(recipe) {
     const samples = new Float32Array(TILE * TILE * FIELDS);
@@ -24,8 +25,9 @@ export function renderRecipe(recipe) {
     return samples;
 }
 
-export function writeLayer(colorBuf, mapBuf, layer, samples, bump) {
-    const heightAt = (x, y) => samples[(wrapIndex(y) * TILE + wrapIndex(x)) * FIELDS + 4];
+export function writeLayer(colorBuf, mapBuf, layer, samples, bump, clampV = false) {
+    const yIdx = clampV ? clampIndex : wrapIndex;
+    const heightAt = (x, y) => samples[(yIdx(y) * TILE + wrapIndex(x)) * FIELDS + 4];
     for (let y = 0; y < TILE; y += 1) {
         for (let x = 0; x < TILE; x += 1) {
             const s = (y * TILE + x) * FIELDS;

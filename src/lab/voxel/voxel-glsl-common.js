@@ -7,6 +7,14 @@ uniform float uDayIntensity;
 uniform float uTime;
 uniform float uRainIntensity;
 
+vec3 safeNorm(vec3 v) {
+    return v * inversesqrt(max(dot(v, v), 1e-8));
+}
+
+vec2 safeNorm2(vec2 v) {
+    return v * inversesqrt(max(dot(v, v), 1e-8));
+}
+
 float sunPower() {
     return smoothstep(-0.04, 0.22, uSunDir.y) * (1.0 - uRainIntensity * 0.85);
 }

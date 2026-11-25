@@ -8,7 +8,7 @@ precision highp float;
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec3 aNormal;
 layout(location = 2) in vec2 aUv;
-layout(location = 3) in vec2 aMeta;
+layout(location = 3) in vec3 aMeta;
 
 uniform mat4 uViewProj;
 
@@ -22,7 +22,7 @@ flat out float vLayer;
 void main() {
     vUv = aUv;
     vLayer = floor(aMeta.x + 0.5);
-    vLight = vec2(aMeta.y, 0.0);
+    vLight = vec2(aMeta.y, aMeta.z);
     vAo = 0.8 + 0.2 * clamp(aNormal.y * 0.5 + 0.5, 0.0, 1.0);
     vNormal = aNormal;
     vWorldPos = aPos;
@@ -58,17 +58,15 @@ void main() {
     vec3 coord = vec3(vUv, vLayer);
     vec4 tex = texture(uTexArray, coord);
     vec4 data = texture(uTexData, coord);
-    vec3 v = normalize(uCamPos - vWorldPos);
-    vec3 n = normalize(vNormal);
-    vec3 albedo = pow(tex.rgb, vec3(2.2));
-    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.72);
+    vec3 toCam = uCamPos - vWorldPos;
+    float dist = length(toCam);
+    vec3 v = safeNorm(toCam);
+    vec3 n = safeNorm(vNormal);
+    vec3 albedo = mix(vec3(dot(tex.rgb, vec3(0.3, 0.59, 0.11))), tex.rgb, 0.9);
     float shadow = sunShadow(vWorldPos, n);
-    vec3 col = shadeSurface(albedo, n, v, data.b, shadow);
-    col = mix(vec3(dot(col, vec3(0.3, 0.59, 0.11))), col, 0.72);
-    col += albedo * data.a * 2.4;
-    float dist = length(uCamPos - vWorldPos);
-    float fogT = pow(smoothstep(uFogStart, uFogEnd, dist), 1.6);
-    col = mix(col, skyGradient(normalize(vWorldPos - uCamPos)), fogT);
+    vec3 col = shadeSurface(albedo, n, v, data.b, shadow, false);
+    col += albedo * data.a * 2.2;
+    col = applyDistanceFog(col, -toCam, dist);
     fragColor = vec4(col, 1.0);
 }`;
 

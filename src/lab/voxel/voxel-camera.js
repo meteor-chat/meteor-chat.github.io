@@ -1,5 +1,4 @@
-export function multiplyMat4(a, b) {
-    const out = new Float32Array(16);
+export function multiplyMat4(a, b, out = new Float32Array(16)) {
     for (let col = 0; col < 4; col += 1) {
         const b0 = b[col * 4];
         const b1 = b[col * 4 + 1];
@@ -13,33 +12,31 @@ export function multiplyMat4(a, b) {
     return out;
 }
 
-export const CAMERA_NEAR = 0.1;
+export const CAMERA_NEAR = 0.05;
 export const CAMERA_FAR = 450;
 
 export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_NEAR, far = CAMERA_FAR) {
-    const cp = Math.cos(pitch);
-    const sp = Math.sin(pitch);
-    const cy = Math.cos(yaw);
-    const sy = Math.sin(yaw);
+    const safePitch = Number.isFinite(pitch) ? pitch : 0;
+    const safeYaw = Number.isFinite(yaw) ? yaw : 0;
+    const cp = Math.cos(safePitch);
+    const sp = Math.sin(safePitch);
+    const cy = Math.cos(safeYaw);
+    const sy = Math.sin(safeYaw);
 
     const fx = cp * sy;
     const fy = sp;
     const fz = -cp * cy;
 
-    let rx = -fz;
-    let rz = fx;
-    const rLen = Math.hypot(rx, rz) || 1;
-    rx /= rLen;
-    rz /= rLen;
+    const rx = cy;
+    const rz = sy;
 
-    const ux = -fy * rz;
-    const uy = rz * fx - rx * fz;
-    const uz = fy * rx;
-    const uLen = Math.hypot(ux, uy, uz) || 1;
-    const up = [ux / uLen, uy / uLen, uz / uLen];
+    const ux = -sp * sy;
+    const uy = cp;
+    const uz = sp * cy;
 
     const forward = [fx, fy, fz];
     const right = [rx, 0, rz];
+    const up = [ux, uy, uz];
 
     const view = new Float32Array([
         right[0], up[0], -forward[0], 0,
@@ -51,22 +48,27 @@ export function buildCameraBasis(eye, yaw, pitch, fovRad, aspect, near = CAMERA_
         1
     ]);
 
-    const safeFov = Math.min(Math.PI * 0.985, Math.max(0.1, fovRad));
+    const rawFov = Number.isFinite(fovRad) ? fovRad : 1.22;
+    const safeFov = Math.min(Math.PI * 0.985, Math.max(0.1, rawFov));
+    const safeAspect = Number.isFinite(aspect) && aspect > 0.01 ? aspect : 1;
     const f = 1 / Math.tan(safeFov * 0.5);
     const nf = 1 / (near - far);
     const proj = new Float32Array([
-        f / aspect, 0, 0, 0,
+        f / safeAspect, 0, 0, 0,
         0, f, 0, 0,
         0, 0, (far + near) * nf, -1,
         0, 0, 2 * far * near * nf, 0
     ]);
 
+    const tanHalfY = Math.tan(safeFov * 0.5);
     return {
         viewProj: multiplyMat4(proj, view),
+        view,
+        proj,
         forward,
         right,
         up,
-        tanHalfFov: [Math.tan(safeFov * 0.5) * aspect, Math.tan(safeFov * 0.5)]
+        tanHalfFov: [tanHalfY * safeAspect, tanHalfY]
     };
 }
 

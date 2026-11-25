@@ -1,12 +1,14 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="/">
-<meta name="description" content="Voxel World Engine 3D Pure WebGL 2.0: Greedy Meshing, Ambient Occlusion, Flood-Fill Lighting, 3D DDA Raycasting, dan FBO Bloom di Meteor.">
+<meta name="description" content="Voxel World Engine 3D Pure WebGL 2.0: Greedy Meshing, Smooth Lighting, Biome Tinting, Villagers, Procedural Audio, Shadows, and Bloom in Meteor.">
 <title>Voxel World 3D - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
+<link rel="preload" href="./fonts/google-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./fonts/roboto-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="./styles/voxel.css">
 <link rel="stylesheet" href="./styles/voxel-settings.css">
 <link rel="stylesheet" href="./styles/voxel-guard.css">
@@ -14,7 +16,7 @@
 @font-face {
     font-family: "Google Sans";
     font-style: normal;
-    font-weight: 400 600 700;
+    font-weight: 400 600;
     font-display: swap;
     src: url("./fonts/google-sans-latin.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
@@ -22,22 +24,22 @@
 @font-face {
     font-family: "Roboto Mono";
     font-style: normal;
-    font-weight: 400 700;
+    font-weight: 400 600;
     font-display: swap;
     src: url("./fonts/roboto-mono-latin.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-* { letter-spacing: 0.25%; padding: 0; margin: 0; box-sizing: border-box; outline: none; }
+* { padding: 0; margin: 0; box-sizing: border-box; }
 body, a { font-family: "Google Sans", sans-serif; color: #ffffff; }
-body { background: #09131f; }
+body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 </style>
 </head>
 <body>
 <main id="voxel-app-root" class="voxel-page">
-    <canvas class="voxel-canvas" data-voxel-gl aria-label="Dunia Voxel 3D WebGL 2.0"></canvas>
+    <canvas class="voxel-canvas" data-voxel-gl aria-label="3D WebGL 2.0 Voxel World"></canvas>
     <div class="voxel-crosshair" aria-hidden="true"></div>
-    <div class="voxel-fallback" data-voxel-fallback hidden>Browser atau perangkat Anda tidak mendukung WebGL 2.0 untuk merender Voxel World Engine.</div>
-    <div class="voxel-fallback" data-voxel-context-lost role="status" hidden>Koneksi GPU terputus. Memulihkan dunia...</div>
+    <div class="voxel-fallback" data-voxel-fallback hidden>Your browser or device does not support WebGL 2.0 required to run Voxel World Engine.</div>
+    <div class="voxel-fallback" data-voxel-context-lost role="status" hidden>GPU context lost. Restoring world...</div>
 
     <header class="voxel-hud-top">
         <div class="voxel-brand">
@@ -56,51 +58,53 @@ body { background: #09131f; }
         </div>
     </header>
 
-    <section class="voxel-settings" id="voxel-settings" data-voxel-settings aria-label="Pengaturan" hidden>
+    <section class="voxel-settings" id="voxel-settings" data-voxel-settings aria-label="Settings" hidden>
         <div class="voxel-setting">
-            <span class="voxel-setting-title">Tampilan</span>
+            <span class="voxel-setting-title">Display</span>
             <div class="voxel-toggle-grid">
-                <button type="button" class="voxel-btn" data-voxel-ui-preset="clear" aria-pressed="false">Bersih</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="clear" aria-pressed="false">Clean</button>
                 <button type="button" class="voxel-btn" data-voxel-ui-preset="bar" aria-pressed="false">Bar</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-preset="stats" aria-pressed="false">Statistik</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-preset="full" aria-pressed="true">Penuh</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="stats" aria-pressed="false">Stats</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-preset="full" aria-pressed="true">Full</button>
             </div>
             <div class="voxel-toggle-grid">
-                <button type="button" class="voxel-btn" data-voxel-ui-toggle="stats" aria-pressed="true">Statistik</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-toggle="hotbar" aria-pressed="true">Bar Item</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-toggle="title" aria-pressed="true">Judul</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-toggle="stats" aria-pressed="true">Stats</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-toggle="hotbar" aria-pressed="true">Hotbar</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-toggle="title" aria-pressed="true">Title</button>
                 <button type="button" class="voxel-btn" data-voxel-ui-toggle="crosshair" aria-pressed="true">Crosshair</button>
             </div>
-            <span class="voxel-setting-hint">Item statistik</span>
+            <span class="voxel-setting-hint">Telemetry pills</span>
             <div class="voxel-toggle-grid">
                 <button type="button" class="voxel-btn" data-voxel-ui-item="fps" aria-pressed="true">FPS</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-item="coords" aria-pressed="true">Koordinat</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-item="chunks" aria-pressed="true">Chunk</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-item="coords" aria-pressed="true">Coords</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-item="chunks" aria-pressed="true">Chunks</button>
                 <button type="button" class="voxel-btn" data-voxel-ui-item="tris" aria-pressed="true">Tris</button>
-                <button type="button" class="voxel-btn" data-voxel-ui-item="scale" aria-pressed="true">Resolusi</button>
+                <button type="button" class="voxel-btn" data-voxel-ui-item="scale" aria-pressed="true">Scale</button>
                 <button type="button" class="voxel-btn" data-voxel-ui-item="gpu" aria-pressed="true">GPU</button>
             </div>
-            <button type="button" class="voxel-btn" data-voxel-ui-hideall aria-pressed="false">Sembunyikan Semua (F1)</button>
-            <span class="voxel-setting-hint">F1 semua, F3 statistik, H bar item</span>
+            <button type="button" class="voxel-btn" data-voxel-ui-hideall aria-pressed="false">Hide All HUD (F1)</button>
+            <span class="voxel-setting-hint">F1 hide all, F3 stats, H hotbar, E catalog</span>
         </div>
         <div class="voxel-setting">
-            <span class="voxel-setting-title">Kontrol</span>
+            <span class="voxel-setting-title">Controls</span>
             <div class="voxel-toggle-grid">
                 <button type="button" class="voxel-btn" data-voxel-lock>FPS Lock</button>
-                <button type="button" class="voxel-btn" data-voxel-fly aria-pressed="true">Mode: Fly</button>
+                <button type="button" class="voxel-btn" data-voxel-fly aria-pressed="false">Mode: Walk</button>
                 <button type="button" class="voxel-btn" data-voxel-action aria-pressed="false">Click: Break</button>
+                <button type="button" class="voxel-btn" data-voxel-audio aria-pressed="true">Audio: On</button>
+                <button type="button" class="voxel-btn" data-voxel-catalog-open>Blocks (E)</button>
             </div>
             <div class="voxel-toggle-grid">
                 <button type="button" class="voxel-btn" data-voxel-time="0.28" aria-pressed="true">Day</button>
                 <button type="button" class="voxel-btn" data-voxel-time="0.62" aria-pressed="false">Sunset</button>
                 <button type="button" class="voxel-btn" data-voxel-time="0.88" aria-pressed="false">Night</button>
                 <button type="button" class="voxel-btn" data-voxel-cycle aria-pressed="false">Auto</button>
-                <button type="button" class="voxel-btn" data-voxel-rain aria-pressed="false">Hujan</button>
+                <button type="button" class="voxel-btn" data-voxel-rain aria-pressed="false">Rain</button>
             </div>
         </div>
-        <span class="voxel-setting-title">Kamera dan Dunia</span>
+        <span class="voxel-setting-title">Camera &amp; World</span>
         <label class="voxel-setting">
-            <span class="voxel-setting-row"><span>Sensitivitas Mouse</span><span data-voxel-sens-val>1.0</span></span>
+            <span class="voxel-setting-row"><span>Mouse Sensitivity</span><span data-voxel-sens-val>1.0</span></span>
             <input type="range" min="0.2" max="3" step="0.1" value="1" data-voxel-sens>
         </label>
         <label class="voxel-setting">
@@ -108,31 +112,43 @@ body { background: #09131f; }
             <input type="range" min="50" max="120" step="1" value="70" data-voxel-fov>
         </label>
         <label class="voxel-setting">
-            <span class="voxel-setting-row"><span>Kunci Jam (1-24)</span><span data-voxel-hour-val>Jam 9</span></span>
+            <span class="voxel-setting-row"><span>Lock Hour (1-24)</span><span data-voxel-hour-val>Hour 9</span></span>
             <input type="range" min="1" max="24" step="1" value="9" data-voxel-hour>
         </label>
         <label class="voxel-setting">
-            <span class="voxel-setting-row"><span>Jarak Pandang</span><span data-voxel-dist-val>6 Chunk (96m)</span></span>
+            <span class="voxel-setting-row"><span>View Distance</span><span data-voxel-dist-val>6 Chunks (96m)</span></span>
             <input type="range" min="3" max="16" step="1" value="6" data-voxel-dist>
         </label>
         <div class="voxel-setting">
-            <span class="voxel-setting-row"><span>Resolusi Render</span><span data-voxel-res-val>Auto</span></span>
+            <span class="voxel-setting-row"><span>Render Resolution</span><span data-voxel-res-val>Auto</span></span>
             <div class="voxel-res-buttons">
                 <button type="button" class="voxel-btn voxel-res-btn" data-voxel-res-auto aria-pressed="true">Auto</button>
-                <button type="button" class="voxel-btn voxel-res-btn" data-voxel-res-lock aria-pressed="false">Kunci</button>
+                <button type="button" class="voxel-btn voxel-res-btn" data-voxel-res-lock aria-pressed="false">Lock</button>
             </div>
-            <input type="range" min="50" max="100" step="5" value="100" data-voxel-res-slider>
+            <input type="range" min="50" max="100" step="5" value="100" aria-label="Render Resolution" data-voxel-res-slider>
         </div>
-        <p class="voxel-setting-hint">Tahan Shift untuk berjalan pelan.</p>
-        <a href="/lab" class="voxel-back-link" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="" width="20" height="20"><span>Kembali ke Lab</span></a>
+        <button type="button" class="voxel-btn voxel-btn-danger" data-voxel-reset-world>Reset World Edits</button>
+        <p class="voxel-setting-hint">F or double-tap Space to fly. Shift to sneak, Ctrl or double-tap W to sprint, Middle-click to pick block.</p>
+        <a href="/lab" class="voxel-back-link" aria-label="Back to Lab"><img src="./assets/svg/back.svg" alt="" width="20" height="20"><span>Back to Lab</span></a>
     </section>
 
-    <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Pilihan Blok"></nav>
+    <div class="voxel-catalog" data-voxel-catalog role="dialog" aria-modal="true" aria-labelledby="voxel-catalog-title" hidden>
+        <div class="voxel-catalog-card">
+            <div class="voxel-catalog-head">
+                <h2 class="voxel-catalog-title" id="voxel-catalog-title">Block Catalog</h2>
+                <button type="button" class="voxel-btn" data-voxel-catalog-close aria-label="Close Block Catalog">Close (E)</button>
+            </div>
+            <p class="voxel-setting-hint">Select a block to assign it to your active hotbar slot.</p>
+            <div class="voxel-catalog-grid" data-voxel-catalog-grid></div>
+        </div>
+    </div>
+
+    <nav class="voxel-hotbar" data-voxel-hotbar aria-label="Block Hotbar"></nav>
 </main>
-<div class="voxel-guard" role="alertdialog" aria-labelledby="voxel-guard-title" aria-describedby="voxel-guard-text" data-voxel-mobile-guard hidden>
-    <h2 class="voxel-guard-title" id="voxel-guard-title">Hanya untuk Desktop</h2>
-    <p class="voxel-guard-text" id="voxel-guard-text">Voxel World membutuhkan keyboard dan mouse. Silakan buka halaman ini dari komputer desktop atau laptop.</p>
-    <a href="/lab" class="voxel-guard-back" aria-label="Kembali ke Lab"><img src="./assets/svg/back.svg" alt="" width="28" height="28"><span>Kembali ke Lab</span></a>
+<div class="voxel-guard" role="alertdialog" aria-modal="true" aria-labelledby="voxel-guard-title" aria-describedby="voxel-guard-text" data-voxel-mobile-guard hidden>
+    <h2 class="voxel-guard-title" id="voxel-guard-title">Desktop Only</h2>
+    <p class="voxel-guard-text" id="voxel-guard-text">Voxel World requires a keyboard and mouse. Please open this page on a desktop computer or laptop.</p>
+    <a href="/lab" class="voxel-guard-back" aria-label="Back to Lab"><img src="./assets/svg/back.svg" alt="" width="28" height="28"><span>Back to Lab</span></a>
 </div>
 <script type="module">
 import { isUnsupportedDevice } from "./src/lab/voxel/voxel-device-guard.js";
@@ -140,8 +156,14 @@ const root = document.getElementById("voxel-app-root");
 const guard = document.querySelector("[data-voxel-mobile-guard]");
 if (isUnsupportedDevice(window)) {
     if (guard) guard.hidden = false;
+    if (root) root.inert = true;
 } else if (root) {
-    import("./src/lab/voxel/voxel-controller.js").then((mod) => mod.createVoxelApp(root));
+    import("./src/lab/voxel/voxel-controller.js")
+        .then((mod) => mod.createVoxelApp(root))
+        .catch(() => {
+            const fallback = root.querySelector("[data-voxel-fallback]");
+            if (fallback) fallback.hidden = false;
+        });
 }
 </script>
 </body>

@@ -49,8 +49,10 @@ export function createQualityController(options = {}) {
     };
 
     const reset = () => {
+        scale = cfg.maxScale;
         emaMs = 16.7;
         sinceChange = -cfg.warmupSec;
+        probeSec = cfg.baseProbeSec;
         probing = false;
     };
 

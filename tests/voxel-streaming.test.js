@@ -31,13 +31,18 @@ describe("Voxel neighbor-aware meshing", () => {
         StubWorker.last = null;
     });
 
-    it("reports a missing in-view neighbor but ignores neighbors beyond the view radius", () => {
+    it("reports a missing in-view neighbor including diagonals but ignores neighbors beyond the view radius", () => {
         const columns = new Map([["0,0", {}], ["1,0", {}]]);
         const center = { cx: 0, cz: 0 };
         expect(isAwaitingNeighbor(columns, 0, 0, center, 1)).toBe(true);
         columns.set("-1,0", {});
         columns.set("0,1", {});
         columns.set("0,-1", {});
+        expect(isAwaitingNeighbor(columns, 0, 0, center, 1)).toBe(true);
+        columns.set("1,1", {});
+        columns.set("1,-1", {});
+        columns.set("-1,1", {});
+        columns.set("-1,-1", {});
         expect(isAwaitingNeighbor(columns, 0, 0, center, 1)).toBe(false);
         expect(isAwaitingNeighbor(new Map(), 1, 0, center, 1)).toBe(true);
         expect(isAwaitingNeighbor(new Map(), 5, 5, center, 1)).toBe(false);

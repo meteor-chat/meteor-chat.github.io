@@ -1,9 +1,10 @@
 import { MAX_CATS } from "./voxel-mob-cat-model.js";
 import { MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
+import { MAX_VILLAGERS } from "./voxel-mob-villager-model.js";
 
 export const BLOB_FLOATS_PER_VERTEX = 6;
 export const BLOB_VERTS_PER_CAT = 6;
-export const BLOB_TOTAL_MOBS = MAX_CATS + MAX_CHICKENS;
+export const BLOB_TOTAL_MOBS = MAX_CATS + MAX_CHICKENS + MAX_VILLAGERS;
 
 const BLOB_STRENGTH = 0.46;
 const BLOB_LIFT = 0.02;
@@ -11,6 +12,7 @@ const HALF_LENGTH = 0.55;
 const HALF_WIDTH = 0.34;
 const CHICKEN_HALF_LENGTH = 0.28;
 const CHICKEN_HALF_WIDTH = 0.24;
+const VILLAGER_HALF_SIZE = 0.36;
 const SIT_SHRINK = 0.2;
 const FADE_HEIGHT = 2.5;
 const DRAW_DISTANCE = 96;
@@ -30,19 +32,29 @@ function fogFade(distance, fog) {
     return 1 - t * t * (3 - 2 * t);
 }
 
-export function blobAlpha(cat, distance, sunPower, fog) {
-    const ground = cat.groundY === undefined ? cat.pos[1] : cat.groundY;
-    const height = Math.max(0, cat.pos[1] - ground);
+export function blobAlpha(mob, distance, sunPower, fog, rainIntensity = 0) {
+    const ground = mob.groundY === undefined ? mob.pos[1] : mob.groundY;
+    const height = Math.max(0, mob.pos[1] - ground);
     const lift = clamp01(1 - height / FADE_HEIGHT);
-    return BLOB_STRENGTH * sunPower * lift * fogFade(distance, fog);
+    const skyAtten = Math.max(0.2, mob.sky === undefined ? 1 : mob.sky);
+    const rainAtten = 1 - clamp01(rainIntensity) * 0.72;
+    return BLOB_STRENGTH * sunPower * lift * fogFade(distance, fog) * skyAtten * rainAtten;
 }
 
 function writeBlob(stage, cursor, mob, alpha) {
     const ground = mob.groundY === undefined ? mob.pos[1] : mob.groundY;
-    const isChicken = mob.kind === "chicken";
-    const hw = isChicken ? CHICKEN_HALF_WIDTH : HALF_WIDTH;
-    const hl = isChicken ? CHICKEN_HALF_LENGTH : HALF_LENGTH;
-    const scale = isChicken ? 1 : 1 - SIT_SHRINK * (mob.anim ? mob.anim.sit : 0);
+    let hw = HALF_WIDTH;
+    let hl = HALF_LENGTH;
+    let scale = 1 - SIT_SHRINK * (mob.anim && mob.anim.sit ? mob.anim.sit : 0);
+    if (mob.kind === "chicken") {
+        hw = CHICKEN_HALF_WIDTH;
+        hl = CHICKEN_HALF_LENGTH;
+        scale = 1;
+    } else if (mob.kind === "villager") {
+        hw = VILLAGER_HALF_SIZE;
+        hl = VILLAGER_HALF_SIZE;
+        scale = 1;
+    }
     const c = Math.cos(mob.yaw);
     const s = Math.sin(mob.yaw);
     let o = cursor;
@@ -60,21 +72,29 @@ function writeBlob(stage, cursor, mob, alpha) {
     return o;
 }
 
-export function fillBlobStage(mobs, eye, sunPower, fog, stage) {
+export function fillBlobStage(mobs, eye, sunPower, fog, stage, rainIntensity = 0) {
     let cursor = 0;
     let count = 0;
     let catCount = 0;
     let chickenCount = 0;
+    let villagerCount = 0;
     if (sunPower <= 0.001) return { count, floats: cursor };
     for (const mob of mobs) {
-        const isChicken = mob.kind === "chicken";
-        if (isChicken ? chickenCount >= MAX_CHICKENS : catCount >= MAX_CATS) continue;
+        const kind = mob.kind;
+        if (kind === "chicken") {
+            if (chickenCount >= MAX_CHICKENS) continue;
+        } else if (kind === "villager") {
+            if (villagerCount >= MAX_VILLAGERS) continue;
+        } else if (catCount >= MAX_CATS) {
+            continue;
+        }
         const distance = Math.hypot(mob.pos[0] - eye[0], mob.pos[1] - eye[1], mob.pos[2] - eye[2]);
         if (distance > DRAW_DISTANCE) continue;
-        const alpha = blobAlpha(mob, distance, sunPower, fog);
+        const alpha = blobAlpha(mob, distance, sunPower, fog, rainIntensity);
         if (alpha <= 0.002) continue;
         cursor = writeBlob(stage, cursor, mob, alpha);
-        if (isChicken) chickenCount += 1;
+        if (kind === "chicken") chickenCount += 1;
+        else if (kind === "villager") villagerCount += 1;
         else catCount += 1;
         count += 1;
     }
@@ -101,8 +121,8 @@ export function destroyBlobGeometry(gl, geometry) {
     gl.deleteBuffer(geometry.buf);
 }
 
-export function drawBlobShadows(gl, res, cam, cats, eye, shading) {
-    const filled = fillBlobStage(cats, eye, shading.sunPower, shading.fog, res.blobGeo.stage);
+export function drawBlobShadows(gl, res, cam, mobs, eye, shading) {
+    const filled = fillBlobStage(mobs, eye, shading.sunPower, shading.fog, res.blobGeo.stage, shading.rainIntensity || 0);
     if (filled.count === 0) return NO_DRAW;
     const { program, u } = res.blob;
     gl.useProgram(program);

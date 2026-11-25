@@ -43,7 +43,7 @@ export function buildShadowFrame(center, sunDir, radius, mapSize) {
     return { viewProj, center: snapped, texel, radius, mapSize };
 }
 
-export function createShadowController({ radius, mapSize, recenterDist = 12, minFrames = 45 }) {
+export function createShadowController({ radius, mapSize, recenterDist = 12, minFrames = 4 }) {
     let frame = null;
     let anchor = null;
     let lastSun = null;

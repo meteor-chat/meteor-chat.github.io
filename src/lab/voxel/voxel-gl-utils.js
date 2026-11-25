@@ -12,7 +12,13 @@ export function compileGlShader(gl, type, src) {
 
 export function linkProgram(gl, vsSrc, fsSrc) {
     const vs = compileGlShader(gl, gl.VERTEX_SHADER, vsSrc);
-    const fs = compileGlShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+    let fs = null;
+    try {
+        fs = compileGlShader(gl, gl.FRAGMENT_SHADER, fsSrc);
+    } catch (error) {
+        gl.deleteShader(vs);
+        throw error;
+    }
     const prog = gl.createProgram();
     gl.attachShader(prog, vs);
     gl.attachShader(prog, fs);
@@ -20,7 +26,9 @@ export function linkProgram(gl, vsSrc, fsSrc) {
     gl.deleteShader(vs);
     gl.deleteShader(fs);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-        throw new Error(gl.getProgramInfoLog(prog) || "Program link error");
+        const err = gl.getProgramInfoLog(prog) || "Program link error";
+        gl.deleteProgram(prog);
+        throw new Error(err);
     }
     return prog;
 }
@@ -108,6 +116,13 @@ export function createFboTarget(gl, w, h, useFloat, withDepth) {
     if (withDepth) {
         depthTex = createDepthTexture(gl, w, h);
         gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
+    }
+    if (useFloat && typeof gl.checkFramebufferStatus === "function") {
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        if (typeof status === "number" && status !== gl.FRAMEBUFFER_COMPLETE) {
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        }
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return { fbo, tex, depthTex, w, h };

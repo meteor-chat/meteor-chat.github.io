@@ -67,7 +67,16 @@ export function orderDirtyColumns(dirtySubs, pcx, pcz) {
     return list.sort((a, b) => a.d2 - b.d2);
 }
 
-const NEIGHBOR_STEPS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+const NEIGHBOR_STEPS = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+    [1, 1],
+    [1, -1],
+    [-1, 1],
+    [-1, -1]
+];
 
 export function isAwaitingNeighbor(columns, cx, cz, center, radius) {
     for (const [dx, dz] of NEIGHBOR_STEPS) {

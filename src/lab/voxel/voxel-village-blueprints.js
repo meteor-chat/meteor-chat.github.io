@@ -20,7 +20,7 @@ export function buildFountain(ox, oy, oz) {
     for (let y = 0; y <= 3; y += 1) {
         addBlock(list, ox, oy + y, oz, BLOCK.STONE_BRICK);
     }
-    addBlock(list, ox, oy + 4, oz, BLOCK.WATER);
+    addBlock(list, ox, oy + 4, oz, BLOCK.TORCH);
     for (const cx of [-3, 3]) {
         for (const cz of [-3, 3]) {
             addBlock(list, ox + cx, oy + 1, oz + cz, BLOCK.STONE_BRICK);
@@ -30,18 +30,18 @@ export function buildFountain(ox, oy, oz) {
     return list;
 }
 
-export function buildCottage(ox, oy, oz, w = 6, d = 6, chimney = true) {
+export function buildCottage(ox, oy, oz, w = 6, d = 6, chimney = true, doorSide = "south") {
     const list = [];
+    const doorX = Math.floor(w / 2);
+    const doorZ = Math.floor(d / 2);
+
     for (let x = 0; x < w; x += 1) {
         for (let z = 0; z < d; z += 1) {
-            addBlock(list, ox + x, oy, oz + z, BLOCK.STONE_BRICK);
+            const isEdge = x === 0 || x === w - 1 || z === 0 || z === d - 1;
+            addBlock(list, ox + x, oy, oz + z, isEdge ? BLOCK.STONE_BRICK : BLOCK.WOOD_PLANKS);
         }
     }
-    for (let x = 1; x < w - 1; x += 1) {
-        for (let z = 1; z < d - 1; z += 1) {
-            addBlock(list, ox + x, oy + 1, oz + z, BLOCK.WOOD_PLANKS);
-        }
-    }
+
     for (let y = 1; y <= 3; y += 1) {
         for (let x = 0; x < w; x += 1) {
             for (let z = 0; z < d; z += 1) {
@@ -49,19 +49,27 @@ export function buildCottage(ox, oy, oz, w = 6, d = 6, chimney = true) {
                 const isEdgeZ = z === 0 || z === d - 1;
                 if (!isEdgeX && !isEdgeZ) continue;
                 const isCorner = isEdgeX && isEdgeZ;
+                const isDoor =
+                    (y === 1 || y === 2) &&
+                    ((doorSide === "north" && z === 0 && x === doorX) ||
+                        (doorSide === "south" && z === d - 1 && x === doorX) ||
+                        (doorSide === "west" && x === 0 && z === doorZ) ||
+                        (doorSide === "east" && x === w - 1 && z === doorZ));
+                if (isDoor) {
+                    addBlock(list, ox + x, oy + y, oz + z, BLOCK.AIR);
+                    continue;
+                }
                 let id = BLOCK.PLASTER;
                 if (isCorner) {
                     id = BLOCK.WOOD;
-                } else if (y === 2 && ((isEdgeX && z === 2) || (isEdgeZ && x === 2))) {
+                } else if (y === 2 && ((isEdgeX && z === doorZ) || (isEdgeZ && x === doorX))) {
                     id = BLOCK.GLASS;
-                }
-                if (z === 0 && x === Math.floor(w / 2) && (y === 1 || y === 2)) {
-                    id = BLOCK.AIR;
                 }
                 addBlock(list, ox + x, oy + y, oz + z, id);
             }
         }
     }
+
     for (let x = 0; x < w; x += 1) {
         for (let z = 0; z < d; z += 1) {
             if (x === 0 || x === w - 1 || z === 0 || z === d - 1) {
@@ -69,7 +77,12 @@ export function buildCottage(ox, oy, oz, w = 6, d = 6, chimney = true) {
             }
         }
     }
-    addBlock(list, ox + Math.floor(w / 2), oy + 3, oz + Math.floor(d / 2), BLOCK.TORCH);
+
+    addBlock(list, ox + 1, oy + 1, oz + 1, BLOCK.WOOD);
+    addBlock(list, ox + 1, oy + 2, oz + 1, BLOCK.TORCH);
+    addBlock(list, ox + w - 2, oy + 1, oz + d - 2, BLOCK.WOOD);
+    addBlock(list, ox + w - 2, oy + 2, oz + d - 2, BLOCK.TORCH);
+
     for (let step = 0; step <= 2; step += 1) {
         const ry = oy + 4 + step;
         const minZ = oz - 1 + step;
@@ -86,18 +99,15 @@ export function buildCottage(ox, oy, oz, w = 6, d = 6, chimney = true) {
             }
         }
     }
-    for (let step = 0; step < 2; step += 1) {
-        const ry = oy + 5 + step;
-        const minZ = oz + 1 + step;
-        const maxZ = oz + d - 2 - step;
-        for (const edgeX of [ox, ox + w - 1]) {
-            for (let z = minZ; z <= maxZ; z += 1) {
-                addBlock(list, edgeX, ry, z, BLOCK.PLASTER);
-            }
+
+    for (const edgeX of [ox, ox + w - 1]) {
+        for (let z = oz + 1; z <= oz + d - 2; z += 1) {
+            addBlock(list, edgeX, oy + 5, z, BLOCK.PLASTER);
         }
     }
+
     if (chimney) {
-        const cx = ox + w - 1;
+        const cx = doorSide === "east" ? ox : ox + w - 1;
         const cz = oz + Math.floor(d / 2);
         for (let y = 0; y <= 7; y += 1) {
             addBlock(list, cx, oy + y, cz, BLOCK.COBBLESTONE);
@@ -128,6 +138,14 @@ export function buildWindmill(ox, oy, oz) {
             }
         }
     }
+    for (let x = 1; x < size - 1; x += 1) {
+        for (let z = 1; z < size - 1; z += 1) {
+            if (x === 1 && z === 1) continue;
+            addBlock(list, ox + x, oy + 5, oz + z, BLOCK.WOOD_PLANKS);
+        }
+    }
+    addBlock(list, ox + 3, oy + 1, oz + 3, BLOCK.WOOD);
+    addBlock(list, ox + 3, oy + 2, oz + 3, BLOCK.TORCH);
     for (let y = 5; y <= 9; y += 1) {
         for (let x = 0; x < size; x += 1) {
             for (let z = 0; z < size; z += 1) {
@@ -168,6 +186,7 @@ export function buildWindmill(ox, oy, oz) {
         addBlock(list, hx, hy - d, hz, BLOCK.WOOD_PLANKS);
     }
     for (const [bx, bz] of [[ox - 1, oz + 1], [ox - 1, oz + 2], [ox - 2, oz + 1]]) {
+        addBlock(list, bx, oy, bz, BLOCK.COBBLESTONE);
         addBlock(list, bx, oy + 1, bz, BLOCK.HAY_BALE);
     }
     addBlock(list, ox - 1, oy + 2, oz + 1, BLOCK.HAY_BALE);
@@ -192,13 +211,22 @@ export function buildTower(ox, oy, oz) {
                 if ((y === 3 || y === 6) && (x === 2 || z === 2)) {
                     id = BLOCK.GLASS;
                 }
-                if (z === 0 && x === 2 && (y === 1 || y === 2)) {
+                if (x === 0 && z === 2 && (y === 1 || y === 2)) {
                     id = BLOCK.AIR;
                 }
                 addBlock(list, ox + x, oy + y, oz + z, id);
             }
         }
     }
+    for (let x = 1; x < size - 1; x += 1) {
+        for (let z = 1; z < size - 1; z += 1) {
+            if (x === 3 && z === 3) continue;
+            addBlock(list, ox + x, oy + 4, oz + z, BLOCK.WOOD_PLANKS);
+            addBlock(list, ox + x, oy + 9, oz + z, BLOCK.WOOD_PLANKS);
+        }
+    }
+    addBlock(list, ox + 3, oy + 1, oz + 1, BLOCK.WOOD);
+    addBlock(list, ox + 3, oy + 2, oz + 1, BLOCK.TORCH);
     for (let x = -1; x <= size; x += 1) {
         for (let z = -1; z <= size; z += 1) {
             const edge = x === -1 || x === size || z === -1 || z === size;
@@ -214,6 +242,7 @@ export function buildTower(ox, oy, oz) {
             }
         }
     }
+    addBlock(list, ox + 2, oy + 10, oz + 2, BLOCK.STONE_BRICK);
     addBlock(list, ox + 2, oy + 11, oz + 2, BLOCK.TORCH);
     for (let x = 0; x < size; x += 1) {
         for (let z = 0; z < size; z += 1) {
@@ -253,7 +282,9 @@ export function buildFarm(ox, oy, oz, w = 6, d = 7) {
         addBlock(list, ox + lx, oy + 2, oz + lz, BLOCK.WOOD);
         addBlock(list, ox + lx, oy + 3, oz + lz, BLOCK.TORCH);
     }
+    addBlock(list, ox + w, oy, oz + 1, BLOCK.COBBLESTONE);
     addBlock(list, ox + w, oy + 1, oz + 1, BLOCK.HAY_BALE);
+    addBlock(list, ox + w, oy, oz + 2, BLOCK.COBBLESTONE);
     addBlock(list, ox + w, oy + 1, oz + 2, BLOCK.HAY_BALE);
     return list;
 }
@@ -268,7 +299,9 @@ export function buildArchBridge(ox, oy, oz, length = 7) {
             addBlock(list, ox + dx, y, bz, dx === 0 ? BLOCK.COBBLESTONE : BLOCK.STONE_BRICK);
             addBlock(list, ox + dx, y - 1, bz, BLOCK.STONE_BRICK);
         }
+        addBlock(list, ox - 2, y, bz, BLOCK.STONE_BRICK);
         addBlock(list, ox - 2, y + 1, bz, BLOCK.STONE_BRICK);
+        addBlock(list, ox + 2, y, bz, BLOCK.STONE_BRICK);
         addBlock(list, ox + 2, y + 1, bz, BLOCK.STONE_BRICK);
     }
     return list;

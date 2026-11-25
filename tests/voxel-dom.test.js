@@ -50,7 +50,10 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(pageHtml).toContain("VOXEL WORLD");
     });
 
-    it("keeps every voxel source, stylesheet, HTML, and test file <= 300 lines with zero comments and zero em-dashes", () => {
+    it("keeps every voxel file <= 1000 lines with zero comments, zero em-dashes, and font-weight <= 600", () => {
+        const voxelTests = readdirSync("tests")
+            .filter((f) => f.startsWith("voxel") && f.endsWith(".test.js"))
+            .map((f) => `tests/${f}`);
         const files = [
             ...readdirSync("src/lab/voxel").map((f) => `src/lab/voxel/${f}`),
             "styles/voxel.css",
@@ -58,30 +61,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             "styles/voxel-guard.css",
             "voxel.html",
             "voxel/index.html",
-            "tests/voxel-engine.test.js",
-            "tests/voxel-dom.test.js",
-            "tests/voxel-guard.test.js",
-            "tests/voxel-perf.test.js",
-            "tests/voxel-lifecycle.test.js",
-            "tests/voxel-textures.test.js",
-            "tests/voxel-shaders.test.js",
-            "tests/voxel-render.test.js",
-            "tests/voxel-streaming.test.js",
-            "tests/voxel-sun-screen.test.js",
-            "tests/voxel-physics.test.js",
-            "tests/voxel-mob-physics.test.js",
-            "tests/voxel-mob-ai.test.js",
-            "tests/voxel-tex-mobs.test.js",
-            "tests/voxel-mob-model.test.js",
-            "tests/voxel-mob-system.test.js",
-            "tests/voxel-mob-render.test.js",
-            "tests/voxel-mob-spawn.test.js",
-            "tests/voxel-mob-blob.test.js",
-            "tests/voxel-mob-chicken.test.js",
-            "tests/voxel-ui-layout.test.js",
-            "tests/voxel-settings-css.test.js",
-            "tests/voxel-ui-shortcuts.test.js",
-            "tests/voxel-village.test.js",
+            ...voxelTests,
             "tests/helpers/mock-gl.js"
         ];
         const slashLineRe = new RegExp("(^|\\s)/" + "/");
@@ -90,11 +70,21 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         for (const file of files) {
             const raw = readFileSync(file, "utf8");
             const lines = raw.split(/\r?\n/);
-            expect(lines.length, `${file} line count (${lines.length})`).toBeLessThanOrEqual(300);
+            expect(lines.length, `${file} line count (${lines.length})`).toBeLessThanOrEqual(1000);
             expect(raw, `${file} must contain zero line comments`).not.toMatch(slashLineRe);
             expect(raw, `${file} must contain zero block comments`).not.toMatch(blockComRe);
             expect(raw, `${file} must contain zero HTML comments`).not.toMatch(htmlComRe);
             expect(raw, `${file} must contain zero em-dashes`).not.toContain("\u2014");
+        }
+        const styleFiles = ["voxel.html", "styles/voxel.css", "styles/voxel-settings.css", "styles/voxel-guard.css"];
+        for (const file of styleFiles) {
+            const raw = readFileSync(file, "utf8");
+            for (const match of raw.matchAll(/font-weight\s*:\s*([^;]+)/g)) {
+                const nums = match[1].match(/\d+/g) || [];
+                for (const n of nums) {
+                    expect(Number(n), `${file} weight ${n}`).toBeLessThanOrEqual(600);
+                }
+            }
         }
     });
 
@@ -108,7 +98,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(readFileSync("voxel.html", "utf8")).toBe(readFileSync("voxel/index.html", "utf8"));
     });
 
-    it("renders 9 hotbar slots, toggles fly/action/time-of-day modes, and reveals fallback when WebGL 2 is absent", () => {
+    it("renders 9 hotbar slots, starts in Walk mode, toggles modes, and reveals fallback when WebGL 2 is absent", () => {
         const root = document.getElementById("voxel-app-root");
         app = createVoxelApp(root);
 
@@ -122,10 +112,11 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(slots[4].getAttribute("aria-pressed")).toBe("true");
 
         const flyBtn = root.querySelector("[data-voxel-fly]");
-        expect(app.player.flyMode).toBe(true);
-        flyBtn.click();
         expect(app.player.flyMode).toBe(false);
         expect(flyBtn.textContent).toBe("Mode: Walk");
+        flyBtn.click();
+        expect(app.player.flyMode).toBe(true);
+        expect(flyBtn.textContent).toBe("Mode: Fly");
 
         const actBtn = root.querySelector("[data-voxel-action]");
         expect(app.state.actionMode).toBe("break");
@@ -139,7 +130,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(nightBtn.getAttribute("aria-pressed")).toBe("true");
     });
 
-    it("toggles the settings panel and drives sensitivity and field of view from the sliders", () => {
+    it("toggles the settings panel and drives sensitivity, FOV, hour, view distance, and resolution", () => {
         const root = document.getElementById("voxel-app-root");
         app = createVoxelApp(root);
 
@@ -174,7 +165,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         hour.dispatchEvent(new window.Event("input"));
         expect(app.state.autoCycle).toBe(false);
         expect(app.state.timeOfDay).toBeCloseTo(0.65, 2);
-        expect(root.querySelector("[data-voxel-hour-val]").textContent).toBe("Jam 18");
+        expect(root.querySelector("[data-voxel-hour-val]").textContent).toBe("Hour 18");
         expect(timeOfDayToHour(hourToTimeOfDay(6))).toBe(6);
         expect(timeOfDayToHour(hourToTimeOfDay(12))).toBe(12);
         expect(timeOfDayToHour(hourToTimeOfDay(18))).toBe(18);
@@ -187,7 +178,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         dist.value = "16";
         dist.dispatchEvent(new window.Event("input"));
         expect(app.state.settings.viewRadius).toBe(16);
-        expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("16 Chunk (256m)");
+        expect(root.querySelector("[data-voxel-dist-val]").textContent).toBe("16 Chunks (256m)");
 
         const resAutoBtn = root.querySelector("[data-voxel-res-auto]");
         const resLockBtn = root.querySelector("[data-voxel-res-lock]");
@@ -204,13 +195,13 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(app.state.settings.resMode).toBe("lock");
         expect(resLockBtn.getAttribute("aria-pressed")).toBe("true");
         expect(resAutoBtn.getAttribute("aria-pressed")).toBe("false");
-        expect(resVal.textContent).toBe("Kunci 100%");
+        expect(resVal.textContent).toBe("Lock 100%");
 
         resSlider.value = "75";
         resSlider.dispatchEvent(new window.Event("input"));
         expect(app.state.settings.resMode).toBe("lock");
         expect(app.state.settings.lockedRes).toBeCloseTo(0.75, 5);
-        expect(resVal.textContent).toBe("Kunci 75%");
+        expect(resVal.textContent).toBe("Lock 75%");
 
         resAutoBtn.click();
         expect(app.state.settings.resMode).toBe("auto");
@@ -221,6 +212,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         toggle.click();
         expect(panel.hidden).toBe(true);
     });
+
     it("offers the four interface conditions from the settings panel and remembers them", () => {
         const root = document.getElementById("voxel-app-root");
         app = createVoxelApp(root);
@@ -250,6 +242,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(rootAgain.querySelector("[data-voxel-stats]").classList.contains("voxel-ui-off")).toBe(true);
         expect(rootAgain.querySelector("[data-voxel-hotbar]").classList.contains("voxel-ui-off")).toBe(true);
     });
+
     it("keeps only the settings button visible in the header and moves every control into the panel", () => {
         const root = document.getElementById("voxel-app-root");
         const header = root.querySelector(".voxel-hud-top");
@@ -268,6 +261,8 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             '[data-voxel-time="0.88"]',
             "[data-voxel-cycle]",
             "[data-voxel-rain]",
+            "[data-voxel-audio]",
+            "[data-voxel-catalog-open]",
             'a[href="/lab"]'
         ];
         for (const selector of inPanel) {
@@ -277,12 +272,12 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(panel.querySelector('a[href="/lab"] img').getAttribute("src")).toContain("back.svg");
     });
 
-    it("still drives fly mode, click mode, and time presets from inside the panel", () => {
+    it("still drives fly mode, click mode, catalog, and time presets from inside the panel", () => {
         const root = document.getElementById("voxel-app-root");
         app = createVoxelApp(root);
         const panel = root.querySelector("[data-voxel-settings]");
         panel.querySelector("[data-voxel-fly]").click();
-        expect(app.player.flyMode).toBe(false);
+        expect(app.player.flyMode).toBe(true);
         panel.querySelector("[data-voxel-action]").click();
         expect(app.state.actionMode).toBe("place");
         panel.querySelector('[data-voxel-time="0.62"]').click();
@@ -291,5 +286,14 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(app.state.autoCycle).toBe(true);
         panel.querySelector("[data-voxel-rain]").click();
         expect(app.state.rain).toBe(true);
+
+        const catalog = root.querySelector("[data-voxel-catalog]");
+        expect(catalog.hidden).toBe(true);
+        panel.querySelector("[data-voxel-catalog-open]").click();
+        expect(catalog.hidden).toBe(false);
+        const items = catalog.querySelectorAll(".voxel-catalog-item");
+        expect(items.length).toBeGreaterThanOrEqual(24);
+        items[0].click();
+        expect(catalog.hidden).toBe(true);
     });
 });

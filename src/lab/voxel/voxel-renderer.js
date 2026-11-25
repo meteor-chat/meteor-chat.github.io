@@ -11,14 +11,19 @@ import {
 import { createMeshStore } from "./voxel-mesh-store.js";
 import { drawBlobShadows, sunPowerOf } from "./voxel-mob-blob.js";
 import { drawMobs } from "./voxel-mob-render.js";
-import { createShadowController } from "./voxel-shadow-math.js";
+import { buildShadowFrame, createShadowController } from "./voxel-shadow-math.js";
 import { projectSunToScreen, raysStrength } from "./voxel-sun-screen.js";
 import { drawShadowMap } from "./voxel-shadow-pass.js";
 import {
+    beginCutoutPass,
     beginMobPass,
     beginWorldPass,
     blitSceneDepth,
+    drawCrack,
+    drawCutout,
+    drawHand,
     drawOpaque,
+    drawParticles,
     drawPostFx,
     drawSky,
     drawTranslucent,
@@ -38,7 +43,9 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
     let res = createGpuResources(gl, atlas);
     const store = createMeshStore(gl, hooks.store);
     const fogRange = hooks.fogRange ? [...hooks.fogRange] : [...DEFAULT_FOG];
-    const shadowCtl = createShadowController({ radius: hooks.shadowRadius || DEFAULT_SHADOW_RADIUS, mapSize: SHADOW_MAP_SIZE });
+    const shadowRadius = hooks.shadowRadius || DEFAULT_SHADOW_RADIUS;
+    const shadowCtl = createShadowController({ radius: shadowRadius, mapSize: SHADOW_MAP_SIZE });
+    let lastShadowFrame = null;
     let timer = createGpuTimer(gl);
     let targets = null;
     let lost = false;
@@ -86,6 +93,7 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
         }
         timer = createGpuTimer(gl);
         shadowCtl.invalidate();
+        lastShadowFrame = null;
         lost = false;
         if (hooks.onContextRestored) hooks.onContextRestored();
     };
@@ -94,13 +102,17 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
     canvas.addEventListener("webglcontextrestored", onContextRestored);
 
     const uploadMeshUpdate = (cx, cz, subs, urgent = false) => {
+        if (lost) return;
         if (urgent) shadowCtl.forceNext();
         store.queue(cx, cz, subs, urgent);
     };
-    const flushUploads = () => store.flush(true);
-    const unloadColumn = (cx, cz) => store.unloadColumn(cx, cz);
+    const flushUploads = () => (lost ? { uploads: 0, bytes: 0, remaining: 0 } : store.flush(true));
+    const unloadColumn = (cx, cz) => {
+        if (lost) return;
+        store.unloadColumn(cx, cz);
+    };
 
-    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater, mobs = [], rainIntensity = 0) => {
+    const renderFrame = (cam, eye, timeSec, timeOfDay, targetHit, underwater, mobs = [], rainIntensity = 0, fx = null) => {
         const w = canvas.width;
         const h = canvas.height;
         if (lost || w < 2 || h < 2 || gl.isContextLost()) return EMPTY_STATS;
@@ -110,68 +122,117 @@ export function createVoxelRenderer(canvas, atlas, hooks = {}) {
             timer.poll();
             timer.begin();
         }
-        const upload = store.flush();
-        const rawAtmo = computeSkyAtmosphere(timeOfDay, rainIntensity);
-        const atmo = linearizeAtmosphere(rawAtmo);
-        const shadow = shadowCtl.update(rawAtmo.sunDir, eye, store.version());
-        if (shadow.refresh && rawAtmo.sunDir[1] > -0.05) {
-            const casters = store.collectOpaque(extractFrustumPlanes(shadow.frame.viewProj));
-            drawShadowMap(gl, res, shadow.frame, casters);
+        try {
+            const upload = store.flush();
+            const rawAtmo = computeSkyAtmosphere(timeOfDay, rainIntensity);
+            const atmo = linearizeAtmosphere(rawAtmo);
+            let shadowFrame = lastShadowFrame;
+            if (rawAtmo.sunDir[1] > -0.05) {
+                const shadow = shadowCtl.update(rawAtmo.sunDir, eye, store.version());
+                shadowFrame = shadow.frame;
+                lastShadowFrame = shadowFrame;
+                if (shadow.refresh) {
+                    const sPlanes = extractFrustumPlanes(shadowFrame.viewProj);
+                    const casters = store.collectOpaque(sPlanes);
+                    const cutCasters = store.collectCutout(sPlanes);
+                    drawShadowMap(gl, res, shadowFrame, casters, cutCasters, timeSec);
+                }
+            } else if (!shadowFrame) {
+                shadowFrame = buildShadowFrame(eye, rawAtmo.sunDir, shadowRadius, SHADOW_MAP_SIZE);
+                lastShadowFrame = shadowFrame;
+            }
+
+            const planes = extractFrustumPlanes(cam.viewProj);
+            const visible = store.collectVisible(planes, eye);
+
+            gl.bindFramebuffer(gl.FRAMEBUFFER, targets.scene.fbo);
+            gl.viewport(0, 0, w, h);
+            gl.clearColor(atmo.horizonColor[0], atmo.horizonColor[1], atmo.horizonColor[2], 1);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            const curFog = [
+                fogRange[0] * (1 - rainIntensity * 0.55),
+                fogRange[1] * (1 - rainIntensity * 0.42)
+            ];
+            const passExtras = {
+                shadow: shadowFrame,
+                depthTex: targets.depthCopy.depthTex,
+                width: w,
+                height: h,
+                underwater,
+                handLight: fx ? fx.handLight : null
+            };
+            beginWorldPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
+            const opaqueStats = drawOpaque(gl, res, visible.opaque);
+
+            let cutoutStats = { drawCalls: 0, triCount: 0 };
+            if (visible.cutout.length > 0) {
+                beginCutoutPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
+                cutoutStats = drawCutout(gl, res, visible.cutout);
+            }
+
+            let mobStats = { drawCalls: 0, triCount: 0 };
+            if (mobs.length > 0) {
+                beginMobPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
+                mobStats = drawMobs(gl, res.mobGeo, mobs, timeSec, eye);
+                drawBlobShadows(gl, res, cam, mobs, eye, {
+                    sunPower: sunPowerOf(rawAtmo.sunDir[1]),
+                    fog: curFog,
+                    rainIntensity
+                });
+            }
+
+            drawSky(gl, res, cam, atmo, timeSec);
+
+            let glassStats = { drawCalls: 0, triCount: 0 };
+            if (visible.translucent.length > 0) {
+                blitSceneDepth(gl, targets, w, h);
+                if (visible.cutout.length > 0 || mobs.length > 0) {
+                    beginWorldPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
+                }
+                glassStats = drawTranslucent(gl, res, visible.translucent);
+            }
+
+            drawWire(gl, res, cam, targetHit);
+            if (fx && fx.breakProgress > 0) {
+                drawCrack(gl, res, cam, targetHit, fx.breakProgress);
+            }
+            if (fx && fx.particles && fx.particles.vertCount > 0) {
+                drawParticles(gl, res, cam, fx.particles, rawAtmo.dayIntensity);
+            }
+            if (fx && fx.hand && fx.hand.mesh && fx.hand.mesh.length > 0) {
+                const handLight = fx.handTint || [0.85, 0.88, 0.92];
+                drawHand(gl, res, cam, fx.hand, handLight);
+            }
+
+            const sun = projectSunToScreen(cam.viewProj, eye, rawAtmo.sunDir);
+            const strength = raysStrength(rawAtmo.sunDir, sun.visibility);
+            drawPostFx(gl, res, targets, w, h, timeSec, underwater, {
+                raysOn: strength > 0.001 && !underwater && rainIntensity < 0.2,
+                raysStrength: strength * (1 - rainIntensity),
+                sunUv: [sun.u, sun.v],
+                tint: atmo.sunTint,
+                rainIntensity,
+                rainVis: fx && fx.rainVis !== undefined ? fx.rainVis : 1,
+                dayIntensity: rawAtmo.dayIntensity,
+                camPos: eye,
+                camForward: cam.forward,
+                camRight: cam.right,
+                camUp: cam.up,
+                tanFov: cam.tanHalfFov
+            });
+
+            return {
+                drawCalls: opaqueStats.drawCalls + cutoutStats.drawCalls + glassStats.drawCalls + mobStats.drawCalls,
+                culledSubs: visible.culled,
+                triCount: opaqueStats.triCount + cutoutStats.triCount + glassStats.triCount + mobStats.triCount,
+                uploads: upload.uploads,
+                queued: upload.remaining,
+                gpuMs: timer ? timer.getMs() : null
+            };
+        } finally {
+            if (timer) timer.end();
         }
-        const planes = extractFrustumPlanes(cam.viewProj);
-        const visible = store.collectVisible(planes, eye);
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, targets.scene.fbo);
-        gl.viewport(0, 0, w, h);
-        gl.clearColor(atmo.horizonColor[0], atmo.horizonColor[1], atmo.horizonColor[2], 1);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        const curFog = [
-            fogRange[0] * (1 - rainIntensity * 0.55),
-            fogRange[1] * (1 - rainIntensity * 0.42)
-        ];
-        const passExtras = {
-            shadow: shadow.frame,
-            depthTex: targets.depthCopy.depthTex,
-            width: w,
-            height: h
-        };
-        beginWorldPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
-        const opaqueStats = drawOpaque(gl, res, visible.opaque);
-        let mobStats = { drawCalls: 0, triCount: 0 };
-        if (mobs.length > 0) {
-            beginMobPass(gl, res, cam, eye, atmo, timeSec, curFog, passExtras);
-            mobStats = drawMobs(gl, res.mobGeo, mobs, timeSec, eye);
-            drawBlobShadows(gl, res, cam, mobs, eye, { sunPower: sunPowerOf(rawAtmo.sunDir[1]), fog: curFog });
-        }
-        drawWire(gl, res, cam, targetHit);
-        drawSky(gl, res, cam, atmo, timeSec);
-        blitSceneDepth(gl, targets, w, h);
-        const glassStats = drawTranslucent(gl, res, visible.translucent);
-        const sun = projectSunToScreen(cam.viewProj, eye, rawAtmo.sunDir);
-        const strength = raysStrength(rawAtmo.sunDir, sun.visibility);
-        drawPostFx(gl, res, targets, w, h, timeSec, underwater, {
-            raysOn: strength > 0.001 && !underwater && rainIntensity < 0.2,
-            raysStrength: strength * (1 - rainIntensity),
-            sunUv: [sun.u, sun.v],
-            tint: atmo.sunTint,
-            rainIntensity,
-            camPos: eye,
-            camForward: cam.forward,
-            camRight: cam.right,
-            camUp: cam.up,
-            tanFov: cam.tanHalfFov
-        });
-        if (timer) timer.end();
-
-        return {
-            drawCalls: opaqueStats.drawCalls + glassStats.drawCalls + mobStats.drawCalls,
-            culledSubs: visible.culled,
-            triCount: opaqueStats.triCount + glassStats.triCount + mobStats.triCount,
-            uploads: upload.uploads,
-            queued: upload.remaining,
-            gpuMs: timer ? timer.getMs() : null
-        };
     };
 
     const destroy = () => {
