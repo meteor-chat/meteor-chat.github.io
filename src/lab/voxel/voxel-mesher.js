@@ -269,7 +269,7 @@ export function meshSubchunk(sy, getBlock, getLight, getTint = null) {
                         if (nbId === id || isOpaque(nbId)) continue;
                         if (id === BLOCK.WATER && nbId === BLOCK.GLASS) continue;
                     } else if (cut) {
-                        if (isOpaque(nbId)) continue;
+                        if (isOpaque(nbId) || nbId === BLOCK.LEAVES) continue;
                     } else if (isOpaque(nbId)) {
                         continue;
                     }

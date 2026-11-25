@@ -30,15 +30,21 @@ const lava = (p) => {
 };
 
 const torch = (p) => {
-    if (p.y >= 11) {
-        const t = (p.y - 11) / 4 + p.px * 0.25;
+    const inStick = p.x >= 6 && p.x <= 9 && p.y >= 1 && p.y <= 9;
+    const inEmber = p.x >= 6 && p.x <= 9 && p.y === 10;
+    const inFlame = p.x >= 6 && p.x <= 9 && p.y >= 11 && p.y <= 14;
+    if (inFlame) {
+        const t = (p.y - 11) / 3 + p.px * 0.25;
         return [...palettePick(FLAME, t, p.x, p.y), 255, 0.85, 0.4, 1];
     }
-    if (p.y === 10) {
+    if (inEmber) {
         return [64, 42, 24, 255, 0.6, 0.85, 0.35];
     }
-    const t = tileFbm(p.u, p.v, 4, 2, p.seed) * 0.5 + p.px * 0.5;
-    return [...palettePick(STICK, t, p.x, p.y), 255, 0.4 + t * 0.4, 0.9, 0];
+    if (inStick) {
+        const t = tileFbm(p.u, p.v, 4, 2, p.seed) * 0.5 + p.px * 0.5;
+        return [...palettePick(STICK, t, p.x, p.y), 255, 0.4 + t * 0.4, 0.9, 0];
+    }
+    return [96, 68, 38, 0, 0.2, 0.9, 0];
 };
 
 export const FX_RECIPES = {

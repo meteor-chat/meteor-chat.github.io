@@ -122,14 +122,14 @@ vec3 sampleFxaa(vec2 uv) {
     float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
     float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
     float range = lMax - lMin;
-    if (range < max(0.04, lMax * 0.1)) return cM;
+    if (range < max(0.08, lMax * 0.16)) return cM;
 
     vec2 dir;
     dir.x = -((lNW + lNE) - (lSW + lSE));
     dir.y = (lNW + lSW) - (lNE + lSE);
     float dirReduce = max((lNW + lNE + lSW + lSE) * 0.03125, 0.0078125);
     float rcpMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-    dir = clamp(dir * rcpMin, vec2(-5.0), vec2(5.0)) * uTexelSize;
+    dir = clamp(dir * rcpMin, vec2(-2.5), vec2(2.5)) * uTexelSize;
 
     vec3 rgbA = 0.5 * (
         texture(uSceneTex, uv + dir * (1.0 / 3.0 - 0.5)).rgb +

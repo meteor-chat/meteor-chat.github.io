@@ -15,20 +15,21 @@ function pushQuad(out, p0, p1, p2, p3, tex, shade, glow) {
     pushTri(out, p0, p2, p3, tex, shade, glow);
 }
 
-function pushBox(out, x0, y0, z0, x1, y1, z1, texForFace, glow = 0) {
-    pushQuad(out, [x1, y0, z1, 0, 0], [x1, y0, z0, 1, 0], [x1, y1, z0, 1, 1], [x1, y1, z1, 0, 1], texForFace(0), 0.84, glow);
-    pushQuad(out, [x0, y0, z0, 0, 0], [x0, y0, z1, 1, 0], [x0, y1, z1, 1, 1], [x0, y1, z0, 0, 1], texForFace(1), 0.78, glow);
-    pushQuad(out, [x0, y1, z1, 0, 0], [x1, y1, z1, 1, 0], [x1, y1, z0, 1, 1], [x0, y1, z0, 0, 1], texForFace(2), 1.0, glow);
-    pushQuad(out, [x0, y0, z0, 0, 0], [x1, y0, z0, 1, 0], [x1, y0, z1, 1, 1], [x0, y0, z1, 0, 1], texForFace(3), 0.62, glow);
-    pushQuad(out, [x0, y0, z1, 0, 0], [x1, y0, z1, 1, 0], [x1, y1, z1, 1, 1], [x0, y1, z1, 0, 1], texForFace(4), 0.9, glow);
-    pushQuad(out, [x1, y0, z0, 0, 0], [x0, y0, z0, 1, 0], [x0, y1, z0, 1, 1], [x1, y1, z0, 0, 1], texForFace(5), 0.72, glow);
+function pushBox(out, x0, y0, z0, x1, y1, z1, texForFace, glow = 0, uv = [0, 0, 1, 1]) {
+    const [u0, v0, u1, v1] = uv;
+    pushQuad(out, [x1, y0, z1, u0, v0], [x1, y0, z0, u1, v0], [x1, y1, z0, u1, v1], [x1, y1, z1, u0, v1], texForFace(0), 0.84, glow);
+    pushQuad(out, [x0, y0, z0, u0, v0], [x0, y0, z1, u1, v0], [x0, y1, z1, u1, v1], [x0, y1, z0, u0, v1], texForFace(1), 0.78, glow);
+    pushQuad(out, [x0, y1, z1, u0, v0], [x1, y1, z1, u1, v0], [x1, y1, z0, u1, v1], [x0, y1, z0, u0, v1], texForFace(2), 1.0, glow);
+    pushQuad(out, [x0, y0, z0, u0, v0], [x1, y0, z0, u1, v0], [x1, y0, z1, u1, v1], [x0, y0, z1, u0, v1], texForFace(3), 0.62, glow);
+    pushQuad(out, [x0, y0, z1, u0, v0], [x1, y0, z1, u1, v0], [x1, y1, z1, u1, v1], [x0, y1, z1, u0, v1], texForFace(4), 0.9, glow);
+    pushQuad(out, [x1, y0, z0, u0, v0], [x0, y0, z0, u1, v0], [x0, y1, z0, u1, v1], [x1, y1, z0, u0, v1], texForFace(5), 0.72, glow);
 }
 
 export function buildHeldBlockMesh(blockId) {
     const out = [];
     if (isTorch(blockId)) {
         const tex = getFaceTexture(blockId, 0);
-        pushBox(out, -0.06, -0.26, -0.06, 0.06, 0.26, 0.06, () => tex, 0.85);
+        pushBox(out, -0.055, -0.26, -0.055, 0.055, 0.26, 0.055, () => tex, 0.72, [0.38, 0.08, 0.62, 0.92]);
         return new Float32Array(out);
     }
     if (isCrossPlant(blockId)) {

@@ -160,9 +160,14 @@ if (isUnsupportedDevice(window)) {
 } else if (root) {
     import("./src/lab/voxel/voxel-controller.js")
         .then((mod) => mod.createVoxelApp(root))
-        .catch(() => {
+        .catch((err) => {
+            console.error("Voxel boot failed:", err);
             const fallback = root.querySelector("[data-voxel-fallback]");
-            if (fallback) fallback.hidden = false;
+            if (fallback) {
+                const detail = err && err.message ? err.message : "Module load failed";
+                fallback.textContent = `Unable to start Voxel World (${detail}). Press Ctrl+Shift+R to refresh.`;
+                fallback.hidden = false;
+            }
         });
 }
 </script>
