@@ -85,7 +85,6 @@ uniform sampler2D uBloomTex;
 uniform sampler2D uRaysTex;
 uniform sampler2D uDepthTex;
 uniform vec3 uRaysColor;
-uniform vec2 uTexelSize;
 uniform float uTime;
 uniform float uUnderwater;
 uniform float uRainIntensity;
@@ -100,47 +99,6 @@ out vec4 fragColor;
 
 vec3 acesTone(vec3 x) {
     return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
-}
-
-float lumaOf(vec3 c) {
-    return dot(c, vec3(0.299, 0.587, 0.114));
-}
-
-vec3 sampleFxaa(vec2 uv) {
-    vec3 cM = texture(uSceneTex, uv).rgb;
-    vec3 cNW = texture(uSceneTex, uv + vec2(-uTexelSize.x, -uTexelSize.y)).rgb;
-    vec3 cNE = texture(uSceneTex, uv + vec2(uTexelSize.x, -uTexelSize.y)).rgb;
-    vec3 cSW = texture(uSceneTex, uv + vec2(-uTexelSize.x, uTexelSize.y)).rgb;
-    vec3 cSE = texture(uSceneTex, uv + vec2(uTexelSize.x, uTexelSize.y)).rgb;
-
-    float lM = lumaOf(cM);
-    float lNW = lumaOf(cNW);
-    float lNE = lumaOf(cNE);
-    float lSW = lumaOf(cSW);
-    float lSE = lumaOf(cSE);
-
-    float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE)));
-    float lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
-    float range = lMax - lMin;
-    if (range < max(0.08, lMax * 0.16)) return cM;
-
-    vec2 dir;
-    dir.x = -((lNW + lNE) - (lSW + lSE));
-    dir.y = (lNW + lSW) - (lNE + lSE);
-    float dirReduce = max((lNW + lNE + lSW + lSE) * 0.03125, 0.0078125);
-    float rcpMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-    dir = clamp(dir * rcpMin, vec2(-2.5), vec2(2.5)) * uTexelSize;
-
-    vec3 rgbA = 0.5 * (
-        texture(uSceneTex, uv + dir * (1.0 / 3.0 - 0.5)).rgb +
-        texture(uSceneTex, uv + dir * (2.0 / 3.0 - 0.5)).rgb
-    );
-    vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(uSceneTex, uv + dir * -0.5).rgb +
-        texture(uSceneTex, uv + dir * 0.5).rgb
-    );
-    float lB = lumaOf(rgbB);
-    return (lB < lMin || lB > lMax) ? rgbA : rgbB;
 }
 
 vec3 colorGrade(vec3 c, float rain) {
@@ -179,7 +137,7 @@ void main() {
         uv.y += cos(uv.x * 18.0 + uTime * 3.1) * 0.003 * wMask;
         uv = clamp(uv, vec2(0.001), vec2(0.999));
     }
-    vec3 sceneCol = sampleFxaa(uv);
+    vec3 sceneCol = texture(uSceneTex, uv).rgb;
     vec3 bloomCol = texture(uBloomTex, uv).rgb;
     vec3 hdr = sceneCol + bloomCol * 0.52 + uRaysColor * texture(uRaysTex, uv).r;
     if (uUnderwater > 0.5) {

@@ -74,7 +74,7 @@ export const PROGRAM_SPECS = {
         fs: COMPOSITE_FS,
         uniforms: [
             "uSceneTex", "uBloomTex", "uRaysTex", "uDepthTex", "uRaysColor",
-            "uTexelSize", "uTime", "uUnderwater", "uRainIntensity", "uRainVis",
+            "uTime", "uUnderwater", "uRainIntensity", "uRainVis",
             "uDayIntensity", "uCamPos", "uCamForward", "uCamRight", "uCamUp", "uTanFov"
         ]
     },

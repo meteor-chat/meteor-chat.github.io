@@ -3,7 +3,7 @@ import { hash2 } from "./voxel-noise.js";
 import { ridge, tileFbm, tileNoise } from "./voxel-tex-noise.js";
 import { palettePick, shade } from "./voxel-tex-palette.js";
 
-const GRASS = [[56, 100, 38], [74, 122, 44], [96, 146, 52], [118, 168, 60], [142, 186, 72]];
+const GRASS = [[42, 80, 28], [60, 100, 34], [80, 122, 40], [102, 144, 46], [126, 164, 54]];
 const DIRT = [[72, 48, 32], [96, 66, 42], [120, 84, 54], [142, 102, 66], [162, 120, 80]];
 const STONE = [[78, 80, 86], [98, 100, 106], [118, 120, 126], [138, 140, 146], [158, 160, 166]];
 const SAND = [[184, 164, 112], [204, 186, 132], [220, 204, 152], [234, 220, 176]];
@@ -88,9 +88,9 @@ const coal = (p) => oreCell(p, COAL, 0.66, 0.52);
 const gold = (p) => oreCell(p, GOLD, 0.68, 0.22);
 
 export const TERRAIN_RECIPES = {
-    [TEX.GRASS_TOP]: { seed: 101, fn: grassTop, bump: 1.4 },
-    [TEX.GRASS_SIDE]: { seed: 103, fn: grassSide, bump: 1.6, clampV: true },
-    [TEX.DIRT]: { seed: 102, fn: dirt, bump: 1.6 },
+    [TEX.GRASS_TOP]: { seed: 101, fn: grassTop, bump: 1.7 },
+    [TEX.GRASS_SIDE]: { seed: 103, fn: grassSide, bump: 1.9, clampV: true },
+    [TEX.DIRT]: { seed: 102, fn: dirt, bump: 1.9 },
     [TEX.STONE]: { seed: 104, fn: stone, bump: 2.2 },
     [TEX.SAND]: { seed: 105, fn: sand, bump: 1.0 },
     [TEX.SNOW]: { seed: 113, fn: snow, bump: 0.8 },

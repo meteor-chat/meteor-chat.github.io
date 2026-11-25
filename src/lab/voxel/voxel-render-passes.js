@@ -295,7 +295,6 @@ export function drawPostFx(gl, res, targets, w, h, timeSec, underwater, post) {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, bloomA.tex);
     gl.uniform1i(comp.u.uBloomTex, 1);
-    gl.uniform2f(comp.u.uTexelSize, 1 / w, 1 / h);
     gl.uniform1f(comp.u.uTime, timeSec);
     gl.uniform1f(comp.u.uUnderwater, underwater ? 1 : 0);
     gl.uniform1f(comp.u.uRainIntensity, post.rainIntensity || 0);

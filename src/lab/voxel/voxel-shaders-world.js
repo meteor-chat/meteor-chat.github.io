@@ -8,9 +8,9 @@ vec3 decodeBiomeTint(uint tintByte, uint flags) {
     if ((flags & 32u) == 0u) return vec3(1.0);
     float warmth = float(tintByte & 15u) / 15.0;
     float moist = float((tintByte >> 4u) & 15u) / 15.0;
-    vec3 coolLush = vec3(0.74, 1.04, 0.82);
-    vec3 meadow = vec3(0.95, 1.06, 0.74);
-    vec3 warmDry = vec3(1.16, 1.00, 0.58);
+    vec3 coolLush = vec3(0.82, 1.02, 0.86);
+    vec3 meadow = vec3(0.95, 1.00, 0.86);
+    vec3 warmDry = vec3(1.12, 0.96, 0.66);
     vec3 base = mix(coolLush, warmDry, warmth);
     return mix(base, meadow, moist * 0.55);
 }
@@ -118,7 +118,7 @@ void main() {
     float dist = length(toCam);
     vec3 v = safeNorm(toCam);
     vec3 albedo = tex.rgb * vTint;
-    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.88);
+    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.80);
     vec3 col;
     float alpha = tex.a;
 
@@ -192,7 +192,7 @@ void main() {
     }
 
     vWorldPos = worldPos;
-    vAo = 0.48 + (ao / 3.0) * 0.52;
+    vAo = 0.42 + (ao / 3.0) * 0.58;
     vLight = vec2(sunL, blkL);
     vTint = decodeBiomeTint(tintByte, vFlags);
     vUv = aUv;
@@ -237,12 +237,13 @@ void main() {
     float dist = length(toCam);
     vec3 v = safeNorm(toCam);
     vec3 albedo = tex.rgb * vTint;
-    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.9);
+    albedo = mix(vec3(dot(albedo, vec3(0.3, 0.59, 0.11))), albedo, 0.82);
 
     vec3 baseN = vFace < 6u ? FACE_N[vFace] : vec3(0.0, 1.0, 0.0);
     vec3 n = vFace < 6u ? mapNormal(vFace, data) : vec3(0.0, 1.0, 0.0);
     float shadow = sunShadow(vWorldPos, baseN);
     vec3 col = shadeSurface(albedo, n, v, data.b, shadow, false);
+    if (!gl_FrontFacing && vFace < 6u) col *= 0.62;
     col += albedo * data.a * 2.8;
     if ((vFlags & 8u) != 0u) col += leafGlow(albedo, v, shadow);
 

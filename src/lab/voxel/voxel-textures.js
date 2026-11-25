@@ -26,17 +26,6 @@ export function generateVoxelAtlasData() {
     return { data, maps, tileSize: TILE, layerCount: LAYER_COUNT };
 }
 
-function applyAnisotropy(gl) {
-    if (typeof gl.getExtension !== "function") return;
-    const ext =
-        gl.getExtension("EXT_texture_filter_anisotropic") ||
-        gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic") ||
-        gl.getExtension("MOZ_EXT_texture_filter_anisotropic");
-    if (!ext || typeof gl.getParameter !== "function" || typeof gl.texParameterf !== "function") return;
-    const max = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 1;
-    gl.texParameterf(gl.TEXTURE_2D_ARRAY, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, max));
-}
-
 function uploadArray(gl, atlas, bytes, useSrgb) {
     const tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D_ARRAY, tex);
@@ -58,7 +47,6 @@ function uploadArray(gl, atlas, bytes, useSrgb) {
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_S, gl.REPEAT);
     gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_WRAP_T, gl.REPEAT);
-    applyAnisotropy(gl);
     return tex;
 }
 
