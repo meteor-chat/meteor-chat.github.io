@@ -297,21 +297,31 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const sumsSec = makeSection("4. two sums");
+    const paren = (v) => {
+        const s = fmtNum(v, 3);
+        return v < 0 ? `(${s})` : s;
+    };
     sumsSec.appendChild(
         makeTexTable(
             [
                 { label: "data" },
+                { tex: "(dx \\cdot dy)\\text{ formula}" },
                 { tex: "dx \\cdot dy" },
+                { tex: "dx^2\\text{ formula}" },
                 { tex: "dx^2" }
             ],
             rows.map((r) => [
                 { rawText: r.label },
+                { tex: `${paren(r.dx)} \\cdot ${paren(r.dy)}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dxdy, 3), cls: "lr-calc-cell" },
+                { tex: `${paren(r.dx)}^2`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dx2, 3), cls: "lr-calc-cell" }
             ]),
             [
                 { rawText: "total" },
+                { rawText: "" },
                 { tex: `\\htmlClass{lr-tok-w0}{${fmtNum(sxy, 4)}}`, cls: "lr-calc-cell" },
+                { rawText: "" },
                 { tex: `\\htmlClass{lr-tok-w1}{${fmtNum(sxx, 4)}}`, cls: "lr-calc-cell" }
             ]
         )
