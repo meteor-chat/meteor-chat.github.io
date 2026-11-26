@@ -87,13 +87,15 @@ function makeWeightUpdateCard({ labelNewTex, symTex, symVal, lr, gradSymTex, gra
 
     const botNode = makeEl("div", "lr-slope-node");
     renderTex(
-        `\\htmlClass{lr-in-ry ${tokCls}}{${wrapNeg(symVal, 4)}} - \\htmlClass{lr-in-rw1}{${wrapNeg(lr, 4)}} \\cdot \\htmlClass{lr-in-rx ${tokCls}}{${wrapNeg(gradVal, 4)}} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`,
+        `\\htmlClass{lr-in-ry ${tokCls}}{${wrapNeg(symVal, 4)}} \\;-\\; \\htmlClass{lr-in-rw1}{${wrapNeg(lr, 4)}} \\;\\cdot\\; \\htmlClass{lr-in-rx ${tokCls}}{${wrapNeg(gradVal, 4)}} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`,
         botNode,
         false
     );
 
     stage.append(topNode, midRow, botNode);
-    card.append(stage, makeHBraceSummary(`${labelNewTex} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`));
+    const unit = makeEl("div", "lr-diagram-unit");
+    unit.append(stage, makeHBraceSummary(`${labelNewTex} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`));
+    card.appendChild(unit);
     return card;
 }
 
@@ -279,7 +281,8 @@ export function renderLogRegSteps(res) {
 
     frag.appendChild(makeArrow());
     const updSec = makeSection("7. weight update (gradient descent)");
-    updSec.append(
+    const updGrid = makeEl("div", "lr40-upd-grid");
+    updGrid.append(
         makeWeightUpdateCard({
             labelNewTex: "w_0^{\\text{new}}",
             symTex: "w_0",
@@ -306,7 +309,7 @@ export function renderLogRegSteps(res) {
         newModelCard,
         true
     );
-    updSec.appendChild(newModelCard);
+    updSec.append(updGrid, newModelCard);
     frag.appendChild(updSec);
 
     frag.appendChild(makeArrow());

@@ -437,7 +437,9 @@ export function makeFractionFlowCard({ symTex, numTex, denTex, numValTex, denVal
     );
 
     stage.append(leftNode, midCol, rightNode);
-    wrap.append(stage, makeHBraceSummary(`${symTex} = ${resWrapped}`));
+    const unit = makeEl("div", "lr-diagram-unit");
+    unit.append(stage, makeHBraceSummary(`${symTex} = ${resWrapped}`));
+    wrap.appendChild(unit);
     return wrap;
 }
 
