@@ -1,4 +1,5 @@
 import { fmtNum } from "./math-calc-40-engine.js";
+import { m, appendMathParts, buildLogisticWarnParts } from "./math-calc-39-explain.js";
 import {
     wrapNeg,
     makeEl,
@@ -21,10 +22,23 @@ export function renderTopFormula40() {
         renderTex(tex, el, false);
     }
 
+    const thI = document.getElementById("lr40-th-i");
     const thX = document.getElementById("lr40-th-x");
     const thY = document.getElementById("lr40-th-y");
+    if (thI) renderTex("i", thI, false);
     if (thX) renderTex("x", thX, false);
     if (thY) renderTex("y", thY, false);
+
+    const tabTitle = document.getElementById("lr40-title-tab");
+    const initTitle = document.getElementById("lr40-title-init");
+    if (tabTitle) {
+        tabTitle.textContent = "";
+        appendMathParts(tabTitle, [m("1."), " tabulate"]);
+    }
+    if (initTitle) {
+        initTitle.textContent = "";
+        appendMathParts(initTitle, [m("2."), " initial weights"]);
+    }
 
     const pW0 = document.getElementById("lr40-lbl-w0");
     const pW1 = document.getElementById("lr40-lbl-w1");
@@ -103,7 +117,7 @@ export function renderLogRegSteps(res) {
     if (braceSide && nTag) {
         if (validCount > 0) {
             nTag.textContent = "";
-            nTag.appendChild(document.createTextNode("jumlah data = "));
+            appendMathParts(nTag, ["jumlah data ", m("=")]);
             const nVal = makeEl("span", "lr-n-val lr-tok-y");
             nVal.id = "math40-n-val";
             renderTex(String(validCount), nVal, false);
@@ -115,7 +129,8 @@ export function renderLogRegSteps(res) {
     }
 
     if (!res || !res.valid) {
-        const err = makeEl("div", "lr-step-card lr-card-subnote lr-subnote-warn", res?.reason || "Minimal 1 titik data (x, y) diperlukan.");
+        const err = makeEl("div", "lr-step-card lr-card-subnote lr-subnote-warn");
+        appendMathParts(err, buildLogisticWarnParts(res));
         container.appendChild(err);
         drawLogRegArrows();
         return;
@@ -127,7 +142,7 @@ export function renderLogRegSteps(res) {
     const w0SignTok = initW1 < 0 ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(initW1), 4)}}` : `+ \\htmlClass{lr-tok-w1}{${fmtNum(initW1, 4)}}`;
 
     frag.appendChild(makeArrow());
-    const sigSec = makeSection("3. linear score (z) and sigmoid probability");
+    const sigSec = makeSection([m("3."), " linear score (", m("z"), ") and sigmoid probability"]);
     sigSec.appendChild(
         makeTexTable(
             [
@@ -165,7 +180,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(sigSec);
 
     frag.appendChild(makeArrow());
-    const lossSec = makeSection("4. log loss and average log loss");
+    const lossSec = makeSection([m("4."), " log loss and average log loss"]);
     lossSec.appendChild(
         makeTexTable(
             [
@@ -212,7 +227,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(lossSec);
 
     frag.appendChild(makeArrow());
-    const gradSec = makeSection("5. gradients");
+    const gradSec = makeSection([m("5."), " gradients"]);
     gradSec.appendChild(
         makeTexTable(
             [
@@ -250,7 +265,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(gradSec);
 
     frag.appendChild(makeArrow());
-    const avgGradSec = makeSection("6. average gradients");
+    const avgGradSec = makeSection([m("6."), " average gradients"]);
     avgGradSec.append(
         makeFractionFlowCard({
             symTex: "g_{w_0}",
@@ -278,7 +293,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(avgGradSec);
 
     frag.appendChild(makeArrow());
-    const updSec = makeSection("7. weight update (gradient descent)");
+    const updSec = makeSection([m("7."), " weight update (gradient descent)"]);
     const updGrid = makeEl("div", "lr40-upd-grid");
     updGrid.append(
         makeWeightUpdateCard({
@@ -311,7 +326,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(updSec);
 
     frag.appendChild(makeArrow());
-    const evalSec = makeSection("8. updated probability and decision");
+    const evalSec = makeSection([m("8."), " updated probability and decision"]);
     evalSec.appendChild(
         makeTexTable(
             [
@@ -349,7 +364,7 @@ export function renderLogRegSteps(res) {
     frag.appendChild(evalSec);
 
     frag.appendChild(makeArrow());
-    const iterSec = makeSection("9. gradient descent iterations (0..4)");
+    const iterSec = makeSection([m("9."), " gradient descent iterations (", m("0\\text{..}4"), ")"]);
     iterSec.appendChild(
         makeTexTable(
             [

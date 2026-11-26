@@ -23,16 +23,16 @@ export function computeLogisticIteration(rawPoints, w0 = 0, w1 = 0, threshold = 
     const points = normalizePoints(rawPoints);
     const n = points.length;
     if (n === 0) {
-        return { valid: false, reason: "Minimal 1 titik data (x, y) diperlukan.", points: [], n: 0 };
+        return { valid: false, code: "empty", reason: "Minimal 1 titik data (x, y) diperlukan.", points: [], n: 0 };
     }
     if (!Number.isFinite(w0) || !Number.isFinite(w1)) {
-        return { valid: false, reason: "Bobot awal w0 dan w1 harus berupa angka valid.", points, n };
+        return { valid: false, code: "weights", reason: "Bobot awal w0 dan w1 harus berupa angka valid.", points, n };
     }
     if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
-        return { valid: false, reason: "Nilai threshold harus berada di antara 0 dan 1.", points, n };
+        return { valid: false, code: "threshold", reason: "Nilai threshold harus berada di antara 0 dan 1.", points, n };
     }
     if (points.some((p) => Math.abs(p.y) > 1e-12 && Math.abs(p.y - 1) > 1e-12)) {
-        return { valid: false, reason: "Nilai target y pada Logistic Regression harus 0 atau 1.", points, n };
+        return { valid: false, code: "target", reason: "Nilai target y pada Logistic Regression harus 0 atau 1.", points, n };
     }
 
     const eps = 1e-12;
@@ -96,7 +96,7 @@ export function computeLogisticIteration(rawPoints, w0 = 0, w1 = 0, threshold = 
 export function computeLogisticRegression(rawPoints, w0 = 0, w1 = 0, lr = 1, threshold = 0.5, numIters = 5) {
     if (!Number.isFinite(lr) || lr < 0) {
         const base = normalizePoints(rawPoints);
-        return { valid: false, reason: "Learning rate harus bernilai >= 0.", points: base, n: base.length };
+        return { valid: false, code: "lr", reason: "Learning rate harus bernilai >= 0.", points: base, n: base.length };
     }
     const iter0 = computeLogisticIteration(rawPoints, w0, w1, threshold);
     if (!iter0.valid) return iter0;

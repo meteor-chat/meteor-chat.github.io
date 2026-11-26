@@ -466,9 +466,12 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 .lr-explain-toggle.is-active { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
 .lr-explain-slot { width: 100%; }
 .lr-explain-box { width: 100%; box-sizing: border-box; background: #06080c; border: 1px solid #26262a; border-left: 2px solid #38bdf8; border-radius: 6px; padding: 9px 12px; text-align: left; }
-.lr-explain-text { margin: 0; font-family: 'Google Sans', sans-serif; font-size: 13.5px; line-height: 1.55; color: #cbd5e1; }
+.lr-explain-text { margin: 0; font-family: 'Google Sans', sans-serif; font-size: 13.5px; line-height: 1.68; color: #cbd5e1; }
 .lr-explain-tag { color: #38bdf8; font-weight: 600; }
-.lr-explain-val { color: #f8fafc; font-weight: 500; }
+.lr-math-inline { display: inline; color: inherit; }
+.lr-explain-math { color: #f8fafc; }
+.lr-math-inline .katex, .lr-n-label .katex { font-size: 1.04em; }
+.lr-tab-label .katex { font-size: 1em; }
 #math-calc-form-39:not(.lr-explain-open) .lr-explain-box, #math-calc-form-39:not(.lr-explain-open) .lr-explain-slot { display: none; }
 @media (max-width: 639px) { .lr-explain-box { padding: 8px 10px; } .lr-explain-text { font-size: 12.5px; } }
 @media (prefers-reduced-motion: reduce) { .lr-page * { transition: none !important; } }

@@ -1,6 +1,6 @@
 import { refs } from "../../core/dom-refs.js";
 import { DEFAULT_LR_POINTS, computeLinearRegressionOLS } from "./math-calc-39-engine.js";
-import { renderTopFormula39, renderLRSteps, drawAfterArrows } from "./math-calc-39-cards.js";
+import { renderTopFormula39, renderLRSteps, drawAfterArrows, renderTex } from "./math-calc-39-cards.js";
 
 let rowEntries = [];
 let resizeAttached = false;
@@ -29,7 +29,8 @@ function createInitialEntries() {
 
 function buildRowElement(entry, idx, tbody) {
     const tr = makeEl("tr");
-    const tdLbl = makeEl("td", "lr-tab-label", defaultLabelAt(idx));
+    const tdLbl = makeEl("td", "lr-tab-label");
+    renderTex(defaultLabelAt(idx), tdLbl, false);
 
     const tdX = makeEl("td", "lr-tab-input-cell");
     const inX = makeEl("input", "lr-cell-input");
@@ -84,7 +85,7 @@ function relabelRows(tbody) {
     Array.from(tbody.children).forEach((tr, idx) => {
         const lbl = defaultLabelAt(idx);
         const td = tr.querySelector(".lr-tab-label");
-        if (td) td.textContent = lbl;
+        if (td) renderTex(lbl, td, false);
         const inputs = tr.querySelectorAll(".lr-cell-input");
         if (inputs[0]) inputs[0].setAttribute("aria-label", `x ${lbl}`);
         if (inputs[1]) inputs[1].setAttribute("aria-label", `y ${lbl}`);

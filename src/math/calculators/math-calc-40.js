@@ -1,7 +1,7 @@
 import { refs } from "../../core/dom-refs.js";
 import { DEFAULT_LOGREG_POINTS, computeLogisticRegression } from "./math-calc-40-engine.js";
 import { renderTopFormula40, renderLogRegSteps, drawLogRegArrows } from "./math-calc-40-cards.js";
-import { makeEl } from "./math-calc-39-cards.js";
+import { makeEl, renderTex } from "./math-calc-39-cards.js";
 
 let rowEntries = [];
 let resizeAttached = false;
@@ -19,7 +19,7 @@ function relabelRows(tbody) {
     Array.from(tbody.children).forEach((tr, idx) => {
         const lbl = String(idx + 1);
         const td = tr.querySelector(".lr-tab-label");
-        if (td) td.textContent = lbl;
+        if (td) renderTex(lbl, td, false);
         const inputs = tr.querySelectorAll(".lr-cell-input");
         if (inputs[0]) inputs[0].setAttribute("aria-label", `x ${lbl}`);
         if (inputs[1]) inputs[1].setAttribute("aria-label", `y ${lbl}`);
@@ -29,7 +29,8 @@ function relabelRows(tbody) {
 function buildRowElement(entry, idx, tbody) {
     const tr = makeEl("tr");
     const numLbl = String(idx + 1);
-    const tdIdx = makeEl("td", "lr-tab-label", numLbl);
+    const tdIdx = makeEl("td", "lr-tab-label");
+    renderTex(numLbl, tdIdx, false);
 
     const tdX = makeEl("td", "lr-tab-input-cell");
     const inX = makeEl("input", "lr-cell-input");

@@ -84,11 +84,20 @@ describe("Formula 40: Logistic Regression", () => {
             const tbody = document.getElementById("math40-tabulate-body");
             const steps = document.getElementById("math40-steps-container");
 
+            const visibleText = (el) => {
+                const clone = el.cloneNode(true);
+                clone.querySelectorAll(".katex-mathml").forEach((n) => n.remove());
+                return clone.textContent.replace(/\s+/g, " ").trim();
+            };
+
             const nHtml = () => document.getElementById("math40-n-val").querySelector(".katex-html").textContent;
             expect(tbody.children.length).toBe(6);
             expect(nHtml()).toBe("5");
-            expect(steps.textContent).toContain("linear score (z) and sigmoid probability");
-            expect(steps.textContent).toContain("gradient descent iterations");
+            expect(document.getElementById("lr40-title-tab").querySelector(".katex-html").textContent).toBe("1.");
+            expect(document.getElementById("lr40-th-i").querySelector(".katex-html").textContent).toBe("i");
+            expect(tbody.querySelectorAll(".lr-tab-label .katex").length).toBe(6);
+            expect(visibleText(steps)).toContain("linear score (z) and sigmoid probability");
+            expect(visibleText(steps)).toContain("gradient descent iterations");
             expect(steps.querySelectorAll(".lr40-upd-grid").length).toBe(1);
             expect(steps.querySelectorAll(".lr-diagram-unit").length).toBe(5);
             expect(steps.querySelectorAll("tfoot .lr-tok-err").length).toBe(2);

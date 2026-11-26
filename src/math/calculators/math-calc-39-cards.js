@@ -1,5 +1,14 @@
 import { fmtNum } from "./math-calc-39-engine.js";
-import { buildTabulateExplain, buildLinearExplainCard } from "./math-calc-39-explain.js";
+import {
+    renderTex,
+    m,
+    appendMathParts,
+    buildTabulateExplain,
+    buildLinearExplainCard,
+    buildLinearWarnParts
+} from "./math-calc-39-explain.js";
+
+export { renderTex };
 
 export function wrapNeg(val, digits = 3) {
     const s = fmtNum(val, digits);
@@ -13,24 +22,21 @@ export function makeEl(tag, className, textContent) {
     return el;
 }
 
-export function renderTex(tex, el, displayMode = false) {
-    const expr = String(tex ?? "");
-    if (typeof katex !== "undefined") {
-        katex.render(expr, el, { throwOnError: false, trust: true, displayMode });
-    } else {
-        el.textContent = expr;
-    }
-}
-
 export function makeArrow() {
     const el = makeEl("div", "lr-step-arrow");
     renderTex("\\downarrow", el, false);
     return el;
 }
 
-export function makeSection(titleText) {
+export function makeSection(titleSpec) {
     const sec = makeEl("section", "lr-sec");
-    sec.appendChild(makeEl("div", "lr-sec-title", titleText));
+    const titleEl = makeEl("div", "lr-sec-title");
+    if (Array.isArray(titleSpec)) {
+        appendMathParts(titleEl, titleSpec);
+    } else if (titleSpec !== undefined) {
+        titleEl.textContent = String(titleSpec);
+    }
+    sec.appendChild(titleEl);
     return sec;
 }
 
@@ -99,6 +105,12 @@ export function renderTopFormula39() {
     const thY = document.getElementById("lr-th-y");
     if (thX) renderTex("x", thX, false);
     if (thY) renderTex("y", thY, false);
+
+    const tabTitle = document.getElementById("lr39-title-tab");
+    if (tabTitle) {
+        tabTitle.textContent = "";
+        appendMathParts(tabTitle, [m("1."), " tabulate"]);
+    }
 }
 
 export function syncRightBrace(
@@ -490,7 +502,7 @@ export function renderLRSteps(res) {
         if (validCount > 0) {
             braceSide.classList.remove("hidden");
             nTag.textContent = "";
-            nTag.appendChild(makeEl("span", "", "jumlah data = "));
+            appendMathParts(nTag, ["jumlah data ", m("=")]);
             const nValSpan = makeEl("span", "lr-n-val lr-tok-y");
             nValSpan.id = "math39-n-val";
             renderTex(String(validCount), nValSpan, false);
@@ -501,7 +513,8 @@ export function renderLRSteps(res) {
     }
 
     if (!res || !res.valid) {
-        const msg = makeEl("div", "lr-card-subnote lr-subnote-warn", res?.reason || "Isi minimal 2 baris x dan y.");
+        const msg = makeEl("div", "lr-card-subnote lr-subnote-warn");
+        appendMathParts(msg, buildLinearWarnParts(res));
         container.appendChild(msg);
         drawAfterArrows();
         return;
@@ -510,7 +523,7 @@ export function renderLRSteps(res) {
     const { n, meanX, meanY, rows, sxy, sxx, w1, w0, predRows, sumResidual, sse, sumAbsRes, mse, rmse, mae } = res;
 
     if (meanWrap) {
-        const meanSec = makeSection("2. mean");
+        const meanSec = makeSection([m("2."), " mean"]);
         const xTerms = rows.map((r) => (r.x < 0 ? `(${fmtNum(r.x, 3)})` : fmtNum(r.x, 3))).join(" + ");
         const yTerms = rows.map((r) => (r.y < 0 ? `(${fmtNum(r.y, 3)})` : fmtNum(r.y, 3))).join(" + ");
 
@@ -542,7 +555,7 @@ export function renderLRSteps(res) {
     const frag = document.createDocumentFragment();
 
     frag.appendChild(makeArrow());
-    const devSec = makeSection("3. deviations");
+    const devSec = makeSection([m("3."), " deviations"]);
     const mxTex = meanX < 0 ? `(\\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}})` : `\\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`;
     const myTex = meanY < 0 ? `(\\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}})` : `\\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`;
     devSec.appendChild(
@@ -557,7 +570,7 @@ export function renderLRSteps(res) {
                 { tex: "dy" }
             ],
             rows.map((r) => [
-                { rawText: r.label },
+                { tex: r.label },
                 { tex: fmtNum(r.x, 3) },
                 { tex: fmtNum(r.y, 3) },
                 { tex: `${fmtNum(r.x, 3)} - ${mxTex}`, cls: "lr-calc-cell" },
@@ -571,7 +584,7 @@ export function renderLRSteps(res) {
     frag.appendChild(devSec);
 
     frag.appendChild(makeArrow());
-    const sumsSec = makeSection("4. two sums");
+    const sumsSec = makeSection([m("4."), " two sums"]);
     sumsSec.appendChild(
         makeTexTable(
             [
@@ -582,7 +595,7 @@ export function renderLRSteps(res) {
                 { tex: "dx^2" }
             ],
             rows.map((r) => [
-                { rawText: r.label },
+                { tex: r.label },
                 { tex: `${wrapNeg(r.dx, 3)} \\cdot ${wrapNeg(r.dy, 3)}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dxdy, 3), cls: "lr-calc-cell" },
                 { tex: `${wrapNeg(r.dx, 3)}^2`, cls: "lr-calc-cell" },
@@ -601,7 +614,7 @@ export function renderLRSteps(res) {
     frag.appendChild(sumsSec);
 
     frag.appendChild(makeArrow());
-    const slopeSec = makeSection("5. slope");
+    const slopeSec = makeSection([m("5."), " slope"]);
     slopeSec.appendChild(
         makeFractionFlowCard({
             symTex: "w_1",
@@ -619,7 +632,7 @@ export function renderLRSteps(res) {
     frag.appendChild(slopeSec);
 
     frag.appendChild(makeArrow());
-    const intSec = makeSection("6. intercept");
+    const intSec = makeSection([m("6."), " intercept"]);
     const intWrap = makeEl("div", "lr-step-card lr-table-scroll");
     const intStage = makeEl("div", "lr-int-stage");
     intStage.id = "math39-int-stage";
@@ -669,7 +682,7 @@ export function renderLRSteps(res) {
     frag.appendChild(intSec);
 
     frag.appendChild(makeArrow());
-    const predSec = makeSection("7. prediction");
+    const predSec = makeSection([m("7."), " prediction"]);
     predSec.appendChild(
         makeTexTable(
             [
@@ -680,7 +693,7 @@ export function renderLRSteps(res) {
                 { tex: "\\hat{y}" }
             ],
             predRows.map((r) => [
-                { rawText: r.label },
+                { tex: r.label },
                 { tex: fmtNum(r.x, 3) },
                 { tex: fmtNum(r.actual, 3) },
                 {
@@ -695,7 +708,7 @@ export function renderLRSteps(res) {
     frag.appendChild(predSec);
 
     frag.appendChild(makeArrow());
-    const resSec = makeSection("8. residuals and SSE");
+    const resSec = makeSection([m("8."), " residuals and ", m("\\text{SSE}")]);
     resSec.appendChild(
         makeTexTable(
             [
@@ -707,7 +720,7 @@ export function renderLRSteps(res) {
                 { tex: "|y - \\hat{y}|" }
             ],
             predRows.map((r) => [
-                { rawText: r.label },
+                { tex: r.label },
                 {
                     tex: `${fmtNum(r.actual, 3)} - \\htmlClass{lr-tok-y}{${wrapNeg(r.predict, 3)}}`,
                     cls: "lr-calc-cell"
@@ -731,7 +744,7 @@ export function renderLRSteps(res) {
     frag.appendChild(resSec);
 
     frag.appendChild(makeArrow());
-    const metSec = makeSection("SSE: Smaller is better");
+    const metSec = makeSection([m("\\text{SSE}"), ": Smaller is better"]);
     metSec.classList.add("lr-metrics-sec");
 
     const mseCard = makeFractionFlowCard({

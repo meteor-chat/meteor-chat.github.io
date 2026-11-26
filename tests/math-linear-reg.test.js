@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { describe, it, expect, beforeEach } from "vitest";
+import { pathToFileURL } from "node:url";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { loadKatex } from "../scripts/lib/load-katex.mjs";
 import {
     DEFAULT_LR_POINTS,
     computeLinearRegressionOLS,
@@ -13,6 +15,33 @@ import { FORM_COUNT } from "../src/math/math-refs.js";
 import { getFormulaUrl, parseFormulaUrl } from "../src/math/math-routes.js";
 import { hasForm } from "../src/math/math-modules.js";
 import { initMath39 } from "../src/math/calculators/math-calc-39.js";
+
+function visibleText(el) {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".katex-mathml").forEach((n) => n.remove());
+    return clone.textContent.replace(/\s+/g, " ").trim();
+}
+
+function proseOnlyText(el) {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".katex, .lr-explain-tag").forEach((n) => n.remove());
+    return clone.textContent.replace(/\s+/g, " ").trim();
+}
+
+function assertAllExplanationsUseKatex(form) {
+    const boxes = form.querySelectorAll(".lr-explain-box");
+    expect(boxes.length).toBeGreaterThan(0);
+    const hasDigit = /\d/;
+    const hasOp = new RegExp("[=+*\\/<>^]|\\B-|\\s-\\s");
+    const hasMathVar = /\b(x|y|dx|dy|w0|w1|SSE|MSE|RMSE|MAE)\b/;
+    boxes.forEach((box) => {
+        expect(box.querySelectorAll(".katex").length).toBeGreaterThan(0);
+        const prose = proseOnlyText(box.querySelector(".lr-explain-text"));
+        expect(hasDigit.test(prose)).toBe(false);
+        expect(hasOp.test(prose)).toBe(false);
+        expect(hasMathVar.test(prose)).toBe(false);
+    });
+}
 
 describe("Formula 39: Linear Regression", () => {
     it("matches CSV manual calculations accurately", () => {
@@ -41,13 +70,24 @@ describe("Formula 39: Linear Regression", () => {
         expect(fs.existsSync(path.resolve(process.cwd(), "math/ai/11/index.html"))).toBe(true);
     });
 
-    describe("Auto-row tabulate and #after DOM flow", () => {
+    describe("Auto-row tabulate, KaTeX explanations, and #after DOM flow", () => {
+        const katexLib = loadKatex(pathToFileURL(path.resolve(process.cwd(), "vendor/katex/katex.min.js")));
+
         beforeEach(() => {
             const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
             document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
+            globalThis.katex = {
+                render: (expr, el, opts) => {
+                    el.innerHTML = katexLib.renderToString(expr, opts);
+                }
+            };
         });
 
-        it("auto-adds blank row when typing and removes cleared rows with no add/delete buttons", () => {
+        afterEach(() => {
+            delete globalThis.katex;
+        });
+
+        it("auto-adds blank row, renders KaTeX in explanations/headings, and updates live on edits", () => {
             initMath39();
             const form = document.getElementById("math-calc-form-39");
             const tbody = document.getElementById("math39-tabulate-body");
@@ -59,16 +99,19 @@ describe("Formula 39: Linear Regression", () => {
             expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
             expect(form.classList.contains("lr-explain-open")).toBe(false);
             expect(tbody.children.length).toBe(6);
-            expect(document.getElementById("math39-n-val").textContent).toBe("5");
-            expect(meanWrap.textContent).toContain("mean");
-            expect(steps.textContent).toContain("deviations");
+            expect(document.getElementById("math39-n-val").querySelector(".katex-html").textContent).toBe("5");
+            expect(document.getElementById("lr39-title-tab").querySelector(".katex-html").textContent).toBe("1.");
+            expect(form.querySelectorAll(".lr-tab-label .katex").length).toBe(6);
+            expect(visibleText(meanWrap)).toContain("2. mean");
+            expect(visibleText(steps)).toContain("3. deviations");
             expect(form.querySelectorAll(".lr-explain-box").length).toBe(9);
-            expect(steps.textContent).toContain("3.8");
+            assertAllExplanationsUseKatex(form);
+            expect(visibleText(steps)).toContain("3.8");
 
             toggleBtn.click();
             expect(form.classList.contains("lr-explain-open")).toBe(true);
             expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
-            expect(meanWrap.textContent).toContain("jungkat-jungkit");
+            expect(visibleText(meanWrap)).toContain("jungkat-jungkit");
 
             toggleBtn.click();
             expect(form.classList.contains("lr-explain-open")).toBe(false);
@@ -86,42 +129,42 @@ describe("Formula 39: Linear Regression", () => {
             rowAInputs[1].dispatchEvent(new window.Event("input"));
             expect(tbody.children.length).toBe(6);
 
-            const slopeExplain = form.querySelectorAll(".lr-explain-box")[4].textContent;
+            const slopeExplain = visibleText(form.querySelectorAll(".lr-explain-box")[4]);
             expect(slopeExplain).toContain("naik");
             expect(slopeExplain).toContain("3.8");
             const y0In = tbody.firstElementChild.querySelectorAll("input")[1];
             y0In.value = "120";
             y0In.dispatchEvent(new window.Event("input"));
-            const slopeUpdated = form.querySelectorAll(".lr-explain-box")[4].textContent;
+            const slopeUpdated = visibleText(form.querySelectorAll(".lr-explain-box")[4]);
             expect(slopeUpdated).not.toContain("3.8 poin");
+            assertAllExplanationsUseKatex(form);
         });
-    });
 
-    it("updates dynamic explanations for negative slope and exact fit", () => {
-        const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
-        document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
-        initMath39();
-        const form = document.getElementById("math-calc-form-39");
-        const tbody = document.getElementById("math39-tabulate-body");
-        while (tbody.children.length > 4) {
-            const inputs = tbody.firstElementChild.querySelectorAll("input");
-            inputs[0].value = "";
-            inputs[0].dispatchEvent(new window.Event("input"));
-            inputs[1].value = "";
-            inputs[1].dispatchEvent(new window.Event("input"));
-        }
-        const pairs = [[1, 90], [3, 70], [5, 50]];
-        pairs.forEach(([x, y], i) => {
-            const inputs = tbody.children[i].querySelectorAll("input");
-            inputs[0].value = String(x);
-            inputs[0].dispatchEvent(new window.Event("input"));
-            inputs[1].value = String(y);
-            inputs[1].dispatchEvent(new window.Event("input"));
+        it("updates dynamic KaTeX explanations for negative slope and exact fit", () => {
+            initMath39();
+            const form = document.getElementById("math-calc-form-39");
+            const tbody = document.getElementById("math39-tabulate-body");
+            while (tbody.children.length > 4) {
+                const inputs = tbody.firstElementChild.querySelectorAll("input");
+                inputs[0].value = "";
+                inputs[0].dispatchEvent(new window.Event("input"));
+                inputs[1].value = "";
+                inputs[1].dispatchEvent(new window.Event("input"));
+            }
+            const pairs = [[1, 90], [3, 70], [5, 50]];
+            pairs.forEach(([x, y], i) => {
+                const inputs = tbody.children[i].querySelectorAll("input");
+                inputs[0].value = String(x);
+                inputs[0].dispatchEvent(new window.Event("input"));
+                inputs[1].value = String(y);
+                inputs[1].dispatchEvent(new window.Event("input"));
+            });
+            const txt = visibleText(form);
+            expect(txt).toContain("pola turun berlawanan");
+            expect(txt).toContain("turun 10 poin");
+            expect(txt).toContain("SSE=0");
+            assertAllExplanationsUseKatex(form);
         });
-        const txt = form.textContent;
-        expect(txt).toContain("pola turun berlawanan");
-        expect(txt).toContain("turun 10 poin");
-        expect(txt).toContain("SSE = 0");
     });
 
     it("complies with zero-comment, zero-em-dash, line-limit, and TeX font rules", () => {
@@ -132,12 +175,14 @@ describe("Formula 39: Linear Regression", () => {
             "src/math/calculators/math-calc-39.js",
             "tests/math-linear-reg.test.js"
         ];
+        const blockComment = new RegExp("\\/\\*[\\s\\S]*?\\*\\/");
+        const lineComment = new RegExp("(^|\\s)\\/\\/");
         for (const rel of files) {
             const c = fs.readFileSync(path.resolve(process.cwd(), rel), "utf-8");
             expect(c.split(/\r?\n/).length).toBeLessThanOrEqual(1000);
             expect(c.includes("\u2014")).toBe(false);
-            expect(/\/\*[\s\S]*?\*\//.test(c)).toBe(false);
-            expect(/(^|\s)\/\//.test(c)).toBe(false);
+            expect(blockComment.test(c)).toBe(false);
+            expect(lineComment.test(c)).toBe(false);
         }
         const css = fs.readFileSync(path.resolve(process.cwd(), "styles/math.css"), "utf-8");
         const lrCss = css.slice(css.indexOf(".lr-page"));
