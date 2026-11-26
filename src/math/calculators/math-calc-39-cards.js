@@ -232,7 +232,7 @@ function drawSlopeArrows() {
     svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
     addArrowMarker(svg, "lr-slope-head");
 
-    const conn = (aEl, bEl, waveY1, waveY2) => {
+    const conn = (aEl, bEl, waveY1 = 0, waveY2 = 0) => {
         const a = aEl.getBoundingClientRect();
         const b = bEl.getBoundingClientRect();
         if (a.width <= 0 || b.width <= 0) return;
@@ -244,10 +244,10 @@ function drawSlopeArrows() {
         addBezierArrow(svg, x1, y1, mx, y1 + waveY1, mx, y2 + waveY2, x2, y2, "lr-slope-head");
     };
 
-    conn(num, mtop, 12, -12);
-    conn(den, mbot, -10, 10);
-    conn(vtop, rnum, -8, -14);
-    conn(vbot, rden, 12, 10);
+    conn(num, mtop, 0, 0);
+    conn(den, mbot, 0, 0);
+    conn(vtop, rnum, -8, -4);
+    conn(vbot, rden, 8, 4);
 }
 
 export function renderLRSteps(res) {
@@ -403,13 +403,32 @@ export function renderLRSteps(res) {
 
     const rightNode = makeEl("div", "lr-slope-node");
     renderTex(
-        `w_1 = \\frac{\\htmlClass{lr-tok-w0 lr-sl-rnum}{${fmtNum(sxy, 4)}}}{\\htmlClass{lr-tok-w1 lr-sl-rden}{${fmtNum(sxx, 4)}}} = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`,
+        `\\frac{\\htmlClass{lr-tok-w0 lr-sl-rnum}{${fmtNum(sxy, 4)}}}{\\htmlClass{lr-tok-w1 lr-sl-rden}{${fmtNum(sxx, 4)}}} = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`,
         rightNode,
         true
     );
 
     slopeStage.append(leftNode, midCol, rightNode);
-    slopeWrap.appendChild(slopeStage);
+
+    const slopeSum = makeEl("div", "lr-slope-summary");
+    const hBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    hBrace.setAttribute("class", "lr-hbrace-svg");
+    hBrace.setAttribute("viewBox", "0 0 540 22");
+    hBrace.setAttribute("preserveAspectRatio", "none");
+    hBrace.setAttribute("aria-hidden", "true");
+    const hPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    hPath.setAttribute("d", "M 4 2 Q 4 12 22 12 L 254 12 Q 270 12 270 20 Q 270 12 286 12 L 518 12 Q 536 12 536 2");
+    hPath.setAttribute("fill", "none");
+    hPath.setAttribute("stroke", "#ffffff");
+    hPath.setAttribute("stroke-width", "1.4");
+    hPath.setAttribute("vector-effect", "non-scaling-stroke");
+    hBrace.appendChild(hPath);
+
+    const slopeFinal = makeEl("div", "lr-slope-node");
+    renderTex(`w_1 = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`, slopeFinal, false);
+    slopeSum.append(hBrace, slopeFinal);
+
+    slopeWrap.append(slopeStage, slopeSum);
     slopeSec.appendChild(slopeWrap);
     frag.appendChild(slopeSec);
 
