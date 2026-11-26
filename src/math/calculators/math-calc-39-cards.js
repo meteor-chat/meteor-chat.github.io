@@ -1,6 +1,6 @@
 import { fmtNum } from "./math-calc-39-engine.js";
 
-function makeEl(tag, className, textContent) {
+export function makeEl(tag, className, textContent) {
     const el = document.createElement(tag);
     if (className) el.className = className;
     if (textContent !== undefined) el.textContent = textContent;
@@ -16,13 +16,13 @@ export function renderTex(tex, el, displayMode = false) {
     }
 }
 
-function makeArrow() {
+export function makeArrow() {
     const el = makeEl("div", "lr-step-arrow");
     renderTex("\\downarrow", el, false);
     return el;
 }
 
-function makeSection(titleText) {
+export function makeSection(titleText) {
     const sec = makeEl("section", "lr-sec");
     sec.appendChild(makeEl("div", "lr-sec-title", titleText));
     return sec;
@@ -42,7 +42,7 @@ function makeTexHeader(tex) {
     return th;
 }
 
-function makeTexTable(headers, bodyRows, footerRow = null) {
+export function makeTexTable(headers, bodyRows, footerRows = null) {
     const wrap = makeEl("div", "lr-table-scroll");
     const table = makeEl("table", "lr-sheet-table");
 
@@ -65,13 +65,16 @@ function makeTexTable(headers, bodyRows, footerRow = null) {
     });
     table.appendChild(tbody);
 
-    if (footerRow) {
+    if (footerRows) {
+        const rowsList = Array.isArray(footerRows[0]) ? footerRows : [footerRows];
         const tfoot = makeEl("tfoot");
-        const fr = makeEl("tr");
-        footerRow.forEach((c) => {
-            fr.appendChild(c.rawText !== undefined ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
+        rowsList.forEach((row) => {
+            const fr = makeEl("tr");
+            row.forEach((c) => {
+                fr.appendChild(c.rawText !== undefined ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
+            });
+            tfoot.appendChild(fr);
         });
-        tfoot.appendChild(fr);
         table.appendChild(tfoot);
     }
 
@@ -92,12 +95,18 @@ export function renderTopFormula39() {
     if (thY) renderTex("y", thY, false);
 }
 
-function syncRightBrace() {
-    const tabRow = document.querySelector(".lr-tab-brace-row");
-    const tbody = document.getElementById("math39-tabulate-body");
-    const braceSide = document.getElementById("math39-brace-side");
-    const vbraceSvg = document.getElementById("math39-vbrace-svg");
-    const vbracePath = document.getElementById("math39-vbrace-path");
+export function syncRightBrace(
+    rowSelector = ".lr-tab-brace-row",
+    tbodyId = "math39-tabulate-body",
+    braceSideId = "math39-brace-side",
+    vbraceSvgId = "math39-vbrace-svg",
+    vbracePathId = "math39-vbrace-path"
+) {
+    const tabRow = document.querySelector(rowSelector);
+    const tbody = document.getElementById(tbodyId);
+    const braceSide = document.getElementById(braceSideId);
+    const vbraceSvg = document.getElementById(vbraceSvgId);
+    const vbracePath = document.getElementById(vbracePathId);
     if (!tabRow || !tbody || !braceSide || !vbraceSvg) return;
 
     const filledRows = Array.from(tbody.children).filter((tr) => {
@@ -193,7 +202,7 @@ export function drawAfterArrows() {
     drawSlopeArrows();
 }
 
-function addArrowMarker(svg, id) {
+export function addArrowMarker(svg, id) {
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
     marker.setAttribute("id", id);
@@ -210,7 +219,7 @@ function addArrowMarker(svg, id) {
     svg.appendChild(defs);
 }
 
-function addBezierArrow(svg, x1, y1, cx1, cy1, cx2, cy2, x2, y2, markerId) {
+export function addBezierArrow(svg, x1, y1, cx1, cy1, cx2, cy2, x2, y2, markerId) {
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path.setAttribute("d", `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
     path.setAttribute("fill", "none");
@@ -220,7 +229,7 @@ function addBezierArrow(svg, x1, y1, cx1, cy1, cx2, cy2, x2, y2, markerId) {
     svg.appendChild(path);
 }
 
-function drawFractionStageArrows(stage, idx) {
+export function drawFractionStageArrows(stage, idx, markerPrefix = "lr-frac-head") {
     const svg = stage.querySelector(".lr-stage-svg");
     if (!svg) return;
     svg.textContent = "";
@@ -238,7 +247,7 @@ function drawFractionStageArrows(stage, idx) {
     const rden = stage.querySelector(".lr-sl-rden");
     if (!num || !den || !mtop || !mbot || !vtop || !vbot || !rnum || !rden) return;
 
-    const markerId = `lr-frac-head-${idx}`;
+    const markerId = `${markerPrefix}-${idx}`;
     svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
     addArrowMarker(svg, markerId);
 
@@ -334,17 +343,8 @@ function drawRmseArrows() {
     addBezierArrow(svg, bval.cx, bval.b + 4, bval.cx, dropY, bout.cx, dropY, bout.cx, bout.b + 5, "lr-rmse-head");
 }
 
-function drawSlopeArrows() {
-    document.querySelectorAll(".lr-frac-stage").forEach((stage, idx) => {
-        drawFractionStageArrows(stage, idx);
-    });
-    drawRmseArrows();
-    drawInterceptArrows();
-}
-
-function drawInterceptArrows() {
-    const stage = document.getElementById("math39-int-stage");
-    const svg = document.getElementById("math39-int-svg");
+export function drawThreeTierArrows(stage, markerId = "lr-int-head") {
+    const svg = stage ? stage.querySelector(".lr-stage-svg") : null;
     if (!stage || !svg) return;
     svg.textContent = "";
 
@@ -372,7 +372,7 @@ function drawInterceptArrows() {
     };
 
     svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
-    addArrowMarker(svg, "lr-int-head");
+    addArrowMarker(svg, markerId);
 
     pairs.forEach(([fromEl, toEl]) => {
         const a = box(fromEl);
@@ -380,8 +380,76 @@ function drawInterceptArrows() {
         const y1 = a.b + 4;
         const y2 = b.t - 5;
         const midY = (y1 + y2) * 0.5;
-        addBezierArrow(svg, a.cx, y1, a.cx, midY, b.cx, midY, b.cx, y2, "lr-int-head");
+        addBezierArrow(svg, a.cx, y1, a.cx, midY, b.cx, midY, b.cx, y2, markerId);
     });
+}
+
+export function makeHBraceSummary(tex) {
+    const wrap = makeEl("div", "lr-slope-summary");
+    const hBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    hBrace.setAttribute("class", "lr-hbrace-svg");
+    hBrace.setAttribute("viewBox", "0 0 540 22");
+    hBrace.setAttribute("preserveAspectRatio", "none");
+    hBrace.setAttribute("aria-hidden", "true");
+    const hPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    hPath.setAttribute("d", "M 4 2 Q 4 12 22 12 L 254 12 Q 270 12 270 20 Q 270 12 286 12 L 518 12 Q 536 12 536 2");
+    hPath.setAttribute("fill", "none");
+    hPath.setAttribute("stroke", "#ffffff");
+    hPath.setAttribute("stroke-width", "1.4");
+    hPath.setAttribute("vector-effect", "non-scaling-stroke");
+    hBrace.appendChild(hPath);
+    const node = makeEl("div", "lr-slope-node");
+    renderTex(tex, node, false);
+    wrap.append(hBrace, node);
+    return wrap;
+}
+
+const joinCls = (tokCls, baseCls) => (tokCls ? `${tokCls} ${baseCls}` : baseCls);
+
+export function makeFractionFlowCard({ symTex, numTex, denTex, numValTex, denValTex, resValTex, numCls = "", denCls = "", resCls = "", extraCls = "" }) {
+    const wrap = makeEl("div", extraCls ? `lr-step-card lr-table-scroll ${extraCls}` : "lr-step-card lr-table-scroll");
+    const stage = makeEl("div", "lr-slope-stage lr-frac-stage");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "lr-stage-svg");
+    svg.setAttribute("aria-hidden", "true");
+    stage.appendChild(svg);
+
+    const leftNode = makeEl("div", "lr-slope-node");
+    renderTex(
+        `${symTex} = \\frac{\\htmlClass{lr-sl-num}{${numTex}}}{\\htmlClass{lr-sl-den}{${denTex}}}`,
+        leftNode,
+        true
+    );
+
+    const midCol = makeEl("div", "lr-slope-mid");
+    const midTop = makeEl("div", "lr-slope-node lr-sl-mtop");
+    renderTex(`${numTex} = \\htmlClass{${joinCls(numCls, "lr-sl-vtop")}}{${numValTex}}`, midTop, false);
+    const midBot = makeEl("div", "lr-slope-node lr-sl-mbot");
+    renderTex(`${denTex} = \\htmlClass{${joinCls(denCls, "lr-sl-vbot")}}{${denValTex}}`, midBot, false);
+    midCol.append(midTop, midBot);
+
+    const rightNode = makeEl("div", "lr-slope-node");
+    const resWrapped = resCls ? `\\htmlClass{${resCls}}{${resValTex}}` : resValTex;
+    renderTex(
+        `\\frac{\\htmlClass{${joinCls(numCls, "lr-sl-rnum")}}{${numValTex}}}{\\htmlClass{${joinCls(denCls, "lr-sl-rden")}}{${denValTex}}} = ${resWrapped}`,
+        rightNode,
+        true
+    );
+
+    stage.append(leftNode, midCol, rightNode);
+    wrap.append(stage, makeHBraceSummary(`${symTex} = ${resWrapped}`));
+    return wrap;
+}
+
+function drawSlopeArrows() {
+    const form39 = document.getElementById("math-calc-form-39");
+    if (!form39) return;
+    form39.querySelectorAll(".lr-frac-stage").forEach((stage, idx) => {
+        drawFractionStageArrows(stage, idx, "lr-frac-head-39");
+    });
+    drawRmseArrows();
+    const intStage = document.getElementById("math39-int-stage");
+    if (intStage) drawThreeTierArrows(intStage, "lr-int-head-39");
 }
 
 export function renderLRSteps(res) {
@@ -509,62 +577,6 @@ export function renderLRSteps(res) {
         )
     );
     frag.appendChild(sumsSec);
-
-    const makeHBraceSummary = (tex) => {
-        const wrap = makeEl("div", "lr-slope-summary");
-        const hBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        hBrace.setAttribute("class", "lr-hbrace-svg");
-        hBrace.setAttribute("viewBox", "0 0 540 22");
-        hBrace.setAttribute("preserveAspectRatio", "none");
-        hBrace.setAttribute("aria-hidden", "true");
-        const hPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        hPath.setAttribute("d", "M 4 2 Q 4 12 22 12 L 254 12 Q 270 12 270 20 Q 270 12 286 12 L 518 12 Q 536 12 536 2");
-        hPath.setAttribute("fill", "none");
-        hPath.setAttribute("stroke", "#ffffff");
-        hPath.setAttribute("stroke-width", "1.4");
-        hPath.setAttribute("vector-effect", "non-scaling-stroke");
-        hBrace.appendChild(hPath);
-        const node = makeEl("div", "lr-slope-node");
-        renderTex(tex, node, false);
-        wrap.append(hBrace, node);
-        return wrap;
-    };
-
-    const joinCls = (tokCls, baseCls) => (tokCls ? `${tokCls} ${baseCls}` : baseCls);
-    const makeFractionFlowCard = ({ symTex, numTex, denTex, numValTex, denValTex, resValTex, numCls = "", denCls = "", resCls = "", extraCls = "" }) => {
-        const wrap = makeEl("div", extraCls ? `lr-step-card lr-table-scroll ${extraCls}` : "lr-step-card lr-table-scroll");
-        const stage = makeEl("div", "lr-slope-stage lr-frac-stage");
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("class", "lr-stage-svg");
-        svg.setAttribute("aria-hidden", "true");
-        stage.appendChild(svg);
-
-        const leftNode = makeEl("div", "lr-slope-node");
-        renderTex(
-            `${symTex} = \\frac{\\htmlClass{lr-sl-num}{${numTex}}}{\\htmlClass{lr-sl-den}{${denTex}}}`,
-            leftNode,
-            true
-        );
-
-        const midCol = makeEl("div", "lr-slope-mid");
-        const midTop = makeEl("div", "lr-slope-node lr-sl-mtop");
-        renderTex(`${numTex} = \\htmlClass{${joinCls(numCls, "lr-sl-vtop")}}{${numValTex}}`, midTop, false);
-        const midBot = makeEl("div", "lr-slope-node lr-sl-mbot");
-        renderTex(`${denTex} = \\htmlClass{${joinCls(denCls, "lr-sl-vbot")}}{${denValTex}}`, midBot, false);
-        midCol.append(midTop, midBot);
-
-        const rightNode = makeEl("div", "lr-slope-node");
-        const resWrapped = resCls ? `\\htmlClass{${resCls}}{${resValTex}}` : resValTex;
-        renderTex(
-            `\\frac{\\htmlClass{${joinCls(numCls, "lr-sl-rnum")}}{${numValTex}}}{\\htmlClass{${joinCls(denCls, "lr-sl-rden")}}{${denValTex}}} = ${resWrapped}`,
-            rightNode,
-            true
-        );
-
-        stage.append(leftNode, midCol, rightNode);
-        wrap.append(stage, makeHBraceSummary(`${symTex} = ${resWrapped}`));
-        return wrap;
-    };
 
     frag.appendChild(makeArrow());
     const slopeSec = makeSection("5. slope");

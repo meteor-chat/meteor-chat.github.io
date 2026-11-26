@@ -38,5 +38,6 @@ export const FORMULA_NAMES = [
     "Konversi Suhu",
     "Net Present Value (NPV)",
     "Simulated Annealing",
-    "Linear Regression"
+    "Linear Regression",
+    "Logistic Regression"
 ];

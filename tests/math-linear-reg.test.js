@@ -32,7 +32,7 @@ describe("Formula 39: Linear Regression", () => {
     });
 
     it("registers Formula 39 routes and builds /math/ai/11", () => {
-        expect(FORM_COUNT).toBe(39);
+        expect(FORM_COUNT).toBe(40);
         expect(FORMULA_NAMES[39]).toBe("Linear Regression");
         expect(FORMULAS[39]).toBe("\\hat{y} = w_0 + w_1 x");
         expect(hasForm(39)).toBe(true);

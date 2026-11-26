@@ -160,10 +160,12 @@ const IDS = {
     m38CanvasTelemetry: "math38-canvas-telemetry",
     m38Steps: "math38-steps-container",
     m39Rows: "math39-tabulate-body",
-    m39Steps: "math39-steps-container"
+    m39Steps: "math39-steps-container",
+    m40Rows: "math40-tabulate-body",
+    m40Steps: "math40-steps-container"
 };
 
-export const FORM_COUNT = 39;
+export const FORM_COUNT = 40;
 
 export function bindMathRefs() {
     refs.mathMenu = document.getElementById("math-menu-view");
