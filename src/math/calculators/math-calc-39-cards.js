@@ -1,5 +1,10 @@
 import { fmtNum } from "./math-calc-39-engine.js";
 
+export function wrapNeg(val, digits = 3) {
+    const s = fmtNum(val, digits);
+    return s.startsWith("-") ? `(${s})` : s;
+}
+
 export function makeEl(tag, className, textContent) {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -404,6 +409,13 @@ export function makeHBraceSummary(tex) {
     return wrap;
 }
 
+export function mountDiagramUnit(card, stage, summaryTex) {
+    const unit = makeEl("div", "lr-diagram-unit");
+    unit.append(stage, makeHBraceSummary(summaryTex));
+    card.appendChild(unit);
+    return card;
+}
+
 const joinCls = (tokCls, baseCls) => (tokCls ? `${tokCls} ${baseCls}` : baseCls);
 
 export function makeFractionFlowCard({ symTex, numTex, denTex, numValTex, denValTex, resValTex, numCls = "", denCls = "", resCls = "", extraCls = "" }) {
@@ -437,10 +449,7 @@ export function makeFractionFlowCard({ symTex, numTex, denTex, numValTex, denVal
     );
 
     stage.append(leftNode, midCol, rightNode);
-    const unit = makeEl("div", "lr-diagram-unit");
-    unit.append(stage, makeHBraceSummary(`${symTex} = ${resWrapped}`));
-    wrap.appendChild(unit);
-    return wrap;
+    return mountDiagramUnit(wrap, stage, `${symTex} = ${resWrapped}`);
 }
 
 function drawSlopeArrows() {
@@ -549,10 +558,6 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const sumsSec = makeSection("4. two sums");
-    const paren = (v) => {
-        const s = fmtNum(v, 3);
-        return v < 0 ? `(${s})` : s;
-    };
     sumsSec.appendChild(
         makeTexTable(
             [
@@ -564,9 +569,9 @@ export function renderLRSteps(res) {
             ],
             rows.map((r) => [
                 { rawText: r.label },
-                { tex: `${paren(r.dx)} \\cdot ${paren(r.dy)}`, cls: "lr-calc-cell" },
+                { tex: `${wrapNeg(r.dx, 3)} \\cdot ${wrapNeg(r.dy, 3)}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dxdy, 3), cls: "lr-calc-cell" },
-                { tex: `${paren(r.dx)}^2`, cls: "lr-calc-cell" },
+                { tex: `${wrapNeg(r.dx, 3)}^2`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dx2, 3), cls: "lr-calc-cell" }
             ]),
             [
@@ -625,17 +630,14 @@ export function renderLRSteps(res) {
     intMid.append(intR1, intR2, intR3);
 
     const intRight = makeEl("div", "lr-slope-node");
-    const yStr = meanY < 0 ? `(${fmtNum(meanY, 4)})` : fmtNum(meanY, 4);
-    const w1Wrap = w1 < 0 ? `(${fmtNum(w1, 4)})` : fmtNum(w1, 4);
-    const meanXWrap = meanX < 0 ? `(${fmtNum(meanX, 4)})` : fmtNum(meanX, 4);
     renderTex(
-        `\\htmlClass{lr-in-ry lr-tok-w0}{${yStr}} - \\htmlClass{lr-in-rw1 lr-tok-w1}{${w1Wrap}} \\cdot \\htmlClass{lr-in-rx lr-tok-w1}{${meanXWrap}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
+        `\\htmlClass{lr-in-ry lr-tok-w0}{${wrapNeg(meanY, 4)}} - \\htmlClass{lr-in-rw1 lr-tok-w1}{${wrapNeg(w1, 4)}} \\cdot \\htmlClass{lr-in-rx lr-tok-w1}{${wrapNeg(meanX, 4)}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
         intRight,
         false
     );
 
     intStage.append(intLeft, intMid, intRight);
-    intWrap.append(intStage, makeHBraceSummary(`w_0 = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`));
+    mountDiagramUnit(intWrap, intStage, `w_0 = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`);
 
     const signW1Tok = w1 < 0
         ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(w1), 4)}}`
@@ -651,7 +653,6 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const predSec = makeSection("7. prediction");
-    const predParens = (v, d = 3) => (v < 0 ? `(${fmtNum(v, d)})` : fmtNum(v, d));
     predSec.appendChild(
         makeTexTable(
             [
@@ -666,7 +667,7 @@ export function renderLRSteps(res) {
                 { tex: fmtNum(r.x, 3) },
                 { tex: fmtNum(r.actual, 3) },
                 {
-                    tex: `\\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1Tok} \\cdot ${predParens(r.x, 3)}`,
+                    tex: `\\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1Tok} \\cdot ${wrapNeg(r.x, 3)}`,
                     cls: "lr-calc-cell"
                 },
                 { tex: `\\htmlClass{lr-tok-y}{${fmtNum(r.predict, 3)}}`, cls: "lr-calc-cell" }
@@ -690,11 +691,11 @@ export function renderLRSteps(res) {
             predRows.map((r) => [
                 { rawText: r.label },
                 {
-                    tex: `${fmtNum(r.actual, 3)} - \\htmlClass{lr-tok-y}{${predParens(r.predict, 3)}}`,
+                    tex: `${fmtNum(r.actual, 3)} - \\htmlClass{lr-tok-y}{${wrapNeg(r.predict, 3)}}`,
                     cls: "lr-calc-cell"
                 },
                 { tex: fmtNum(r.residual, 4), cls: "lr-calc-cell" },
-                { tex: `${predParens(r.residual, 4)}^2`, cls: "lr-calc-cell" },
+                { tex: `${wrapNeg(r.residual, 4)}^2`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.sse, 4), cls: "lr-calc-cell" },
                 { tex: fmtNum(r.absRes, 4), cls: "lr-calc-cell" }
             ]),
@@ -749,7 +750,7 @@ export function renderLRSteps(res) {
     );
 
     rmseStage.append(rmseLeft, rmseMid, rmseRight);
-    rmseCard.append(rmseStage, makeHBraceSummary(`\\text{RMSE} = \\htmlClass{lr-tok-err}{${fmtNum(rmse, 4)}}`));
+    mountDiagramUnit(rmseCard, rmseStage, `\\text{RMSE} = \\htmlClass{lr-tok-err}{${fmtNum(rmse, 4)}}`);
 
     const maeCard = makeFractionFlowCard({
         symTex: "\\text{MAE}",

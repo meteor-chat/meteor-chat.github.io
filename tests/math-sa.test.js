@@ -93,7 +93,7 @@ describe("Simulated Annealing Engine (math-calc-38-engine)", () => {
 
 describe("Formula 38 Integration & Routing", () => {
     it("registers formula 38 in registry and routes", () => {
-        expect(FORM_COUNT).toBe(39);
+        expect(FORM_COUNT).toBe(40);
         expect(FORMULAS[38]).toBe("P = \\exp\\left(-\\frac{\\Delta E}{T}\\right)");
         expect(FORMULA_NAMES[38]).toBe("Simulated Annealing");
         expect(FORMULA_CATEGORIES[38]).toBe("Kecerdasan Artifisial");

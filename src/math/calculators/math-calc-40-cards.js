@@ -1,21 +1,17 @@
 import { fmtNum } from "./math-calc-40-engine.js";
 import {
+    wrapNeg,
     makeEl,
     renderTex,
     makeArrow,
     makeSection,
     makeTexTable,
     syncRightBrace,
-    makeHBraceSummary,
+    mountDiagramUnit,
     makeFractionFlowCard,
     drawFractionStageArrows,
     drawThreeTierArrows
 } from "./math-calc-39-cards.js";
-
-function wrapNeg(v, digits = 4) {
-    const s = fmtNum(v, digits);
-    return v < 0 ? `(${s})` : s;
-}
 
 export function renderTopFormula40() {
     const el = document.getElementById("math-calc-formula-display-40");
@@ -93,10 +89,7 @@ function makeWeightUpdateCard({ labelNewTex, symTex, symVal, lr, gradSymTex, gra
     );
 
     stage.append(topNode, midRow, botNode);
-    const unit = makeEl("div", "lr-diagram-unit");
-    unit.append(stage, makeHBraceSummary(`${labelNewTex} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`));
-    card.appendChild(unit);
-    return card;
+    return mountDiagramUnit(card, stage, `${labelNewTex} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`);
 }
 
 export function renderLogRegSteps(res) {
@@ -106,24 +99,29 @@ export function renderLogRegSteps(res) {
     if (!container) return;
     container.textContent = "";
 
-    if (!res.valid) {
-        if (braceSide) braceSide.classList.add("hidden");
-        const err = makeEl("div", "lr-step-card lr-card-subnote lr-subnote-warn", res.reason);
+    const validCount = res ? res.n : 0;
+    if (braceSide && nTag) {
+        if (validCount > 0) {
+            nTag.textContent = "";
+            nTag.appendChild(document.createTextNode("jumlah data = "));
+            const nVal = makeEl("span", "lr-n-val lr-tok-y");
+            nVal.id = "math40-n-val";
+            renderTex(String(validCount), nVal, false);
+            nTag.appendChild(nVal);
+            braceSide.classList.remove("hidden");
+        } else {
+            braceSide.classList.add("hidden");
+        }
+    }
+
+    if (!res || !res.valid) {
+        const err = makeEl("div", "lr-step-card lr-card-subnote lr-subnote-warn", res?.reason || "Minimal 1 titik data (x, y) diperlukan.");
         container.appendChild(err);
+        drawLogRegArrows();
         return;
     }
 
     const { n, lr, threshold, initW0, initW1, rows, totalLoss, avgLoss, totalGw0, avgGw0, totalGw1, avgGw1, newW0, newW1, afterRows, afterLoss, afterCorrect, initCorrect, trace } = res;
-
-    if (braceSide && nTag) {
-        nTag.textContent = "";
-        nTag.appendChild(document.createTextNode("jumlah data = "));
-        const nVal = makeEl("span", "lr-n-val lr-tok-y");
-        nVal.id = "math40-n-val";
-        renderTex(String(n), nVal, false);
-        nTag.appendChild(nVal);
-        braceSide.classList.remove("hidden");
-    }
 
     const frag = document.createDocumentFragment();
     const w0SignTok = initW1 < 0 ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(initW1), 4)}}` : `+ \\htmlClass{lr-tok-w1}{${fmtNum(initW1, 4)}}`;
