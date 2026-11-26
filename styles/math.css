@@ -418,9 +418,9 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 .lr-slope-summary { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 6px; color: #ffffff; width: 100%; min-width: 0; margin: 0 auto; }
 .lr-int-stage { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 38px; width: 100%; min-width: max-content; padding: 14px 12px 10px; box-sizing: border-box; margin: 0 auto; }
 .lr-int-mid { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 40px; z-index: 3; }
-.lr-metrics-card { overflow-x: visible; }
-.lr-metrics-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 26px; width: 100%; }
-.lr-metric-item .katex-display { margin: 0; }
+.lr-metrics-sec { gap: 8px; }
+.lr-mae-card { margin-top: 8px; }
+.lr-rmse-stage { position: relative; display: flex; align-items: center; justify-content: center; gap: 36px; width: 100%; min-width: min(100%, 480px); max-width: 560px; padding: 14px 14px 28px; box-sizing: border-box; margin: 0 auto; }
 .lr-step-eq { margin-top: 6px; }
 .lr-card-subnote { font-size: 12px; color: #94a3b8; text-align: center; padding: 8px; }
 .lr-subnote-warn { color: #fbbf24; }
@@ -428,5 +428,5 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 .lr-tok-w1 { color: #34d399 !important; }
 .lr-tok-y { color: #38bdf8 !important; }
 .lr-tok-err { color: #c084fc !important; }
-@media (max-width: 639px) { .lr-mean-section { padding-right: 12px; } .lr-mean-line .katex { font-size: 0.9em; } .lr-mean-summary { margin-top: 22px; } .lr-sheet-table th, .lr-sheet-table td { padding: 7px 10px; } .lr-tabulate-table { min-width: 186px; } .lr-tabulate-table .lr-tab-label { width: 38px; padding: 0 6px; } .lr-tab-input-cell { min-width: 64px; } .lr-brace-side { gap: 4px; } .lr-n-label { font-size: 13px; } .lr-slope-stage { flex-direction: column; min-width: 0; width: 100%; gap: 38px; padding: 30px 8px 28px; } .lr-slope-stage .katex { font-size: 0.85em; } .lr-slope-mid { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 16px; width: 100%; } .lr-int-stage { gap: 34px; padding: 12px 4px 8px; } .lr-int-mid { gap: 20px; } }
+@media (max-width: 639px) { .lr-mean-section { padding-right: 12px; } .lr-mean-line .katex { font-size: 0.9em; } .lr-mean-summary { margin-top: 22px; } .lr-sheet-table th, .lr-sheet-table td { padding: 7px 10px; } .lr-tabulate-table { min-width: 186px; } .lr-tabulate-table .lr-tab-label { width: 38px; padding: 0 6px; } .lr-tab-input-cell { min-width: 64px; } .lr-brace-side { gap: 4px; } .lr-n-label { font-size: 13px; } .lr-slope-stage { flex-direction: column; min-width: 0; width: 100%; gap: 38px; padding: 30px 8px 28px; } .lr-slope-stage .katex { font-size: 0.85em; } .lr-slope-mid { flex-direction: row; flex-wrap: nowrap; justify-content: center; gap: 16px; width: 100%; } .lr-int-stage { gap: 34px; padding: 12px 4px 8px; } .lr-int-mid { gap: 20px; } .lr-rmse-stage { min-width: max-content; gap: 16px; padding: 12px 6px 26px; } .lr-rmse-stage .katex { font-size: 0.85em; } }
 @media (prefers-reduced-motion: reduce) { .lr-page * { transition: none !important; } }
