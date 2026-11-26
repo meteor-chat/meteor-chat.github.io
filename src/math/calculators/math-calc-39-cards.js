@@ -248,6 +248,68 @@ function drawSlopeArrows() {
     conn(den, mbot, 0, 0);
     conn(vtop, rnum, -8, -4);
     conn(vbot, rden, 8, 4);
+    drawInterceptArrows();
+}
+
+function drawInterceptArrows() {
+    const stage = document.getElementById("math39-int-stage");
+    const svg = document.getElementById("math39-int-svg");
+    if (!stage || !svg) return;
+    svg.textContent = "";
+
+    const stR = stage.getBoundingClientRect();
+    if (!stR || stR.width <= 0 || stR.height <= 0) return;
+
+    const q = (cls) => stage.querySelector(`.${cls}`);
+    const ybar = q("lr-in-ybar");
+    const w1 = q("lr-in-w1");
+    const xbar = q("lr-in-xbar");
+    const my = q("lr-in-my");
+    const mw1 = q("lr-in-mw1");
+    const mx = q("lr-in-mx");
+    const vy = q("lr-in-vy");
+    const vw1 = q("lr-in-vw1");
+    const vx = q("lr-in-vx");
+    const ry = q("lr-in-ry");
+    const rw1 = q("lr-in-rw1");
+    const rx = q("lr-in-rx");
+    if (!ybar || !w1 || !xbar || !my || !mw1 || !mx || !vy || !vw1 || !vx || !ry || !rw1 || !rx) return;
+
+    const box = (el) => {
+        const b = el.getBoundingClientRect();
+        return {
+            l: b.left - stR.left,
+            r: b.right - stR.left,
+            t: b.top - stR.top,
+            b: b.bottom - stR.top,
+            cx: b.left - stR.left + b.width * 0.5,
+            cy: b.top - stR.top + b.height * 0.5
+        };
+    };
+
+    const byb = box(ybar);
+    const bw1 = box(w1);
+    const bxb = box(xbar);
+    const bmy = box(my);
+    const bmw1 = box(mw1);
+    const bmx = box(mx);
+    const bvy = box(vy);
+    const bvw1 = box(vw1);
+    const bvx = box(vx);
+    const bry = box(ry);
+    const brw1 = box(rw1);
+    const brx = box(rx);
+
+    svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
+    addArrowMarker(svg, "lr-int-head");
+
+    addBezierArrow(svg, byb.cx, byb.t - 4, byb.cx + 12, byb.t - 26, bmy.l - 28, bmy.cy - 4, bmy.l - 6, bmy.cy, "lr-int-head");
+    addBezierArrow(svg, bw1.cx, bw1.t - 3, bw1.cx + 20, bw1.t - 22, bmw1.l - 16, bmw1.cy - 14, bmw1.l - 6, bmw1.cy - 2, "lr-int-head");
+    addBezierArrow(svg, bxb.cx, bxb.b + 4, bxb.cx + 4, bmx.cy, bmx.l - 22, bmx.cy + 2, bmx.l - 6, bmx.cy, "lr-int-head");
+
+    addBezierArrow(svg, bvy.r + 6, bvy.cy, bry.cx + 4, bvy.cy - 2, bry.cx + 4, bry.t - 18, bry.cx, bry.t - 5, "lr-int-head");
+    addBezierArrow(svg, bvw1.r + 6, bvw1.cy + 2, bvw1.r + 22, brw1.b + 30, brw1.cx - 4, brw1.b + 26, brw1.cx, brw1.b + 5, "lr-int-head");
+    addBezierArrow(svg, bvx.cx, bvx.b + 5, bvx.cx + 22, brx.b + 48, brx.cx + 4, brx.b + 44, brx.cx, brx.b + 5, "lr-int-head");
 }
 
 export function renderLRSteps(res) {
@@ -410,46 +472,78 @@ export function renderLRSteps(res) {
 
     slopeStage.append(leftNode, midCol, rightNode);
 
-    const slopeSum = makeEl("div", "lr-slope-summary");
-    const hBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    hBrace.setAttribute("class", "lr-hbrace-svg");
-    hBrace.setAttribute("viewBox", "0 0 540 22");
-    hBrace.setAttribute("preserveAspectRatio", "none");
-    hBrace.setAttribute("aria-hidden", "true");
-    const hPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    hPath.setAttribute("d", "M 4 2 Q 4 12 22 12 L 254 12 Q 270 12 270 20 Q 270 12 286 12 L 518 12 Q 536 12 536 2");
-    hPath.setAttribute("fill", "none");
-    hPath.setAttribute("stroke", "#ffffff");
-    hPath.setAttribute("stroke-width", "1.4");
-    hPath.setAttribute("vector-effect", "non-scaling-stroke");
-    hBrace.appendChild(hPath);
+    const makeHBraceSummary = (tex) => {
+        const wrap = makeEl("div", "lr-slope-summary");
+        const hBrace = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        hBrace.setAttribute("class", "lr-hbrace-svg");
+        hBrace.setAttribute("viewBox", "0 0 540 22");
+        hBrace.setAttribute("preserveAspectRatio", "none");
+        hBrace.setAttribute("aria-hidden", "true");
+        const hPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        hPath.setAttribute("d", "M 4 2 Q 4 12 22 12 L 254 12 Q 270 12 270 20 Q 270 12 286 12 L 518 12 Q 536 12 536 2");
+        hPath.setAttribute("fill", "none");
+        hPath.setAttribute("stroke", "#ffffff");
+        hPath.setAttribute("stroke-width", "1.4");
+        hPath.setAttribute("vector-effect", "non-scaling-stroke");
+        hBrace.appendChild(hPath);
+        const node = makeEl("div", "lr-slope-node");
+        renderTex(tex, node, false);
+        wrap.append(hBrace, node);
+        return wrap;
+    };
 
-    const slopeFinal = makeEl("div", "lr-slope-node");
-    renderTex(`w_1 = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`, slopeFinal, false);
-    slopeSum.append(hBrace, slopeFinal);
-
-    slopeWrap.append(slopeStage, slopeSum);
+    slopeWrap.append(slopeStage, makeHBraceSummary(`w_1 = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`));
     slopeSec.appendChild(slopeWrap);
     frag.appendChild(slopeSec);
 
     frag.appendChild(makeArrow());
     const intSec = makeSection("6. intercept");
-    const intMath = makeEl("div", "lr-step-card");
+    const intWrap = makeEl("div", "lr-step-card lr-table-scroll");
+    const intStage = makeEl("div", "lr-int-stage");
+    intStage.id = "math39-int-stage";
+    const intSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    intSvg.setAttribute("class", "lr-stage-svg");
+    intSvg.setAttribute("aria-hidden", "true");
+    intSvg.id = "math39-int-svg";
+    intStage.appendChild(intSvg);
+
+    const intLeft = makeEl("div", "lr-slope-node");
+    renderTex(
+        "w_0 = \\htmlClass{lr-in-ybar}{\\bar{y}} - \\htmlClass{lr-in-w1}{w_1} \\cdot \\htmlClass{lr-in-xbar}{\\bar{x}}",
+        intLeft,
+        false
+    );
+
+    const intMid = makeEl("div", "lr-int-mid");
+    const intR1 = makeEl("div", "lr-slope-node");
+    renderTex(`\\htmlClass{lr-in-my}{\\bar{y}} = \\htmlClass{lr-in-vy}{${fmtNum(meanY, 4)}}`, intR1, false);
+    const intR2 = makeEl("div", "lr-slope-node");
+    renderTex(`\\htmlClass{lr-in-mw1}{w_1} = \\htmlClass{lr-in-vw1}{${fmtNum(w1, 4)}}`, intR2, false);
+    const intR3 = makeEl("div", "lr-slope-node");
+    renderTex(`\\htmlClass{lr-in-mx}{\\bar{x}} = \\htmlClass{lr-in-vx}{${fmtNum(meanX, 4)}}`, intR3, false);
+    intMid.append(intR1, intR2, intR3);
+
+    const intRight = makeEl("div", "lr-slope-node");
+    const yStr = meanY < 0 ? `(${fmtNum(meanY, 4)})` : fmtNum(meanY, 4);
     const w1Wrap = w1 < 0 ? `(${fmtNum(w1, 4)})` : fmtNum(w1, 4);
     const meanXWrap = meanX < 0 ? `(${fmtNum(meanX, 4)})` : fmtNum(meanX, 4);
-    const signW1 = w1 < 0 ? `- ${fmtNum(Math.abs(w1), 4)}` : `+ ${fmtNum(w1, 4)}`;
     renderTex(
-        `w_0 = \\bar{y} - w_1\\bar{x} = ${fmtNum(meanY, 4)} - ${w1Wrap} \\cdot ${meanXWrap} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
-        intMath,
-        true
+        `\\htmlClass{lr-in-ry}{${yStr}} - \\htmlClass{lr-in-rw1}{${w1Wrap}} \\cdot \\htmlClass{lr-in-rx}{${meanXWrap}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
+        intRight,
+        false
     );
+
+    intStage.append(intLeft, intMid, intRight);
+    intWrap.append(intStage, makeHBraceSummary(`w_0 = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`));
+
+    const signW1 = w1 < 0 ? `- ${fmtNum(Math.abs(w1), 4)}` : `+ ${fmtNum(w1, 4)}`;
     const eqMath = makeEl("div", "lr-step-card lr-step-eq");
     renderTex(
         `\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1}\\,x`,
         eqMath,
         true
     );
-    intSec.append(intMath, eqMath);
+    intSec.append(intWrap, eqMath);
     frag.appendChild(intSec);
 
     frag.appendChild(makeArrow());
