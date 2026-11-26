@@ -8,10 +8,11 @@ function makeEl(tag, className, textContent) {
 }
 
 export function renderTex(tex, el, displayMode = false) {
+    const expr = String(tex ?? "");
     if (typeof katex !== "undefined") {
-        katex.render(tex, el, { throwOnError: false, trust: true, displayMode });
+        katex.render(expr, el, { throwOnError: false, trust: true, displayMode });
     } else {
-        el.textContent = tex;
+        el.textContent = expr;
     }
 }
 
@@ -58,7 +59,7 @@ function makeTexTable(headers, bodyRows, footerRow = null) {
     bodyRows.forEach((cells) => {
         const tr = makeEl("tr");
         cells.forEach((c) => {
-            tr.appendChild(c.rawText ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
+            tr.appendChild(c.rawText !== undefined ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
         });
         tbody.appendChild(tr);
     });
@@ -68,7 +69,7 @@ function makeTexTable(headers, bodyRows, footerRow = null) {
         const tfoot = makeEl("tfoot");
         const fr = makeEl("tr");
         footerRow.forEach((c) => {
-            fr.appendChild(c.rawText ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
+            fr.appendChild(c.rawText !== undefined ? makeEl("td", c.cls || "", c.rawText) : makeTexCell(c.tex, c.cls || ""));
         });
         tfoot.appendChild(fr);
         table.appendChild(tfoot);
