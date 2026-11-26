@@ -119,7 +119,17 @@ export function initMath40() {
 }
 
 export function calculateMath40() {
-    const rawPoints = rowEntries.map((r) => ({ x: r.xStr, y: r.yStr }));
+    const rawPoints = [];
+    for (let i = 0; i < rowEntries.length; i++) {
+        const xStr = String(rowEntries[i].xStr ?? "").trim();
+        const yStr = String(rowEntries[i].yStr ?? "").trim();
+        if (xStr === "" || yStr === "") continue;
+        const x = parseFloat(xStr);
+        const y = parseFloat(yStr);
+        if (Number.isFinite(x) && Number.isFinite(y)) {
+            rawPoints.push({ x, y });
+        }
+    }
     const w0 = readNumInput("math40-in-w0", 0);
     const w1 = readNumInput("math40-in-w1", 0);
     const lr = readNumInput("math40-in-lr", 1);

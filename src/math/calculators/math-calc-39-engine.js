@@ -17,8 +17,12 @@ export function normalizePoints(rawPoints) {
     const clean = [];
     for (let i = 0; i < rawPoints.length; i++) {
         const p = rawPoints[i];
-        const x = Number(p?.x);
-        const y = Number(p?.y);
+        if (p == null) continue;
+        const rawX = typeof p.x === "string" ? p.x.trim() : p.x;
+        const rawY = typeof p.y === "string" ? p.y.trim() : p.y;
+        if (rawX === "" || rawY === "" || rawX === null || rawX === undefined || rawY === null || rawY === undefined) continue;
+        const x = Number(rawX);
+        const y = Number(rawY);
         if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
         const label = p?.label && String(p.label).trim() !== ""
             ? String(p.label).trim()

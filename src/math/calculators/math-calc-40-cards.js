@@ -158,7 +158,7 @@ export function renderLogRegSteps(res) {
                 { rawText: "" },
                 { rawText: "" },
                 { rawText: "" },
-                { tex: `${initCorrect}/${n} (${fmtNum((initCorrect / n) * 100, 1)}\\%)`, cls: "lr-calc-cell" }
+                { tex: `${initCorrect}/${n}\\;(${fmtNum((initCorrect / n) * 100, 1)}\\%)`, cls: "lr-calc-cell" }
             ]
         )
     );
@@ -341,7 +341,7 @@ export function renderLogRegSteps(res) {
                 { rawText: "" },
                 { rawText: "" },
                 { tex: `\\htmlClass{lr-tok-err}{${fmtNum(afterLoss, 4)}}`, cls: "lr-calc-cell" },
-                { tex: `${afterCorrect}/${n} (${fmtNum((afterCorrect / n) * 100, 1)}\\%)`, cls: "lr-calc-cell" }
+                { tex: `${afterCorrect}/${n}\\;(${fmtNum((afterCorrect / n) * 100, 1)}\\%)`, cls: "lr-calc-cell" }
             ]
         )
     );
