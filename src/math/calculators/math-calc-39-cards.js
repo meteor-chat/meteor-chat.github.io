@@ -617,11 +617,11 @@ export function renderLRSteps(res) {
 
     const intMid = makeEl("div", "lr-int-mid");
     const intR1 = makeEl("div", "lr-slope-node");
-    renderTex(`\\htmlClass{lr-in-my}{\\bar{y}} = \\htmlClass{lr-in-vy}{${fmtNum(meanY, 4)}}`, intR1, false);
+    renderTex(`\\htmlClass{lr-in-my}{\\bar{y}} = \\htmlClass{lr-in-vy lr-tok-w0}{${fmtNum(meanY, 4)}}`, intR1, false);
     const intR2 = makeEl("div", "lr-slope-node");
-    renderTex(`\\htmlClass{lr-in-mw1}{w_1} = \\htmlClass{lr-in-vw1}{${fmtNum(w1, 4)}}`, intR2, false);
+    renderTex(`\\htmlClass{lr-in-mw1}{w_1} = \\htmlClass{lr-in-vw1 lr-tok-w1}{${fmtNum(w1, 4)}}`, intR2, false);
     const intR3 = makeEl("div", "lr-slope-node");
-    renderTex(`\\htmlClass{lr-in-mx}{\\bar{x}} = \\htmlClass{lr-in-vx}{${fmtNum(meanX, 4)}}`, intR3, false);
+    renderTex(`\\htmlClass{lr-in-mx}{\\bar{x}} = \\htmlClass{lr-in-vx lr-tok-w1}{${fmtNum(meanX, 4)}}`, intR3, false);
     intMid.append(intR1, intR2, intR3);
 
     const intRight = makeEl("div", "lr-slope-node");
@@ -629,7 +629,7 @@ export function renderLRSteps(res) {
     const w1Wrap = w1 < 0 ? `(${fmtNum(w1, 4)})` : fmtNum(w1, 4);
     const meanXWrap = meanX < 0 ? `(${fmtNum(meanX, 4)})` : fmtNum(meanX, 4);
     renderTex(
-        `\\htmlClass{lr-in-ry}{${yStr}} - \\htmlClass{lr-in-rw1}{${w1Wrap}} \\cdot \\htmlClass{lr-in-rx}{${meanXWrap}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
+        `\\htmlClass{lr-in-ry lr-tok-w0}{${yStr}} - \\htmlClass{lr-in-rw1 lr-tok-w1}{${w1Wrap}} \\cdot \\htmlClass{lr-in-rx lr-tok-w1}{${meanXWrap}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
         intRight,
         false
     );
@@ -637,10 +637,12 @@ export function renderLRSteps(res) {
     intStage.append(intLeft, intMid, intRight);
     intWrap.append(intStage, makeHBraceSummary(`w_0 = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`));
 
-    const signW1 = w1 < 0 ? `- ${fmtNum(Math.abs(w1), 4)}` : `+ ${fmtNum(w1, 4)}`;
+    const signW1Tok = w1 < 0
+        ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(w1), 4)}}`
+        : `+ \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`;
     const eqMath = makeEl("div", "lr-step-card lr-step-eq");
     renderTex(
-        `\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1}\\,x`,
+        `\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1Tok}\\,x`,
         eqMath,
         true
     );
@@ -649,9 +651,6 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const predSec = makeSection("7. prediction");
-    const signW1Tok = w1 < 0
-        ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(w1), 4)}}`
-        : `+ \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`;
     const predParens = (v, d = 3) => (v < 0 ? `(${fmtNum(v, d)})` : fmtNum(v, d));
     predSec.appendChild(
         makeTexTable(
@@ -705,7 +704,7 @@ export function renderLRSteps(res) {
                 { tex: fmtNum(sumResidual, 4), cls: "lr-calc-cell" },
                 { rawText: "" },
                 { tex: `\\htmlClass{lr-tok-err}{${fmtNum(sse, 4)}}`, cls: "lr-calc-cell" },
-                { tex: fmtNum(sumAbsRes, 4), cls: "lr-calc-cell" }
+                { tex: `\\htmlClass{lr-tok-err}{${fmtNum(sumAbsRes, 4)}}`, cls: "lr-calc-cell" }
             ]
         )
     );
@@ -759,6 +758,7 @@ export function renderLRSteps(res) {
         numValTex: fmtNum(sumAbsRes, 4),
         denValTex: String(n),
         resValTex: fmtNum(mae, 4),
+        numCls: "lr-tok-err",
         denCls: "lr-tok-y",
         resCls: "lr-tok-err",
         extraCls: "lr-mae-card"
