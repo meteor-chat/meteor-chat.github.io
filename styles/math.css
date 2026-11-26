@@ -410,6 +410,10 @@ main { position: relative; z-index: 1; }
 .lr-calc-cell { background: rgba(255, 255, 255, 0.04); }
 .lr-step-card { border: 1px solid #333333; border-radius: 6px; padding: 10px 14px; text-align: center; overflow-x: auto; color: #ffffff; background: #000000; }
 .lr-step-card .katex-display { margin: 0.2em 0; }
+.lr-slope-stage { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 40px; min-width: 550px; padding: 12px 10px; box-sizing: border-box; margin: 0 auto; }
+.lr-slope-mid { display: flex; flex-direction: column; align-items: center; gap: 36px; z-index: 3; }
+.lr-slope-node { position: relative; z-index: 3; white-space: nowrap; }
+.lr-slope-node .katex-display { margin: 0; }
 .lr-step-eq { margin-top: 6px; }
 .lr-card-subnote { font-size: 12px; color: #94a3b8; text-align: center; padding: 8px; }
 .lr-subnote-warn { color: #fbbf24; }

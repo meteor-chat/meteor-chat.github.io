@@ -150,20 +150,7 @@ export function drawAfterArrows() {
 
     svg.setAttribute("viewBox", `0 0 ${sRect.width} ${sRect.height}`);
 
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    marker.setAttribute("id", "lr-after-head");
-    marker.setAttribute("markerWidth", "7");
-    marker.setAttribute("markerHeight", "7");
-    marker.setAttribute("refX", "5.5");
-    marker.setAttribute("refY", "3.5");
-    marker.setAttribute("orient", "auto");
-    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-    poly.setAttribute("points", "0 0, 7 3.5, 0 7");
-    poly.setAttribute("fill", "#ffffff");
-    marker.appendChild(poly);
-    defs.appendChild(marker);
-    svg.appendChild(defs);
+    addArrowMarker(svg, "lr-after-head");
 
     const startX = nRect.left - sRect.left + nRect.width * 0.5;
     const startY = nRect.bottom - sRect.top + 5;
@@ -176,31 +163,91 @@ export function drawAfterArrows() {
 
     const tx1 = dxRect.left - sRect.left + dxRect.width * 0.72;
     const ty1 = dxRect.bottom - sRect.top + 4;
-    const c1x1 = safeOut;
-    const c1y1 = ty1 + 26;
-    const c2x1 = tx1 + 38;
-    const c2y1 = ty1 + 30;
-    const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path1.setAttribute("d", `M ${startX} ${startY} C ${c1x1} ${c1y1}, ${c2x1} ${c2y1}, ${tx1} ${ty1}`);
-    path1.setAttribute("fill", "none");
-    path1.setAttribute("stroke", "rgba(255,255,255,0.88)");
-    path1.setAttribute("stroke-width", "1.4");
-    path1.setAttribute("marker-end", "url(#lr-after-head)");
-    svg.appendChild(path1);
+    addBezierArrow(svg, startX, startY, safeOut, ty1 + 26, tx1 + 38, ty1 + 30, tx1, ty1, "lr-after-head");
 
     const tx2 = dyRect.left - sRect.left + dyRect.width * 0.72;
     const ty2 = dyRect.bottom - sRect.top + 4;
-    const c1x2 = Math.min(sRect.width - 4, safeOut + 12);
-    const c1y2 = ty2 + 30;
-    const c2x2 = tx2 + 40;
-    const c2y2 = ty2 + 34;
-    const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path2.setAttribute("d", `M ${startX} ${startY} C ${c1x2} ${c1y2}, ${c2x2} ${c2y2}, ${tx2} ${ty2}`);
-    path2.setAttribute("fill", "none");
-    path2.setAttribute("stroke", "rgba(255,255,255,0.88)");
-    path2.setAttribute("stroke-width", "1.4");
-    path2.setAttribute("marker-end", "url(#lr-after-head)");
-    svg.appendChild(path2);
+    addBezierArrow(
+        svg,
+        startX,
+        startY,
+        Math.min(sRect.width - 4, safeOut + 12),
+        ty2 + 30,
+        tx2 + 40,
+        ty2 + 34,
+        tx2,
+        ty2,
+        "lr-after-head"
+    );
+
+    drawSlopeArrows();
+}
+
+function addArrowMarker(svg, id) {
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    marker.setAttribute("id", id);
+    marker.setAttribute("markerWidth", "7");
+    marker.setAttribute("markerHeight", "7");
+    marker.setAttribute("refX", "5.5");
+    marker.setAttribute("refY", "3.5");
+    marker.setAttribute("orient", "auto");
+    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    poly.setAttribute("points", "0 0, 7 3.5, 0 7");
+    poly.setAttribute("fill", "#ffffff");
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+    svg.appendChild(defs);
+}
+
+function addBezierArrow(svg, x1, y1, cx1, cy1, cx2, cy2, x2, y2, markerId) {
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
+    path.setAttribute("fill", "none");
+    path.setAttribute("stroke", "rgba(255,255,255,0.88)");
+    path.setAttribute("stroke-width", "1.4");
+    path.setAttribute("marker-end", `url(#${markerId})`);
+    svg.appendChild(path);
+}
+
+function drawSlopeArrows() {
+    const stage = document.getElementById("math39-slope-stage");
+    const svg = document.getElementById("math39-slope-svg");
+    if (!stage || !svg) return;
+    svg.textContent = "";
+
+    const stR = stage.getBoundingClientRect();
+    if (!stR || stR.width <= 0 || stR.height <= 0) return;
+
+    const num = stage.querySelector(".lr-sl-num");
+    const den = stage.querySelector(".lr-sl-den");
+    const mtop = stage.querySelector(".lr-sl-mtop");
+    const mbot = stage.querySelector(".lr-sl-mbot");
+    const vtop = stage.querySelector(".lr-sl-vtop");
+    const vbot = stage.querySelector(".lr-sl-vbot");
+    const rnum = stage.querySelector(".lr-sl-rnum");
+    const rden = stage.querySelector(".lr-sl-rden");
+    if (!num || !den || !mtop || !mbot || !vtop || !vbot || !rnum || !rden) return;
+
+    svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
+    addArrowMarker(svg, "lr-slope-head");
+
+    const conn = (aEl, bEl, waveY1, waveY2) => {
+        const a = aEl.getBoundingClientRect();
+        const b = bEl.getBoundingClientRect();
+        if (a.width <= 0 || b.width <= 0) return;
+        const x1 = a.right - stR.left + 6;
+        const y1 = a.top + a.height * 0.5 - stR.top;
+        const x2 = b.left - stR.left - 6;
+        const y2 = b.top + b.height * 0.5 - stR.top;
+        const mx = (x1 + x2) * 0.5;
+        addBezierArrow(svg, x1, y1, mx, y1 + waveY1, mx, y2 + waveY2, x2, y2, "lr-slope-head");
+    };
+
+    conn(num, mtop, 12, -12);
+    conn(den, mbot, -10, 10);
+    conn(vtop, rnum, -8, -14);
+    conn(vbot, rden, 12, 10);
 }
 
 export function renderLRSteps(res) {
@@ -331,13 +378,39 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const slopeSec = makeSection("5. slope");
-    const slopeMath = makeEl("div", "lr-step-card");
+    const slopeWrap = makeEl("div", "lr-step-card lr-table-scroll");
+    const slopeStage = makeEl("div", "lr-slope-stage");
+    slopeStage.id = "math39-slope-stage";
+    const slopeSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    slopeSvg.setAttribute("class", "lr-stage-svg");
+    slopeSvg.setAttribute("aria-hidden", "true");
+    slopeSvg.id = "math39-slope-svg";
+    slopeStage.appendChild(slopeSvg);
+
+    const leftNode = makeEl("div", "lr-slope-node");
     renderTex(
-        `w_1 = \\frac{\\text{total } (dx \\cdot dy)}{\\text{total } dx^2} = \\frac{\\htmlClass{lr-tok-w0}{${fmtNum(sxy, 4)}}}{\\htmlClass{lr-tok-w1}{${fmtNum(sxx, 4)}}} = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`,
-        slopeMath,
+        "w_1 = \\frac{\\htmlClass{lr-sl-num}{\\text{total } (dx \\cdot dy)}}{\\htmlClass{lr-sl-den}{\\text{total } dx^2}}",
+        leftNode,
         true
     );
-    slopeSec.appendChild(slopeMath);
+
+    const midCol = makeEl("div", "lr-slope-mid");
+    const midTop = makeEl("div", "lr-slope-node lr-sl-mtop");
+    renderTex(`\\text{total } (dx \\cdot dy) = \\htmlClass{lr-tok-w0 lr-sl-vtop}{${fmtNum(sxy, 4)}}`, midTop, false);
+    const midBot = makeEl("div", "lr-slope-node lr-sl-mbot");
+    renderTex(`\\text{total } dx^2 = \\htmlClass{lr-tok-w1 lr-sl-vbot}{${fmtNum(sxx, 4)}}`, midBot, false);
+    midCol.append(midTop, midBot);
+
+    const rightNode = makeEl("div", "lr-slope-node");
+    renderTex(
+        `w_1 = \\frac{\\htmlClass{lr-tok-w0 lr-sl-rnum}{${fmtNum(sxy, 4)}}}{\\htmlClass{lr-tok-w1 lr-sl-rden}{${fmtNum(sxx, 4)}}} = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`,
+        rightNode,
+        true
+    );
+
+    slopeStage.append(leftNode, midCol, rightNode);
+    slopeWrap.appendChild(slopeStage);
+    slopeSec.appendChild(slopeWrap);
     frag.appendChild(slopeSec);
 
     frag.appendChild(makeArrow());
