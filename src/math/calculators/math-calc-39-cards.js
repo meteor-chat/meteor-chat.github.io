@@ -269,20 +269,26 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const devSec = makeSection("3. deviations");
+    const mxTex = meanX < 0 ? `(\\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}})` : `\\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`;
+    const myTex = meanY < 0 ? `(\\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}})` : `\\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`;
     devSec.appendChild(
         makeTexTable(
             [
                 { label: "data" },
                 { tex: "x" },
                 { tex: "y" },
+                { tex: "dx\\text{ formula}" },
                 { tex: "dx" },
+                { tex: "dy\\text{ formula}" },
                 { tex: "dy" }
             ],
             rows.map((r) => [
                 { rawText: r.label },
                 { tex: fmtNum(r.x, 3) },
                 { tex: fmtNum(r.y, 3) },
+                { tex: `${fmtNum(r.x, 3)} - ${mxTex}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dx, 3), cls: "lr-calc-cell" },
+                { tex: `${fmtNum(r.y, 3)} - ${myTex}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.dy, 3), cls: "lr-calc-cell" }
             ])
         )

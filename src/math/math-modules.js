@@ -2,7 +2,7 @@ import { refs } from "../core/dom-refs.js";
 import { loadScript, loadStylesheet } from "../core/lazy-assets.js";
 
 export const KATEX_SRC = new URL("../../vendor/katex/katex.min.js", import.meta.url).href;
-export const CALC_CSS = new URL("../../styles/math.css?v=20", import.meta.url).href;
+export const CALC_CSS = new URL("../../styles/math.css?v=21", import.meta.url).href;
 const MATHJS_SRC = "https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js";
 
 const FORMS = {
@@ -50,7 +50,7 @@ const FORMS = {
 const pending = new Map();
 
 function importModule(file) {
-    return import(`./calculators/${file}.js?v=20`);
+    return import(`./calculators/${file}.js?v=21`);
 }
 
 function buildForm(spec, module) {
