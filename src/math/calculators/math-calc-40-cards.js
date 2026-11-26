@@ -34,8 +34,8 @@ export function renderTopFormula40() {
     const pW1 = document.getElementById("lr40-lbl-w1");
     const pLr = document.getElementById("lr40-lbl-lr");
     const pTh = document.getElementById("lr40-lbl-th");
-    if (pW0) renderTex("\\htmlClass{lr-tok-w0}{w_0}", pW0, false);
-    if (pW1) renderTex("\\htmlClass{lr-tok-w1}{w_1}", pW1, false);
+    if (pW0) renderTex("w_0", pW0, false);
+    if (pW1) renderTex("w_1", pW1, false);
     if (pLr) renderTex("\\eta", pLr, false);
     if (pTh) renderTex("\\theta", pTh, false);
 }
@@ -118,7 +118,7 @@ export function renderLogRegSteps(res) {
     if (braceSide && nTag) {
         nTag.textContent = "";
         nTag.appendChild(document.createTextNode("jumlah data = "));
-        const nVal = makeEl("span", "lr-n-val");
+        const nVal = makeEl("span", "lr-n-val lr-tok-y");
         nVal.id = "math40-n-val";
         renderTex(String(n), nVal, false);
         nTag.appendChild(nVal);
@@ -367,8 +367,8 @@ export function renderLogRegSteps(res) {
                 { tex: `\\htmlClass{lr-tok-w0}{${fmtNum(t.w0, 4)}}`, cls: "lr-calc-cell" },
                 { tex: `\\htmlClass{lr-tok-w1}{${fmtNum(t.w1, 4)}}`, cls: "lr-calc-cell" },
                 { tex: `\\htmlClass{lr-tok-err}{${fmtNum(t.avgLoss, 4)}}`, cls: "lr-calc-cell" },
-                { tex: fmtNum(t.avgGw0, 4), cls: "lr-calc-cell" },
-                { tex: fmtNum(t.avgGw1, 4), cls: "lr-calc-cell" }
+                { tex: `\\htmlClass{lr-tok-w0}{${fmtNum(t.avgGw0, 4)}}`, cls: "lr-calc-cell" },
+                { tex: `\\htmlClass{lr-tok-w1}{${fmtNum(t.avgGw1, 4)}}`, cls: "lr-calc-cell" }
             ])
         )
     );

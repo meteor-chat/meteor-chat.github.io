@@ -447,6 +447,8 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 #math-calc-form-40 .lr-params-table { width: auto; min-width: 280px; }
 #math-calc-form-40 .lr-tabulate-table td, #math-calc-form-40 .lr-params-table td { padding: 0; }
 #math-calc-form-40 .lr-params-table td { width: 78px; min-width: 72px; }
+#math40-in-w0 { color: #fbbf24; }
+#math40-in-w1 { color: #34d399; }
 #math-calc-form-40 .lr-slope-stage { min-width: 0; width: fit-content; max-width: 100%; gap: clamp(20px, 3.2vw, 38px); padding: 12px 8px; }
 #math-calc-form-40 .lr-int-stage { min-width: 0; width: fit-content; max-width: 100%; gap: 46px; padding: 14px 12px 10px; }
 #math-calc-form-40 .lr-int-mid { gap: 18px; }
