@@ -548,18 +548,27 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const predSec = makeSection("7. prediction");
+    const signW1Tok = w1 < 0
+        ? `- \\htmlClass{lr-tok-w1}{${fmtNum(Math.abs(w1), 4)}}`
+        : `+ \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`;
+    const predParens = (v, d = 3) => (v < 0 ? `(${fmtNum(v, d)})` : fmtNum(v, d));
     predSec.appendChild(
         makeTexTable(
             [
                 { label: "data" },
                 { tex: "x" },
                 { tex: "y" },
+                { tex: "\\hat{y}\\text{ formula}" },
                 { tex: "\\hat{y}" }
             ],
             predRows.map((r) => [
                 { rawText: r.label },
                 { tex: fmtNum(r.x, 3) },
                 { tex: fmtNum(r.actual, 3) },
+                {
+                    tex: `\\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1Tok} \\cdot ${predParens(r.x, 3)}`,
+                    cls: "lr-calc-cell"
+                },
                 { tex: `\\htmlClass{lr-tok-y}{${fmtNum(r.predict, 3)}}`, cls: "lr-calc-cell" }
             ])
         )
@@ -572,19 +581,28 @@ export function renderLRSteps(res) {
         makeTexTable(
             [
                 { label: "data" },
+                { tex: "(y - \\hat{y})\\text{ formula}" },
                 { tex: "y - \\hat{y}" },
+                { tex: "(y - \\hat{y})^2\\text{ formula}" },
                 { tex: "(y - \\hat{y})^2" },
                 { tex: "|y - \\hat{y}|" }
             ],
             predRows.map((r) => [
                 { rawText: r.label },
+                {
+                    tex: `${fmtNum(r.actual, 3)} - \\htmlClass{lr-tok-y}{${predParens(r.predict, 3)}}`,
+                    cls: "lr-calc-cell"
+                },
                 { tex: fmtNum(r.residual, 4), cls: "lr-calc-cell" },
+                { tex: `${predParens(r.residual, 4)}^2`, cls: "lr-calc-cell" },
                 { tex: fmtNum(r.sse, 4), cls: "lr-calc-cell" },
                 { tex: fmtNum(r.absRes, 4), cls: "lr-calc-cell" }
             ]),
             [
                 { rawText: "total" },
+                { rawText: "" },
                 { tex: fmtNum(sumResidual, 4), cls: "lr-calc-cell" },
+                { rawText: "" },
                 { tex: `\\htmlClass{lr-tok-err}{${fmtNum(sse, 4)}}`, cls: "lr-calc-cell" },
                 { tex: fmtNum(sumAbsRes, 4), cls: "lr-calc-cell" }
             ]
