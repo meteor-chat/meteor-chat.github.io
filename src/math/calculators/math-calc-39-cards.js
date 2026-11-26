@@ -164,15 +164,21 @@ export function drawAfterArrows() {
     defs.appendChild(marker);
     svg.appendChild(defs);
 
-    const startX = nRect.right - sRect.left + 6;
-    const startY = nRect.top - sRect.top + nRect.height * 0.56;
+    const startX = nRect.left - sRect.left + nRect.width * 0.5;
+    const startY = nRect.bottom - sRect.top + 5;
 
-    const tx1 = dxRect.left - sRect.left + dxRect.width * 0.85;
+    const resX = document.querySelector(".lr-res-x");
+    const resY = document.querySelector(".lr-res-y");
+    const rxRight = resX ? resX.getBoundingClientRect().right - sRect.left : 0;
+    const ryRight = resY ? resY.getBoundingClientRect().right - sRect.left : 0;
+    const safeOut = Math.min(sRect.width - 8, Math.max(startX + 4, rxRight + 28, ryRight + 28));
+
+    const tx1 = dxRect.left - sRect.left + dxRect.width * 0.72;
     const ty1 = dxRect.bottom - sRect.top + 4;
-    const c1x1 = Math.min(sRect.width - 10, startX + 32);
-    const c1y1 = startY + (ty1 - startY) * 0.62;
-    const c2x1 = tx1 + 36;
-    const c2y1 = ty1 + 32;
+    const c1x1 = safeOut;
+    const c1y1 = ty1 + 26;
+    const c2x1 = tx1 + 38;
+    const c2y1 = ty1 + 30;
     const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path1.setAttribute("d", `M ${startX} ${startY} C ${c1x1} ${c1y1}, ${c2x1} ${c2y1}, ${tx1} ${ty1}`);
     path1.setAttribute("fill", "none");
@@ -181,11 +187,11 @@ export function drawAfterArrows() {
     path1.setAttribute("marker-end", "url(#lr-after-head)");
     svg.appendChild(path1);
 
-    const tx2 = dyRect.left - sRect.left + dyRect.width * 0.85;
+    const tx2 = dyRect.left - sRect.left + dyRect.width * 0.72;
     const ty2 = dyRect.bottom - sRect.top + 4;
-    const c1x2 = Math.min(sRect.width - 6, startX + 42);
-    const c1y2 = startY + (ty2 - startY) * 0.65;
-    const c2x2 = tx2 + 38;
+    const c1x2 = Math.min(sRect.width - 4, safeOut + 12);
+    const c1y2 = ty2 + 30;
+    const c2x2 = tx2 + 40;
     const c2y2 = ty2 + 34;
     const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
     path2.setAttribute("d", `M ${startX} ${startY} C ${c1x2} ${c1y2}, ${c2x2} ${c2y2}, ${tx2} ${ty2}`);
@@ -237,13 +243,13 @@ export function renderLRSteps(res) {
 
         const eqX = makeEl("div", "lr-mean-line");
         renderTex(
-            `\\text{mean } x = \\frac{${xTerms}}{\\htmlClass{lr-den-x lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`,
+            `\\text{mean } x = \\frac{${xTerms}}{\\htmlClass{lr-den-x lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w1 lr-res-x}{${fmtNum(meanX, 4)}}`,
             eqX,
             true
         );
         const eqY = makeEl("div", "lr-mean-line");
         renderTex(
-            `\\text{mean } y = \\frac{${yTerms}}{\\htmlClass{lr-den-y lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`,
+            `\\text{mean } y = \\frac{${yTerms}}{\\htmlClass{lr-den-y lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w0 lr-res-y}{${fmtNum(meanY, 4)}}`,
             eqY,
             true
         );

@@ -389,9 +389,10 @@ main { position: relative; z-index: 1; }
 .lr-n-label { font-family: 'Google Sans', sans-serif; font-size: 14px; color: #f8fafc; white-space: nowrap; display: inline-flex; align-items: baseline; gap: 6px; }
 .lr-n-val { color: #38bdf8; font-size: 16px; }
 .lr-mean-section { padding-right: 48px; width: 100%; box-sizing: border-box; }
-.lr-mean-line { overflow-x: auto; padding: 4px 0; color: #ffffff; text-align: left; }
+.lr-mean-line { overflow-x: auto; padding: 6px 0 14px; color: #ffffff; text-align: left; }
 .lr-mean-line .katex-display { text-align: left; margin: 0.35em 0; }
-.lr-mean-summary { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 8px; }
+.lr-mean-summary { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 10px; }
+.lr-mean-summary .lr-mean-line { padding: 2px 0; }
 .lr-steps-flow { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; }
 .lr-step-arrow { color: #ffffff; text-align: center; padding: 2px 0; user-select: none; }
 .lr-table-scroll { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
