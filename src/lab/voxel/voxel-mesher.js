@@ -5,9 +5,12 @@ import {
     getEmissiveLight,
     getFaceTexture,
     isCrossPlant,
+    isLantern,
     isOpaque,
+    isSolid,
     isTorch,
-    isTranslucent
+    isTranslucent,
+    isWaterlogged
 } from "./voxel-blocks.js";
 
 const FACE_BASIS = [
@@ -149,8 +152,8 @@ function emitCutoutQuad(arr, p0, p1, p2, p3, u0, v0, u1, v1, face, texId, sun, b
 function emitCrossPlant(arr, lx, ly, lz, id, sun, blk, tint) {
     const texId = getFaceTexture(id, 4);
     const flags = getBlockFlags(id);
-    const m = 0.14;
-    const h = id === BLOCK.TALL_GRASS ? 0.88 : id === BLOCK.WHEAT ? 0.92 : 0.72;
+    const m = id === BLOCK.SEAGRASS ? 0.08 : 0.14;
+    const h = id === BLOCK.SEAGRASS ? 0.94 : id === BLOCK.TALL_GRASS ? 0.88 : id === BLOCK.WHEAT ? 0.92 : 0.72;
     const x0 = lx + m;
     const x1 = lx + 1 - m;
     const z0 = lz + m;
@@ -176,6 +179,33 @@ function emitTorch(arr, lx, ly, lz, sun, tint) {
     emitCutoutQuad(arr, [x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], 0.38, 0.0, 0.62, 0.86, 0, texId, sun, 14, 3, flags, tint);
     emitCutoutQuad(arr, [x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], 0.38, 0.0, 0.62, 0.86, 1, texId, sun, 14, 3, flags, tint);
     emitCutoutQuad(arr, [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], 0.42, 0.74, 0.58, 0.92, 2, texId, sun, 14, 3, flags, tint);
+}
+
+function emitLantern(arr, lx, ly, lz, sun, hanging) {
+    const texId = getFaceTexture(BLOCK.LANTERN, 4);
+    const flags = 0;
+    const r = 0.2;
+    const x0 = lx + 0.5 - r;
+    const x1 = lx + 0.5 + r;
+    const z0 = lz + 0.5 - r;
+    const z1 = lz + 0.5 + r;
+    const y0 = ly + (hanging ? 0.24 : 0.02);
+    const y1 = y0 + 0.5;
+    emitCutoutQuad(arr, [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], 0, 0, 1, 1, 4, texId, sun, 15, 3, flags, 128);
+    emitCutoutQuad(arr, [x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0], 0, 0, 1, 1, 5, texId, sun, 15, 3, flags, 128);
+    emitCutoutQuad(arr, [x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1], 0, 0, 1, 1, 0, texId, sun, 15, 3, flags, 128);
+    emitCutoutQuad(arr, [x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], 0, 0, 1, 1, 1, texId, sun, 15, 3, flags, 128);
+    emitCutoutQuad(arr, [x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], 0, 0.82, 1, 1, 2, texId, sun, 15, 3, flags, 128);
+    emitCutoutQuad(arr, [x0, y0, z1], [x1, y0, z1], [x1, y0, z0], [x0, y0, z0], 0, 0, 1, 0.18, 3, texId, sun, 15, 3, flags, 128);
+    if (hanging) {
+        const cr = 0.045;
+        const cx0 = lx + 0.5 - cr;
+        const cx1 = lx + 0.5 + cr;
+        const cz0 = lz + 0.5 - cr;
+        const cz1 = lz + 0.5 + cr;
+        emitCutoutQuad(arr, [cx0, y1, cz0], [cx1, y1, cz1], [cx1, ly + 1, cz1], [cx0, ly + 1, cz0], 0, 0.85, 0.2, 1, 4, texId, sun, 15, 3, flags, 128);
+        emitCutoutQuad(arr, [cx1, y1, cz0], [cx0, y1, cz1], [cx0, ly + 1, cz1], [cx1, ly + 1, cz0], 0, 0.85, 0.2, 1, 0, texId, sun, 15, 3, flags, 128);
+    }
 }
 
 function emitLeafFace(arr, fDef, face, d, u, v, texId, sunArr, blkArr, aoArr, flags, tint) {
@@ -239,6 +269,11 @@ export function meshSubchunk(sy, getBlock, getLight, getTint = null) {
                     const lb = getLight(lx, baseY + ly, lz);
                     emitTorch(cutout, lx, ly, lz, (lb >> 4) & 15, 128);
                     expandBounds(lx, ly, lz, lx + 1, ly + 1, lz + 1);
+                } else if (isLantern(id)) {
+                    const lb = getLight(lx, baseY + ly, lz);
+                    const hanging = isSolid(getBlock(lx, baseY + ly + 1, lz));
+                    emitLantern(cutout, lx, ly, lz, (lb >> 4) & 15, hanging);
+                    expandBounds(lx, ly, lz, lx + 1, ly + 1, lz + 1);
                 }
             }
         }
@@ -256,7 +291,7 @@ export function meshSubchunk(sy, getBlock, getLight, getTint = null) {
                     const c = coord3(dAxis, uAxis, vAxis, d, u, v, TMP_A);
                     const wy = baseY + c[1];
                     const id = getBlock(c[0], wy, c[2]);
-                    if (id === BLOCK.AIR || isCrossPlant(id) || isTorch(id)) continue;
+                    if (id === BLOCK.AIR || isCrossPlant(id) || isTorch(id) || isLantern(id)) continue;
 
                     const nbPos = coord3(dAxis, uAxis, vAxis, d + step, u, v, TMP_B);
                     const nwy = baseY + nbPos[1];
@@ -267,7 +302,7 @@ export function meshSubchunk(sy, getBlock, getLight, getTint = null) {
 
                     if (trans) {
                         if (nbId === id || isOpaque(nbId)) continue;
-                        if (id === BLOCK.WATER && nbId === BLOCK.GLASS) continue;
+                        if (id === BLOCK.WATER && (nbId === BLOCK.GLASS || isWaterlogged(nbId))) continue;
                     } else if (cut) {
                         if (isOpaque(nbId) || nbId === BLOCK.LEAVES) continue;
                     } else if (isOpaque(nbId)) {

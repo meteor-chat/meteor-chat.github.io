@@ -10,6 +10,7 @@ const CACTUS = [[40, 92, 40], [56, 118, 48], [74, 144, 58], [98, 168, 72]];
 const STEM = [[32, 74, 24], [48, 102, 32], [68, 132, 42]];
 const RED_PETAL = [[148, 20, 22], [194, 30, 30], [234, 54, 46], [252, 98, 80]];
 const YELLOW_PETAL = [[192, 138, 18], [228, 180, 28], [250, 218, 52], [255, 242, 118]];
+const SEAGRASS_PALETTE = [[18, 76, 48], [28, 108, 62], [44, 142, 76], [72, 174, 96]];
 
 const woodSide = (p) => {
     const groove = hash2(p.x, 1, p.seed);
@@ -112,6 +113,26 @@ const flowerYellow = (p) => {
     return [38, 78, 26, 0, 0.2, 0.9, 0];
 };
 
+const seagrass = (p) => {
+    const blades = [
+        [2, 13, 0.14],
+        [5, 15, -0.11],
+        [8, 14, 0.12],
+        [11, 15, -0.13],
+        [13, 12, 0.1]
+    ];
+    for (const [bx, bh, amp] of blades) {
+        if (p.y > bh) continue;
+        const cx = Math.round(bx + Math.sin(p.y * 0.45 + bx) * 1.25 + p.y * amp * 0.25);
+        const half = p.y < 5 ? 1 : 0;
+        if (Math.abs(p.x - cx) <= half) {
+            const t = Math.min(1, (p.y / bh) * 0.65 + p.px * 0.35);
+            return [...palettePick(SEAGRASS_PALETTE, t, p.x, p.y), 255, 0.35 + t * 0.4, 0.78, 0];
+        }
+    }
+    return [20, 74, 44, 0, 0.2, 0.85, 0];
+};
+
 export const ORGANIC_RECIPES = {
     [TEX.WOOD_SIDE]: { seed: 107, fn: woodSide, bump: 2.6 },
     [TEX.WOOD_TOP]: { seed: 108, fn: woodTop, bump: 1.5 },
@@ -119,6 +140,7 @@ export const ORGANIC_RECIPES = {
     [TEX.CACTUS]: { seed: 118, fn: cactus, bump: 2.2, clampV: true },
     [TEX.CACTUS_TOP]: { seed: 119, fn: cactusTop, bump: 1.6 },
     [TEX.TALL_GRASS]: { seed: 261, fn: tallGrass, bump: 1.4, clampV: true },
+    [TEX.SEAGRASS]: { seed: 264, fn: seagrass, bump: 1.3, clampV: true },
     [TEX.FLOWER_RED]: { seed: 262, fn: flowerRed, bump: 1.4, clampV: true },
     [TEX.FLOWER_YELLOW]: { seed: 263, fn: flowerYellow, bump: 1.4, clampV: true }
 };

@@ -1,11 +1,11 @@
 import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SEA_LEVEL, chunkIndex } from "./voxel-blocks.js";
-import { buildArchBridge, buildCottage, buildFarm, buildFountain, buildLamp, buildTower, buildWindmill } from "./voxel-village-blueprints.js";
+import { buildVillageLayout, TOWN_RADIUS } from "./voxel-village-layout.js";
 import { sampleColumnMeta } from "./voxel-world-gen.js";
 
 const STARTER_VX = 36;
 const STARTER_VZ = 36;
-const VILLAGE_RADIUS = 32;
-const PLAN_CACHE_LIMIT = 32;
+const VILLAGE_RADIUS = TOWN_RADIUS + 4;
+const PLAN_CACHE_LIMIT = 24;
 const planCache = new Map();
 
 function hash2(x, z, seed) {
@@ -22,10 +22,20 @@ function isFoundationStop(id) {
         id === BLOCK.SAND ||
         id === BLOCK.SNOW ||
         id === BLOCK.COBBLESTONE ||
+        id === BLOCK.MOSSY_COBBLE ||
         id === BLOCK.COAL_ORE ||
         id === BLOCK.GOLD_ORE ||
         id === BLOCK.BEDROCK
     );
+}
+
+function foundationMaterial(wx, y, wz, style) {
+    if (style === "brick") return BLOCK.STONE_BRICK;
+    const h = ((wx * 73856093) ^ (y * 19349663) ^ (wz * 83492791)) >>> 0;
+    const r = h % 100;
+    if (r < 22) return BLOCK.MOSSY_COBBLE;
+    if (r > 86) return BLOCK.STONE_BRICK;
+    return BLOCK.COBBLESTONE;
 }
 
 export function getVillageCenter(regionX, regionZ, seed) {
@@ -52,8 +62,12 @@ export function getNearbyVillages(minX, minZ, maxX, maxZ, seed) {
         for (let rz = minRegZ; rz <= maxRegZ; rz += 1) {
             const v = getVillageCenter(rx, rz, seed);
             if (!v) continue;
-            if (v.vx + VILLAGE_RADIUS >= minX && v.vx - VILLAGE_RADIUS <= maxX &&
-                v.vz + VILLAGE_RADIUS >= minZ && v.vz - VILLAGE_RADIUS <= maxZ) {
+            if (
+                v.vx + VILLAGE_RADIUS >= minX &&
+                v.vx - VILLAGE_RADIUS <= maxX &&
+                v.vz + VILLAGE_RADIUS >= minZ &&
+                v.vz - VILLAGE_RADIUS <= maxZ
+            ) {
                 list.push(v);
             }
         }
@@ -66,75 +80,7 @@ export function getVillagePlan(vx, vz, seed) {
     const cached = planCache.get(key);
     if (cached) return cached;
 
-    const meta = sampleColumnMeta(vx, vz, seed);
-    const baseY = Math.max(SEA_LEVEL + 2, meta.surfaceY);
-    const blocks = [];
-    const clearZones = [];
-    const foundationZones = [];
-
-    const fountain = buildFountain(vx, baseY, vz);
-    blocks.push(...fountain);
-    clearZones.push({ x0: vx - 3, z0: vz - 3, x1: vx + 3, z1: vz + 3, y0: baseY + 1, y1: baseY + 6 });
-    foundationZones.push({ x0: vx - 3, z0: vz - 3, x1: vx + 3, z1: vz + 3, floorY: baseY - 1 });
-
-    const cottages = [
-        { x: vx - 15, z: vz - 15, w: 6, d: 6, chimney: true, door: "south" },
-        { x: vx + 9, z: vz - 15, w: 7, d: 6, chimney: true, door: "south" },
-        { x: vx + 9, z: vz + 9, w: 6, d: 6, chimney: true, door: "north" }
-    ];
-    for (const c of cottages) {
-        blocks.push(...buildCottage(c.x, baseY, c.z, c.w, c.d, c.chimney, c.door));
-        clearZones.push({ x0: c.x - 1, z0: c.z - 1, x1: c.x + c.w, z1: c.z + c.d, y0: baseY + 1, y1: baseY + 9 });
-        foundationZones.push({ x0: c.x, z0: c.z, x1: c.x + c.w - 1, z1: c.z + c.d - 1, floorY: baseY });
-    }
-
-    blocks.push(...buildWindmill(vx - 16, baseY, vz + 9));
-    clearZones.push({ x0: vx - 18, z0: vz + 7, x1: vx - 10, z1: vz + 15, y0: baseY + 1, y1: baseY + 15 });
-    foundationZones.push({ x0: vx - 18, z0: vz + 9, x1: vx - 12, z1: vz + 13, floorY: baseY });
-
-    blocks.push(...buildTower(vx + 13, baseY, vz - 8));
-    clearZones.push({ x0: vx + 11, z0: vz - 9, x1: vx + 19, z1: vz - 2, y0: baseY + 1, y1: baseY + 17 });
-    foundationZones.push({ x0: vx + 13, z0: vz - 8, x1: vx + 17, z1: vz - 4, floorY: baseY });
-
-    blocks.push(...buildFarm(vx - 16, baseY, vz - 9, 6, 6));
-    clearZones.push({ x0: vx - 16, z0: vz - 9, x1: vx - 9, z1: vz - 3, y0: baseY + 1, y1: baseY + 5 });
-    foundationZones.push({ x0: vx - 16, z0: vz - 9, x1: vx - 10, z1: vz - 4, floorY: baseY - 1 });
-
-    blocks.push(...buildArchBridge(vx, baseY, vz - 25, 7));
-    clearZones.push({ x0: vx - 2, z0: vz - 25, x1: vx + 2, z1: vz - 19, y0: baseY + 1, y1: baseY + 5 });
-
-    for (let z = vz - 18; z <= vz + 18; z += 1) {
-        if (z >= vz - 3 && z <= vz + 3) continue;
-        for (let dx = -1; dx <= 1; dx += 1) {
-            const blkId = dx === 0 ? BLOCK.COBBLESTONE : BLOCK.STONE_BRICK;
-            blocks.push({ dx: vx + dx, dy: baseY, dz: z, id: blkId });
-        }
-    }
-    clearZones.push({ x0: vx - 1, z0: vz - 18, x1: vx + 1, z1: vz + 18, y0: baseY + 1, y1: baseY + 5 });
-    foundationZones.push({ x0: vx - 1, z0: vz - 18, x1: vx + 1, z1: vz + 18, floorY: baseY });
-
-    for (let x = vx - 18; x <= vx + 18; x += 1) {
-        if (x >= vx - 3 && x <= vx + 3) continue;
-        for (let dz = -1; dz <= 1; dz += 1) {
-            const blkId = dz === 0 ? BLOCK.COBBLESTONE : BLOCK.STONE_BRICK;
-            blocks.push({ dx: x, dy: baseY, dz: vz + dz, id: blkId });
-        }
-    }
-    clearZones.push({ x0: vx - 18, z0: vz - 1, x1: vx + 18, z1: vz + 1, y0: baseY + 1, y1: baseY + 5 });
-    foundationZones.push({ x0: vx - 18, z0: vz - 1, x1: vx + 18, z1: vz + 1, floorY: baseY });
-
-    const lamps = [
-        [vx - 4, vz - 4], [vx + 4, vz - 4], [vx - 4, vz + 4], [vx + 4, vz + 4],
-        [vx - 2, vz - 17], [vx + 2, vz + 17], [vx - 17, vz - 2], [vx + 17, vz + 2]
-    ];
-    for (const [lx, lz] of lamps) {
-        blocks.push({ dx: lx, dy: baseY, dz: lz, id: BLOCK.STONE_BRICK });
-        blocks.push(...buildLamp(lx, baseY, lz));
-        clearZones.push({ x0: lx, z0: lz, x1: lx, z1: lz, y0: baseY + 1, y1: baseY + 5 });
-        foundationZones.push({ x0: lx, z0: lz, x1: lx, z1: lz, floorY: baseY });
-    }
-
-    const plan = { vx, vz, baseY, blocks, clearZones, foundationZones };
+    const plan = buildVillageLayout(vx, vz, seed, sampleColumnMeta);
     if (planCache.size >= PLAN_CACHE_LIMIT) {
         const firstKey = planCache.keys().next().value;
         planCache.delete(firstKey);
@@ -143,12 +89,55 @@ export function getVillagePlan(vx, vz, seed) {
     return plan;
 }
 
+export function getVillageMeta(vx, vz, seed) {
+    const plan = getVillagePlan(vx, vz, seed);
+    return {
+        vx: plan.vx,
+        vz: plan.vz,
+        baseY: plan.baseY,
+        radius: plan.radius,
+        pois: plan.pois,
+        chimneys: plan.chimneys,
+        buildings: plan.buildings
+    };
+}
+
 export function isVillageArea(wx, wz, seed) {
     const villages = getNearbyVillages(wx, wz, wx, wz, seed);
     for (const v of villages) {
         if (Math.hypot(wx - v.vx, wz - v.vz) <= VILLAGE_RADIUS) return true;
     }
     return false;
+}
+
+export function isPlansOccupied(plans, wx, wz, pad = 1) {
+    for (let i = 0; i < plans.length; i += 1) {
+        const plan = plans[i];
+        const gx0 = wx - pad - plan.gridOriginX;
+        const gz0 = wz - pad - plan.gridOriginZ;
+        const gx1 = wx + pad - plan.gridOriginX;
+        const gz1 = wz + pad - plan.gridOriginZ;
+        if (gx1 < 0 || gz1 < 0 || gx0 >= plan.gridSize || gz0 >= plan.gridSize) continue;
+        const xStart = gx0 > 0 ? gx0 : 0;
+        const zStart = gz0 > 0 ? gz0 : 0;
+        const xEnd = gx1 < plan.gridSize - 1 ? gx1 : plan.gridSize - 1;
+        const zEnd = gz1 < plan.gridSize - 1 ? gz1 : plan.gridSize - 1;
+        for (let gz = zStart; gz <= zEnd; gz += 1) {
+            const row = gz * plan.gridSize;
+            for (let gx = xStart; gx <= xEnd; gx += 1) {
+                const cell = plan.occ[gx + row];
+                if (cell === 1 || cell === 2) return true;
+            }
+        }
+    }
+    return false;
+}
+
+export function isVillageOccupied(wx, wz, seed, pad = 1) {
+    const villages = getNearbyVillages(wx - pad, wz - pad, wx + pad, wz + pad, seed);
+    if (villages.length === 0) return false;
+    const plans = villages.map((v) => getVillagePlan(v.vx, v.vz, seed));
+    return isPlansOccupied(plans, wx, wz, pad);
 }
 
 export function applyVillageToColumn(blocks, cx, cz, seed) {
@@ -160,18 +149,17 @@ export function applyVillageToColumn(blocks, cx, cz, seed) {
     const villages = getNearbyVillages(minX, minZ, maxX, maxZ, seed);
     if (villages.length === 0) return;
 
+    const bucketKey = `${cx},${cz}`;
     for (const v of villages) {
         const plan = getVillagePlan(v.vx, v.vz, seed);
+        const bucket = plan.chunkBuckets.get(bucketKey);
+        if (!bucket) continue;
 
-        for (const zone of plan.foundationZones) {
-            const zx0 = Math.max(minX, zone.x0);
-            const zx1 = Math.min(maxX, zone.x1);
-            const zz0 = Math.max(minZ, zone.z0);
-            const zz1 = Math.min(maxZ, zone.z1);
+        for (const zone of bucket.foundations) {
             const startY = Math.max(1, zone.floorY - 1);
-            for (let wx = zx0; wx <= zx1; wx += 1) {
+            for (let wx = zone.x0; wx <= zone.x1; wx += 1) {
                 const lx = wx - minX;
-                for (let wz = zz0; wz <= zz1; wz += 1) {
+                for (let wz = zone.z0; wz <= zone.z1; wz += 1) {
                     const lz = wz - minZ;
                     let groundY = 1;
                     for (let y = startY; y >= 1; y -= 1) {
@@ -182,39 +170,31 @@ export function applyVillageToColumn(blocks, cx, cz, seed) {
                     }
                     if (groundY < zone.floorY - 1) {
                         for (let y = groundY + 1; y < zone.floorY; y += 1) {
-                            blocks[chunkIndex(lx, y, lz)] = BLOCK.STONE_BRICK;
+                            blocks[chunkIndex(lx, y, lz)] = foundationMaterial(wx, y, wz, zone.style);
                         }
                     }
                 }
             }
         }
 
-        for (const zone of plan.clearZones) {
-            const zx0 = Math.max(minX, zone.x0);
-            const zx1 = Math.min(maxX, zone.x1);
-            const zz0 = Math.max(minZ, zone.z0);
-            const zz1 = Math.min(maxZ, zone.z1);
-            for (let wx = zx0; wx <= zx1; wx += 1) {
+        for (const zone of bucket.clears) {
+            const y0 = Math.max(1, zone.y0);
+            const y1 = Math.min(CHUNK_HEIGHT - 1, zone.y1);
+            for (let wx = zone.x0; wx <= zone.x1; wx += 1) {
                 const lx = wx - minX;
-                for (let wz = zz0; wz <= zz1; wz += 1) {
+                for (let wz = zone.z0; wz <= zone.z1; wz += 1) {
                     const lz = wz - minZ;
-                    for (let y = zone.y0; y <= zone.y1; y += 1) {
-                        if (y >= 0 && y < CHUNK_HEIGHT) {
-                            blocks[chunkIndex(lx, y, lz)] = BLOCK.AIR;
-                        }
+                    for (let y = y0; y <= y1; y += 1) {
+                        blocks[chunkIndex(lx, y, lz)] = BLOCK.AIR;
                     }
                 }
             }
         }
 
-        for (const blk of plan.blocks) {
-            if (blk.dx >= minX && blk.dx <= maxX && blk.dz >= minZ && blk.dz <= maxZ) {
-                const lx = blk.dx - minX;
-                const lz = blk.dz - minZ;
-                const y = blk.dy;
-                if (y >= 0 && y < CHUNK_HEIGHT) {
-                    blocks[chunkIndex(lx, y, lz)] = blk.id;
-                }
+        for (const blk of bucket.blocks) {
+            const y = blk.dy;
+            if (y >= 0 && y < CHUNK_HEIGHT) {
+                blocks[chunkIndex(blk.dx - minX, y, blk.dz - minZ)] = blk.id;
             }
         }
     }

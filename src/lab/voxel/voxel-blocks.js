@@ -31,7 +31,11 @@ export const BLOCK = {
     COBBLESTONE: 23,
     TALL_GRASS: 24,
     FLOWER_RED: 25,
-    FLOWER_YELLOW: 26
+    FLOWER_YELLOW: 26,
+    SEAGRASS: 27,
+    LANTERN: 28,
+    MOSSY_COBBLE: 29,
+    BARREL: 30
 };
 
 export const TEX = {
@@ -82,7 +86,17 @@ export const TEX = {
     VILLAGER_ROBE: 44,
     VILLAGER_SKIN: 45,
     VILLAGER_FACE: 46,
-    CACTUS_TOP: 47
+    CACTUS_TOP: 47,
+    SEAGRASS: 48,
+    LANTERN: 49,
+    MOSSY_COBBLE: 50,
+    BARREL_SIDE: 51,
+    BARREL_TOP: 52,
+    VILLAGER_FARMER: 53,
+    VILLAGER_SMITH: 54,
+    VILLAGER_CLERIC: 55,
+    GOLEM_IRON: 56,
+    GOLEM_FACE: 57
 };
 
 export const HOTBAR_ITEMS = [
@@ -102,6 +116,7 @@ export const BLOCK_CATALOG = [
     { id: BLOCK.DIRT, label: "Dirt", tex: TEX.DIRT, group: "Nature" },
     { id: BLOCK.STONE, label: "Stone", tex: TEX.STONE, group: "Nature" },
     { id: BLOCK.COBBLESTONE, label: "Cobblestone", tex: TEX.COBBLESTONE, group: "Building" },
+    { id: BLOCK.MOSSY_COBBLE, label: "Mossy Cobble", tex: TEX.MOSSY_COBBLE, group: "Building" },
     { id: BLOCK.STONE_BRICK, label: "Stone Brick", tex: TEX.STONE_BRICK, group: "Building" },
     { id: BLOCK.SAND, label: "Sand", tex: TEX.SAND, group: "Nature" },
     { id: BLOCK.SNOW, label: "Snow", tex: TEX.SNOW_SIDE, group: "Nature" },
@@ -113,14 +128,17 @@ export const BLOCK_CATALOG = [
     { id: BLOCK.ROOF_GREEN, label: "Green Roof", tex: TEX.ROOF_GREEN, group: "Building" },
     { id: BLOCK.GLASS, label: "Glass", tex: TEX.GLASS, group: "Building" },
     { id: BLOCK.TORCH, label: "Torch", tex: TEX.TORCH, group: "Light" },
+    { id: BLOCK.LANTERN, label: "Lantern", tex: TEX.LANTERN, group: "Light" },
     { id: BLOCK.WATER, label: "Water", tex: TEX.WATER, group: "Fluid" },
     { id: BLOCK.LAVA, label: "Lava", tex: TEX.LAVA, group: "Fluid" },
     { id: BLOCK.COAL_ORE, label: "Coal Ore", tex: TEX.COAL_ORE, group: "Ore" },
     { id: BLOCK.GOLD_ORE, label: "Gold Ore", tex: TEX.GOLD_ORE, group: "Ore" },
     { id: BLOCK.HAY_BALE, label: "Hay Bale", tex: TEX.HAY_SIDE, group: "Village" },
+    { id: BLOCK.BARREL, label: "Barrel", tex: TEX.BARREL_SIDE, group: "Village" },
     { id: BLOCK.WHEAT, label: "Wheat", tex: TEX.WHEAT, group: "Plants" },
     { id: BLOCK.CACTUS, label: "Cactus", tex: TEX.CACTUS, group: "Plants" },
     { id: BLOCK.TALL_GRASS, label: "Tall Grass", tex: TEX.TALL_GRASS, group: "Plants" },
+    { id: BLOCK.SEAGRASS, label: "Seagrass", tex: TEX.SEAGRASS, group: "Plants" },
     { id: BLOCK.FLOWER_RED, label: "Poppy", tex: TEX.FLOWER_RED, group: "Plants" },
     { id: BLOCK.FLOWER_YELLOW, label: "Dandelion", tex: TEX.FLOWER_YELLOW, group: "Plants" }
 ];
@@ -132,15 +150,33 @@ export function chunkIndex(x, y, z) {
 }
 
 export function isCrossPlant(id) {
-    return id === BLOCK.WHEAT || id === BLOCK.TALL_GRASS || id === BLOCK.FLOWER_RED || id === BLOCK.FLOWER_YELLOW;
+    return (
+        id === BLOCK.WHEAT ||
+        id === BLOCK.TALL_GRASS ||
+        id === BLOCK.FLOWER_RED ||
+        id === BLOCK.FLOWER_YELLOW ||
+        id === BLOCK.SEAGRASS
+    );
 }
 
 export function isTorch(id) {
     return id === BLOCK.TORCH;
 }
 
+export function isLantern(id) {
+    return id === BLOCK.LANTERN;
+}
+
+export function isWaterlogged(id) {
+    return id === BLOCK.SEAGRASS;
+}
+
+export function isWater(id) {
+    return id === BLOCK.WATER || id === BLOCK.SEAGRASS;
+}
+
 export function isCutout(id) {
-    return id === BLOCK.LEAVES || isTorch(id) || isCrossPlant(id);
+    return id === BLOCK.LEAVES || isTorch(id) || isLantern(id) || isCrossPlant(id);
 }
 
 export function isOpaque(id) {
@@ -156,7 +192,7 @@ export function isFluid(id) {
 }
 
 export function isSolid(id) {
-    return id !== BLOCK.AIR && !isFluid(id) && !isCrossPlant(id) && !isTorch(id);
+    return id !== BLOCK.AIR && !isFluid(id) && !isCrossPlant(id) && !isTorch(id) && !isLantern(id);
 }
 
 export function isGravityBlock(id) {
@@ -164,7 +200,7 @@ export function isGravityBlock(id) {
 }
 
 export function getEmissiveLight(id) {
-    if (id === BLOCK.LAVA) return 15;
+    if (id === BLOCK.LAVA || id === BLOCK.LANTERN) return 15;
     if (id === BLOCK.TORCH) return 14;
     return 0;
 }
@@ -175,7 +211,7 @@ export function getBlockFlags(id) {
     if (id === BLOCK.GLASS) return 4;
     if (id === BLOCK.LEAVES) return 8 | 32;
     if (id === BLOCK.TALL_GRASS) return 8 | 32;
-    if (id === BLOCK.WHEAT || id === BLOCK.FLOWER_RED || id === BLOCK.FLOWER_YELLOW) return 8;
+    if (id === BLOCK.WHEAT || id === BLOCK.FLOWER_RED || id === BLOCK.FLOWER_YELLOW || id === BLOCK.SEAGRASS) return 8;
     if (id === BLOCK.GRASS) return 32;
     return 0;
 }
@@ -184,8 +220,9 @@ export function getBlockHardness(id) {
     if (id === BLOCK.BEDROCK) return Infinity;
     if (isCrossPlant(id) || isTorch(id)) return 0.08;
     if (id === BLOCK.LEAVES || id === BLOCK.GLASS) return 0.22;
+    if (id === BLOCK.LANTERN) return 0.35;
     if (id === BLOCK.GRASS || id === BLOCK.DIRT || id === BLOCK.SAND || id === BLOCK.SNOW || id === BLOCK.HAY_BALE) return 0.35;
-    if (id === BLOCK.WOOD || id === BLOCK.WOOD_PLANKS || id === BLOCK.CACTUS) return 0.55;
+    if (id === BLOCK.WOOD || id === BLOCK.WOOD_PLANKS || id === BLOCK.CACTUS || id === BLOCK.BARREL) return 0.55;
     if (id === BLOCK.COAL_ORE || id === BLOCK.GOLD_ORE) return 0.85;
     return 0.68;
 }
@@ -195,7 +232,7 @@ export function getBlockMaterial(id) {
     if (id === BLOCK.DIRT) return "dirt";
     if (id === BLOCK.SAND) return "sand";
     if (id === BLOCK.SNOW) return "snow";
-    if (id === BLOCK.WOOD || id === BLOCK.WOOD_PLANKS || id === BLOCK.TORCH || id === BLOCK.HAY_BALE || id === BLOCK.CACTUS) return "wood";
+    if (id === BLOCK.WOOD || id === BLOCK.WOOD_PLANKS || id === BLOCK.TORCH || id === BLOCK.HAY_BALE || id === BLOCK.CACTUS || id === BLOCK.BARREL) return "wood";
     if (id === BLOCK.GLASS) return "glass";
     if (id === BLOCK.WATER) return "water";
     return "stone";
@@ -214,6 +251,7 @@ export function getFaceTexture(id, face) {
     }
     if (id === BLOCK.WOOD) return face === 2 || face === 3 ? TEX.WOOD_TOP : TEX.WOOD_SIDE;
     if (id === BLOCK.HAY_BALE) return face === 2 || face === 3 ? TEX.HAY_TOP : TEX.HAY_SIDE;
+    if (id === BLOCK.BARREL) return face === 2 || face === 3 ? TEX.BARREL_TOP : TEX.BARREL_SIDE;
     if (id === BLOCK.CACTUS) return face === 2 || face === 3 ? TEX.CACTUS_TOP : TEX.CACTUS;
     if (id === BLOCK.DIRT) return TEX.DIRT;
     if (id === BLOCK.STONE) return TEX.STONE;
@@ -223,6 +261,7 @@ export function getFaceTexture(id, face) {
     if (id === BLOCK.GLASS) return TEX.GLASS;
     if (id === BLOCK.LAVA) return TEX.LAVA;
     if (id === BLOCK.TORCH) return TEX.TORCH;
+    if (id === BLOCK.LANTERN) return TEX.LANTERN;
     if (id === BLOCK.COAL_ORE) return TEX.COAL_ORE;
     if (id === BLOCK.GOLD_ORE) return TEX.GOLD_ORE;
     if (id === BLOCK.BEDROCK) return TEX.BEDROCK;
@@ -233,7 +272,9 @@ export function getFaceTexture(id, face) {
     if (id === BLOCK.WOOD_PLANKS) return TEX.WOOD_PLANKS;
     if (id === BLOCK.WHEAT) return TEX.WHEAT;
     if (id === BLOCK.COBBLESTONE) return TEX.COBBLESTONE;
+    if (id === BLOCK.MOSSY_COBBLE) return TEX.MOSSY_COBBLE;
     if (id === BLOCK.TALL_GRASS) return TEX.TALL_GRASS;
+    if (id === BLOCK.SEAGRASS) return TEX.SEAGRASS;
     if (id === BLOCK.FLOWER_RED) return TEX.FLOWER_RED;
     if (id === BLOCK.FLOWER_YELLOW) return TEX.FLOWER_YELLOW;
     return TEX.STONE;

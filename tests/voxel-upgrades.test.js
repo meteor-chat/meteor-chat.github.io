@@ -160,7 +160,7 @@ describe("Voxel upgrade regressions", () => {
     });
 
     it("initializes audio, particles, hand model, catalog, and storage safely in jsdom", async () => {
-        expect(BLOCK_CATALOG.length).toBe(25);
+        expect(BLOCK_CATALOG.length).toBe(29);
         const audio = createVoxelAudio();
         audio.unlock();
         audio.playFootstep("grass");

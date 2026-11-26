@@ -10,7 +10,12 @@ import {
 import { buildCameraBasis } from "./voxel-camera.js";
 import { createVoxelHand } from "./voxel-hand.js";
 import { bindVisibility, createVoxelInput } from "./voxel-input.js";
-import { createCatSpawner, createChickenSpawner, createVillagerSpawner } from "./voxel-mob-spawn.js";
+import {
+    createCatSpawner,
+    createChickenSpawner,
+    createGolemSpawner,
+    createVillagerSpawner
+} from "./voxel-mob-spawn.js";
 import { createMobSystem } from "./voxel-mob-system.js";
 import { mulberry32 } from "./voxel-noise.js";
 import { createVoxelParticles } from "./voxel-particles.js";
@@ -20,6 +25,7 @@ import { raycastMob, raycastVoxel } from "./voxel-raycast.js";
 import { createVoxelRenderer } from "./voxel-renderer.js";
 import { generateVoxelAtlasData } from "./voxel-textures.js";
 import { createVoxelHud } from "./voxel-ui.js";
+import { getNearbyVillages, getVillageMeta } from "./voxel-village-gen.js";
 import { createVoxelWorld } from "./voxel-world.js";
 import { findSafeSpawn } from "./voxel-world-gen.js";
 
@@ -96,8 +102,8 @@ export function createVoxelApp(root) {
     const player = {
         pos: [spawnPos[0], spawnPos[1], spawnPos[2]],
         vel: [0, 0, 0],
-        yaw: 0.45,
-        pitch: -0.15,
+        yaw: 2.35,
+        pitch: -0.12,
         eyeHeight: EYE_STAND,
         walkDist: 0,
         flyMode: false,
@@ -114,6 +120,8 @@ export function createVoxelApp(root) {
     let currentFov = state.settings.fov;
     let lastStepDist = 0;
     let torchParticleAcc = 0;
+    let chimneyAcc = 0;
+    let forgeAudioAcc = 6;
     let saveTimer = 0;
     let breakTarget = "";
     let breakElapsed = 0;
@@ -136,6 +144,7 @@ export function createVoxelApp(root) {
     const catSpawner = createCatSpawner({ mobs, world, seed, rng: mobRng });
     const chickenSpawner = createChickenSpawner({ mobs, world, seed, rng: mobRng });
     const villagerSpawner = createVillagerSpawner({ mobs, world, seed, rng: mobRng });
+    const golemSpawner = createGolemSpawner({ mobs, world, seed, rng: mobRng });
 
     const syncSelectedHand = () => {
         const item = state.hotbar[state.selectedSlot];
@@ -330,6 +339,36 @@ export function createVoxelApp(root) {
         }
     };
 
+    const stepVillageAtmosphere = (dt) => {
+        chimneyAcc += dt;
+        forgeAudioAcc -= dt;
+        if (chimneyAcc < 0.34) return;
+        chimneyAcc = 0;
+        const px = player.pos[0];
+        const pz = player.pos[2];
+        const nearby = getNearbyVillages(px - 72, pz - 72, px + 72, pz + 72, seed);
+        if (nearby.length === 0) return;
+        let nearForge = false;
+        for (const v of nearby) {
+            const meta = getVillageMeta(v.vx, v.vz, seed);
+            for (const ch of meta.chimneys) {
+                const dist = Math.hypot(ch.x - px, ch.z - pz);
+                if (dist > 64) continue;
+                if (ch.isForge && dist < 24) nearForge = true;
+                if (Math.random() < (ch.isForge ? 0.55 : 0.24)) {
+                    particles.spawnChimneySmoke(ch.x, ch.y, ch.z);
+                    if (ch.isForge && Math.random() < 0.45) {
+                        particles.spawnForgeSpark(ch.x, ch.y, ch.z);
+                    }
+                }
+            }
+        }
+        if (nearForge && forgeAudioAcc <= 0) {
+            forgeAudioAcc = 7 + Math.random() * 9;
+            audio.playVillageForge();
+        }
+    };
+
     const isLoopPaused = () => manualPaused || tabHidden;
 
     const tick = (now) => {
@@ -368,10 +407,11 @@ export function createVoxelApp(root) {
         currentFov += (fovTarget - currentFov) * Math.min(1, dt * 10);
         const fovRad = (currentFov * Math.PI) / 180;
 
-        mobs.update(dt, player.pos);
+        mobs.update(dt, player.pos, state.timeOfDay);
         catSpawner.update(dt, player.pos, player.yaw, fovRad);
         chickenSpawner.update(dt, player.pos, player.yaw, fovRad);
         villagerSpawner.update(dt, player.pos);
+        golemSpawner.update(dt, player.pos);
 
         world.stepDynamic(dt);
         const unloaded = world.updateAround(player.pos[0], player.pos[2]);
@@ -412,6 +452,7 @@ export function createVoxelApp(root) {
         hand.step(dt);
         particles.step(dt);
         stepNearbyTorchParticles(dt);
+        stepVillageAtmosphere(dt);
 
         const aspect = canvas.width / Math.max(1, canvas.height);
         const cam = buildCameraBasis(eye, player.yaw, player.pitch, fovRad, aspect);
@@ -423,7 +464,7 @@ export function createVoxelApp(root) {
         audio.updateAmbience(state.rainIntensity, indoorFactor, player.submerged);
 
         const heldItem = state.hotbar[state.selectedSlot];
-        const heldEmits = heldItem && (heldItem.id === BLOCK.TORCH || heldItem.id === BLOCK.LAVA);
+        const heldEmits = heldItem && (heldItem.id === BLOCK.TORCH || heldItem.id === BLOCK.LANTERN || heldItem.id === BLOCK.LAVA);
         handLightBuf[0] = eye[0] + cam.right[0] * 0.25 + cam.forward[0] * 0.35;
         handLightBuf[1] = eye[1] - 0.14 + cam.forward[1] * 0.35;
         handLightBuf[2] = eye[2] + cam.right[2] * 0.25 + cam.forward[2] * 0.35;

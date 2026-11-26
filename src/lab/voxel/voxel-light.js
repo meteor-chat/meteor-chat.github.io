@@ -1,4 +1,4 @@
-import { CHUNK_HEIGHT, CHUNK_SIZE, SUB_SIZE, chunkIndex, getEmissiveLight, isOpaque, BLOCK } from "./voxel-blocks.js";
+import { CHUNK_HEIGHT, CHUNK_SIZE, SUB_SIZE, chunkIndex, getEmissiveLight, isOpaque, isWaterlogged, BLOCK } from "./voxel-blocks.js";
 
 const DIRS = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 
@@ -7,7 +7,7 @@ function inBounds(lx, ly, lz) {
 }
 
 function sunDrop(id, isDown, curSun) {
-    if (id === BLOCK.WATER || id === BLOCK.LEAVES) return 2;
+    if (id === BLOCK.WATER || id === BLOCK.LEAVES || isWaterlogged(id)) return 2;
     if (isDown && curSun === 15) return 0;
     return 1;
 }
@@ -41,7 +41,7 @@ export function propagateColumnLight(blocks, light) {
                     if (!hitCover) hitCover = ly;
                     sun = 0;
                 } else {
-                    if (id === BLOCK.WATER || id === BLOCK.LEAVES) {
+                    if (id === BLOCK.WATER || id === BLOCK.LEAVES || isWaterlogged(id)) {
                         if (!hitCover) hitCover = ly;
                         sun = Math.max(0, sun - 2);
                     } else if (sun < 15 && sun > 0) {
@@ -240,8 +240,8 @@ export function updateWorldLight(getCol, markSubDirty, wx, wy, wz, oldId, newId)
         const curVal = getL(center);
 
         if (isSun) {
-            const oldAtten = isOpaque(oldId) ? 16 : oldId === BLOCK.WATER || oldId === BLOCK.LEAVES ? 2 : 0;
-            const newAtten = isOpaque(newId) ? 16 : newId === BLOCK.WATER || newId === BLOCK.LEAVES ? 2 : 0;
+            const oldAtten = isOpaque(oldId) ? 16 : oldId === BLOCK.WATER || oldId === BLOCK.LEAVES || isWaterlogged(oldId) ? 2 : 0;
+            const newAtten = isOpaque(newId) ? 16 : newId === BLOCK.WATER || newId === BLOCK.LEAVES || isWaterlogged(newId) ? 2 : 0;
             if (newAtten > oldAtten && curVal > 0) {
                 remQ.push([wx, wy, wz, curVal]);
                 setL(center, wy, 0);

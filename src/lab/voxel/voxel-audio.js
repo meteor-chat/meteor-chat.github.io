@@ -160,7 +160,15 @@ export function createVoxelAudio() {
             setTimeout(() => {
                 if (!destroyed && !muted) playTone(215, 165, 0.16, 0.065, "triangle");
             }, 125);
+        } else if (kind === "golem") {
+            playTone(118, 72, 0.18, 0.09, "triangle");
+            playNoiseBurst(460, 3.2, 0.12, 0.08, 0.12);
         }
+    };
+
+    const playVillageForge = () => {
+        playTone(1480, 1220, 0.11, 0.032, "triangle");
+        playNoiseBurst(2100, 4.5, 0.06, 0.025, 0.15);
     };
 
     const updateAmbience = (rainIntensity, indoorFactor = 0, underwater = false) => {
@@ -237,6 +245,7 @@ export function createVoxelAudio() {
         playPlace,
         playSplash,
         playMob,
+        playVillageForge,
         updateAmbience,
         setMuted,
         isMuted: () => muted,

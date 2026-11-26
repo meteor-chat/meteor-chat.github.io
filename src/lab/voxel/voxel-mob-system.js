@@ -3,6 +3,8 @@ import { MAX_CATS } from "./voxel-mob-cat-model.js";
 import { createCat, stepCat } from "./voxel-mob-cat-ai.js";
 import { MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
 import { createChicken, stepChicken } from "./voxel-mob-chicken-ai.js";
+import { MAX_GOLEMS } from "./voxel-mob-golem-model.js";
+import { createGolem, stepGolem } from "./voxel-mob-golem-ai.js";
 import { separateMobs } from "./voxel-mob-physics.js";
 import { MAX_VILLAGERS } from "./voxel-mob-villager-model.js";
 import { createVillager, stepVillager } from "./voxel-mob-villager-ai.js";
@@ -55,7 +57,8 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
     const cats = [];
     const chickens = [];
     const villagers = [];
-    const ctx = { rng, getBlock, frozen: false, playerPos: null, onVillagerHum };
+    const golems = [];
+    const ctx = { rng, getBlock, frozen: false, playerPos: null, isNight: false, villagers, onVillagerHum };
 
     const initLighting = (mob) => {
         const l = sampleMobLight(mob.pos, getBlock, getLight);
@@ -80,12 +83,20 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
         return chicken;
     };
 
-    const spawnVillager = (x, y, z, homeX, homeZ) => {
+    const spawnVillager = (x, y, z, homeX, homeZ, opts = {}) => {
         if (villagers.length >= MAX_VILLAGERS) return null;
-        const v = createVillager(x, y, z, homeX, homeZ, rng);
+        const v = createVillager(x, y, z, homeX, homeZ, rng, opts);
         initLighting(v);
         villagers.push(v);
         return v;
+    };
+
+    const spawnGolem = (x, y, z, homeX, homeZ, pois = null) => {
+        if (golems.length >= MAX_GOLEMS) return null;
+        const g = createGolem(x, y, z, homeX, homeZ, rng, pois);
+        initLighting(g);
+        golems.push(g);
+        return g;
     };
 
     const removeCat = (cat) => {
@@ -103,6 +114,11 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
         if (index >= 0) villagers.splice(index, 1);
     };
 
+    const removeGolem = (g) => {
+        const index = golems.indexOf(g);
+        if (index >= 0) golems.splice(index, 1);
+    };
+
     const blendLight = (mob, blend) => {
         const l = sampleMobLight(mob.pos, getBlock, getLight);
         mob.sky += (l.sky - mob.sky) * blend;
@@ -110,9 +126,10 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
         mob.groundY = groundBelow(mob.pos, getBlock);
     };
 
-    const update = (dt, playerPos = null) => {
+    const update = (dt, playerPos = null, timeOfDay = 0.28) => {
         const blend = Math.min(1, LIGHT_RATE * dt);
         ctx.playerPos = playerPos;
+        ctx.isNight = Math.sin((timeOfDay - 0.15) * Math.PI * 2) < 0.05;
         for (const cat of cats) {
             ctx.frozen = !isLoaded(cat.pos[0], cat.pos[2]);
             stepCat(cat, dt, ctx);
@@ -128,7 +145,12 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
             stepVillager(v, dt, ctx);
             blendLight(v, blend);
         }
-        const combined = [...cats, ...chickens, ...villagers];
+        for (const g of golems) {
+            ctx.frozen = !isLoaded(g.pos[0], g.pos[2]);
+            stepGolem(g, dt, ctx);
+            blendLight(g, blend);
+        }
+        const combined = [...cats, ...chickens, ...villagers, ...golems];
         if (combined.length > 0) separateMobs(combined, playerPos, getBlock);
     };
 
@@ -136,21 +158,25 @@ export function createMobSystem({ getBlock, getLight = null, rng, isLoaded = () 
         cats.splice(0, cats.length);
         chickens.splice(0, chickens.length);
         villagers.splice(0, villagers.length);
+        golems.splice(0, golems.length);
     };
 
     return {
         cats,
         chickens,
         villagers,
+        golems,
         get all() {
-            return [...cats, ...chickens, ...villagers];
+            return [...cats, ...chickens, ...villagers, ...golems];
         },
         spawnCat,
         spawnChicken,
         spawnVillager,
+        spawnGolem,
         removeCat,
         removeChicken,
         removeVillager,
+        removeGolem,
         update,
         clear
     };

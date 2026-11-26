@@ -1,4 +1,4 @@
-import { BLOCK, CHUNK_SIZE, isSolid } from "./voxel-blocks.js";
+import { BLOCK, CHUNK_SIZE, isSolid, isWater } from "./voxel-blocks.js";
 
 export const PLAYER_HW = 0.28;
 export const PLAYER_H = 1.68;
@@ -50,7 +50,7 @@ function sampleFluidBox(px, py, pz, getBlock, yLow, yHigh) {
         for (let sx = -1; sx <= 1; sx += 2) {
             for (let sz = -1; sz <= 1; sz += 2) {
                 const id = getBlock(px + sx * r, y, pz + sz * r);
-                if (id === BLOCK.WATER) water = true;
+                if (isWater(id)) water = true;
                 else if (id === BLOCK.LAVA) lava = true;
             }
         }
@@ -208,7 +208,7 @@ export function stepPlayerPhysics(player, keys, dt, getBlock, isColumnLoaded = n
     player.eyeHeight += (targetEye - player.eyeHeight) * Math.min(1, stepDt * 18);
 
     const eyeBlock = getBlock(player.pos[0], player.pos[1] + player.eyeHeight, player.pos[2]);
-    player.submerged = eyeBlock === BLOCK.WATER;
+    player.submerged = isWater(eyeBlock);
     player.submergedLava = eyeBlock === BLOCK.LAVA;
     player.inWater = inWater;
     player.inLava = inLava;

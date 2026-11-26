@@ -7,8 +7,10 @@ import {
     chunkIndex,
     isCrossPlant,
     isGravityBlock,
+    isLantern,
     isSolid,
-    isTorch
+    isTorch,
+    isWaterlogged
 } from "./voxel-blocks.js";
 import { propagateColumnLight, stitchColumnLight, updateWorldLight } from "./voxel-light.js";
 import { meshSubchunk } from "./voxel-mesher.js";
@@ -288,7 +290,17 @@ export function createVoxelWorld(options = {}) {
 
             if (isTorch(id) || isCrossPlant(id)) {
                 const below = getBlock(x, y - 1, z);
-                if (!isSolid(below)) {
+                const validSupport = isSolid(below) || (id === BLOCK.SEAGRASS && below === BLOCK.SEAGRASS);
+                if (!validSupport) {
+                    setBlockInternal(x, y, z, id === BLOCK.SEAGRASS ? BLOCK.WATER : BLOCK.AIR, true, 0);
+                }
+                continue;
+            }
+
+            if (isLantern(id)) {
+                const below = getBlock(x, y - 1, z);
+                const above = getBlock(x, y + 1, z);
+                if (!isSolid(below) && !isSolid(above)) {
                     setBlockInternal(x, y, z, BLOCK.AIR, true, 0);
                 }
                 continue;
@@ -298,13 +310,13 @@ export function createVoxelWorld(options = {}) {
                 const depth = waterFlow.get(k) || 0;
                 if (depth <= 0) continue;
                 const below = getBlock(x, y - 1, z);
-                if (below === BLOCK.AIR || isCrossPlant(below)) {
+                if (below === BLOCK.AIR || (isCrossPlant(below) && !isWaterlogged(below))) {
                     setBlockInternal(x, y - 1, z, BLOCK.WATER, true, WATER_MAX_FLOW);
                 } else if (isSolid(below) && depth > 1) {
                     const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
                     for (const [dx, dz] of dirs) {
                         const nb = getBlock(x + dx, y, z + dz);
-                        if (nb === BLOCK.AIR || isCrossPlant(nb)) {
+                        if (nb === BLOCK.AIR || (isCrossPlant(nb) && !isWaterlogged(nb))) {
                             setBlockInternal(x + dx, y, z + dz, BLOCK.WATER, true, depth - 1);
                         }
                     }

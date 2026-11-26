@@ -15,14 +15,19 @@ const BLOCK_COLORS = {
     [BLOCK.GOLD_ORE]: [0.88, 0.72, 0.25],
     [BLOCK.GLASS]: [0.78, 0.9, 0.96],
     [BLOCK.TORCH]: [1.0, 0.74, 0.28],
+    [BLOCK.LANTERN]: [1.0, 0.82, 0.34],
     [BLOCK.COBBLESTONE]: [0.48, 0.5, 0.52],
+    [BLOCK.MOSSY_COBBLE]: [0.4, 0.54, 0.38],
     [BLOCK.WOOD_PLANKS]: [0.68, 0.52, 0.32],
-    [BLOCK.ROOF_TERRACOTTA]: [0.7, 0.32, 0.22],
-    [BLOCK.WHITE_PLASTER]: [0.9, 0.88, 0.84],
+    [BLOCK.BARREL]: [0.56, 0.4, 0.24],
+    [BLOCK.ROOF_RED]: [0.7, 0.32, 0.22],
+    [BLOCK.ROOF_GREEN]: [0.24, 0.52, 0.38],
+    [BLOCK.PLASTER]: [0.9, 0.88, 0.84],
     [BLOCK.STONE_BRICK]: [0.54, 0.55, 0.57],
     [BLOCK.WHEAT]: [0.84, 0.72, 0.3],
     [BLOCK.HAY_BALE]: [0.82, 0.7, 0.28],
     [BLOCK.TALL_GRASS]: [0.34, 0.62, 0.24],
+    [BLOCK.SEAGRASS]: [0.22, 0.58, 0.34],
     [BLOCK.FLOWER_RED]: [0.86, 0.22, 0.2],
     [BLOCK.FLOWER_YELLOW]: [0.95, 0.82, 0.2],
     [BLOCK.CACTUS]: [0.24, 0.56, 0.22],
@@ -67,7 +72,7 @@ export function createVoxelParticles() {
 
     const spawnBlockBreak = (bx, by, bz, blockId, amount = 14) => {
         const base = BLOCK_COLORS[blockId] || [0.6, 0.6, 0.6];
-        const em = blockId === BLOCK.TORCH || blockId === BLOCK.LAVA ? 0.95 : 0;
+        const em = blockId === BLOCK.TORCH || blockId === BLOCK.LANTERN || blockId === BLOCK.LAVA ? 0.95 : 0;
         for (let i = 0; i < amount; i += 1) {
             const shade = 0.78 + Math.random() * 0.36;
             const ox = bx + 0.15 + Math.random() * 0.7;
@@ -132,6 +137,43 @@ export function createVoxelParticles() {
             isSmoke ? 0.65 : 0.45,
             0.1,
             isSmoke ? 0 : 1
+        );
+    };
+
+    const spawnChimneySmoke = (bx, by, bz) => {
+        const shade = 0.66 + Math.random() * 0.22;
+        push(
+            bx + 0.5 + (Math.random() - 0.5) * 0.34,
+            by + 0.15,
+            bz + 0.5 + (Math.random() - 0.5) * 0.34,
+            0.22 + (Math.random() - 0.5) * 0.24,
+            0.78 + Math.random() * 0.45,
+            0.14 + (Math.random() - 0.5) * 0.22,
+            shade,
+            shade,
+            shade + 0.02,
+            0.16 + Math.random() * 0.12,
+            2.1 + Math.random() * 1.1,
+            0.08,
+            0
+        );
+    };
+
+    const spawnForgeSpark = (bx, by, bz) => {
+        push(
+            bx + 0.5 + (Math.random() - 0.5) * 0.35,
+            by + 0.1,
+            bz + 0.5 + (Math.random() - 0.5) * 0.35,
+            (Math.random() - 0.5) * 0.65,
+            1.15 + Math.random() * 0.75,
+            (Math.random() - 0.5) * 0.65,
+            1.0,
+            0.62 + Math.random() * 0.25,
+            0.18,
+            0.055 + Math.random() * 0.03,
+            0.85 + Math.random() * 0.55,
+            -0.6,
+            1
         );
     };
 
@@ -238,6 +280,8 @@ export function createVoxelParticles() {
         spawnBlockBreak,
         spawnSplash,
         spawnTorchEmber,
+        spawnChimneySmoke,
+        spawnForgeSpark,
         step,
         buildBillboardBuffer,
         clear,

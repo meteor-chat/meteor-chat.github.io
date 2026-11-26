@@ -2,13 +2,18 @@ import { TEX } from "./voxel-blocks.js";
 import { FLOATS_PER_VERTEX } from "./voxel-mob-cat-model.js";
 
 export { FLOATS_PER_VERTEX };
-export const MAX_VILLAGERS = 6;
+export const MAX_VILLAGERS = 14;
 export const VERTS_PER_BOX = 36;
 
 export const VILLAGER_LAYERS = Object.freeze({
     robe: TEX.VILLAGER_ROBE,
+    plains: TEX.VILLAGER_ROBE,
+    farmer: TEX.VILLAGER_FARMER,
+    blacksmith: TEX.VILLAGER_SMITH,
+    cleric: TEX.VILLAGER_CLERIC,
     skin: TEX.VILLAGER_SKIN,
-    face: TEX.VILLAGER_FACE
+    face: TEX.VILLAGER_FACE,
+    hat: TEX.HAY_TOP
 });
 
 const UV_SCALE = 1.6;
@@ -22,6 +27,7 @@ const PIVOTS = {
 const PARTS = [
     { min: [-0.22, 0.56, -0.14], max: [0.22, 1.32, 0.14], chain: ["body"], layerType: "robe" },
     { min: [-0.21, 1.32, -0.21], max: [0.21, 1.82, 0.21], chain: ["head", "body"], head: true, layerType: "skin" },
+    { min: [-0.26, 1.76, -0.26], max: [0.26, 1.85, 0.26], chain: ["head", "body"], layerType: "headgear" },
     { min: [-0.055, 1.33, -0.31], max: [0.055, 1.49, -0.21], chain: ["head", "body"], layerType: "skin" },
     { min: [-0.28, 0.9, -0.24], max: [0.28, 1.1, -0.1], chain: ["body"], layerType: "robe" },
     { min: [-0.32, 0.94, -0.14], max: [-0.22, 1.28, 0.12], chain: ["body"], layerType: "robe" },
@@ -105,6 +111,22 @@ function placeInWorld(v, pose, chain, localPt, isPoint, c, s, dest) {
     dest[2] = z + (isPoint ? v.pos[2] : 0);
 }
 
+function resolveVillagerLayer(v, part, k, sign) {
+    if (part.head && k === 2 && sign < 0) return VILLAGER_LAYERS.face;
+    if (part.layerType === "skin") return VILLAGER_LAYERS.skin;
+    const prof = v.variant || "plains";
+    if (part.layerType === "headgear") {
+        if (prof === "farmer") return VILLAGER_LAYERS.hat;
+        if (prof === "cleric") return VILLAGER_LAYERS.cleric;
+        if (prof === "blacksmith") return VILLAGER_LAYERS.blacksmith;
+        return VILLAGER_LAYERS.robe;
+    }
+    if (prof === "farmer") return VILLAGER_LAYERS.farmer;
+    if (prof === "blacksmith") return VILLAGER_LAYERS.blacksmith;
+    if (prof === "cleric") return VILLAGER_LAYERS.cleric;
+    return VILLAGER_LAYERS.robe;
+}
+
 function emitFace(out, cursor, args) {
     const { v, pose, part, layer, sky, blk, k, sign, c, s } = args;
     const [uAxis, vAxis] = AXES[k];
@@ -114,14 +136,17 @@ function emitFace(out, cursor, args) {
     localNormal[k] = sign;
     placeInWorld(v, pose, part.chain, localNormal, false, c, s, placedNormal);
     const order = sign > 0 ? [0, 1, 2, 3] : [0, 3, 2, 1];
-    const sizeU = part.max[uAxis] - part.min[uAxis];
-    const sizeV = part.max[vAxis] - part.min[vAxis];
+    const shrinkHat = part.layerType === "headgear" && v.variant !== "farmer";
+    const min = shrinkHat ? [-0.215, 1.76, -0.215] : part.min;
+    const max = shrinkHat ? [0.215, 1.84, 0.215] : part.max;
+    const sizeU = max[uAxis] - min[uAxis];
+    const sizeV = max[vAxis] - min[vAxis];
 
     for (let idx = 0; idx < 4; idx += 1) {
         const [cu, cv] = CORNERS[order[idx]];
-        localPos[k] = sign > 0 ? part.max[k] : part.min[k];
-        localPos[uAxis] = cu ? part.max[uAxis] : part.min[uAxis];
-        localPos[vAxis] = cv ? part.max[vAxis] : part.min[vAxis];
+        localPos[k] = sign > 0 ? max[k] : min[k];
+        localPos[uAxis] = cu ? max[uAxis] : min[uAxis];
+        localPos[vAxis] = cv ? max[vAxis] : min[vAxis];
         placeInWorld(v, pose, part.chain, localPos, true, c, s, placed);
         const du = sign < 0 ? 1 - cu : cu;
         const fullFace = part.head && k === 2 && sign < 0;
@@ -165,9 +190,7 @@ export function buildVillagerVertices(v, timeSec, out, offset) {
     for (const part of PARTS) {
         for (let k = 0; k < 3; k += 1) {
             for (const sign of [1, -1]) {
-                let layer = VILLAGER_LAYERS.robe;
-                if (part.head && k === 2 && sign < 0) layer = VILLAGER_LAYERS.face;
-                else if (part.layerType === "skin") layer = VILLAGER_LAYERS.skin;
+                const layer = resolveVillagerLayer(v, part, k, sign);
                 cursor = emitFace(out, cursor, { v, pose, part, layer, sky, blk, k, sign, c, s });
             }
         }

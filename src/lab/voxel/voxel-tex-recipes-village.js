@@ -12,6 +12,10 @@ const WHEAT_PALETTE = [[162, 118, 32], [192, 146, 40], [220, 172, 54], [244, 202
 const WHEAT_STEM = [[78, 106, 36], [108, 130, 42], [142, 146, 48]];
 const HAY_PALETTE = [[174, 134, 44], [202, 162, 58], [226, 186, 74], [244, 208, 96]];
 const COBBLE_PALETTE = [[68, 70, 76], [90, 92, 100], [112, 114, 124], [136, 140, 150]];
+const MOSS_PALETTE = [[44, 84, 34], [62, 112, 46], [84, 138, 58]];
+const IRON_DARK = [[36, 40, 48], [52, 58, 68], [72, 78, 90]];
+const LANTERN_GLOW = [[236, 152, 42], [252, 194, 78], [255, 234, 148], [255, 248, 206]];
+const BARREL_WOOD = [[98, 68, 38], [122, 86, 48], [144, 104, 60], [164, 122, 74]];
 
 const stoneBrick = (p) => {
     const row = Math.floor(p.y / 4);
@@ -122,6 +126,67 @@ const cobblestone = (p) => {
     return [...color, 255, 0.42 + h * 0.32, 0.82, 0];
 };
 
+const mossyCobble = (p) => {
+    const row = Math.floor(p.y / 4);
+    const shift = (row & 1) * 2;
+    const sx = (p.x + shift) & 15;
+    const cx = Math.floor(sx / 4);
+    const ly = p.y % 4;
+    const lx = sx % 4;
+    const moss = tileFbm(p.u, p.v, 4, 2, p.seed + 31);
+    const isMortar = ly === 0 || lx === 0;
+    if (isMortar) {
+        if (moss > 0.44) {
+            return [...palettePick(MOSS_PALETTE, moss * 0.6 + p.px * 0.4, p.x, p.y), 255, 0.25, 0.9, 0];
+        }
+        return [...shade(COBBLE_PALETTE[0], -26), 255, 0.1, 0.96, 0];
+    }
+    if (moss > 0.62) {
+        const mt = (moss - 0.62) / 0.38;
+        return [...palettePick(MOSS_PALETTE, mt * 0.65 + p.px * 0.35, p.x, p.y), 255, 0.46 + mt * 0.25, 0.88, 0];
+    }
+    const h = hash2(cx, row, p.seed);
+    const t = h * 0.45 + tileFbm(p.u, p.v, 4, 2, p.seed) * 0.3 + p.px * 0.25;
+    return [...palettePick(COBBLE_PALETTE, t, p.x, p.y), 255, 0.42 + h * 0.3, 0.84, 0];
+};
+
+const lanternTex = (p) => {
+    const isCap = p.y <= 2 || p.y >= 13;
+    const isStrut = p.x <= 2 || p.x >= 13 || ((p.x === 7 || p.x === 8) && (p.y === 3 || p.y === 12));
+    if (isCap || isStrut) {
+        const t = p.px * 0.6 + (p.y === 14 || p.y === 1 ? 0.3 : 0);
+        return [...palettePick(IRON_DARK, t, p.x, p.y), 255, 0.72, 0.42, 0];
+    }
+    const dx = (p.x - 7.5) / 5.0;
+    const dy = (p.y - 7.5) / 5.0;
+    const dist = Math.hypot(dx, dy);
+    const core = Math.max(0, Math.min(1, 1.05 - dist * 0.72 + (p.px - 0.5) * 0.18));
+    return [...palettePick(LANTERN_GLOW, core, p.x, p.y), 255, 0.55, 0.25, 1.0];
+};
+
+const barrelSide = (p) => {
+    const isHoop = p.y === 3 || p.y === 4 || p.y === 11 || p.y === 12;
+    if (isHoop) {
+        const rivet = (p.y === 3 || p.y === 12) && (p.x === 3 || p.x === 8 || p.x === 13);
+        const t = rivet ? 0.9 : 0.35 + p.px * 0.35;
+        return [...palettePick(IRON_DARK, t, p.x, p.y), 255, rivet ? 0.85 : 0.65, 0.42, 0];
+    }
+    const seam = p.x % 4 === 0;
+    if (seam) return [58, 38, 22, 255, 0.14, 0.92, 0];
+    const grain = tileFbm(p.u, p.v, 4, 2, p.seed);
+    const t = grain * 0.6 + p.px * 0.4;
+    return [...palettePick(BARREL_WOOD, t, p.x, p.y), 255, 0.4 + grain * 0.3, 0.86, 0];
+};
+
+const barrelTop = (p) => {
+    const edge = Math.min(p.x, p.y, 15 - p.x, 15 - p.y);
+    if (edge === 0) return [...palettePick(IRON_DARK, 0.4 + p.px * 0.3, p.x, p.y), 255, 0.7, 0.44, 0];
+    if (p.x >= 6 && p.x <= 9 && p.y === 10) return [36, 26, 20, 255, 0.2, 0.85, 0];
+    if (p.y % 4 === 0) return [64, 42, 24, 255, 0.18, 0.9, 0];
+    const grain = tileFbm(p.u, p.v, 4, 2, p.seed);
+    return [...palettePick(BARREL_WOOD, grain * 0.6 + p.px * 0.4, p.x, p.y), 255, 0.42 + grain * 0.25, 0.86, 0];
+};
+
 export const VILLAGE_RECIPES = {
     [TEX.STONE_BRICK]: { seed: 120, fn: stoneBrick, bump: 2.4 },
     [TEX.PLASTER]: { seed: 121, fn: plaster, bump: 0.8 },
@@ -131,5 +196,9 @@ export const VILLAGE_RECIPES = {
     [TEX.WHEAT]: { seed: 125, fn: wheat, bump: 1.4, clampV: true },
     [TEX.HAY_SIDE]: { seed: 126, fn: haySide, bump: 2.2 },
     [TEX.HAY_TOP]: { seed: 127, fn: hayTop, bump: 1.6 },
-    [TEX.COBBLESTONE]: { seed: 128, fn: cobblestone, bump: 2.6 }
+    [TEX.COBBLESTONE]: { seed: 128, fn: cobblestone, bump: 2.6 },
+    [TEX.MOSSY_COBBLE]: { seed: 129, fn: mossyCobble, bump: 2.5 },
+    [TEX.LANTERN]: { seed: 130, fn: lanternTex, bump: 1.4, clampV: true },
+    [TEX.BARREL_SIDE]: { seed: 131, fn: barrelSide, bump: 1.8 },
+    [TEX.BARREL_TOP]: { seed: 132, fn: barrelTop, bump: 1.5 }
 };

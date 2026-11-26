@@ -1,4 +1,4 @@
-import { BLOCK, isSolid } from "./voxel-blocks.js";
+import { BLOCK, isSolid, isWater } from "./voxel-blocks.js";
 import { collidesAABB } from "./voxel-physics.js";
 
 export const CAT_HALF_WIDTH = 0.25;
@@ -7,6 +7,8 @@ export const CHICKEN_HALF_WIDTH = 0.2;
 export const CHICKEN_HEIGHT = 0.5;
 export const VILLAGER_HALF_WIDTH = 0.28;
 export const VILLAGER_HEIGHT = 1.72;
+export const GOLEM_HALF_WIDTH = 0.52;
+export const GOLEM_HEIGHT = 2.65;
 
 const GRAVITY = -24;
 const TERMINAL_VEL = -40;
@@ -29,7 +31,7 @@ function columnSafe(x, y, z, getBlock) {
     const top = Math.floor(y + 0.001);
     for (let i = 0; i <= MAX_DROP + 1; i += 1) {
         const id = cell(getBlock, x, top - i, z);
-        if (id === BLOCK.WATER || id === BLOCK.LAVA) return false;
+        if (isWater(id) || id === BLOCK.LAVA) return false;
         if (i > 0 && isSolid(id)) return true;
     }
     return false;
@@ -155,7 +157,7 @@ export function stepMobPhysics(mob, dt, wishX, wishZ, getBlock) {
     const stepDt = Math.min(MAX_STEP_DT, Math.max(0.001, dt));
     const pos = mob.pos;
     unstick(mob, getBlock);
-    mob.inWater = cell(getBlock, pos[0], pos[1] + 0.2, pos[2]) === BLOCK.WATER;
+    mob.inWater = isWater(cell(getBlock, pos[0], pos[1] + 0.2, pos[2]));
     if (mob.inWater) {
         mob.vel[1] += (SWIM_RISE - mob.vel[1]) * Math.min(1, 6 * stepDt);
     } else if (mob.slowFall && mob.vel[1] < 0) {

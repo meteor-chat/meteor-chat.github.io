@@ -1,4 +1,4 @@
-import { getFaceTexture, isCrossPlant, isTorch } from "./voxel-blocks.js";
+import { getFaceTexture, isCrossPlant, isLantern, isTorch } from "./voxel-blocks.js";
 
 export const HAND_VERTEX_STRIDE = 8;
 
@@ -30,6 +30,11 @@ export function buildHeldBlockMesh(blockId) {
     if (isTorch(blockId)) {
         const tex = getFaceTexture(blockId, 0);
         pushBox(out, -0.055, -0.26, -0.055, 0.055, 0.26, 0.055, () => tex, 0.72, [0.38, 0.08, 0.62, 0.92]);
+        return new Float32Array(out);
+    }
+    if (isLantern(blockId)) {
+        const tex = getFaceTexture(blockId, 0);
+        pushBox(out, -0.12, -0.17, -0.12, 0.12, 0.15, 0.12, () => tex, 0.85, [0, 0, 1, 1]);
         return new Float32Array(out);
     }
     if (isCrossPlant(blockId)) {

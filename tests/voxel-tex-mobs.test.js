@@ -52,7 +52,7 @@ function distinct(layer) {
 
 describe("cat textures", () => {
     it("appends ten cat layers after the original block layers without moving them", () => {
-        expect(atlas.layerCount).toBe(48);
+        expect(atlas.layerCount).toBe(58);
         expect(TEX.CACTUS).toBe(17);
         expect(TEX.GRASS_TOP).toBe(0);
         const all = [...Object.values(FUR), ...Object.values(FACE)];

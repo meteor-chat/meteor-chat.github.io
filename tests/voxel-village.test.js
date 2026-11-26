@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { BLOCK, CHUNK_SIZE, chunkIndex } from "../src/lab/voxel/voxel-blocks.js";
 import { propagateColumnLight } from "../src/lab/voxel/voxel-light.js";
+import { meshSubchunk } from "../src/lab/voxel/voxel-mesher.js";
+import { createGolem, stepGolem } from "../src/lab/voxel/voxel-mob-golem-ai.js";
+import { buildGolemVertices, FLOATS_PER_GOLEM } from "../src/lab/voxel/voxel-mob-golem-model.js";
+import { createVillager, stepVillager, VILLAGER_PROFESSIONS, VILLAGER_STATE } from "../src/lab/voxel/voxel-mob-villager-ai.js";
+import { buildVillagerVertices, FLOATS_PER_VILLAGER } from "../src/lab/voxel/voxel-mob-villager-model.js";
+import { mulberry32 } from "../src/lab/voxel/voxel-noise.js";
 import { buildArchBridge, buildCottage, buildFarm, buildFountain, buildLamp, buildTower, buildWindmill } from "../src/lab/voxel/voxel-village-blueprints.js";
-import { applyVillageToColumn, getVillageCenter, isVillageArea } from "../src/lab/voxel/voxel-village-gen.js";
+import { applyVillageToColumn, getVillageCenter, getVillageMeta, getVillagePlan, isVillageArea } from "../src/lab/voxel/voxel-village-gen.js";
 import { generateColumn } from "../src/lab/voxel/voxel-world-gen.js";
 
 const SEED = 2026;
@@ -177,5 +183,99 @@ describe("village generation and seamless chunk integration", () => {
             if (hasFoundation) break;
         }
         expect(hasFoundation).toBe(true);
+    });
+
+    it("generates a dense multi-tier coastal hillside town with diverse landmarks and zero building overlaps", () => {
+        const plan = getVillagePlan(36, 36, SEED);
+        const meta = getVillageMeta(36, 36, SEED);
+        expect(plan.buildings.length).toBeGreaterThanOrEqual(40);
+        expect(plan.chunkBuckets.size).toBeGreaterThan(20);
+        expect(meta.chimneys.length).toBeGreaterThanOrEqual(10);
+        expect(meta.pois.length).toBeGreaterThanOrEqual(30);
+
+        const kinds = new Set(plan.buildings.map((b) => b.kind));
+        expect(kinds.has("home")).toBe(true);
+        expect(kinds.has("church")).toBe(true);
+        expect(kinds.has("forge")).toBe(true);
+        expect(kinds.has("market")).toBe(true);
+        expect(kinds.has("dock")).toBe(true);
+        expect(kinds.has("farm")).toBe(true);
+
+        const ys = plan.buildings.map((b) => b.floorY);
+        expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThanOrEqual(12);
+
+        for (let i = 0; i < plan.buildings.length; i += 1) {
+            const a = plan.buildings[i];
+            for (let j = i + 1; j < plan.buildings.length; j += 1) {
+                const b = plan.buildings[j];
+                const overlaps = a.x0 <= b.x1 && a.x1 >= b.x0 && a.z0 <= b.z1 && a.z1 >= b.z0;
+                expect(overlaps, `overlap between ${a.kind} and ${b.kind}`).toBe(false);
+            }
+        }
+    });
+
+    it("meshes waterlogged seagrass without internal water bubble faces and emits lantern light", () => {
+        const blocks = new Uint8Array(CHUNK_SIZE * 128 * CHUNK_SIZE);
+        const light = new Uint8Array(blocks.length);
+        for (let z = 4; z <= 10; z += 1) {
+            for (let x = 4; x <= 10; x += 1) {
+                blocks[chunkIndex(x, 38, z)] = BLOCK.SAND;
+                blocks[chunkIndex(x, 39, z)] = BLOCK.WATER;
+                blocks[chunkIndex(x, 40, z)] = BLOCK.WATER;
+            }
+        }
+        blocks[chunkIndex(7, 39, 7)] = BLOCK.SEAGRASS;
+        blocks[chunkIndex(7, 45, 7)] = BLOCK.LANTERN;
+        propagateColumnLight(blocks, light);
+        expect(light[chunkIndex(7, 45, 7)] & 15).toBe(15);
+
+        const gBlock = (x, y, z) =>
+            x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE && y >= 0 && y < 128
+                ? blocks[chunkIndex(x, y, z)]
+                : BLOCK.AIR;
+        const gLight = (x, y, z) =>
+            x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE && y >= 0 && y < 128
+                ? light[chunkIndex(x, y, z)]
+                : 240;
+
+        const subWater = meshSubchunk(2, gBlock, gLight);
+        expect(subWater.cutout.length).toBeGreaterThan(0);
+
+        const waterOnly = new Uint8Array(blocks);
+        waterOnly[chunkIndex(7, 39, 7)] = BLOCK.WATER;
+        const gWaterOnly = (x, y, z) =>
+            x >= 0 && x < CHUNK_SIZE && z >= 0 && z < CHUNK_SIZE && y >= 0 && y < 128
+                ? waterOnly[chunkIndex(x, y, z)]
+                : BLOCK.AIR;
+        const refWater = meshSubchunk(2, gWaterOnly, gLight);
+        expect(subWater.translucent.length).toBeLessThanOrEqual(refWater.translucent.length);
+    });
+
+    it("drives profession villagers with social chat and builds Iron Golem patrol geometry", () => {
+        const flat = (x, y) => (Math.floor(y) < 50 ? BLOCK.COBBLESTONE : BLOCK.AIR);
+        const rng = mulberry32(42);
+        const pois = [
+            { type: "plaza", x: 10, y: 50, z: 10 },
+            { type: "forge", x: 18, y: 50, z: 10 }
+        ];
+        const a = createVillager(10.5, 50, 10.5, 10, 10, rng, { variant: "blacksmith", pois });
+        const b = createVillager(12.2, 50, 10.5, 10, 10, rng, { variant: "farmer", pois });
+        a.chatCooldown = 0;
+        a.timer = 0;
+        const ctx = { rng: () => 0.1, getBlock: flat, frozen: false, playerPos: null, isNight: false, villagers: [a, b] };
+        stepVillager(a, 0.05, ctx);
+        expect(a.state).toBe(VILLAGER_STATE.CHAT);
+        expect(VILLAGER_PROFESSIONS).toContain(b.variant);
+
+        const vBuf = new Float32Array(FLOATS_PER_VILLAGER);
+        expect(buildVillagerVertices(b, 1.2, vBuf, 0)).toBe(FLOATS_PER_VILLAGER);
+
+        const golem = createGolem(10.5, 50, 14.5, 10, 10, rng, pois);
+        for (let i = 0; i < 30; i += 1) {
+            stepGolem(golem, 0.05, { rng, getBlock: flat, frozen: false, playerPos: [14, 50, 14] });
+        }
+        expect(golem.pos[1]).toBeCloseTo(50, 2);
+        const gBuf = new Float32Array(FLOATS_PER_GOLEM);
+        expect(buildGolemVertices(golem, 1.5, gBuf, 0)).toBe(FLOATS_PER_GOLEM);
     });
 });

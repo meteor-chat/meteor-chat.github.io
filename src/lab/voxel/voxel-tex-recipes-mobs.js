@@ -7,6 +7,11 @@ const BLACK = [[16, 16, 20], [28, 28, 34], [42, 42, 50], [60, 60, 70]];
 const WHITE = [[204, 204, 206], [224, 224, 226], [240, 240, 241], [252, 252, 252]];
 const SAND = [[166, 138, 96], [188, 160, 116], [208, 182, 136], [228, 206, 162]];
 const ROBE = [[86, 56, 36], [108, 72, 46], [130, 88, 58], [148, 104, 70]];
+const FARMER_ROBE = [[72, 92, 44], [94, 118, 56], [116, 142, 70], [138, 162, 86]];
+const SMITH_ROBE = [[42, 44, 50], [58, 60, 68], [76, 78, 86], [94, 96, 104]];
+const CLERIC_ROBE = [[74, 38, 96], [96, 52, 122], [118, 68, 148], [140, 86, 170]];
+const GOLEM_METAL = [[164, 158, 150], [186, 180, 172], [208, 202, 194], [228, 224, 216]];
+const GOLEM_VINE = [[46, 98, 42], [68, 128, 56], [92, 152, 72]];
 const SKIN = [[166, 118, 86], [184, 136, 102], [202, 152, 118], [216, 168, 134]];
 
 const EYES = {
@@ -132,6 +137,68 @@ const villagerFace = (p) => {
     return villagerSkin(p);
 };
 
+const villagerFarmer = (p) => {
+    if (p.y === 5 || p.y === 6) {
+        const pouch = p.x >= 10 && p.x <= 12;
+        return pouch ? [208, 172, 72, 255, 0.55, 0.82, 0] : [78, 52, 32, 255, 0.38, 0.88, 0];
+    }
+    if (p.y >= 13 && p.x >= 5 && p.x <= 10) {
+        return [182, 146, 76, 255, 0.42, 0.86, 0];
+    }
+    const base = baseTone(p);
+    const fold = p.x === 7 || p.x === 8 ? -0.16 : 0;
+    return [...palettePick(FARMER_ROBE, base + fold, p.x, p.y), 255, 0.4 + base * 0.3, 0.9, 0];
+};
+
+const villagerSmith = (p) => {
+    if (p.y === 6 && p.x >= 6 && p.x <= 9) {
+        return [176, 182, 192, 255, 0.82, 0.32, 0];
+    }
+    if (p.y >= 13 && (p.x === 5 || p.x === 10)) {
+        return [102, 66, 40, 255, 0.4, 0.86, 0];
+    }
+    const base = baseTone(p);
+    const apron = p.x >= 4 && p.x <= 11 && p.y >= 2 && p.y <= 12;
+    const pal = apron ? SMITH_ROBE : ROBE;
+    return [...palettePick(pal, base, p.x, p.y), 255, 0.45 + base * 0.3, apron ? 0.72 : 0.9, 0];
+};
+
+const villagerCleric = (p) => {
+    if (p.y === 5 || p.y === 6 || (p.x >= 7 && p.x <= 8 && p.y <= 13)) {
+        return [212, 176, 68, 255, 0.72, 0.4, 0];
+    }
+    const base = baseTone(p);
+    return [...palettePick(CLERIC_ROBE, base, p.x, p.y), 255, 0.42 + base * 0.3, 0.86, 0];
+};
+
+const golemIron = (p) => {
+    const seam = p.y === 0 || p.y === 8 || (p.x === 0 && (p.y & 7) > 0);
+    if (seam) return [116, 112, 106, 255, 0.25, 0.65, 0];
+    const vine = tileFbm(p.u, p.v, 4, 2, p.seed + 19);
+    if (vine > 0.73 && p.x >= 2 && p.x <= 13) {
+        const vt = (vine - 0.73) / 0.27;
+        return [...palettePick(GOLEM_VINE, vt * 0.65 + p.px * 0.35, p.x, p.y), 255, 0.48, 0.86, 0];
+    }
+    const rivet = (p.x === 2 || p.x === 13) && (p.y === 2 || p.y === 10);
+    if (rivet) return [134, 130, 124, 255, 0.82, 0.4, 0];
+    const base = baseTone(p);
+    return [...palettePick(GOLEM_METAL, base, p.x, p.y), 255, 0.55 + base * 0.3, 0.46, 0];
+};
+
+const golemFace = (p) => {
+    if (p.y >= 11 && p.y <= 12 && p.x >= 2 && p.x <= 13) {
+        return [122, 116, 110, 255, 0.35, 0.62, 0];
+    }
+    if (inBox(p, 3, 8, 5, 9) || inBox(p, 10, 8, 12, 9)) {
+        const glow = (p.x === 4 || p.x === 11) && p.y === 8;
+        return glow ? [246, 142, 46, 255, 0.6, 0.28, 0.92] : [48, 34, 28, 255, 0.2, 0.75, 0];
+    }
+    if (p.y >= 4 && p.y <= 7 && p.x >= 6 && p.x <= 9) {
+        return [148, 142, 134, 255, 0.68, 0.52, 0];
+    }
+    return golemIron(p);
+};
+
 export const MOB_RECIPES = {
     [TEX.CAT_FUR_ORANGE]: { seed: 201, fn: furOrange, bump: 1.2 },
     [TEX.CAT_FUR_BLACK]: { seed: 202, fn: furBlack, bump: 1.0 },
@@ -149,5 +216,10 @@ export const MOB_RECIPES = {
     [TEX.CHICKEN_WATTLE]: { seed: 254, fn: chickenWattle, bump: 0.8 },
     [TEX.VILLAGER_ROBE]: { seed: 271, fn: villagerRobe, bump: 1.2, clampV: true },
     [TEX.VILLAGER_SKIN]: { seed: 272, fn: villagerSkin, bump: 0.8 },
-    [TEX.VILLAGER_FACE]: { seed: 273, fn: villagerFace, bump: 1.0, clampV: true }
+    [TEX.VILLAGER_FACE]: { seed: 273, fn: villagerFace, bump: 1.0, clampV: true },
+    [TEX.VILLAGER_FARMER]: { seed: 274, fn: villagerFarmer, bump: 1.2, clampV: true },
+    [TEX.VILLAGER_SMITH]: { seed: 275, fn: villagerSmith, bump: 1.3, clampV: true },
+    [TEX.VILLAGER_CLERIC]: { seed: 276, fn: villagerCleric, bump: 1.2, clampV: true },
+    [TEX.GOLEM_IRON]: { seed: 281, fn: golemIron, bump: 1.8 },
+    [TEX.GOLEM_FACE]: { seed: 282, fn: golemFace, bump: 1.5, clampV: true }
 };

@@ -1,5 +1,6 @@
 import { BLOCK, CHUNK_HEIGHT, CHUNK_SIZE, SEA_LEVEL, isCrossPlant, isSolid } from "./voxel-blocks.js";
-import { getNearbyVillages } from "./voxel-village-gen.js";
+import { VILLAGER_PROFESSIONS } from "./voxel-mob-villager-ai.js";
+import { getNearbyVillages, getVillageMeta } from "./voxel-village-gen.js";
 import { sampleColumnMeta } from "./voxel-world-gen.js";
 
 export const SPAWN_MIN_DIST = 14;
@@ -22,7 +23,14 @@ export const BIOME_VARIANTS = Object.freeze({
     desert: [["sand", 1]]
 });
 
-const VILLAGE_GROUND = new Set([BLOCK.GRASS, BLOCK.COBBLESTONE, BLOCK.STONE_BRICK, BLOCK.WOOD_PLANKS]);
+const VILLAGE_GROUND = new Set([
+    BLOCK.GRASS,
+    BLOCK.SAND,
+    BLOCK.COBBLESTONE,
+    BLOCK.MOSSY_COBBLE,
+    BLOCK.STONE_BRICK,
+    BLOCK.WOOD_PLANKS
+]);
 
 export function pickVariant(biome, roll) {
     const table = BIOME_VARIANTS[biome];
@@ -147,34 +155,50 @@ export function createChickenSpawner({ mobs, world, seed, rng }) {
     return { update, trySpawn, isLoaded };
 }
 
-export const SPAWN_VILLAGER_CAP = 5;
-const VILLAGER_DESPAWN_DIST = 78;
+export const SPAWN_VILLAGER_CAP = 12;
+const VILLAGER_DESPAWN_DIST = 98;
+
+function findStandableY(world, wx, wz, headroom = 2) {
+    for (let y = CHUNK_HEIGHT - 6; y > SEA_LEVEL; y -= 1) {
+        const g = world.getBlock(wx, y, wz);
+        if (!isSolid(g) || g === BLOCK.LEAVES) continue;
+        if (!VILLAGE_GROUND.has(g)) return -1;
+        for (let h = 1; h <= headroom; h += 1) {
+            if (!isPassable(world.getBlock(wx, y + h, wz))) return -1;
+        }
+        return y + 1;
+    }
+    return -1;
+}
 
 export function createVillagerSpawner({ mobs, world, seed, rng }) {
     const isLoaded = (wx, wz) => Boolean(world.getColumn(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
-    let timer = 0.6;
+    let timer = 0.5;
+    let profCursor = 0;
 
-    const findRoadSpot = (vx, vz) => {
-        const offsets = [
-            [4, 0], [-4, 0], [0, 4], [0, -4],
-            [8, 0], [-8, 0], [0, 8], [0, -8],
-            [12, 0], [0, 12], [-12, 0], [0, -12]
-        ];
-        const start = Math.floor(rng() * offsets.length);
-        for (let i = 0; i < offsets.length; i += 1) {
-            const [ox, oz] = offsets[(start + i) % offsets.length];
-            const wx = vx + ox;
-            const wz = vz + oz;
+    const findVillageSpot = (meta) => {
+        const pool = meta.pois && meta.pois.length > 0 ? meta.pois : [];
+        const start = Math.floor(rng() * Math.max(1, pool.length));
+        for (let i = 0; i < Math.min(pool.length, 18); i += 1) {
+            const poi = pool[(start + i) % pool.length];
+            const wx = Math.floor(poi.x);
+            const wz = Math.floor(poi.z);
             if (!isLoaded(wx, wz)) continue;
-            if (mobs.villagers.some((v) => Math.hypot(v.pos[0] - (wx + 0.5), v.pos[2] - (wz + 0.5)) < 3.5)) continue;
-            for (let y = CHUNK_HEIGHT - 6; y > SEA_LEVEL + 1; y -= 1) {
-                const g = world.getBlock(wx, y, wz);
-                if (!isSolid(g) || g === BLOCK.LEAVES) continue;
-                if (VILLAGE_GROUND.has(g) && isPassable(world.getBlock(wx, y + 1, wz)) && isPassable(world.getBlock(wx, y + 2, wz))) {
-                    return { x: wx + 0.5, y: y + 1, z: wz + 0.5 };
-                }
-                break;
-            }
+            if (mobs.villagers.some((v) => Math.hypot(v.pos[0] - (wx + 0.5), v.pos[2] - (wz + 0.5)) < 3.2)) continue;
+            const sy = findStandableY(world, wx, wz, 2);
+            if (sy > 0) return { x: wx + 0.5, y: sy, z: wz + 0.5, poi };
+        }
+        const fallbackOffsets = [
+            [4, 0], [-4, 0], [0, 4], [0, -4],
+            [8, 0], [-8, 0], [0, 8], [0, -8]
+        ];
+        for (const [ox, oz] of fallbackOffsets) {
+            const wx = meta.vx + ox;
+            const wz = meta.vz + oz;
+            if (!isLoaded(wx, wz)) continue;
+            if (mobs.villagers.some((v) => Math.hypot(v.pos[0] - (wx + 0.5), v.pos[2] - (wz + 0.5)) < 3.2)) continue;
+            const sy = findStandableY(world, wx, wz, 2);
+            if (sy > 0) return { x: wx + 0.5, y: sy, z: wz + 0.5, poi: null };
         }
         return null;
     };
@@ -190,20 +214,89 @@ export function createVillagerSpawner({ mobs, world, seed, rng }) {
         despawnFar(playerPos);
         timer -= dt;
         if (timer > 0) return;
-        timer = 1.8;
+        timer = 1.1;
         if (mobs.villagers.length >= SPAWN_VILLAGER_CAP) return;
         const nearby = getNearbyVillages(
-            playerPos[0] - 48,
-            playerPos[2] - 48,
-            playerPos[0] + 48,
-            playerPos[2] + 48,
+            playerPos[0] - 84,
+            playerPos[2] - 84,
+            playerPos[0] + 84,
+            playerPos[2] + 84,
             seed
         );
         for (const village of nearby) {
             if (mobs.villagers.length >= SPAWN_VILLAGER_CAP) break;
-            const spot = findRoadSpot(village.vx, village.vz);
+            const meta = getVillageMeta(village.vx, village.vz, seed);
+            const spot = findVillageSpot(meta);
             if (spot) {
-                mobs.spawnVillager(spot.x, spot.y, spot.z, village.vx, village.vz);
+                const variant = VILLAGER_PROFESSIONS[profCursor % VILLAGER_PROFESSIONS.length];
+                profCursor += 1;
+                const homes = meta.pois.filter((p) => p.type === "home" || p.type === "inn");
+                const homeDoor = homes.length > 0 ? homes[Math.floor(rng() * homes.length)] : null;
+                mobs.spawnVillager(spot.x, spot.y, spot.z, village.vx, village.vz, {
+                    variant,
+                    pois: meta.pois,
+                    homeDoor
+                });
+            }
+        }
+    };
+
+    return { update, isLoaded };
+}
+
+export const SPAWN_GOLEM_CAP = 2;
+
+export function createGolemSpawner({ mobs, world, seed, rng }) {
+    const isLoaded = (wx, wz) => Boolean(world.getColumn(Math.floor(wx / CHUNK_SIZE), Math.floor(wz / CHUNK_SIZE)));
+    let timer = 0.8;
+
+    const findPatrolSpot = (meta) => {
+        const spots = [
+            { x: meta.vx + 4, z: meta.vz },
+            { x: meta.vx - 4, z: meta.vz },
+            { x: meta.vx, z: meta.vz + 5 },
+            { x: meta.vx, z: meta.vz - 5 },
+            ...meta.pois.filter((p) => p.type === "plaza" || p.type === "market" || p.type === "forge")
+        ];
+        const start = Math.floor(rng() * spots.length);
+        for (let i = 0; i < spots.length; i += 1) {
+            const p = spots[(start + i) % spots.length];
+            const wx = Math.floor(p.x);
+            const wz = Math.floor(p.z);
+            if (!isLoaded(wx, wz)) continue;
+            if (mobs.golems.some((g) => Math.hypot(g.pos[0] - (wx + 0.5), g.pos[2] - (wz + 0.5)) < 8)) continue;
+            const sy = findStandableY(world, wx, wz, 3);
+            if (sy > 0) return { x: wx + 0.5, y: sy, z: wz + 0.5 };
+        }
+        return null;
+    };
+
+    const despawnFar = (playerPos) => {
+        for (const g of [...mobs.golems]) {
+            const far = Math.hypot(g.pos[0] - playerPos[0], g.pos[2] - playerPos[2]) > VILLAGER_DESPAWN_DIST;
+            if (far || !isLoaded(g.pos[0], g.pos[2]) || g.pos[1] < 2) mobs.removeGolem(g);
+        }
+    };
+
+    const update = (dt, playerPos) => {
+        despawnFar(playerPos);
+        timer -= dt;
+        if (timer > 0) return;
+        timer = 2.4;
+        if (mobs.golems.length >= SPAWN_GOLEM_CAP) return;
+        const nearby = getNearbyVillages(
+            playerPos[0] - 84,
+            playerPos[2] - 84,
+            playerPos[0] + 84,
+            playerPos[2] + 84,
+            seed
+        );
+        for (const village of nearby) {
+            if (mobs.golems.length >= SPAWN_GOLEM_CAP) break;
+            const meta = getVillageMeta(village.vx, village.vz, seed);
+            const spot = findPatrolSpot(meta);
+            if (spot) {
+                mobs.spawnGolem(spot.x, spot.y, spot.z, village.vx, village.vz, meta.pois);
             }
         }
     };

@@ -5,7 +5,7 @@ import { ORGANIC_RECIPES } from "./voxel-tex-recipes-organic.js";
 import { TERRAIN_RECIPES } from "./voxel-tex-recipes-terrain.js";
 import { VILLAGE_RECIPES } from "./voxel-tex-recipes-village.js";
 
-const LAYER_COUNT = 48;
+const LAYER_COUNT = 58;
 const RECIPES = {
     ...TERRAIN_RECIPES,
     ...ORGANIC_RECIPES,

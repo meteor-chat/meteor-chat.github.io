@@ -51,10 +51,10 @@ describe("Voxel procedural noise and palette", () => {
 
 describe("Voxel procedural atlas", () => {
     it("keeps the public contract and a second map array of equal size", () => {
-        expect(atlas.layerCount).toBe(48);
+        expect(atlas.layerCount).toBe(58);
         expect(atlas.tileSize).toBe(16);
-        expect(atlas.data.length).toBe(LAYER * 48);
-        expect(atlas.maps.length).toBe(LAYER * 48);
+        expect(atlas.data.length).toBe(LAYER * 58);
+        expect(atlas.maps.length).toBe(LAYER * 58);
     });
 
     it("is deterministic across generations", () => {
@@ -64,7 +64,7 @@ describe("Voxel procedural atlas", () => {
     });
 
     it("gives every layer a varied palette instead of a flat color", () => {
-        for (let layer = 0; layer < 48; layer += 1) {
+        for (let layer = 0; layer < 58; layer += 1) {
             expect(distinctColors(atlas.data, layer), `layer ${layer}`).toBeGreaterThanOrEqual(3);
         }
     });

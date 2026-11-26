@@ -8,9 +8,12 @@ import {
     isSolid
 } from "./voxel-blocks.js";
 import { fbm2, fbm3, hash2, noise3, ridged2 } from "./voxel-noise.js";
-import { applyVillageToColumn, getNearbyVillages } from "./voxel-village-gen.js";
-
-const VILLAGE_CLEAR_PAD = 32;
+import {
+    applyVillageToColumn,
+    getNearbyVillages,
+    getVillagePlan,
+    isPlansOccupied
+} from "./voxel-village-gen.js";
 
 const SAFE_GROUND_BLOCKS = new Set([
     BLOCK.GRASS,
@@ -19,6 +22,7 @@ const SAFE_GROUND_BLOCKS = new Set([
     BLOCK.SNOW,
     BLOCK.STONE,
     BLOCK.COBBLESTONE,
+    BLOCK.MOSSY_COBBLE,
     BLOCK.STONE_BRICK,
     BLOCK.WOOD_PLANKS
 ]);
@@ -118,15 +122,6 @@ function placeCactus(blocks, lx, baseY, lz, wx, wz, seed) {
     }
 }
 
-function isInVillageList(villages, wx, wz) {
-    for (const v of villages) {
-        if (Math.abs(wx - v.vx) <= VILLAGE_CLEAR_PAD && Math.abs(wz - v.vz) <= VILLAGE_CLEAR_PAD) {
-            return true;
-        }
-    }
-    return false;
-}
-
 export function generateColumn(cx, cz, seed = 2026) {
     const blocks = new Uint8Array(CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE);
     const light = new Uint8Array(blocks.length);
@@ -183,20 +178,38 @@ export function generateColumn(cx, cz, seed = 2026) {
                 for (let y = surf + 1; y <= SEA_LEVEL; y += 1) {
                     blocks[chunkIndex(lx, y, lz)] = BLOCK.WATER;
                 }
+                if (surf <= SEA_LEVEL - 2 && surf >= SEA_LEVEL - 10) {
+                    const patch = fbm2(wx * 0.085, wz * 0.085, 2, seed + 3313);
+                    const sr = hash2(wx, wz, seed + 3391);
+                    if (patch > 0.43 && sr < 0.36) {
+                        const maxH = Math.min(3, SEA_LEVEL - 1 - surf);
+                        const h = 1 + Math.floor(hash2(wx + 19, wz - 13, seed + 3457) * maxH);
+                        for (let dy = 1; dy <= h; dy += 1) {
+                            blocks[chunkIndex(lx, surf + dy, lz)] = BLOCK.SEAGRASS;
+                        }
+                    }
+                }
             }
         }
     }
 
     applyVillageToColumn(blocks, cx, cz, seed);
 
-    const villages = getNearbyVillages(baseX - 4, baseZ - 4, baseX + CHUNK_SIZE + 3, baseZ + CHUNK_SIZE + 3, seed);
+    const nearbyVillages = getNearbyVillages(
+        baseX - 4,
+        baseZ - 4,
+        baseX + CHUNK_SIZE + 3,
+        baseZ + CHUNK_SIZE + 3,
+        seed
+    );
+    const villagePlans = nearbyVillages.map((v) => getVillagePlan(v.vx, v.vz, seed));
 
     for (let lz = -2; lz <= CHUNK_SIZE + 1; lz += 1) {
         const wz = baseZ + lz;
         for (let lx = -2; lx <= CHUNK_SIZE + 1; lx += 1) {
             const wx = baseX + lx;
             if (!isTreeRoot(wx, wz, seed)) continue;
-            if (isInVillageList(villages, wx, wz)) continue;
+            if (villagePlans.length > 0 && isPlansOccupied(villagePlans, wx, wz, 3)) continue;
             const inChunk = lx >= 0 && lx < CHUNK_SIZE && lz >= 0 && lz < CHUNK_SIZE;
             let surf;
             let biome;
@@ -219,7 +232,7 @@ export function generateColumn(cx, cz, seed = 2026) {
         const wz = baseZ + lz;
         for (let lx = 0; lx < CHUNK_SIZE; lx += 1) {
             const wx = baseX + lx;
-            if (isInVillageList(villages, wx, wz)) continue;
+            if (villagePlans.length > 0 && isPlansOccupied(villagePlans, wx, wz, 1)) continue;
             const off = lx + (lz << 4);
             const surf = surfaces[off];
             const biome = biomes[off];
