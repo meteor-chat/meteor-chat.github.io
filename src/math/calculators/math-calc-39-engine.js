@@ -417,3 +417,12 @@ export function stepGD(state, rawPoints, lr = 0.1) {
         history: nextHistory
     };
 }
+
+export function fmtNum(val, digits = 3) {
+    if (!Number.isFinite(val)) return "0";
+    if (Math.abs(val) < 1e-11) return "0";
+    const factor = Math.pow(10, digits);
+    const rounded = Math.round(val * factor) / factor;
+    if (Object.is(rounded, -0) || rounded === 0) return "0";
+    return String(Number(rounded.toFixed(digits)));
+}

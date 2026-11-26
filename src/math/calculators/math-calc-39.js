@@ -1,9 +1,9 @@
 import { refs } from "../../core/dom-refs.js";
-import { LR_PRESETS, computeLinearRegressionOLS, createGDState, stepGD } from "./math-calc-39-engine.js";
-import { renderTopFormula39, renderLRSteps } from "./math-calc-39-cards.js";
+import { LR_PRESETS, computeLinearRegressionOLS, createGDState, stepGD, fmtNum } from "./math-calc-39-engine.js";
+import { renderTopFormula39, renderLRInputsRow, updateLRMeansTags, renderLRDerivedRows } from "./math-calc-39-diagram.js";
+import { renderLRSteps } from "./math-calc-39-cards.js";
 import { renderScatterCanvas, renderLossCanvas, hitTestScatterPoint } from "../visuals/math-visual-39.js";
 
-let initialized = false;
 let currentMode = "ols";
 let currentPoints = LR_PRESETS.manual.points.map((p) => ({ ...p }));
 let currentPresetMeta = LR_PRESETS.manual;
@@ -55,78 +55,53 @@ function defaultLabelAt(i) {
     return String.fromCharCode(code) + suffix;
 }
 
-function renderPointRows() {
-    const listEl = refs.m39Rows || document.getElementById("math39-rows-container");
-    if (!listEl) return;
-    listEl.innerHTML = "";
-
-    currentPoints.forEach((pt, idx) => {
-        const row = document.createElement("div");
-        row.className = "lr-data-row";
-
-        const badge = document.createElement("span");
-        badge.className = "lr-row-tag";
-        badge.textContent = pt.label || defaultLabelAt(idx);
-
-        const inX = document.createElement("input");
-        inX.type = "number";
-        inX.step = "any";
-        inX.inputMode = "decimal";
-        inX.className = "lr-row-input";
-        inX.value = String(pt.x);
-        inX.setAttribute("aria-label", `Nilai x untuk data ${badge.textContent}`);
-        inX.addEventListener("input", () => {
-            const val = parseFloat(inX.value);
-            if (Number.isFinite(val)) {
-                currentPoints[idx].x = val;
-                if (currentMode === "gd") resetGD();
-                calculateMath39();
-            }
-        });
-
-        const inY = document.createElement("input");
-        inY.type = "number";
-        inY.step = "any";
-        inY.inputMode = "decimal";
-        inY.className = "lr-row-input";
-        inY.value = String(pt.y);
-        inY.setAttribute("aria-label", `Nilai y untuk data ${badge.textContent}`);
-        inY.addEventListener("input", () => {
-            const val = parseFloat(inY.value);
-            if (Number.isFinite(val)) {
-                currentPoints[idx].y = val;
-                if (currentMode === "gd") resetGD();
-                calculateMath39();
-            }
-        });
-
-        const delBtn = document.createElement("button");
-        delBtn.type = "button";
-        delBtn.className = "lr-row-del";
-        delBtn.textContent = "\u00d7";
-        delBtn.disabled = currentPoints.length <= 2;
-        delBtn.setAttribute("aria-label", `Hapus data ${badge.textContent}`);
-        delBtn.addEventListener("click", () => {
-            if (currentPoints.length <= 2) return;
-            currentPoints.splice(idx, 1);
-            renderPointRows();
-            if (currentMode === "gd") resetGD();
-            calculateMath39();
-        });
-
-        row.appendChild(badge);
-        row.appendChild(inX);
-        row.appendChild(inY);
-        row.appendChild(delBtn);
-        listEl.appendChild(row);
+function addPoint() {
+    if (currentPoints.length >= 12) return;
+    const last = currentPoints[currentPoints.length - 1] || { x: 0, y: 0 };
+    currentPoints.push({
+        label: defaultLabelAt(currentPoints.length),
+        x: Math.round((last.x + 2) * 10) / 10,
+        y: Math.round((last.y + 5) * 10) / 10
     });
+    renderInputMatrix();
+    if (currentMode === "gd") resetGD();
+    calculateMath39();
+}
+
+function removePoint(idx) {
+    if (currentPoints.length <= 2) return;
+    currentPoints.splice(idx, 1);
+    renderInputMatrix();
+    if (currentMode === "gd") resetGD();
+    calculateMath39();
+}
+
+function renderInputMatrix() {
+    const inputsEl = document.getElementById("math39-cells-inputs");
+    const olsQuick = computeLinearRegressionOLS(currentPoints, getQueryX());
+    renderLRInputsRow(
+        inputsEl,
+        currentPoints,
+        olsQuick.meanX,
+        olsQuick.meanY,
+        {
+            onEdit: (idx, axis, val) => {
+                if (!currentPoints[idx]) return;
+                currentPoints[idx][axis] = val;
+                if (currentMode === "gd") resetGD();
+                calculateMath39();
+            },
+            onAdd: addPoint,
+            onRemove: removePoint
+        }
+    );
 }
 
 function syncModeUI() {
     const tabOls = document.getElementById("math39-tab-ols");
     const tabGd = document.getElementById("math39-tab-gd");
-    const gdControls = document.getElementById("math39-gd-panel");
-    const olsQueryBox = document.getElementById("math39-query-box");
+    const gdPanel = document.getElementById("math39-gd-panel");
+    const olsParams = document.getElementById("math39-ols-params");
     const lossWrap = document.getElementById("math39-loss-wrap");
 
     if (tabOls) {
@@ -137,9 +112,9 @@ function syncModeUI() {
         tabGd.classList.toggle("active", currentMode === "gd");
         tabGd.setAttribute("aria-selected", String(currentMode === "gd"));
     }
-    if (gdControls) gdControls.classList.toggle("hidden", currentMode !== "gd");
+    if (gdPanel) gdPanel.classList.toggle("hidden", currentMode !== "gd");
     if (lossWrap) lossWrap.classList.toggle("hidden", currentMode !== "gd");
-    if (olsQueryBox) olsQueryBox.classList.toggle("hidden", currentMode === "gd");
+    if (olsParams) olsParams.classList.toggle("hidden", currentMode === "gd");
 }
 
 function stepOnceGD() {
@@ -179,7 +154,7 @@ function loadPreset(key) {
     if (inLr) inLr.value = String(preset.gdLr);
     const chkStd = refs.m39ChkStd || document.getElementById("math39-chk-std");
     if (chkStd) chkStd.checked = Boolean(preset.gdStd);
-    renderPointRows();
+    renderInputMatrix();
     resetGD();
     calculateMath39();
 }
@@ -215,13 +190,10 @@ function bindCanvasPointer(canvas) {
             const mathPos = lastGeom.toMath(sx, sy);
             currentPoints[draggedIdx].x = mathPos.x;
             currentPoints[draggedIdx].y = mathPos.y;
-            const listEl = refs.m39Rows || document.getElementById("math39-rows-container");
-            const row = listEl?.children[draggedIdx];
-            const inputs = row?.querySelectorAll(".lr-row-input");
-            if (inputs && inputs.length === 2) {
-                inputs[0].value = String(mathPos.x);
-                inputs[1].value = String(mathPos.y);
-            }
+            const xEl = document.querySelector(`.lr-cell-x[data-idx="${draggedIdx}"]`);
+            const yEl = document.querySelector(`.lr-cell-y[data-idx="${draggedIdx}"]`);
+            if (xEl) xEl.value = String(mathPos.x);
+            if (yEl) yEl.value = String(mathPos.y);
             if (currentMode === "gd") resetGD();
             calculateMath39();
             return;
@@ -256,27 +228,17 @@ function bindCanvasPointer(canvas) {
 }
 
 export function initMath39() {
-    if (!initialized) {
-        initialized = true;
+    const root = document.getElementById("math-calc-form-39");
+    if (root && root.dataset.lrBound !== "1") {
+        root.dataset.lrBound = "1";
+        currentMode = "ols";
+        currentPresetMeta = LR_PRESETS.manual;
+        currentPoints = LR_PRESETS.manual.points.map((p) => ({ ...p }));
+
         const selPreset = refs.m39Preset || document.getElementById("math39-preset");
         if (selPreset) {
+            selPreset.value = "manual";
             selPreset.addEventListener("change", () => loadPreset(selPreset.value));
-        }
-
-        const btnAdd = document.getElementById("math39-btn-add");
-        if (btnAdd) {
-            btnAdd.addEventListener("click", () => {
-                if (currentPoints.length >= 12) return;
-                const last = currentPoints[currentPoints.length - 1] || { x: 0, y: 0 };
-                currentPoints.push({
-                    label: defaultLabelAt(currentPoints.length),
-                    x: Math.round((last.x + 2) * 10) / 10,
-                    y: Math.round((last.y + 5) * 10) / 10
-                });
-                renderPointRows();
-                if (currentMode === "gd") resetGD();
-                calculateMath39();
-            });
         }
 
         const tabOls = document.getElementById("math39-tab-ols");
@@ -309,14 +271,21 @@ export function initMath39() {
 
         if (chkRes) chkRes.addEventListener("change", calculateMath39);
         if (chkSq) chkSq.addEventListener("change", calculateMath39);
-        if (inQx) inQx.addEventListener("input", calculateMath39);
+        if (inQx) {
+            inQx.value = String(currentPresetMeta.queryX);
+            inQx.addEventListener("input", calculateMath39);
+        }
         if (chkStd) {
+            chkStd.checked = Boolean(currentPresetMeta.gdStd);
             chkStd.addEventListener("change", () => {
                 resetGD();
                 calculateMath39();
             });
         }
-        if (inLr) inLr.addEventListener("input", calculateMath39);
+        if (inLr) {
+            inLr.value = String(currentPresetMeta.gdLr);
+            inLr.addEventListener("input", calculateMath39);
+        }
 
         document.querySelectorAll(".lr-lr-pill").forEach((pill) => {
             pill.addEventListener("click", () => {
@@ -347,7 +316,7 @@ export function initMath39() {
         }
 
         bindCanvasPointer(refs.m39CanvasScatter || document.getElementById("math39-canvas-scatter"));
-        renderPointRows();
+        renderInputMatrix();
         resetGD();
     }
 
@@ -360,6 +329,24 @@ export function calculateMath39() {
     const qx = getQueryX();
     const ols = computeLinearRegressionOLS(currentPoints, qx);
     if (!gdState) resetGD();
+
+    const inputsEl = document.getElementById("math39-cells-inputs");
+    updateLRMeansTags(inputsEl, ols.meanX, ols.meanY);
+
+    const centroidLabel = document.getElementById("math39-centroid-pill");
+    if (centroidLabel) {
+        centroidLabel.textContent = Number.isFinite(ols.meanX)
+            ? `n=${ols.n} (${fmtNum(ols.meanX, 2)}, ${fmtNum(ols.meanY, 2)})`
+            : `n=${ols.n}`;
+    }
+
+    const qxLabel = document.getElementById("math39-label-qx");
+    if (qxLabel && typeof katex !== "undefined") {
+        katex.render("\\htmlClass{lr-tok-w1}{x_{\\text{baru}}}", qxLabel, { throwOnError: false, trust: true });
+    }
+
+    const derivedEl = document.getElementById("math39-cells-derived");
+    renderLRDerivedRows(derivedEl, currentMode, ols, gdState);
 
     const chkRes = document.getElementById("math39-chk-residuals");
     const chkSq = document.getElementById("math39-chk-squares");
@@ -389,5 +376,5 @@ export function calculateMath39() {
         }
     }
 
-    renderLRSteps(ols, currentMode, gdState, currentPresetMeta.queryLabel);
+    renderLRSteps({ mode: currentMode, ols, gdState, lr: getLrValue() });
 }

@@ -158,13 +158,13 @@ export function renderScatterCanvas(canvas, state) {
     const { ctx, w, h, pad, plotW, plotH, bounds, toPx, toPy } = geom;
     const points = ols?.points || [];
 
-    ctx.fillStyle = "#080a10";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, w, h);
 
     if (ols?.valid && queryPt?.isExtrapolation) {
         const minDomainPx = Math.max(pad.left, Math.min(w - pad.right, toPx(ols.minX)));
         const maxDomainPx = Math.max(pad.left, Math.min(w - pad.right, toPx(ols.maxX)));
-        ctx.fillStyle = "rgba(245, 158, 11, 0.05)";
+        ctx.fillStyle = "rgba(251, 191, 36, 0.04)";
         if (minDomainPx > pad.left) {
             ctx.fillRect(pad.left, pad.top, minDomainPx - pad.left, plotH);
         }
@@ -179,7 +179,7 @@ export function renderScatterCanvas(canvas, state) {
     for (let x = xStart; x <= bounds.maxX + xStep * 0.01; x += xStep) {
         const px = toPx(x);
         if (px < pad.left - 1 || px > w - pad.right + 1) continue;
-        ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
         ctx.beginPath();
         ctx.moveTo(px, pad.top);
         ctx.lineTo(px, h - pad.bottom);
@@ -197,7 +197,7 @@ export function renderScatterCanvas(canvas, state) {
     for (let y = yStart; y <= bounds.maxY + yStep * 0.01; y += yStep) {
         const py = toPy(y);
         if (py < pad.top - 1 || py > h - pad.bottom + 1) continue;
-        ctx.strokeStyle = "rgba(148, 163, 184, 0.12)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
         ctx.beginPath();
         ctx.moveTo(pad.left, py);
         ctx.lineTo(w - pad.right, py);
@@ -210,7 +210,7 @@ export function renderScatterCanvas(canvas, state) {
         ctx.fillText(fmtAxis(y), pad.left - 6, py);
     }
 
-    ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(pad.left, pad.top);
@@ -412,7 +412,7 @@ export function renderLossCanvas(canvas, gdState, olsMse) {
     if (!setup) return;
     const { ctx, w, h } = setup;
 
-    ctx.fillStyle = "#080a10";
+    ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, w, h);
 
     const history = gdState?.history || [];

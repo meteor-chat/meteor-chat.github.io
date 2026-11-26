@@ -165,7 +165,7 @@ describe("Formula 39: Linear Regression", () => {
         expect(fs.existsSync(routeHtml)).toBe(true);
     });
 
-    describe("Interactive DOM controller integration", () => {
+    describe("Interactive /math/ai/1-style DOM integration", () => {
         beforeEach(() => {
             const html = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
             document.documentElement.innerHTML = html;
@@ -176,9 +176,12 @@ describe("Formula 39: Linear Regression", () => {
             }
         });
 
-        it("initializes UI, updates OLS query, switches preset and runs GD mode", () => {
+        it("renders cell matrix with curly braces, updates OLS query, switches preset and runs GD mode", () => {
             initMath39();
+            const diagram = document.getElementById("math39-diagram-container");
             const steps = document.getElementById("math39-steps-container");
+            expect(diagram.querySelectorAll(".lr-cell-input").length).toBe(10);
+            expect(diagram.querySelectorAll(".chromo-brace-svg").length).toBe(3);
             expect(steps.textContent).toContain("54.6");
             expect(steps.textContent).toContain("43.2");
             expect(steps.textContent).toContain("3.8");
@@ -186,6 +189,7 @@ describe("Formula 39: Linear Regression", () => {
             const preset = document.getElementById("math39-preset");
             preset.value = "ex1";
             preset.dispatchEvent(new window.Event("change"));
+            expect(diagram.querySelectorAll(".lr-cell-input").length).toBe(8);
             expect(steps.textContent).toContain("36.2");
             expect(steps.textContent).toContain("4.2");
 
@@ -196,7 +200,7 @@ describe("Formula 39: Linear Regression", () => {
 
             const btnStep = document.getElementById("math39-btn-step");
             btnStep.click();
-            expect(steps.textContent).toContain("Iterasi Saat Ini");
+            expect(steps.textContent).toContain("Iterasi 1");
             expect(steps.textContent).toContain("1855.008");
         });
     });
@@ -204,6 +208,7 @@ describe("Formula 39: Linear Regression", () => {
     it("complies with zero-comment, zero-em-dash, line-limit, and font constraints", () => {
         const filesToCheck = [
             "src/math/calculators/math-calc-39-engine.js",
+            "src/math/calculators/math-calc-39-diagram.js",
             "src/math/calculators/math-calc-39-cards.js",
             "src/math/calculators/math-calc-39.js",
             "src/math/visuals/math-visual-39.js",

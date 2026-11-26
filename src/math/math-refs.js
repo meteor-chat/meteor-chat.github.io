@@ -160,7 +160,7 @@ const IDS = {
     m38CanvasTelemetry: "math38-canvas-telemetry",
     m38Steps: "math38-steps-container",
     m39Preset: "math39-preset",
-    m39Rows: "math39-rows-container",
+    m39Rows: "math39-cells-inputs",
     m39InQx: "math39-in-qx",
     m39InLr: "math39-in-lr",
     m39ChkStd: "math39-chk-std",
