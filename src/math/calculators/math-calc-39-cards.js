@@ -91,7 +91,44 @@ export function renderTopFormula39() {
     if (thY) renderTex("y", thY, false);
 }
 
+function syncRightBrace() {
+    const tabRow = document.querySelector(".lr-tab-brace-row");
+    const tbody = document.getElementById("math39-tabulate-body");
+    const braceSide = document.getElementById("math39-brace-side");
+    const vbraceSvg = document.getElementById("math39-vbrace-svg");
+    const vbracePath = document.getElementById("math39-vbrace-path");
+    if (!tabRow || !tbody || !braceSide || !vbraceSvg) return;
+
+    const filledRows = Array.from(tbody.children).filter((tr) => {
+        const inputs = tr.querySelectorAll(".lr-cell-input");
+        if (inputs.length < 2) return false;
+        return Number.isFinite(parseFloat(inputs[0].value)) && Number.isFinite(parseFloat(inputs[1].value));
+    });
+    if (filledRows.length === 0) return;
+
+    const tabRect = tabRow.getBoundingClientRect();
+    const firstRect = filledRows[0].getBoundingClientRect();
+    const lastRect = filledRows[filledRows.length - 1].getBoundingClientRect();
+    if (firstRect.height <= 0 || lastRect.height <= 0) return;
+
+    const topOffset = Math.max(0, firstRect.top - tabRect.top + 3);
+    const braceH = Math.max(38, lastRect.bottom - firstRect.top - 6);
+    const mid = braceH / 2;
+
+    braceSide.style.paddingTop = `${topOffset}px`;
+    vbraceSvg.setAttribute("viewBox", `0 0 22 ${braceH}`);
+    vbraceSvg.style.width = "22px";
+    vbraceSvg.style.height = `${braceH}px`;
+    if (vbracePath) {
+        const r = Math.min(12, Math.max(4, braceH * 0.14));
+        const d = `M 2 2 Q 12 2 12 ${2 + r} L 12 ${mid - r} Q 12 ${mid} 20 ${mid} Q 12 ${mid} 12 ${mid + r} L 12 ${braceH - 2 - r} Q 12 ${braceH - 2} 2 ${braceH - 2}`;
+        vbracePath.setAttribute("d", d);
+    }
+}
+
 export function drawAfterArrows() {
+    syncRightBrace();
+
     const stage = document.getElementById("math39-stage-top");
     const svg = document.getElementById("math39-arrows-svg");
     const srcEl = document.getElementById("math39-n-val");
@@ -117,7 +154,7 @@ export function drawAfterArrows() {
     marker.setAttribute("id", "lr-after-head");
     marker.setAttribute("markerWidth", "7");
     marker.setAttribute("markerHeight", "7");
-    marker.setAttribute("refX", "5");
+    marker.setAttribute("refX", "5.5");
     marker.setAttribute("refY", "3.5");
     marker.setAttribute("orient", "auto");
     const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
@@ -127,27 +164,33 @@ export function drawAfterArrows() {
     defs.appendChild(marker);
     svg.appendChild(defs);
 
-    const startX = nRect.right - sRect.left + 8;
-    const startY = nRect.top + nRect.height / 2 - sRect.top;
+    const startX = nRect.right - sRect.left + 6;
+    const startY = nRect.top - sRect.top + nRect.height * 0.56;
 
-    const tx1 = dxRect.left + dxRect.width / 2 - sRect.left;
-    const ty1 = dxRect.bottom - sRect.top + 5;
-    const ctrlX1 = Math.min(sRect.width - 8, Math.max(startX + 34, tx1 + 140));
+    const tx1 = dxRect.left - sRect.left + dxRect.width * 0.85;
+    const ty1 = dxRect.bottom - sRect.top + 4;
+    const c1x1 = Math.min(sRect.width - 10, startX + 32);
+    const c1y1 = startY + (ty1 - startY) * 0.62;
+    const c2x1 = tx1 + 36;
+    const c2y1 = ty1 + 32;
     const path1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path1.setAttribute("d", `M ${startX} ${startY} C ${ctrlX1} ${startY + 40}, ${ctrlX1} ${ty1 + 42}, ${tx1} ${ty1}`);
+    path1.setAttribute("d", `M ${startX} ${startY} C ${c1x1} ${c1y1}, ${c2x1} ${c2y1}, ${tx1} ${ty1}`);
     path1.setAttribute("fill", "none");
-    path1.setAttribute("stroke", "rgba(255,255,255,0.85)");
+    path1.setAttribute("stroke", "rgba(255,255,255,0.88)");
     path1.setAttribute("stroke-width", "1.4");
     path1.setAttribute("marker-end", "url(#lr-after-head)");
     svg.appendChild(path1);
 
-    const tx2 = dyRect.left + dyRect.width / 2 - sRect.left;
-    const ty2 = dyRect.bottom - sRect.top + 5;
-    const ctrlX2 = Math.min(sRect.width - 4, ctrlX1 + 18);
+    const tx2 = dyRect.left - sRect.left + dyRect.width * 0.85;
+    const ty2 = dyRect.bottom - sRect.top + 4;
+    const c1x2 = Math.min(sRect.width - 6, startX + 42);
+    const c1y2 = startY + (ty2 - startY) * 0.65;
+    const c2x2 = tx2 + 38;
+    const c2y2 = ty2 + 34;
     const path2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path2.setAttribute("d", `M ${startX} ${startY} C ${ctrlX2} ${startY + 55}, ${ctrlX2} ${ty2 + 52}, ${tx2} ${ty2}`);
+    path2.setAttribute("d", `M ${startX} ${startY} C ${c1x2} ${c1y2}, ${c2x2} ${c2y2}, ${tx2} ${ty2}`);
     path2.setAttribute("fill", "none");
-    path2.setAttribute("stroke", "rgba(255,255,255,0.85)");
+    path2.setAttribute("stroke", "rgba(255,255,255,0.88)");
     path2.setAttribute("stroke-width", "1.4");
     path2.setAttribute("marker-end", "url(#lr-after-head)");
     svg.appendChild(path2);
@@ -169,7 +212,7 @@ export function renderLRSteps(res) {
             braceSide.classList.remove("hidden");
             nTag.textContent = "";
             nTag.appendChild(makeEl("span", "", "jumlah data = "));
-            const nValSpan = makeEl("span", "lr-n-val");
+            const nValSpan = makeEl("span", "lr-n-val lr-tok-y");
             nValSpan.id = "math39-n-val";
             renderTex(String(validCount), nValSpan, false);
             nTag.appendChild(nValSpan);
@@ -194,17 +237,25 @@ export function renderLRSteps(res) {
 
         const eqX = makeEl("div", "lr-mean-line");
         renderTex(
-            `\\text{mean } x = \\frac{${xTerms}}{\\htmlClass{lr-den-x}{${n}}} = \\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`,
+            `\\text{mean } x = \\frac{${xTerms}}{\\htmlClass{lr-den-x lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`,
             eqX,
             true
         );
         const eqY = makeEl("div", "lr-mean-line");
         renderTex(
-            `\\text{mean } y = \\frac{${yTerms}}{\\htmlClass{lr-den-y}{${n}}} = \\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`,
+            `\\text{mean } y = \\frac{${yTerms}}{\\htmlClass{lr-den-y lr-tok-y}{${n}}} = \\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`,
             eqY,
             true
         );
-        meanSec.append(eqX, eqY);
+
+        const summaryBox = makeEl("div", "lr-mean-summary");
+        const sumX = makeEl("div", "lr-mean-line");
+        renderTex(`\\text{mean } x = \\htmlClass{lr-tok-w1}{${fmtNum(meanX, 4)}}`, sumX, false);
+        const sumY = makeEl("div", "lr-mean-line");
+        renderTex(`\\text{mean } y = \\htmlClass{lr-tok-w0}{${fmtNum(meanY, 4)}}`, sumY, false);
+        summaryBox.append(sumX, sumY);
+
+        meanSec.append(eqX, eqY, summaryBox);
         meanWrap.appendChild(meanSec);
     }
 
