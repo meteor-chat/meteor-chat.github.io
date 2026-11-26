@@ -43,7 +43,8 @@ describe("Formula 39: Linear Regression", () => {
 
     describe("Auto-row tabulate and #after DOM flow", () => {
         beforeEach(() => {
-            document.documentElement.innerHTML = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
+            const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
+            document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
         });
 
         it("auto-adds blank row when typing and removes cleared rows with no add/delete buttons", () => {
@@ -52,13 +53,26 @@ describe("Formula 39: Linear Regression", () => {
             const tbody = document.getElementById("math39-tabulate-body");
             const steps = document.getElementById("math39-steps-container");
             const meanWrap = document.getElementById("math39-mean-wrap");
+            const toggleBtn = document.getElementById("math39-btn-explain-toggle");
 
-            expect(form.querySelectorAll("button").length).toBe(1);
+            expect(form.querySelectorAll("button").length).toBe(2);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+            expect(form.classList.contains("lr-explain-open")).toBe(false);
             expect(tbody.children.length).toBe(6);
             expect(document.getElementById("math39-n-val").textContent).toBe("5");
             expect(meanWrap.textContent).toContain("mean");
             expect(steps.textContent).toContain("deviations");
-            expect(steps.textContent).toContain("residuals and SSE");
+            expect(form.querySelectorAll(".lr-explain-box").length).toBe(9);
+            expect(steps.textContent).toContain("3.8");
+
+            toggleBtn.click();
+            expect(form.classList.contains("lr-explain-open")).toBe(true);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
+            expect(meanWrap.textContent).toContain("jungkat-jungkit");
+
+            toggleBtn.click();
+            expect(form.classList.contains("lr-explain-open")).toBe(false);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
 
             const lastInputs = tbody.lastElementChild.querySelectorAll("input");
             lastInputs[0].value = "12";
@@ -71,12 +85,49 @@ describe("Formula 39: Linear Regression", () => {
             rowAInputs[1].value = "";
             rowAInputs[1].dispatchEvent(new window.Event("input"));
             expect(tbody.children.length).toBe(6);
+
+            const slopeExplain = form.querySelectorAll(".lr-explain-box")[4].textContent;
+            expect(slopeExplain).toContain("naik");
+            expect(slopeExplain).toContain("3.8");
+            const y0In = tbody.firstElementChild.querySelectorAll("input")[1];
+            y0In.value = "120";
+            y0In.dispatchEvent(new window.Event("input"));
+            const slopeUpdated = form.querySelectorAll(".lr-explain-box")[4].textContent;
+            expect(slopeUpdated).not.toContain("3.8 poin");
         });
+    });
+
+    it("updates dynamic explanations for negative slope and exact fit", () => {
+        const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
+        document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
+        initMath39();
+        const form = document.getElementById("math-calc-form-39");
+        const tbody = document.getElementById("math39-tabulate-body");
+        while (tbody.children.length > 4) {
+            const inputs = tbody.firstElementChild.querySelectorAll("input");
+            inputs[0].value = "";
+            inputs[0].dispatchEvent(new window.Event("input"));
+            inputs[1].value = "";
+            inputs[1].dispatchEvent(new window.Event("input"));
+        }
+        const pairs = [[1, 90], [3, 70], [5, 50]];
+        pairs.forEach(([x, y], i) => {
+            const inputs = tbody.children[i].querySelectorAll("input");
+            inputs[0].value = String(x);
+            inputs[0].dispatchEvent(new window.Event("input"));
+            inputs[1].value = String(y);
+            inputs[1].dispatchEvent(new window.Event("input"));
+        });
+        const txt = form.textContent;
+        expect(txt).toContain("pola turun berlawanan");
+        expect(txt).toContain("turun 10 poin");
+        expect(txt).toContain("SSE = 0");
     });
 
     it("complies with zero-comment, zero-em-dash, line-limit, and TeX font rules", () => {
         const files = [
             "src/math/calculators/math-calc-39-engine.js",
+            "src/math/calculators/math-calc-39-explain.js",
             "src/math/calculators/math-calc-39-cards.js",
             "src/math/calculators/math-calc-39.js",
             "tests/math-linear-reg.test.js"

@@ -106,6 +106,21 @@ export function initMath39() {
         root.dataset.lrBound = "1";
         rowEntries = createInitialEntries();
         renderTabulateBody();
+        const toggleBtn = document.getElementById("math39-btn-explain-toggle");
+        if (toggleBtn) {
+            toggleBtn.setAttribute("aria-expanded", "false");
+            toggleBtn.addEventListener("click", () => {
+                const open = root.classList.toggle("lr-explain-open");
+                toggleBtn.setAttribute("aria-expanded", String(open));
+                toggleBtn.classList.toggle("is-active", open);
+                toggleBtn.textContent = open ? "Sembunyikan Penjelasan" : "Tampilkan Penjelasan";
+                if (typeof requestAnimationFrame !== "undefined") {
+                    requestAnimationFrame(drawAfterArrows);
+                } else {
+                    drawAfterArrows();
+                }
+            });
+        }
         if (!resizeAttached && typeof window !== "undefined") {
             resizeAttached = true;
             window.addEventListener("resize", drawAfterArrows);

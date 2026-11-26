@@ -459,4 +459,16 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 @media (max-width: 920px) { #math-calc-form-40 .lr-sheet-table { font-size: clamp(11px, 1.5vw, 14px); } #math-calc-form-40 .lr-sheet-table th, #math-calc-form-40 .lr-sheet-table td { padding: 7px clamp(4px, 0.85vw, 10px); } #math-calc-form-40 .lr-tabulate-table td, #math-calc-form-40 .lr-params-table td { padding: 0; } #math-calc-form-40 .lr-slope-stage .katex { font-size: clamp(0.78em, 1.45vw, 1em); } }
 @media (max-width: 740px) { .lr40-upd-grid { grid-template-columns: 1fr; } }
 @media (max-width: 639px) { #math-calc-form-40 .lr-slope-stage { width: 100%; gap: 38px; padding: 30px 8px 28px; } }
+.lr-toolbar-row { display: flex; justify-content: flex-end; width: 100%; }
+.lr-explain-toggle { min-height: 44px; padding: 8px 14px; border-radius: 8px; border: 1px solid #333333; background: #090b10; color: #e2e8f0; font-family: 'Google Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: border-color 0.15s, color 0.15s, background-color 0.15s; }
+.lr-explain-toggle:hover { border-color: #38bdf8; color: #ffffff; }
+.lr-explain-toggle:focus-visible { outline: none; border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25); }
+.lr-explain-toggle.is-active { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.08); }
+.lr-explain-slot { width: 100%; }
+.lr-explain-box { width: 100%; box-sizing: border-box; background: #06080c; border: 1px solid #26262a; border-left: 2px solid #38bdf8; border-radius: 6px; padding: 9px 12px; text-align: left; }
+.lr-explain-text { margin: 0; font-family: 'Google Sans', sans-serif; font-size: 13.5px; line-height: 1.55; color: #cbd5e1; }
+.lr-explain-tag { color: #38bdf8; font-weight: 600; }
+.lr-explain-val { color: #f8fafc; font-weight: 500; }
+#math-calc-form-39:not(.lr-explain-open) .lr-explain-box, #math-calc-form-39:not(.lr-explain-open) .lr-explain-slot { display: none; }
+@media (max-width: 639px) { .lr-explain-box { padding: 8px 10px; } .lr-explain-text { font-size: 12.5px; } }
 @media (prefers-reduced-motion: reduce) { .lr-page * { transition: none !important; } }

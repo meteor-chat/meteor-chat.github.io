@@ -1,4 +1,5 @@
 import { fmtNum } from "./math-calc-39-engine.js";
+import { buildTabulateExplain, buildLinearExplainCard } from "./math-calc-39-explain.js";
 
 export function wrapNeg(val, digits = 3) {
     const s = fmtNum(val, digits);
@@ -463,15 +464,26 @@ function drawSlopeArrows() {
     if (intStage) drawThreeTierArrows(intStage, "lr-int-head-39");
 }
 
+function attachExplain(sec, stepKey, res) {
+    const box = buildLinearExplainCard(stepKey, res);
+    if (box) sec.appendChild(box);
+}
+
 export function renderLRSteps(res) {
     const braceSide = document.getElementById("math39-brace-side");
     const nTag = document.getElementById("math39-n-tag");
+    const tabExplain = document.getElementById("math39-tabulate-explain");
     const meanWrap = document.getElementById("math39-mean-wrap");
     const container = document.getElementById("math39-steps-container");
     if (!container) return;
 
     container.textContent = "";
     if (meanWrap) meanWrap.textContent = "";
+    if (tabExplain) {
+        tabExplain.textContent = "";
+        const tbBox = buildTabulateExplain(res);
+        if (tbBox) tabExplain.appendChild(tbBox);
+    }
 
     const validCount = res ? res.n : 0;
     if (braceSide && nTag) {
@@ -523,6 +535,7 @@ export function renderLRSteps(res) {
         summaryBox.append(sumX, sumY);
 
         meanSec.append(eqX, eqY, summaryBox);
+        attachExplain(meanSec, "mean", res);
         meanWrap.appendChild(meanSec);
     }
 
@@ -554,6 +567,7 @@ export function renderLRSteps(res) {
             ])
         )
     );
+    attachExplain(devSec, "deviations", res);
     frag.appendChild(devSec);
 
     frag.appendChild(makeArrow());
@@ -583,6 +597,7 @@ export function renderLRSteps(res) {
             ]
         )
     );
+    attachExplain(sumsSec, "twoSums", res);
     frag.appendChild(sumsSec);
 
     frag.appendChild(makeArrow());
@@ -600,6 +615,7 @@ export function renderLRSteps(res) {
             resCls: "lr-tok-w1"
         })
     );
+    attachExplain(slopeSec, "slope", res);
     frag.appendChild(slopeSec);
 
     frag.appendChild(makeArrow());
@@ -649,6 +665,7 @@ export function renderLRSteps(res) {
         true
     );
     intSec.append(intWrap, eqMath);
+    attachExplain(intSec, "intercept", res);
     frag.appendChild(intSec);
 
     frag.appendChild(makeArrow());
@@ -674,6 +691,7 @@ export function renderLRSteps(res) {
             ])
         )
     );
+    attachExplain(predSec, "prediction", res);
     frag.appendChild(predSec);
 
     frag.appendChild(makeArrow());
@@ -709,6 +727,7 @@ export function renderLRSteps(res) {
             ]
         )
     );
+    attachExplain(resSec, "residuals", res);
     frag.appendChild(resSec);
 
     frag.appendChild(makeArrow());
@@ -766,6 +785,7 @@ export function renderLRSteps(res) {
     });
 
     metSec.append(mseCard, makeArrow(), rmseCard, maeCard);
+    attachExplain(metSec, "metrics", res);
     frag.appendChild(metSec);
 
     container.appendChild(frag);
