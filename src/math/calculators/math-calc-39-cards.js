@@ -157,24 +157,34 @@ export function drawAfterArrows() {
 
     const resX = document.querySelector(".lr-res-x");
     const resY = document.querySelector(".lr-res-y");
-    const rxRight = resX ? resX.getBoundingClientRect().right - sRect.left : 0;
-    const ryRight = resY ? resY.getBoundingClientRect().right - sRect.left : 0;
-    const safeOut = Math.min(sRect.width - 8, Math.max(startX + 4, rxRight + 28, ryRight + 28));
+    const rxRect = resX ? resX.getBoundingClientRect() : null;
+    const rxRight = rxRect ? rxRect.right - sRect.left : 0;
+    const rxBot = rxRect ? rxRect.bottom - sRect.top : 0;
+    const ryRect = resY ? resY.getBoundingClientRect() : null;
+    const ryRight = ryRect ? ryRect.right - sRect.left : 0;
+    const ryBot = ryRect ? ryRect.bottom - sRect.top : 0;
+    const safeOut = Math.min(sRect.width - 4, Math.max(startX + 4, rxRight + 22, ryRight + 22));
 
     const tx1 = dxRect.left - sRect.left + dxRect.width * 0.72;
     const ty1 = dxRect.bottom - sRect.top + 4;
-    addBezierArrow(svg, startX, startY, safeOut, ty1 + 26, tx1 + 38, ty1 + 30, tx1, ty1, "lr-after-head");
+    const cx1a = Math.min(sRect.width - 4, safeOut);
+    const cy1a = Math.max(startY + 40, rxBot + 10);
+    const cx2a = Math.min(sRect.width - 4, Math.max(tx1 + 42, rxRight + 18));
+    addBezierArrow(svg, startX, startY, cx1a, cy1a, cx2a, ty1 + 40, tx1, ty1, "lr-after-head");
 
     const tx2 = dyRect.left - sRect.left + dyRect.width * 0.72;
     const ty2 = dyRect.bottom - sRect.top + 4;
+    const cx1b = Math.min(sRect.width - 2, safeOut + 6);
+    const cy1b = Math.max(startY + 60, ryBot + 10);
+    const cx2b = Math.min(sRect.width - 4, Math.max(tx2 + 48, ryRight + 24));
     addBezierArrow(
         svg,
         startX,
         startY,
-        Math.min(sRect.width - 4, safeOut + 12),
-        ty2 + 30,
-        tx2 + 40,
-        ty2 + 34,
+        cx1b,
+        cy1b,
+        cx2b,
+        ty2 + 52,
         tx2,
         ty2,
         "lr-after-head"
@@ -232,22 +242,55 @@ function drawSlopeArrows() {
     svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
     addArrowMarker(svg, "lr-slope-head");
 
-    const conn = (aEl, bEl, waveY1 = 0, waveY2 = 0) => {
-        const a = aEl.getBoundingClientRect();
-        const b = bEl.getBoundingClientRect();
-        if (a.width <= 0 || b.width <= 0) return;
-        const x1 = a.right - stR.left + 6;
-        const y1 = a.top + a.height * 0.5 - stR.top;
-        const x2 = b.left - stR.left - 6;
-        const y2 = b.top + b.height * 0.5 - stR.top;
-        const mx = (x1 + x2) * 0.5;
-        addBezierArrow(svg, x1, y1, mx, y1 + waveY1, mx, y2 + waveY2, x2, y2, "lr-slope-head");
+    const box = (el) => {
+        const b = el.getBoundingClientRect();
+        return {
+            l: b.left - stR.left,
+            r: b.right - stR.left,
+            t: b.top - stR.top,
+            b: b.bottom - stR.top,
+            cx: b.left - stR.left + b.width * 0.5,
+            cy: b.top - stR.top + b.height * 0.5
+        };
     };
 
-    conn(num, mtop, 0, 0);
-    conn(den, mbot, 0, 0);
-    conn(vtop, rnum, -8, -4);
-    conn(vbot, rden, 8, 4);
+    const bn = box(num);
+    const bm = box(mtop);
+    const stacked = bn.b < bm.t - 6;
+
+    if (stacked) {
+        const bl = box(num.closest(".lr-slope-node"));
+        const bd = box(den);
+        const bmb = box(mbot);
+        const bv1 = box(vtop);
+        const bv2 = box(vbot);
+        const br1 = box(rnum);
+        const br2 = box(rden);
+
+        const railLeftX = Math.max(6, bl.l - 42);
+        addBezierArrow(svg, bn.cx, bn.t - 4, railLeftX, bn.t - 28, railLeftX, bm.t - 24, bm.cx, bm.t - 5, "lr-slope-head");
+        const midDenY = (bd.b + 4 + bmb.t - 5) * 0.5;
+        addBezierArrow(svg, bd.cx, bd.b + 4, bd.cx, midDenY, bmb.cx, midDenY, bmb.cx, bmb.t - 5, "lr-slope-head");
+        addBezierArrow(svg, bv1.cx, bv1.b + 4, bv1.cx - 18, br1.cy - 12, br1.l - 30, br1.cy, br1.l - 6, br1.cy, "lr-slope-head");
+        addBezierArrow(svg, bv2.cx, bv2.b + 4, bv2.cx, br2.b + 24, br2.cx + 12, br2.b + 24, br2.cx, br2.b + 5, "lr-slope-head");
+    } else {
+        const conn = (aEl, bEl, waveY1 = 0, waveY2 = 0) => {
+            const a = aEl.getBoundingClientRect();
+            const b = bEl.getBoundingClientRect();
+            if (a.width <= 0 || b.width <= 0) return;
+            const x1 = a.right - stR.left + 6;
+            const y1 = a.top + a.height * 0.5 - stR.top;
+            const x2 = b.left - stR.left - 6;
+            const y2 = b.top + b.height * 0.5 - stR.top;
+            const mx = (x1 + x2) * 0.5;
+            addBezierArrow(svg, x1, y1, mx, y1 + waveY1, mx, y2 + waveY2, x2, y2, "lr-slope-head");
+        };
+
+        conn(num, mtop, 0, 0);
+        conn(den, mbot, 0, 0);
+        conn(vtop, rnum, -8, -4);
+        conn(vbot, rden, 8, 4);
+    }
     drawInterceptArrows();
 }
 
@@ -261,55 +304,36 @@ function drawInterceptArrows() {
     if (!stR || stR.width <= 0 || stR.height <= 0) return;
 
     const q = (cls) => stage.querySelector(`.${cls}`);
-    const ybar = q("lr-in-ybar");
-    const w1 = q("lr-in-w1");
-    const xbar = q("lr-in-xbar");
-    const my = q("lr-in-my");
-    const mw1 = q("lr-in-mw1");
-    const mx = q("lr-in-mx");
-    const vy = q("lr-in-vy");
-    const vw1 = q("lr-in-vw1");
-    const vx = q("lr-in-vx");
-    const ry = q("lr-in-ry");
-    const rw1 = q("lr-in-rw1");
-    const rx = q("lr-in-rx");
-    if (!ybar || !w1 || !xbar || !my || !mw1 || !mx || !vy || !vw1 || !vx || !ry || !rw1 || !rx) return;
+    const pairs = [
+        [q("lr-in-ybar"), q("lr-in-my")],
+        [q("lr-in-w1"), q("lr-in-mw1")],
+        [q("lr-in-xbar"), q("lr-in-mx")],
+        [q("lr-in-vy"), q("lr-in-ry")],
+        [q("lr-in-vw1"), q("lr-in-rw1")],
+        [q("lr-in-vx"), q("lr-in-rx")]
+    ];
+    if (pairs.some(([a, b]) => !a || !b)) return;
 
     const box = (el) => {
         const b = el.getBoundingClientRect();
         return {
-            l: b.left - stR.left,
-            r: b.right - stR.left,
-            t: b.top - stR.top,
-            b: b.bottom - stR.top,
             cx: b.left - stR.left + b.width * 0.5,
-            cy: b.top - stR.top + b.height * 0.5
+            t: b.top - stR.top,
+            b: b.bottom - stR.top
         };
     };
-
-    const byb = box(ybar);
-    const bw1 = box(w1);
-    const bxb = box(xbar);
-    const bmy = box(my);
-    const bmw1 = box(mw1);
-    const bmx = box(mx);
-    const bvy = box(vy);
-    const bvw1 = box(vw1);
-    const bvx = box(vx);
-    const bry = box(ry);
-    const brw1 = box(rw1);
-    const brx = box(rx);
 
     svg.setAttribute("viewBox", `0 0 ${stR.width} ${stR.height}`);
     addArrowMarker(svg, "lr-int-head");
 
-    addBezierArrow(svg, byb.cx, byb.t - 4, byb.cx + 12, byb.t - 26, bmy.l - 28, bmy.cy - 4, bmy.l - 6, bmy.cy, "lr-int-head");
-    addBezierArrow(svg, bw1.cx, bw1.t - 3, bw1.cx + 20, bw1.t - 22, bmw1.l - 16, bmw1.cy - 14, bmw1.l - 6, bmw1.cy - 2, "lr-int-head");
-    addBezierArrow(svg, bxb.cx, bxb.b + 4, bxb.cx + 4, bmx.cy, bmx.l - 22, bmx.cy + 2, bmx.l - 6, bmx.cy, "lr-int-head");
-
-    addBezierArrow(svg, bvy.r + 6, bvy.cy, bry.cx + 4, bvy.cy - 2, bry.cx + 4, bry.t - 18, bry.cx, bry.t - 5, "lr-int-head");
-    addBezierArrow(svg, bvw1.r + 6, bvw1.cy + 2, bvw1.r + 22, brw1.b + 30, brw1.cx - 4, brw1.b + 26, brw1.cx, brw1.b + 5, "lr-int-head");
-    addBezierArrow(svg, bvx.cx, bvx.b + 5, bvx.cx + 22, brx.b + 48, brx.cx + 4, brx.b + 44, brx.cx, brx.b + 5, "lr-int-head");
+    pairs.forEach(([fromEl, toEl]) => {
+        const a = box(fromEl);
+        const b = box(toEl);
+        const y1 = a.b + 4;
+        const y2 = b.t - 5;
+        const midY = (y1 + y2) * 0.5;
+        addBezierArrow(svg, a.cx, y1, a.cx, midY, b.cx, midY, b.cx, y2, "lr-int-head");
+    });
 }
 
 export function renderLRSteps(res) {
@@ -612,12 +636,19 @@ export function renderLRSteps(res) {
 
     frag.appendChild(makeArrow());
     const metSec = makeSection("SSE: Smaller is better");
-    const metCard = makeEl("div", "lr-step-card");
-    renderTex(
-        `\\text{MSE} = \\frac{${fmtNum(sse, 4)}}{${n}} = ${fmtNum(mse, 4)}, \\quad \\text{RMSE} = ${fmtNum(rmse, 4)}, \\quad \\text{MAE} = ${fmtNum(mae, 4)}`,
-        metCard,
-        true
-    );
+    const metCard = makeEl("div", "lr-step-card lr-metrics-card");
+    const metRow = makeEl("div", "lr-metrics-row");
+    const metrics = [
+        `\\text{MSE} = \\frac{${fmtNum(sse, 4)}}{${n}} = ${fmtNum(mse, 4)}`,
+        `\\text{RMSE} = ${fmtNum(rmse, 4)}`,
+        `\\text{MAE} = ${fmtNum(mae, 4)}`
+    ];
+    metrics.forEach((tex) => {
+        const item = makeEl("div", "lr-metric-item");
+        renderTex(tex, item, true);
+        metRow.appendChild(item);
+    });
+    metCard.appendChild(metRow);
     metSec.appendChild(metCard);
     frag.appendChild(metSec);
 
