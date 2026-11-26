@@ -37,5 +37,6 @@ export const FORMULAS = [
     "VAC = BAC - EAC",
     "\\frac{C}{5} = \\frac{R}{4} = \\frac{F - 32}{9} = \\frac{K - 273.15}{5}",
     "NPV = \\sum_{t=1}^{T} \\frac{C_t}{(1 + r)^t} - C_0",
-    "P = \\exp\\left(-\\frac{\\Delta E}{T}\\right)"
+    "P = \\exp\\left(-\\frac{\\Delta E}{T}\\right)",
+    "\\hat{y} = w_0 + w_1 x"
 ];

@@ -37,5 +37,6 @@ export const FORMULA_NAMES = [
     "Variance at Completion (VAC)",
     "Konversi Suhu",
     "Net Present Value (NPV)",
-    "Simulated Annealing"
+    "Simulated Annealing",
+    "Linear Regression"
 ];

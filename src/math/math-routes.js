@@ -62,6 +62,7 @@ export const FORMULA_CATEGORIES = [
     "Manajemen Proyek",
     "Fisika",
     "Manajemen Proyek",
+    "Kecerdasan Artifisial",
     "Kecerdasan Artifisial"
 ];
 
@@ -104,7 +105,8 @@ export const FORMULA_URLS = [
     "/math/pm/11",
     "/math/phy/1",
     "/math/pm/12",
-    "/math/ai/10"
+    "/math/ai/10",
+    "/math/ai/11"
 ];
 
 const URL_TO_ID = {
@@ -171,7 +173,10 @@ const URL_TO_ID = {
     "/math/37": 37,
     "/math/ai/10": 38,
     "/math/ai/38": 38,
-    "/math/38": 38
+    "/math/38": 38,
+    "/math/ai/11": 39,
+    "/math/ai/39": 39,
+    "/math/39": 39
 };
 
 export function getFormulaUrl(id) {

@@ -34,22 +34,22 @@ describe("Math Hub Catalog UI and Filter Unit Tests", () => {
         expect(searchInput).not.toBeNull();
         expect(filterContainer).not.toBeNull();
         expect(emptyState).not.toBeNull();
-        expect(formulaCards.length).toBe(38);
+        expect(formulaCards.length).toBe(39);
     });
 
     it("initializes dynamic category counts and default counter", () => {
         initFilters();
         const allBtnCount = container.querySelector('.math-filter-btn[data-filter=""] .math-filter-count');
-        expect(allBtnCount.textContent).toBe("38");
+        expect(allBtnCount.textContent).toBe("39");
 
         const aiBtnCount = container.querySelector('.math-filter-btn[data-filter="Kecerdasan Artifisial"] .math-filter-count');
-        expect(aiBtnCount.textContent).toBe("10");
+        expect(aiBtnCount.textContent).toBe("11");
 
         const pmBtnCount = container.querySelector('.math-filter-btn[data-filter="Manajemen Proyek"] .math-filter-count');
         expect(pmBtnCount.textContent).toBe("12");
 
         const counterEl = container.querySelector("#math-search-counter");
-        expect(counterEl.textContent).toBe("Menampilkan 38 rumus");
+        expect(counterEl.textContent).toBe("Menampilkan 39 rumus");
     });
 
     it("filters cards correctly by category and updates title and counter", () => {
@@ -62,10 +62,10 @@ describe("Math Hub Catalog UI and Filter Unit Tests", () => {
         const visibleCards = Array.from(container.querySelectorAll(".math-grid .math-card[data-formula]")).filter(
             (c) => !c.classList.contains("math-hidden")
         );
-        expect(visibleCards.length).toBe(10);
+        expect(visibleCards.length).toBe(11);
 
         const counterEl = container.querySelector("#math-search-counter");
-        expect(counterEl.textContent).toBe("Menampilkan 10 dari 38 rumus");
+        expect(counterEl.textContent).toBe("Menampilkan 11 dari 39 rumus");
 
         const aiBtn = container.querySelector('.math-filter-btn[data-filter="Kecerdasan Artifisial"]');
         expect(aiBtn.classList.contains("active")).toBe(true);
@@ -77,7 +77,7 @@ describe("Math Hub Catalog UI and Filter Unit Tests", () => {
         const allVisible = Array.from(container.querySelectorAll(".math-grid .math-card[data-formula]")).filter(
             (c) => !c.classList.contains("math-hidden")
         );
-        expect(allVisible.length).toBe(38);
+        expect(allVisible.length).toBe(39);
     });
 
     it("searches formula cards by title, id, and aria label", () => {
@@ -138,7 +138,7 @@ describe("Math Hub Catalog UI and Filter Unit Tests", () => {
         const visibleCards = Array.from(container.querySelectorAll(".math-grid .math-card[data-formula]")).filter(
             (c) => !c.classList.contains("math-hidden")
         );
-        expect(visibleCards.length).toBe(38);
+        expect(visibleCards.length).toBe(39);
 
         const emptyState = container.querySelector("#math-empty-state");
         expect(emptyState.classList.contains("hidden")).toBe(true);

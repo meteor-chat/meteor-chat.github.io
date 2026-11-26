@@ -43,7 +43,8 @@ const FORMS = {
     35: { file: "math-calc-35", calc: "calculateMath35" },
     36: { file: "math-calc-36", calc: "calculateMath36", open: "initMath36" },
     37: { file: "math-calc-37", calc: "calculateMath37", open: "initMath37" },
-    38: { file: "math-calc-38", calc: "calculateMath38", open: "initMath38" }
+    38: { file: "math-calc-38", calc: "calculateMath38", open: "initMath38" },
+    39: { file: "math-calc-39", calc: "calculateMath39", open: "initMath39" }
 };
 
 const pending = new Map();
