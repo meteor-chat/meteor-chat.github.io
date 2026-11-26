@@ -159,16 +159,7 @@ const IDS = {
     m38CanvasLandscape: "math38-canvas-landscape",
     m38CanvasTelemetry: "math38-canvas-telemetry",
     m38Steps: "math38-steps-container",
-    m39Preset: "math39-preset",
-    m39Rows: "math39-cells-inputs",
-    m39InQx: "math39-in-qx",
-    m39InLr: "math39-in-lr",
-    m39ChkStd: "math39-chk-std",
-    m39BtnPlay: "math39-btn-play",
-    m39BtnStep: "math39-btn-step",
-    m39BtnReset: "math39-btn-reset",
-    m39CanvasScatter: "math39-canvas-scatter",
-    m39CanvasLoss: "math39-canvas-loss",
+    m39Rows: "math39-tabulate-body",
     m39Steps: "math39-steps-container"
 };
 

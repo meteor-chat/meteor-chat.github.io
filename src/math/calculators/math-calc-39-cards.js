@@ -1,5 +1,4 @@
 import { fmtNum } from "./math-calc-39-engine.js";
-import { bindLrTokenHover } from "./math-calc-39-diagram.js";
 
 function makeEl(tag, className, textContent) {
     const el = document.createElement(tag);
@@ -8,7 +7,7 @@ function makeEl(tag, className, textContent) {
     return el;
 }
 
-function renderTex(tex, el, displayMode = true) {
+function renderTex(tex, el, displayMode = false) {
     if (typeof katex !== "undefined") {
         katex.render(tex, el, { throwOnError: false, trust: true, displayMode });
     } else {
@@ -20,151 +19,229 @@ function makeArrow() {
     return makeEl("div", "lr-step-arrow", "↓");
 }
 
-function makeStepCard(variantClass, mathTex, subnoteText = "", isError = false) {
-    const card = makeEl("div", `lr-step-card ${variantClass}`);
-    const mathBox = makeEl("div", "lr-step-math");
-    renderTex(mathTex, mathBox, true);
-    card.appendChild(mathBox);
-    if (subnoteText) {
-        const sub = makeEl("div", isError ? "lr-card-subnote lr-subnote-warn" : "lr-card-subnote", subnoteText);
-        card.appendChild(sub);
-    }
-    return card;
+function makeBlock(titleText) {
+    const box = makeEl("section", "lr-block");
+    const head = makeEl("div", "lr-block-head", titleText);
+    box.appendChild(head);
+    return box;
 }
 
-function buildOlsFlow(ols) {
-    const frag = document.createDocumentFragment();
+function makeTable(headers, bodyRows, footerRow = null) {
+    const wrap = makeEl("div", "lr-table-scroll");
+    const table = makeEl("table", "lr-sheet-table");
 
-    if (!ols || !ols.valid) {
-        frag.appendChild(
-            makeStepCard(
-                "lr-step-rounded",
-                "w_1 = \\frac{S_{xy}}{S_{xx}}, \\quad w_0 = \\bar{y} - w_1\\bar{x}",
-                ols?.reason || "Masukkan minimal 2 titik dengan nilai x berbeda.",
-                true
-            )
-        );
-        frag.appendChild(makeArrow());
-        frag.appendChild(makeStepCard("lr-step-result", "\\hat{y} \\approx ?", "Menunggu data valid"));
-        return frag;
+    const thead = makeEl("thead");
+    const hr = makeEl("tr");
+    headers.forEach((h) => {
+        const th = makeEl("th", h.cls || "", h.label);
+        hr.appendChild(th);
+    });
+    thead.appendChild(hr);
+    table.appendChild(thead);
+
+    const tbody = makeEl("tbody");
+    bodyRows.forEach((cells) => {
+        const tr = makeEl("tr");
+        cells.forEach((c) => {
+            const td = makeEl("td", c.cls || "", c.text);
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+
+    if (footerRow) {
+        const tfoot = makeEl("tfoot");
+        const fr = makeEl("tr");
+        footerRow.forEach((c) => {
+            const td = makeEl("td", c.cls || "", c.text);
+            fr.appendChild(td);
+        });
+        tfoot.appendChild(fr);
+        table.appendChild(tfoot);
     }
 
-    const { w1, w0, sxy, sxx, meanX, meanY, sse, mse, mae, r2, query, checks } = ols;
-    const tokW1 = `\\htmlClass{lr-tok-w1}{${fmtNum(w1, 3)}}`;
-    const tokW0 = `\\htmlClass{lr-tok-w0}{${fmtNum(w0, 3)}}`;
-    const tokSxy = `\\htmlClass{lr-tok-w0}{${fmtNum(sxy, 3)}}`;
-    const tokSxx = `\\htmlClass{lr-tok-w1}{${fmtNum(sxx, 3)}}`;
-    const tokQx = `\\htmlClass{lr-tok-w1}{${fmtNum(query.x, 3)}}`;
-    const tokQy = `\\htmlClass{lr-tok-y}{${fmtNum(query.yHat, 3)}}`;
-
-    const c1Math = `w_1 = \\frac{${tokSxy}}{${tokSxx}} = ${tokW1}`;
-    const c1Sub = `Slope ${w1 >= 0 ? "+" : ""}${fmtNum(w1, 3)}: tiap +1 x berasosiasi ${w1 >= 0 ? "+" : ""}${fmtNum(w1, 3)} y`;
-    frag.appendChild(makeStepCard("lr-step-rounded", c1Math, c1Sub));
-    frag.appendChild(makeArrow());
-
-    const meanXWrap = meanX < 0 ? `(${fmtNum(meanX, 3)})` : fmtNum(meanX, 3);
-    const w1Wrap = w1 < 0 ? `(${fmtNum(w1, 3)})` : fmtNum(w1, 3);
-    const prodW1MeanX = w1 * meanX;
-    const diffStr = prodW1MeanX < 0 ? `+ ${fmtNum(Math.abs(prodW1MeanX), 3)}` : `- ${fmtNum(prodW1MeanX, 3)}`;
-    const c2Math = `w_0 = ${fmtNum(meanY, 3)} - ${w1Wrap}(${meanXWrap}) = ${fmtNum(meanY, 3)} ${diffStr} = ${tokW0}`;
-    const c2Sub = `Intercept garis pada sumbu tegak x = 0`;
-    frag.appendChild(makeStepCard("lr-step-rect", c2Math, c2Sub));
-    frag.appendChild(makeArrow());
-
-    const w1Signed = w1 < 0 ? `- ${fmtNum(Math.abs(w1), 3)}` : `+ ${fmtNum(w1, 3)}`;
-    const c3Math = `\\htmlClass{lr-tok-y}{\\hat{y}} = ${tokW0} ${w1Signed}\\,x`;
-    const c1Ok = checks.passesCentroid ? "Lulus" : "Cek";
-    const c2Ok = checks.residualsSumZero ? "Lulus" : "Cek";
-    const c3Sub = `Check 1 (x̄, ȳ): ${fmtNum(checks.yAtMeanX, 2)} (${c1Ok})  ·  Check 2 (∑e): ${fmtNum(checks.sumResidual, 2)} (${c2Ok})`;
-    frag.appendChild(makeStepCard("lr-step-rect", c3Math, c3Sub));
-    frag.appendChild(makeArrow());
-
-    const contrib = w1 * query.x;
-    const contribStr = contrib < 0 ? `- ${fmtNum(Math.abs(contrib), 3)}` : `+ ${fmtNum(contrib, 3)}`;
-    const qxWrap = query.x < 0 ? `(${tokQx})` : tokQx;
-    const c4Math = `\\hat{y}(${tokQx}) = ${tokW0} ${w1Signed}(${qxWrap}) = ${tokW0} ${contribStr}`;
-    const extrapTxt = query.isExtrapolation
-        ? `Ekstrapolasi: x = ${fmtNum(query.x, 3)} di luar rentang latih [${fmtNum(query.minX, 2)}, ${fmtNum(query.maxX, 2)}]`
-        : `Interpolasi: x = ${fmtNum(query.x, 3)} berada di dalam rentang [${fmtNum(query.minX, 2)}, ${fmtNum(query.maxX, 2)}]`;
-    frag.appendChild(makeStepCard("lr-step-rect", c4Math, extrapTxt, query.isExtrapolation));
-    frag.appendChild(makeArrow());
-
-    const isExact = Number.isInteger(query.yHat) || parseFloat(query.yHat.toFixed(3)) === query.yHat;
-    const sym = isExact ? "=" : "\\approx";
-    const c5Math = `\\htmlClass{lr-tok-y}{\\hat{y}} ${sym} ${tokQy}`;
-    const c5Sub = `SSE = ${fmtNum(sse, 3)}  ·  MSE = ${fmtNum(mse, 3)}  ·  MAE = ${fmtNum(mae, 3)}  ·  R² = ${fmtNum(r2, 4)}`;
-    frag.appendChild(makeStepCard("lr-step-result", c5Math, c5Sub));
-
-    return frag;
+    wrap.appendChild(table);
+    return wrap;
 }
 
-function buildGdFlow(gdState, ols, lrVal) {
-    const frag = document.createDocumentFragment();
-    if (!gdState) return frag;
-
-    const mseStr = gdState.diverged ? "\\infty" : `\\htmlClass{lr-tok-err}{${fmtNum(gdState.mse, 4)}}`;
-    const optNote = ols?.valid
-        ? `Iterasi ${gdState.iter}  ·  Target OLS MSE* = ${fmtNum(ols.mse, 4)}`
-        : `Iterasi ${gdState.iter}`;
-    frag.appendChild(
-        makeStepCard(
-            "lr-step-rounded",
-            `L(\\theta) = \\frac{1}{n}\\sum (\\hat{y}_i - y_i)^2 = ${mseStr}`,
-            gdState.diverged ? "Divergen: turunkan Learning Rate atau aktifkan Standardisasi z" : optNote,
-            gdState.diverged
-        )
-    );
-    frag.appendChild(makeArrow());
-
-    const paramSym0 = gdState.standardise ? "\\theta_0" : "w_0";
-    const paramSym1 = gdState.standardise ? "\\theta_1" : "w_1";
-    const gradTex = `\\frac{\\partial L}{\\partial ${paramSym0}} = ${fmtNum(gdState.grad0, 4)}, \\quad \\frac{\\partial L}{\\partial ${paramSym1}} = ${fmtNum(gdState.grad1, 4)}`;
-    const scaleNote = gdState.standardise
-        ? `Standardisasi z-score aktif  ·  Laju α = ${fmtNum(lrVal, 4)}`
-        : `Tanpa standardisasi (fitur asli)  ·  Laju α = ${fmtNum(lrVal, 4)}`;
-    frag.appendChild(makeStepCard("lr-step-rect", gradTex, scaleNote));
-    frag.appendChild(makeArrow());
-
-    const updTex = `${paramSym0} = \\htmlClass{lr-tok-w0}{${fmtNum(gdState.theta0, 4)}}, \\quad ${paramSym1} = \\htmlClass{lr-tok-w1}{${fmtNum(gdState.theta1, 4)}}`;
-    frag.appendChild(
-        makeStepCard("lr-step-rect", updTex, "Pembaruan serentak memakai gradien langkah sebelumnya")
-    );
-    frag.appendChild(makeArrow());
-
-    const signW1 = gdState.w1 < 0 ? `- ${fmtNum(Math.abs(gdState.w1), 3)}` : `+ ${fmtNum(gdState.w1, 3)}`;
-    const eqTex = `\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{${fmtNum(gdState.w0, 3)}} ${signW1}\\,x`;
-    const olsRef = ols?.valid
-        ? `Target OLS: w0* = ${fmtNum(ols.w0, 3)}  ·  w1* = ${fmtNum(ols.w1, 3)}`
-        : "";
-    frag.appendChild(makeStepCard("lr-step-result", eqTex, olsRef));
-
-    const recent = gdState.history.slice(-6);
-    if (recent.length > 0) {
-        const histBox = makeEl("div", "lr-gd-trace");
-        const head = makeEl("div", "lr-gd-trace-row lr-gd-trace-head");
-        head.append(makeEl("span", "", "iter"), makeEl("span", "", "w0"), makeEl("span", "", "w1"), makeEl("span", "", "MSE"));
-        histBox.appendChild(head);
-        for (const h of recent) {
-            const row = makeEl("div", "lr-gd-trace-row");
-            row.append(
-                makeEl("span", "", String(h.iter)),
-                makeEl("span", "", fmtNum(h.w0, 2)),
-                makeEl("span", "", fmtNum(h.w1, 2)),
-                makeEl("span", "", fmtNum(h.mse, 3))
-            );
-            histBox.appendChild(row);
-        }
-        frag.appendChild(histBox);
-    }
-
-    return frag;
+export function renderTopFormula39() {
+    const el = document.getElementById("math-calc-formula-display-39");
+    if (!el) return;
+    el.textContent = "";
+    const tex = "\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{w_0} + \\htmlClass{lr-tok-w1}{w_1}\\,x";
+    renderTex(tex, el, false);
 }
 
-export function renderLRSteps({ mode, ols, gdState, lr }) {
+export function renderLRSteps(res) {
     const container = document.getElementById("math39-steps-container");
     if (!container) return;
     container.textContent = "";
-    const content = mode === "gd" ? buildGdFlow(gdState, ols, lr) : buildOlsFlow(ols);
-    container.appendChild(content);
-    bindLrTokenHover();
+
+    const frag = document.createDocumentFragment();
+
+    if (!res || !res.valid) {
+        frag.appendChild(makeArrow());
+        const errBox = makeBlock("status perhitungan");
+        errBox.appendChild(
+            makeEl("div", "lr-card-subnote lr-subnote-warn", res?.reason || "Masukkan minimal 2 pasang nilai x dan y yang valid.")
+        );
+        frag.appendChild(errBox);
+        container.appendChild(frag);
+        return;
+    }
+
+    const { n, meanX, meanY, rows, sxy, sxx, w1, w0, predRows, sumResidual, sse, sumAbsRes, mse, rmse, mae } = res;
+
+    frag.appendChild(makeArrow());
+    const meanBox = makeBlock("mean");
+    const meanGrid = makeEl("div", "lr-kv-list");
+    const rowX = makeEl("div", "lr-kv-row");
+    rowX.append(makeEl("span", "lr-kv-key", "x̄"), makeEl("span", "lr-kv-eq", "="), makeEl("span", "lr-kv-val lr-tok-w1", fmtNum(meanX, 4)));
+    const rowY = makeEl("div", "lr-kv-row");
+    rowY.append(makeEl("span", "lr-kv-key", "ȳ"), makeEl("span", "lr-kv-eq", "="), makeEl("span", "lr-kv-val lr-tok-w0", fmtNum(meanY, 4)));
+    meanGrid.append(rowX, rowY);
+    meanBox.appendChild(meanGrid);
+    frag.appendChild(meanBox);
+
+    frag.appendChild(makeArrow());
+    const devBox = makeBlock("deviations");
+    devBox.appendChild(
+        makeTable(
+            [
+                { label: "data" },
+                { label: "x" },
+                { label: "y" },
+                { label: "dx" },
+                { label: "dy" }
+            ],
+            rows.map((r) => [
+                { text: r.label },
+                { text: fmtNum(r.x, 3) },
+                { text: fmtNum(r.y, 3) },
+                { text: fmtNum(r.dx, 3), cls: "lr-calc-cell" },
+                { text: fmtNum(r.dy, 3), cls: "lr-calc-cell" }
+            ])
+        )
+    );
+    frag.appendChild(devBox);
+
+    frag.appendChild(makeArrow());
+    const sumsBox = makeBlock("two sums");
+    sumsBox.appendChild(
+        makeTable(
+            [
+                { label: "data" },
+                { label: "dx * dy" },
+                { label: "dx ^ 2" }
+            ],
+            rows.map((r) => [
+                { text: r.label },
+                { text: fmtNum(r.dxdy, 3), cls: "lr-calc-cell" },
+                { text: fmtNum(r.dx2, 3), cls: "lr-calc-cell" }
+            ]),
+            [
+                { text: "total" },
+                { text: fmtNum(sxy, 4), cls: "lr-calc-cell lr-tok-w0" },
+                { text: fmtNum(sxx, 4), cls: "lr-calc-cell lr-tok-w1" }
+            ]
+        )
+    );
+    frag.appendChild(sumsBox);
+
+    frag.appendChild(makeArrow());
+    const slopeBox = makeBlock("slope");
+    const slopeMath = makeEl("div", "lr-step-math");
+    renderTex(
+        `w_1 = \\frac{\\text{total } (dx \\cdot dy)}{\\text{total } dx^2} = \\frac{\\htmlClass{lr-tok-w0}{${fmtNum(sxy, 4)}}}{\\htmlClass{lr-tok-w1}{${fmtNum(sxx, 4)}}} = \\htmlClass{lr-tok-w1}{${fmtNum(w1, 4)}}`,
+        slopeMath,
+        true
+    );
+    slopeBox.appendChild(slopeMath);
+    frag.appendChild(slopeBox);
+
+    frag.appendChild(makeArrow());
+    const intBox = makeBlock("intercept");
+    const intMath = makeEl("div", "lr-step-math");
+    const w1Wrap = w1 < 0 ? `(${fmtNum(w1, 4)})` : fmtNum(w1, 4);
+    const meanXWrap = meanX < 0 ? `(${fmtNum(meanX, 4)})` : fmtNum(meanX, 4);
+    const signW1 = w1 < 0 ? `- ${fmtNum(Math.abs(w1), 4)}` : `+ ${fmtNum(w1, 4)}`;
+    renderTex(
+        `w_0 = \\bar{y} - w_1\\bar{x} = ${fmtNum(meanY, 4)} - ${w1Wrap}\\cdot ${meanXWrap} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}}`,
+        intMath,
+        true
+    );
+    intBox.appendChild(intMath);
+    const eqLine = makeEl("div", "lr-step-math lr-eq-summary");
+    renderTex(
+        `\\htmlClass{lr-tok-y}{\\hat{y}} = \\htmlClass{lr-tok-w0}{${fmtNum(w0, 4)}} ${signW1}\\,x`,
+        eqLine,
+        true
+    );
+    intBox.appendChild(eqLine);
+    frag.appendChild(intBox);
+
+    frag.appendChild(makeArrow());
+    const predBox = makeBlock("prediction");
+    predBox.appendChild(
+        makeTable(
+            [
+                { label: "data" },
+                { label: "x" },
+                { label: "actual" },
+                { label: "predict" }
+            ],
+            predRows.map((r) => [
+                { text: r.label },
+                { text: fmtNum(r.x, 3) },
+                { text: fmtNum(r.actual, 3) },
+                { text: fmtNum(r.predict, 3), cls: "lr-calc-cell lr-tok-y" }
+            ])
+        )
+    );
+    frag.appendChild(predBox);
+
+    frag.appendChild(makeArrow());
+    const resBox = makeBlock("residuals and SSE (sum of squared errors)");
+    resBox.appendChild(
+        makeTable(
+            [
+                { label: "data" },
+                { label: "residual" },
+                { label: "sse" },
+                { label: "abs (res)" }
+            ],
+            predRows.map((r) => [
+                { text: r.label },
+                { text: fmtNum(r.residual, 4), cls: "lr-calc-cell" },
+                { text: fmtNum(r.sse, 4), cls: "lr-calc-cell" },
+                { text: fmtNum(r.absRes, 4), cls: "lr-calc-cell" }
+            ]),
+            [
+                { text: "total" },
+                { text: fmtNum(sumResidual, 4), cls: "lr-calc-cell" },
+                { text: fmtNum(sse, 4), cls: "lr-calc-cell lr-tok-err" },
+                { text: fmtNum(sumAbsRes, 4), cls: "lr-calc-cell" }
+            ]
+        )
+    );
+    frag.appendChild(resBox);
+
+    frag.appendChild(makeArrow());
+    const metricsBox = makeBlock("SSE: Smaller is better");
+    const metricsGrid = makeEl("div", "lr-kv-list");
+    const rMse = makeEl("div", "lr-kv-row");
+    rMse.append(makeEl("span", "lr-kv-key", "MSE"), makeEl("span", "lr-kv-eq", "="), makeEl("span", "lr-kv-val", fmtNum(mse, 4)));
+    const rRmse = makeEl("div", "lr-kv-row");
+    rRmse.append(makeEl("span", "lr-kv-key", "RMSE"), makeEl("span", "lr-kv-eq", "="), makeEl("span", "lr-kv-val", fmtNum(rmse, 4)));
+    const rMae = makeEl("div", "lr-kv-row");
+    rMae.append(makeEl("span", "lr-kv-key", "MAE"), makeEl("span", "lr-kv-eq", "="), makeEl("span", "lr-kv-val", fmtNum(mae, 4)));
+    metricsGrid.append(rMse, rRmse, rMae);
+    metricsBox.appendChild(metricsGrid);
+    metricsBox.appendChild(
+        makeEl("div", "lr-card-subnote", `MSE = SSE / ${n}  ·  RMSE = sqrt(MSE)  ·  MAE = sum(|residual|) / ${n}`)
+    );
+    frag.appendChild(metricsBox);
+
+    container.appendChild(frag);
 }

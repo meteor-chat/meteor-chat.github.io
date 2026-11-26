@@ -3,10 +3,9 @@ import path from "node:path";
 import process from "node:process";
 import { describe, it, expect, beforeEach } from "vitest";
 import {
-    LR_PRESETS,
+    DEFAULT_LR_POINTS,
     computeLinearRegressionOLS,
-    createGDState,
-    stepGD
+    fmtNum
 } from "../src/math/calculators/math-calc-39-engine.js";
 import { FORMULAS } from "../src/math/math-formulas.js";
 import { FORMULA_NAMES } from "../src/math/math-formula-names.js";
@@ -15,140 +14,63 @@ import { getFormulaUrl, parseFormulaUrl } from "../src/math/math-routes.js";
 import { hasForm } from "../src/math/math-modules.js";
 import { initMath39 } from "../src/math/calculators/math-calc-39.js";
 
-function createMockCanvasCtx() {
-    return {
-        clearRect: () => {},
-        fillRect: () => {},
-        strokeRect: () => {},
-        rect: () => {},
-        clip: () => {},
-        beginPath: () => {},
-        moveTo: () => {},
-        lineTo: () => {},
-        closePath: () => {},
-        arc: () => {},
-        fill: () => {},
-        stroke: () => {},
-        fillText: () => {},
-        setLineDash: () => {},
-        save: () => {},
-        restore: () => {},
-        scale: () => {},
-        measureText: (txt) => ({ width: String(txt || "").length * 7 }),
-        setTransform: () => {}
-    };
-}
-
 describe("Formula 39: Linear Regression", () => {
-    it("matches manual Excel/CSV/PDF calculations exactly", () => {
-        const res = computeLinearRegressionOLS(LR_PRESETS.manual.points, 3);
+    it("matches CSV and 4-screenshot manual calculations step by step", () => {
+        const res = computeLinearRegressionOLS(DEFAULT_LR_POINTS);
         expect(res.valid).toBe(true);
         expect(res.n).toBe(5);
         expect(res.meanX).toBeCloseTo(6, 10);
         expect(res.meanY).toBeCloseTo(66, 10);
-        expect(res.sxx).toBeCloseTo(40, 10);
+
+        expect(res.rows.map((r) => r.dx)).toEqual([-4, -2, 0, 2, 4]);
+        expect(res.rows.map((r) => r.dy)).toEqual([-15, -8, 1, 6, 16]);
+        expect(res.rows.map((r) => r.dxdy)).toEqual([60, 16, 0, 12, 64]);
+        expect(res.rows.map((r) => r.dx2)).toEqual([16, 4, 0, 4, 16]);
+
         expect(res.sxy).toBeCloseTo(152, 10);
-        expect(res.sst).toBeCloseTo(582, 10);
+        expect(res.sxx).toBeCloseTo(40, 10);
         expect(res.w1).toBeCloseTo(3.8, 10);
         expect(res.w0).toBeCloseTo(43.2, 10);
 
-        expect(res.query.x).toBe(3);
-        expect(res.query.yHat).toBeCloseTo(54.6, 10);
-        expect(res.query.isExtrapolation).toBe(false);
-
-        const expectedResiduals = [0.2, -0.4, 1.0, -1.6, 0.8];
-        res.predRows.forEach((row, idx) => {
-            expect(row.residual).toBeCloseTo(expectedResiduals[idx], 10);
+        const expectedPred = [50.8, 58.4, 66, 73.6, 81.2];
+        const expectedRes = [0.2, -0.4, 1, -1.6, 0.8];
+        const expectedSse = [0.04, 0.16, 1, 2.56, 0.64];
+        res.predRows.forEach((r, i) => {
+            expect(r.predict).toBeCloseTo(expectedPred[i], 10);
+            expect(r.residual).toBeCloseTo(expectedRes[i], 10);
+            expect(r.sse).toBeCloseTo(expectedSse[i], 10);
+            expect(r.absRes).toBeCloseTo(Math.abs(expectedRes[i]), 10);
         });
 
+        expect(res.sumResidual).toBeCloseTo(0, 10);
         expect(res.sse).toBeCloseTo(4.4, 10);
+        expect(res.sumAbsRes).toBeCloseTo(4, 10);
         expect(res.mse).toBeCloseTo(0.88, 10);
-        expect(res.rmse).toBeCloseTo(Math.sqrt(0.88), 10);
+        expect(fmtNum(res.rmse, 2)).toBe("0.94");
         expect(res.mae).toBeCloseTo(0.8, 10);
-        expect(res.maeSignedCheck).toBeCloseTo(0, 10);
-        expect(res.r2).toBeCloseTo(1 - 4.4 / 582, 10);
-
-        expect(res.checks.yAtMeanX).toBeCloseTo(66, 10);
-        expect(res.checks.passesCentroid).toBe(true);
-        expect(res.checks.sumResidual).toBeCloseTo(0, 10);
-        expect(res.checks.residualsSumZero).toBe(true);
     });
 
-    it("solves Week 9 Exercise 1 dataset accurately", () => {
-        const res = computeLinearRegressionOLS(LR_PRESETS.ex1.points, 4);
-        expect(res.valid).toBe(true);
-        expect(res.meanX).toBeCloseTo(4, 10);
-        expect(res.meanY).toBeCloseTo(53, 10);
-        expect(res.w1).toBeCloseTo(4.2, 10);
-        expect(res.w0).toBeCloseTo(36.2, 10);
-        expect(res.query.yHat).toBeCloseTo(53, 10);
-        expect(res.sse).toBeCloseTo(3.2, 10);
-        expect(res.mse).toBeCloseTo(0.8, 10);
-        expect(res.mae).toBeCloseTo(0.8, 10);
-        expect(res.checks.passesCentroid).toBe(true);
-        expect(res.checks.residualsSumZero).toBe(true);
-    });
+    it("handles fewer than 2 points, identical x, and constant y safely", () => {
+        const one = computeLinearRegressionOLS([{ x: 2, y: 50 }]);
+        expect(one.valid).toBe(false);
 
-    it("computes Week 9 Slide 22 Gradient Descent step-by-step and converges", () => {
-        const pts = LR_PRESETS.gd0.points;
-        let state = createGDState(pts, 0, 0, false);
-        expect(state.iter).toBe(0);
-        expect(state.mse).toBeCloseTo(83 / 3, 6);
-        expect(state.grad0).toBeCloseTo(-10, 6);
-        expect(state.grad1).toBeCloseTo(-68 / 3, 6);
+        const sameX = computeLinearRegressionOLS([
+            { x: 5, y: 10 },
+            { x: 5, y: 20 }
+        ]);
+        expect(sameX.valid).toBe(false);
+        expect(sameX.sxx).toBe(0);
 
-        state = stepGD(state, pts, 0.1);
-        expect(state.iter).toBe(1);
-        expect(state.w0).toBeCloseTo(1.0, 6);
-        expect(state.w1).toBeCloseTo(2.2666666667, 6);
-        expect(state.mse).toBeLessThan(83 / 3);
-
-        for (let i = 0; i < 119; i++) {
-            state = stepGD(state, pts, 0.1);
-        }
-        expect(state.w0).toBeCloseTo(1, 1);
-        expect(state.w1).toBeCloseTo(2, 1);
-        expect(state.mse).toBeLessThan(0.05);
-    });
-
-    it("recovers original scale weights under z-score GD and flags high-LR divergence", () => {
-        const pts = LR_PRESETS.manual.points;
-        let stdState = createGDState(pts, 0, 0, true);
-        for (let i = 0; i < 100; i++) {
-            stdState = stepGD(stdState, pts, 0.1);
-        }
-        expect(stdState.diverged).toBe(false);
-        expect(stdState.w1).toBeCloseTo(3.8, 2);
-        expect(stdState.w0).toBeCloseTo(43.2, 1);
-
-        let rawDivState = createGDState(pts, 0, 0, false);
-        for (let i = 0; i < 20 && !rawDivState.diverged; i++) {
-            rawDivState = stepGD(rawDivState, pts, 0.35);
-        }
-        expect(rawDivState.diverged).toBe(true);
-    });
-
-    it("handles degenerate datasets and extrapolation warnings safely", () => {
-        const single = computeLinearRegressionOLS([{ label: "A", x: 2, y: 10 }], 2);
-        expect(single.valid).toBe(false);
-
-        const vertical = computeLinearRegressionOLS([
-            { label: "A", x: 5, y: 10 },
-            { label: "B", x: 5, y: 20 }
-        ], 5);
-        expect(vertical.valid).toBe(false);
-        expect(vertical.sxx).toBe(0);
-
-        const horizontal = computeLinearRegressionOLS([
-            { label: "A", x: 1, y: 42 },
-            { label: "B", x: 3, y: 42 },
-            { label: "C", x: 5, y: 42 }
-        ], 8);
-        expect(horizontal.valid).toBe(true);
-        expect(horizontal.w1).toBe(0);
-        expect(horizontal.w0).toBe(42);
-        expect(horizontal.r2).toBe(1);
-        expect(horizontal.query.isExtrapolation).toBe(true);
+        const flatY = computeLinearRegressionOLS([
+            { x: 1, y: 40 },
+            { x: 3, y: 40 },
+            { x: 5, y: 40 }
+        ]);
+        expect(flatY.valid).toBe(true);
+        expect(flatY.w1).toBe(0);
+        expect(flatY.w0).toBe(40);
+        expect(flatY.sse).toBe(0);
+        expect(flatY.mse).toBe(0);
     });
 
     it("registers Formula 39 routes, names, and static HTML outputs", () => {
@@ -158,60 +80,61 @@ describe("Formula 39: Linear Regression", () => {
         expect(hasForm(39)).toBe(true);
         expect(getFormulaUrl(39)).toBe("/math/ai/11");
         expect(parseFormulaUrl("/math/ai/11")).toEqual({ id: 39, category: "Kecerdasan Artifisial" });
-        expect(parseFormulaUrl("/math/ai/39")).toEqual({ id: 39, category: "Kecerdasan Artifisial" });
-        expect(parseFormulaUrl("/math/39")).toEqual({ id: 39, category: "Kecerdasan Artifisial" });
 
         const routeHtml = path.resolve(process.cwd(), "math/ai/11/index.html");
         expect(fs.existsSync(routeHtml)).toBe(true);
     });
 
-    describe("Interactive /math/ai/1-style DOM integration", () => {
+    describe("Interactive 2-input (x, y) automatic flow DOM integration", () => {
         beforeEach(() => {
             const html = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
             document.documentElement.innerHTML = html;
-            if (typeof window.HTMLCanvasElement !== "undefined") {
-                window.HTMLCanvasElement.prototype.getContext = function getContextMock() {
-                    return createMockCanvasCtx();
-                };
-            }
         });
 
-        it("renders cell matrix with curly braces, updates OLS query, switches preset and runs GD mode", () => {
+        it("accepts only x and y inputs and auto-computes mean through SSE below", () => {
             initMath39();
-            const diagram = document.getElementById("math39-diagram-container");
+            const form = document.getElementById("math-calc-form-39");
+            const tbody = document.getElementById("math39-tabulate-body");
             const steps = document.getElementById("math39-steps-container");
-            expect(diagram.querySelectorAll(".lr-cell-input").length).toBe(10);
-            expect(diagram.querySelectorAll(".chromo-brace-svg").length).toBe(3);
-            expect(steps.textContent).toContain("54.6");
+
+            expect(form.querySelectorAll("input").length).toBe(10);
+            expect(tbody.querySelectorAll("input").length).toBe(10);
+
+            const txt = steps.textContent;
+            expect(txt).toContain("mean");
+            expect(txt).toContain("deviations");
+            expect(txt).toContain("two sums");
+            expect(txt).toContain("slope");
+            expect(txt).toContain("intercept");
+            expect(txt).toContain("prediction");
+            expect(txt).toContain("residuals and SSE");
+            expect(txt).toContain("152");
+            expect(txt).toContain("40");
+            expect(txt).toContain("3.8");
+            expect(txt).toContain("43.2");
+            expect(txt).toContain("50.8");
+            expect(txt).toContain("4.4");
+            expect(txt).toContain("0.88");
+
+            const firstY = tbody.querySelectorAll("input")[1];
+            firstY.value = "52";
+            firstY.dispatchEvent(new window.Event("input"));
+            expect(steps.textContent).toContain("66.2");
+
+            document.getElementById("math39-btn-add").click();
+            expect(tbody.querySelectorAll("input").length).toBe(12);
+
+            document.getElementById("math39-btn-reset").click();
+            expect(tbody.querySelectorAll("input").length).toBe(10);
             expect(steps.textContent).toContain("43.2");
-            expect(steps.textContent).toContain("3.8");
-
-            const preset = document.getElementById("math39-preset");
-            preset.value = "ex1";
-            preset.dispatchEvent(new window.Event("change"));
-            expect(diagram.querySelectorAll(".lr-cell-input").length).toBe(8);
-            expect(steps.textContent).toContain("36.2");
-            expect(steps.textContent).toContain("4.2");
-
-            const tabGd = document.getElementById("math39-tab-gd");
-            tabGd.click();
-            const gdPanel = document.getElementById("math39-gd-panel");
-            expect(gdPanel.classList.contains("hidden")).toBe(false);
-
-            const btnStep = document.getElementById("math39-btn-step");
-            btnStep.click();
-            expect(steps.textContent).toContain("Iterasi 1");
-            expect(steps.textContent).toContain("1855.008");
         });
     });
 
     it("complies with zero-comment, zero-em-dash, line-limit, and font constraints", () => {
         const filesToCheck = [
             "src/math/calculators/math-calc-39-engine.js",
-            "src/math/calculators/math-calc-39-diagram.js",
             "src/math/calculators/math-calc-39-cards.js",
             "src/math/calculators/math-calc-39.js",
-            "src/math/visuals/math-visual-39.js",
             "tests/math-linear-reg.test.js"
         ];
         const emDash = "\u2014";
