@@ -32,7 +32,8 @@ const DYNAMIC_INTERVAL = 0.12;
 const DYNAMIC_MAX_OPS = 28;
 
 export function createVoxelWorld(options = {}) {
-    const seed = options.seed ?? 2026;
+    const localSeed = options.seed ?? 2026;
+    let seed = localSeed;
     let viewRadius = options.viewRadius ?? 6;
     const columns = new Map();
     const pendingGen = new Set();
@@ -41,7 +42,8 @@ export function createVoxelWorld(options = {}) {
     const activeBlocks = new Set();
     const waterFlow = new Map();
     const center = { cx: 0, cz: 0 };
-    const storage = createWorldStorage(seed);
+    const storage = createWorldStorage(localSeed);
+    let dynamicBatchHandler = options.onDynamicBatch || null;
     let seqCounter = 0;
     let inFlightMesh = 0;
     let dynAcc = 0;
@@ -258,6 +260,26 @@ export function createVoxelWorld(options = {}) {
         return setBlockInternal(wx, wy, wz, id, true, flowDepth);
     };
 
+    const setBlockRemote = (wx, wy, wz, id, persist = true) => {
+        const x = Math.floor(wx);
+        const y = Math.floor(wy);
+        const z = Math.floor(wz);
+        if (y <= 1 || y >= CHUNK_HEIGHT) return false;
+        const cx = Math.floor(x / CHUNK_SIZE);
+        const cz = Math.floor(z / CHUNK_SIZE);
+        const col = getColumn(cx, cz);
+        if (!col) {
+            if (persist) {
+                const lx = x - cx * CHUNK_SIZE;
+                const lz = z - cz * CHUNK_SIZE;
+                storage.recordEdit(cx, cz, chunkIndex(lx, y, lz), id);
+            }
+            return true;
+        }
+        const flowDepth = id === BLOCK.WATER ? WATER_MAX_FLOW : 0;
+        return setBlockInternal(x, y, z, id, persist, flowDepth);
+    };
+
     const stepDynamic = (dt) => {
         if (activeBlocks.size === 0) return;
         dynAcc += dt;
@@ -270,6 +292,12 @@ export function createVoxelWorld(options = {}) {
             activeBlocks.delete(k);
             if (batch.length >= DYNAMIC_MAX_OPS) break;
         }
+        const changed = [];
+        const applyDyn = (x, y, z, id, flowDepth) => {
+            if (setBlockInternal(x, y, z, id, true, flowDepth)) {
+                changed.push([x, y, z, id]);
+            }
+        };
 
         for (const k of batch) {
             const parts = k.split(",");
@@ -282,8 +310,8 @@ export function createVoxelWorld(options = {}) {
             if (isGravityBlock(id)) {
                 const below = getBlock(x, y - 1, z);
                 if (below === BLOCK.AIR || below === BLOCK.WATER || isCrossPlant(below)) {
-                    setBlockInternal(x, y, z, BLOCK.AIR, true, 0);
-                    setBlockInternal(x, y - 1, z, id, true, 0);
+                    applyDyn(x, y, z, BLOCK.AIR, 0);
+                    applyDyn(x, y - 1, z, id, 0);
                 }
                 continue;
             }
@@ -292,7 +320,7 @@ export function createVoxelWorld(options = {}) {
                 const below = getBlock(x, y - 1, z);
                 const validSupport = isSolid(below) || (id === BLOCK.SEAGRASS && below === BLOCK.SEAGRASS);
                 if (!validSupport) {
-                    setBlockInternal(x, y, z, id === BLOCK.SEAGRASS ? BLOCK.WATER : BLOCK.AIR, true, 0);
+                    applyDyn(x, y, z, id === BLOCK.SEAGRASS ? BLOCK.WATER : BLOCK.AIR, 0);
                 }
                 continue;
             }
@@ -301,7 +329,7 @@ export function createVoxelWorld(options = {}) {
                 const below = getBlock(x, y - 1, z);
                 const above = getBlock(x, y + 1, z);
                 if (!isSolid(below) && !isSolid(above)) {
-                    setBlockInternal(x, y, z, BLOCK.AIR, true, 0);
+                    applyDyn(x, y, z, BLOCK.AIR, 0);
                 }
                 continue;
             }
@@ -311,18 +339,19 @@ export function createVoxelWorld(options = {}) {
                 if (depth <= 0) continue;
                 const below = getBlock(x, y - 1, z);
                 if (below === BLOCK.AIR || (isCrossPlant(below) && !isWaterlogged(below))) {
-                    setBlockInternal(x, y - 1, z, BLOCK.WATER, true, WATER_MAX_FLOW);
+                    applyDyn(x, y - 1, z, BLOCK.WATER, WATER_MAX_FLOW);
                 } else if (isSolid(below) && depth > 1) {
                     const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
                     for (const [dx, dz] of dirs) {
                         const nb = getBlock(x + dx, y, z + dz);
                         if (nb === BLOCK.AIR || (isCrossPlant(nb) && !isWaterlogged(nb))) {
-                            setBlockInternal(x + dx, y, z + dz, BLOCK.WATER, true, depth - 1);
+                            applyDyn(x + dx, y, z + dz, BLOCK.WATER, depth - 1);
                         }
                     }
                 }
             }
         }
+        if (changed.length > 0 && dynamicBatchHandler) dynamicBatchHandler(changed);
     };
 
     const updateAround = (px, pz) => {
@@ -469,6 +498,30 @@ export function createVoxelWorld(options = {}) {
         }
     };
 
+    const reloadAround = (px, pz, radius = 1) => {
+        const unloaded = Array.from(columns.values()).map((c) => ({ cx: c.cx, cz: c.cz }));
+        columns.clear();
+        dirtySubs.clear();
+        pendingGen.clear();
+        meshResults.length = 0;
+        activeBlocks.clear();
+        waterFlow.clear();
+        warmAreaSync(px, pz, radius);
+        return unloaded;
+    };
+
+    const applyGuestWorld = ({ seed: guestSeed, edits = [], centerPos = [8, 52, 8], warmRadius = 1 } = {}) => {
+        seed = Number.isFinite(guestSeed) ? guestSeed : localSeed;
+        storage.enterGuestOverlay(edits);
+        return reloadAround(centerPos[0], centerPos[2], warmRadius);
+    };
+
+    const restoreLocalWorld = (centerPos = [8, 52, 8], warmRadius = 1) => {
+        seed = localSeed;
+        storage.exitGuestOverlay();
+        return reloadAround(centerPos[0], centerPos[2], warmRadius);
+    };
+
     const destroy = () => {
         disableWorker();
         storage.destroy();
@@ -485,13 +538,18 @@ export function createVoxelWorld(options = {}) {
         getColumn,
         isColumnLoaded,
         setBlock,
+        setBlockRemote,
+        setDynamicBatchHandler: (fn) => { dynamicBatchHandler = fn; },
         stepDynamic,
         updateAround,
         consumeMeshes,
         remeshAll,
         warmAreaSync,
+        applyGuestWorld,
+        restoreLocalWorld,
         hydrateStorage,
         resetEdits,
+        getSeed: () => seed,
         getStorage: () => storage,
         getColumnCount: () => columns.size,
         setViewRadius: (r) => { viewRadius = Math.max(2, Math.min(16, Math.floor(r))); },

@@ -58,6 +58,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             ...readdirSync("src/lab/voxel").map((f) => `src/lab/voxel/${f}`),
             "styles/voxel.css",
             "styles/voxel-settings.css",
+            "styles/voxel-lan.css",
             "styles/voxel-guard.css",
             "voxel.html",
             "voxel/index.html",
@@ -76,7 +77,7 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
             expect(raw, `${file} must contain zero HTML comments`).not.toMatch(htmlComRe);
             expect(raw, `${file} must contain zero em-dashes`).not.toContain("\u2014");
         }
-        const styleFiles = ["voxel.html", "styles/voxel.css", "styles/voxel-settings.css", "styles/voxel-guard.css"];
+        const styleFiles = ["voxel.html", "styles/voxel.css", "styles/voxel-settings.css", "styles/voxel-lan.css", "styles/voxel-guard.css"];
         for (const file of styleFiles) {
             const raw = readFileSync(file, "utf8");
             for (const match of raw.matchAll(/font-weight\s*:\s*([^;]+)/g)) {
@@ -295,5 +296,13 @@ describe("Voxel World 3D Routing, Compliance & DOM App", () => {
         expect(items.length).toBeGreaterThanOrEqual(24);
         items[0].click();
         expect(catalog.hidden).toBe(true);
+
+        const lanModal = root.querySelector("[data-voxel-lan-modal]");
+        expect(lanModal.hidden).toBe(true);
+        panel.querySelector("[data-voxel-lan-open]").click();
+        expect(lanModal.hidden).toBe(false);
+        expect(root.querySelector("[data-lan-strict]").checked).toBe(true);
+        root.querySelector("[data-voxel-lan-close]").click();
+        expect(lanModal.hidden).toBe(true);
     });
 });

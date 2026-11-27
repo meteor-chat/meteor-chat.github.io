@@ -29,6 +29,8 @@ export function createVoxelInput({
     onPickBlock = null,
     onToggleFly = null,
     onToggleCatalog = null,
+    onToggleLan = null,
+    onOpenChat = null,
     onToggleMute = null,
     onEscape = null,
     onUserGesture = null
@@ -48,7 +50,7 @@ export function createVoxelInput({
     const clampPitch = (value) => Math.max(-MAX_PITCH, Math.min(MAX_PITCH, value));
     const clampDelta = (value) => Math.max(-MAX_MOUSE_DELTA, Math.min(MAX_MOUSE_DELTA, value));
     const isLocked = () => document.pointerLockElement === canvas;
-    const isOverlayOpen = () => Boolean(state.catalogOpen);
+    const isOverlayOpen = () => Boolean(state.catalogOpen || state.lanOpen || state.chatOpen);
 
     const getHotbarLength = () => (Array.isArray(state.hotbar) ? state.hotbar.length : HOTBAR_ITEMS.length);
 
@@ -83,10 +85,26 @@ export function createVoxelInput({
 
         const hasModifier = e.ctrlKey || e.metaKey || e.altKey;
 
-        if (e.code === "KeyE" && !e.repeat && !hasModifier) {
+        if (e.code === "KeyE" && !e.repeat && !hasModifier && !state.lanOpen && !state.chatOpen) {
             if (onToggleCatalog) {
                 e.preventDefault();
                 onToggleCatalog();
+            }
+            return;
+        }
+
+        if (e.code === "KeyL" && !e.repeat && !hasModifier && !state.catalogOpen && !state.chatOpen) {
+            if (onToggleLan) {
+                e.preventDefault();
+                onToggleLan();
+            }
+            return;
+        }
+
+        if (e.code === "KeyT" && !e.repeat && !hasModifier && !isOverlayOpen()) {
+            if (onOpenChat) {
+                e.preventDefault();
+                onOpenChat();
             }
             return;
         }

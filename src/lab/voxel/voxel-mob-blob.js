@@ -2,10 +2,11 @@ import { MAX_CATS } from "./voxel-mob-cat-model.js";
 import { MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
 import { MAX_GOLEMS } from "./voxel-mob-golem-model.js";
 import { MAX_VILLAGERS } from "./voxel-mob-villager-model.js";
+import { MAX_REMOTE_PLAYERS } from "./voxel-player-model.js";
 
 export const BLOB_FLOATS_PER_VERTEX = 6;
 export const BLOB_VERTS_PER_CAT = 6;
-export const BLOB_TOTAL_MOBS = MAX_CATS + MAX_CHICKENS + MAX_VILLAGERS + MAX_GOLEMS;
+export const BLOB_TOTAL_MOBS = MAX_CATS + MAX_CHICKENS + MAX_VILLAGERS + MAX_GOLEMS + MAX_REMOTE_PLAYERS;
 
 const BLOB_STRENGTH = 0.46;
 const BLOB_LIFT = 0.02;
@@ -15,6 +16,7 @@ const CHICKEN_HALF_LENGTH = 0.28;
 const CHICKEN_HALF_WIDTH = 0.24;
 const VILLAGER_HALF_SIZE = 0.36;
 const GOLEM_HALF_SIZE = 0.62;
+const PLAYER_HALF_SIZE = 0.34;
 const SIT_SHRINK = 0.2;
 const FADE_HEIGHT = 2.5;
 const DRAW_DISTANCE = 96;
@@ -60,6 +62,10 @@ function writeBlob(stage, cursor, mob, alpha) {
         hw = GOLEM_HALF_SIZE;
         hl = GOLEM_HALF_SIZE;
         scale = 1;
+    } else if (mob.kind === "player") {
+        hw = PLAYER_HALF_SIZE;
+        hl = PLAYER_HALF_SIZE;
+        scale = 1;
     }
     const c = Math.cos(mob.yaw);
     const s = Math.sin(mob.yaw);
@@ -85,6 +91,7 @@ export function fillBlobStage(mobs, eye, sunPower, fog, stage, rainIntensity = 0
     let chickenCount = 0;
     let villagerCount = 0;
     let golemCount = 0;
+    let playerCount = 0;
     if (sunPower <= 0.001) return { count, floats: cursor };
     for (const mob of mobs) {
         const kind = mob.kind;
@@ -94,6 +101,8 @@ export function fillBlobStage(mobs, eye, sunPower, fog, stage, rainIntensity = 0
             if (villagerCount >= MAX_VILLAGERS) continue;
         } else if (kind === "golem") {
             if (golemCount >= MAX_GOLEMS) continue;
+        } else if (kind === "player") {
+            if (playerCount >= MAX_REMOTE_PLAYERS) continue;
         } else if (catCount >= MAX_CATS) {
             continue;
         }
@@ -105,6 +114,7 @@ export function fillBlobStage(mobs, eye, sunPower, fog, stage, rainIntensity = 0
         if (kind === "chicken") chickenCount += 1;
         else if (kind === "villager") villagerCount += 1;
         else if (kind === "golem") golemCount += 1;
+        else if (kind === "player") playerCount += 1;
         else catCount += 1;
         count += 1;
     }

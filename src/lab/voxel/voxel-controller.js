@@ -10,6 +10,8 @@ import {
 import { buildCameraBasis } from "./voxel-camera.js";
 import { createVoxelHand } from "./voxel-hand.js";
 import { bindVisibility, createVoxelInput } from "./voxel-input.js";
+import { createLanSession } from "./voxel-lan-session.js";
+import { createLanUi } from "./voxel-lan-ui.js";
 import {
     createCatSpawner,
     createChickenSpawner,
@@ -89,6 +91,8 @@ export function createVoxelApp(root) {
         hotbar: HOTBAR_ITEMS.map((item) => ({ ...item })),
         actionMode: "break",
         catalogOpen: false,
+        lanOpen: false,
+        chatOpen: false,
         destroyed: false,
         fps: 60,
         frameCount: 0,
@@ -161,6 +165,93 @@ export function createVoxelApp(root) {
         }
     };
 
+    let lanUi = null;
+    const unloadColumns = (list) => {
+        if (!renderer || !Array.isArray(list)) return;
+        for (const u of list) renderer.unloadColumn(u.cx, u.cz);
+    };
+
+    const uploadMeshes = (urgent) => {
+        for (const msg of world.consumeMeshes()) {
+            if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs, urgent);
+        }
+    };
+
+    const lanSession = createLanSession({
+        hooks: {
+            getLocalPlayer: () => player,
+            getWorldSnapshot: () => ({
+                seed: world.getSeed(),
+                timeOfDay: state.timeOfDay,
+                autoCycle: state.autoCycle,
+                rain: state.rain,
+                spawnPos: [...player.pos],
+                edits: world.getStorage().exportEdits()
+            }),
+            onWorldSync: (sync) => {
+                const target = Array.isArray(sync.spawnPos) && sync.spawnPos.length === 3
+                    ? [sync.spawnPos[0] + 1.8, sync.spawnPos[1], sync.spawnPos[2] + 1.8]
+                    : [spawnPos[0], spawnPos[1], spawnPos[2]];
+                const unloaded = world.applyGuestWorld({
+                    seed: sync.seed,
+                    edits: sync.edits || [],
+                    centerPos: target,
+                    warmRadius: renderer ? 1 : 0
+                });
+                unloadColumns(unloaded);
+                player.pos[0] = target[0];
+                player.pos[1] = target[1];
+                player.pos[2] = target[2];
+                player.vel[0] = 0;
+                player.vel[1] = 0;
+                player.vel[2] = 0;
+                if (!player.flyMode) unstickPlayer(player, world.getBlock);
+                if (Number.isFinite(sync.timeOfDay)) state.timeOfDay = sync.timeOfDay;
+                if (typeof sync.autoCycle === "boolean") state.autoCycle = sync.autoCycle;
+                if (typeof sync.rain === "boolean") state.rain = sync.rain;
+                uploadMeshes(true);
+                hud.syncHud();
+            },
+            onLeaveGuestWorld: () => {
+                const unloaded = world.restoreLocalWorld(spawnPos, renderer ? 1 : 0);
+                unloadColumns(unloaded);
+                const safe = findSafeSpawn(world, 8, 8, seed);
+                player.pos[0] = safe[0];
+                player.pos[1] = safe[1];
+                player.pos[2] = safe[2];
+                player.vel[1] = 0;
+                uploadMeshes(true);
+                hud.syncHud();
+            },
+            onRemoteBlock: (x, y, z, id, _by, persist) => {
+                const prev = world.getBlock(x, y, z);
+                const ok = world.setBlockRemote(x, y, z, id, persist);
+                if (!ok) return false;
+                const dist = Math.hypot(x + 0.5 - player.pos[0], y + 0.5 - player.pos[1], z + 0.5 - player.pos[2]);
+                if (dist < 28) {
+                    if (id === BLOCK.AIR && prev !== BLOCK.AIR) {
+                        audio.playBreak(getBlockMaterial(prev));
+                        particles.spawnBlockBreak(x, y, z, prev);
+                    } else if (id !== BLOCK.AIR) {
+                        audio.playPlace(getBlockMaterial(id));
+                    }
+                }
+                uploadMeshes(true);
+                return true;
+            },
+            onEnvSync: (env) => {
+                if (Number.isFinite(env.timeOfDay)) state.timeOfDay = env.timeOfDay;
+                if (typeof env.autoCycle === "boolean") state.autoCycle = env.autoCycle;
+                if (typeof env.rain === "boolean") state.rain = env.rain;
+                hud.syncHud();
+            }
+        }
+    });
+
+    world.setDynamicBatchHandler((list) => {
+        lanSession.sendDynamicBlockBatch(list);
+    });
+
     const hud = createVoxelHud(root, atlas, state, player, canvas, {
         onViewDistance: (radius) => {
             world.setViewRadius(radius);
@@ -180,7 +271,15 @@ export function createVoxelApp(root) {
         },
         onHotbarChange: syncSelectedHand,
         onAudioToggle: (muted) => audio.setMuted(muted),
+        onOpenLan: () => {
+            if (lanUi) lanUi.setModalOpen(true);
+        },
+        onCloseExtraOverlays: () => (lanUi ? lanUi.closeOverlays() : false),
+        onEnvChange: () => {
+            lanSession.sendEnvSync(state.timeOfDay, state.autoCycle, state.rain);
+        },
         onResetWorld: () => {
+            if (lanSession.getRole() === "guest") return;
             world.resetEdits().then(() => {
                 if (state.destroyed) return;
                 const resetPos = findSafeSpawn(world, 8, 8, seed);
@@ -192,14 +291,9 @@ export function createVoxelApp(root) {
             });
         }
     });
+    lanUi = createLanUi({ root, state, session: lanSession });
     audio.setMuted(state.settings.muted);
     syncSelectedHand();
-
-    const uploadMeshes = (urgent) => {
-        for (const msg of world.consumeMeshes()) {
-            if (renderer) renderer.uploadMeshUpdate(msg.cx, msg.cz, msg.subs, urgent);
-        }
-    };
 
     const breakVoxelAt = (vx, vy, vz, oldId) => {
         if (oldId === BLOCK.BEDROCK) return false;
@@ -208,6 +302,8 @@ export function createVoxelApp(root) {
         audio.playBreak(getBlockMaterial(oldId));
         particles.spawnBlockBreak(vx, vy, vz, oldId);
         hand.triggerSwing();
+        lanSession.triggerLocalSwing();
+        lanSession.sendLocalBlockChange(vx, vy, vz, BLOCK.AIR);
         uploadMeshes(true);
         return true;
     };
@@ -251,10 +347,15 @@ export function createVoxelApp(root) {
                 for (const m of mobs.all) {
                     if (blockOverlapsBox(tx, ty, tz, m.pos[0], m.pos[1], m.pos[2], m.hw, m.h)) return;
                 }
+                for (const rp of lanSession.getRemotePlayerEntities()) {
+                    if (blockOverlapsBox(tx, ty, tz, rp.pos[0], rp.pos[1], rp.pos[2], PLAYER_HW, PLAYER_H)) return;
+                }
             }
             if (world.setBlock(tx, ty, tz, item.id)) {
                 audio.playPlace(getBlockMaterial(item.id));
                 hand.triggerSwing();
+                lanSession.triggerLocalSwing();
+                lanSession.sendLocalBlockChange(tx, ty, tz, item.id);
                 uploadMeshes(true);
             }
         }
@@ -286,6 +387,12 @@ export function createVoxelApp(root) {
             if (!fly) unstickPlayer(player, world.getBlock);
         },
         onToggleCatalog: () => hud.toggleCatalog(),
+        onToggleLan: () => {
+            if (lanUi) lanUi.toggleModal();
+        },
+        onOpenChat: () => {
+            if (lanUi) lanUi.setChatOpen(true);
+        },
         onToggleMute: () => {
             state.settings.muted = !state.settings.muted;
             audio.setMuted(state.settings.muted);
@@ -407,17 +514,17 @@ export function createVoxelApp(root) {
         currentFov += (fovTarget - currentFov) * Math.min(1, dt * 10);
         const fovRad = (currentFov * Math.PI) / 180;
 
-        mobs.update(dt, player.pos, state.timeOfDay);
-        catSpawner.update(dt, player.pos, player.yaw, fovRad);
-        chickenSpawner.update(dt, player.pos, player.yaw, fovRad);
-        villagerSpawner.update(dt, player.pos);
-        golemSpawner.update(dt, player.pos);
-
-        world.stepDynamic(dt);
-        const unloaded = world.updateAround(player.pos[0], player.pos[2]);
-        for (const u of unloaded) {
-            if (renderer) renderer.unloadColumn(u.cx, u.cz);
+        const isGuest = lanSession.getRole() === "guest";
+        if (!isGuest) {
+            mobs.update(dt, player.pos, state.timeOfDay);
+            catSpawner.update(dt, player.pos, player.yaw, fovRad);
+            chickenSpawner.update(dt, player.pos, player.yaw, fovRad);
+            villagerSpawner.update(dt, player.pos);
+            golemSpawner.update(dt, player.pos);
+            world.stepDynamic(dt);
         }
+        const unloaded = world.updateAround(player.pos[0], player.pos[2]);
+        unloadColumns(unloaded);
         uploadMeshes(false);
 
         handleResize();
@@ -464,6 +571,14 @@ export function createVoxelApp(root) {
         audio.updateAmbience(state.rainIntensity, indoorFactor, player.submerged);
 
         const heldItem = state.hotbar[state.selectedSlot];
+        lanSession.update(dt, player, heldItem ? heldItem.id : BLOCK.AIR, world, mobs.all);
+        const remotePlayers = lanSession.getRemotePlayerEntities();
+        const renderEntities = isGuest
+            ? [...lanSession.getSyncedMobs(), ...remotePlayers]
+            : remotePlayers.length > 0
+                ? [...mobs.all, ...remotePlayers]
+                : mobs.all;
+
         const heldEmits = heldItem && (heldItem.id === BLOCK.TORCH || heldItem.id === BLOCK.LANTERN || heldItem.id === BLOCK.LAVA);
         handLightBuf[0] = eye[0] + cam.right[0] * 0.25 + cam.forward[0] * 0.35;
         handLightBuf[1] = eye[1] - 0.14 + cam.forward[1] * 0.35;
@@ -494,7 +609,7 @@ export function createVoxelApp(root) {
                 state.timeOfDay,
                 hit,
                 player.submerged,
-                mobs.all,
+                renderEntities,
                 state.rainIntensity,
                 {
                     breakProgress,
@@ -509,6 +624,9 @@ export function createVoxelApp(root) {
                     handTint
                 }
             );
+        }
+        if (lanUi) {
+            lanUi.updateNametags(cam, canvas.clientWidth, canvas.clientHeight, remotePlayers, eye);
         }
 
         saveTimer += dt;
@@ -572,6 +690,11 @@ export function createVoxelApp(root) {
 
     const unbindVisibility = bindVisibility(document, onTabHidden, onTabVisible);
 
+    const onBeforeUnload = () => {
+        if (lanSession.isConnected()) lanSession.leaveSession();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+
     hud.updateTelemetry(world.getColumnCount());
     scheduleIfActive();
 
@@ -581,10 +704,14 @@ export function createVoxelApp(root) {
         world,
         mobs,
         audio,
+        lan: lanSession,
         pause: pauseLoop,
         resume: resumeLoop,
         destroy() {
             state.destroyed = true;
+            window.removeEventListener("beforeunload", onBeforeUnload);
+            if (lanUi) lanUi.destroy();
+            lanSession.destroy();
             mobs.clear();
             particles.clear();
             stopLoop();

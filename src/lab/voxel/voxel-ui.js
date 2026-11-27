@@ -243,11 +243,16 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
     });
     bindClick("[data-voxel-cycle]", () => {
         state.autoCycle = !state.autoCycle;
+        if (hooks.onEnvChange) hooks.onEnvChange();
         syncHud();
     });
     bindClick("[data-voxel-catalog-open]", () => {
         setSettingsOpen(false);
         setCatalogOpen(true);
+    });
+    bindClick("[data-voxel-lan-open]", () => {
+        setSettingsOpen(false);
+        if (hooks.onOpenLan) hooks.onOpenLan();
     });
     bindClick("[data-voxel-audio]", () => {
         state.settings.muted = !state.settings.muted;
@@ -263,12 +268,14 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
         listen(btn, "click", () => {
             state.autoCycle = false;
             state.timeOfDay = Number(btn.dataset.voxelTime);
+            if (hooks.onEnvChange) hooks.onEnvChange();
             syncHud();
         });
     });
     root.querySelectorAll("[data-voxel-rain]").forEach((btn) => {
         listen(btn, "click", () => {
             state.rain = !state.rain;
+            if (hooks.onEnvChange) hooks.onEnvChange();
             syncHud();
         });
     });
@@ -330,6 +337,7 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
             const h = Math.round(clampNum(hourInput.value, 1, 24, 9));
             state.autoCycle = false;
             state.timeOfDay = hourToTimeOfDay(h);
+            if (hooks.onEnvChange) hooks.onEnvChange();
             syncHud();
         });
     }
@@ -380,6 +388,9 @@ export function createVoxelHud(root, atlas, state, player, canvas, hooks = {}) {
 
     const closeOverlays = () => {
         let closed = false;
+        if (hooks.onCloseExtraOverlays && hooks.onCloseExtraOverlays()) {
+            closed = true;
+        }
         if (state.catalogOpen) {
             setCatalogOpen(false);
             closed = true;

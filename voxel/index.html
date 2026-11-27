@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="/">
-<meta name="description" content="Voxel World Engine 3D Pure WebGL 2.0: Greedy Meshing, Smooth Lighting, Biome Tinting, Villagers, Procedural Audio, Shadows, and Bloom in Meteor.">
+<meta name="description" content="Voxel World Engine 3D Pure WebGL 2.0: Greedy Meshing, Smooth Lighting, Biome Tinting, Villagers, Same-Network LAN Multiplayer, Procedural Audio, Shadows, and Bloom in Meteor.">
 <title>Voxel World 3D - Meteor</title>
 <link rel="icon" href="./assets/icons/icon-48.png" type="image/png" sizes="48x48">
 <link rel="preload" href="./fonts/google-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="./fonts/roboto-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="./styles/voxel.css">
 <link rel="stylesheet" href="./styles/voxel-settings.css">
+<link rel="stylesheet" href="./styles/voxel-lan.css">
 <link rel="stylesheet" href="./styles/voxel-guard.css">
 <style>
 @font-face {
@@ -37,6 +38,7 @@ body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering:
 <body>
 <main id="voxel-app-root" class="voxel-page">
     <canvas class="voxel-canvas" data-voxel-gl aria-label="3D WebGL 2.0 Voxel World"></canvas>
+    <div class="voxel-nametags" data-voxel-nametags aria-hidden="true"></div>
     <div class="voxel-crosshair" aria-hidden="true"></div>
     <div class="voxel-fallback" data-voxel-fallback hidden>Your browser or device does not support WebGL 2.0 required to run Voxel World Engine.</div>
     <div class="voxel-fallback" data-voxel-context-lost role="status" hidden>GPU context lost. Restoring world...</div>
@@ -51,6 +53,7 @@ body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering:
                 <span class="voxel-stat-pill" data-tel-tris>0 tris</span>
                 <span class="voxel-stat-pill" data-tel-scale>100% res</span>
                 <span class="voxel-stat-pill" data-tel-gpu hidden>0.0 ms GPU</span>
+                <span class="voxel-stat-pill voxel-stat-lan" data-tel-lan hidden></span>
             </div>
         </div>
         <div class="voxel-actions">
@@ -83,7 +86,7 @@ body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering:
                 <button type="button" class="voxel-btn" data-voxel-ui-item="gpu" aria-pressed="true">GPU</button>
             </div>
             <button type="button" class="voxel-btn" data-voxel-ui-hideall aria-pressed="false">Hide All HUD (F1)</button>
-            <span class="voxel-setting-hint">F1 hide all, F3 stats, H hotbar, E catalog</span>
+            <span class="voxel-setting-hint">F1 hide all, F3 stats, H hotbar, E catalog, L LAN, T chat</span>
         </div>
         <div class="voxel-setting">
             <span class="voxel-setting-title">Controls</span>
@@ -93,6 +96,7 @@ body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering:
                 <button type="button" class="voxel-btn" data-voxel-action aria-pressed="false">Click: Break</button>
                 <button type="button" class="voxel-btn" data-voxel-audio aria-pressed="true">Audio: On</button>
                 <button type="button" class="voxel-btn" data-voxel-catalog-open>Blocks (E)</button>
+                <button type="button" class="voxel-btn" data-voxel-lan-open>LAN Play (L)</button>
             </div>
             <div class="voxel-toggle-grid">
                 <button type="button" class="voxel-btn" data-voxel-time="0.28" aria-pressed="true">Day</button>
@@ -140,6 +144,86 @@ body { background: #09131f; -webkit-font-smoothing: antialiased; text-rendering:
             </div>
             <p class="voxel-setting-hint">Select a block to assign it to your active hotbar slot.</p>
             <div class="voxel-catalog-grid" data-voxel-catalog-grid></div>
+        </div>
+    </div>
+
+    <aside class="voxel-lan-chat" data-voxel-lan-chat aria-label="LAN Chat" hidden>
+        <div class="voxel-lan-chat-log" data-lan-chat-log></div>
+        <form class="voxel-lan-chat-form" data-lan-chat-form hidden>
+            <input type="text" class="voxel-lan-input" data-lan-chat-input maxlength="180" placeholder="Press Enter to send chat..." aria-label="LAN chat message">
+            <button type="submit" class="voxel-btn">Send</button>
+        </form>
+    </aside>
+
+    <div class="voxel-lan-modal" data-voxel-lan-modal role="dialog" aria-modal="true" aria-labelledby="voxel-lan-title" hidden>
+        <div class="voxel-lan-card">
+            <div class="voxel-lan-head">
+                <h2 class="voxel-lan-title" id="voxel-lan-title">LAN Multiplayer (Same WiFi / Hotspot)</h2>
+                <button type="button" class="voxel-btn" data-voxel-lan-close aria-label="Close LAN Multiplayer">Close (L)</button>
+            </div>
+
+            <div class="voxel-lan-status-bar">
+                <span class="voxel-lan-badge" data-lan-net-badge>Detecting WiFi / Hotspot...</span>
+                <button type="button" class="voxel-btn" data-lan-refresh>Rescan</button>
+            </div>
+
+            <div class="voxel-lan-error" data-lan-error role="alert" hidden></div>
+
+            <div class="voxel-lan-section">
+                <span class="voxel-setting-title">Your Profile</span>
+                <div class="voxel-lan-row-between">
+                    <input type="text" class="voxel-lan-input" data-lan-name maxlength="18" value="Explorer" placeholder="Player name" aria-label="Player name" style="max-width: 210px;">
+                    <div class="voxel-lan-swatches" data-lan-swatches aria-label="Player outfit color"></div>
+                </div>
+            </div>
+
+            <div class="voxel-lan-section">
+                <div class="voxel-lan-row-between">
+                    <span class="voxel-setting-title">Host This World</span>
+                    <div class="voxel-lan-row">
+                        <button type="button" class="voxel-btn" data-lan-host-btn aria-pressed="false">Host on LAN</button>
+                        <button type="button" class="voxel-btn voxel-btn-danger" data-lan-leave-btn hidden>Leave World</button>
+                    </div>
+                </div>
+                <label class="voxel-lan-check">
+                    <input type="checkbox" data-lan-strict checked>
+                    <span>Same Network Only (auto-discover &amp; allow only friends on this WiFi / tethering hotspot)</span>
+                </label>
+                <div class="voxel-lan-row-between" data-lan-room-info hidden>
+                    <span class="voxel-setting-hint">Dual-WAN Room Code:</span>
+                    <div class="voxel-lan-row">
+                        <span class="voxel-lan-code-pill" data-lan-room-code>----</span>
+                        <button type="button" class="voxel-btn" data-lan-copy-code>Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="voxel-lan-section" data-lan-roster-section hidden>
+                <span class="voxel-setting-title">Players in World (Press T to Chat)</span>
+                <div class="voxel-lan-list" data-lan-roster></div>
+            </div>
+
+            <div class="voxel-lan-section">
+                <span class="voxel-setting-title">Worlds on Your Network</span>
+                <div class="voxel-lan-list" data-lan-worlds></div>
+                <div class="voxel-lan-row">
+                    <input type="text" class="voxel-lan-input voxel-lan-code-input" data-lan-code-input maxlength="4" placeholder="CODE" aria-label="4-character room code">
+                    <button type="button" class="voxel-btn" data-lan-join-code>Join by Code</button>
+                    <span class="voxel-setting-hint">Use if campus/office WiFi uses dual-WAN.</span>
+                </div>
+            </div>
+
+            <details class="voxel-lan-section voxel-lan-offline">
+                <summary>Offline Direct (Zero Internet Copy/Paste)</summary>
+                <p class="voxel-setting-hint">For WiFi or hotspots with no internet: Host generates an Offer, Friend pastes it to generate an Answer, Host pastes the Answer to connect directly over LAN.</p>
+                <div class="voxel-lan-row">
+                    <button type="button" class="voxel-btn" data-lan-off-create>1. Host: Create Offer</button>
+                    <button type="button" class="voxel-btn" data-lan-off-join>2. Friend: Accept Offer</button>
+                    <button type="button" class="voxel-btn" data-lan-off-complete>3. Host: Apply Answer</button>
+                </div>
+                <textarea class="voxel-lan-textarea" data-lan-off-out readonly placeholder="Generated Offer or Answer appears here..." aria-label="Generated offline code"></textarea>
+                <textarea class="voxel-lan-textarea" data-lan-off-in placeholder="Paste friend's Offer or Answer code here..." aria-label="Paste offline code"></textarea>
+            </details>
         </div>
     </div>
 

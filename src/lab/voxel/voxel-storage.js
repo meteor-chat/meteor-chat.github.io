@@ -37,7 +37,9 @@ function openDatabase() {
 
 export function createWorldStorage(seed = 2026) {
     const edits = new Map();
+    const guestEdits = new Map();
     const dirtyCols = new Set();
+    let guestMode = false;
     let dbPromise = null;
     let dbInstance = null;
     let flushTimer = null;
@@ -45,6 +47,7 @@ export function createWorldStorage(seed = 2026) {
     let pendingPlayer = null;
     let closed = false;
 
+    const activeEdits = () => (guestMode ? guestEdits : edits);
     const colKey = (cx, cz) => `${cx},${cz}`;
     const dbColKey = (k) => `${seed}:${k}`;
     const playerKey = `player:${seed}`;
@@ -106,12 +109,14 @@ export function createWorldStorage(seed = 2026) {
 
     const recordEdit = (cx, cz, idx, blockId) => {
         const k = colKey(cx, cz);
-        let colMap = edits.get(k);
+        const map = activeEdits();
+        let colMap = map.get(k);
         if (!colMap) {
             colMap = new Map();
-            edits.set(k, colMap);
+            map.set(k, colMap);
         }
         colMap.set(idx, blockId);
+        if (guestMode) return;
         dirtyCols.add(k);
         if (!flushTimer && !closed) {
             flushTimer = setTimeout(flushEdits, 400);
@@ -119,12 +124,45 @@ export function createWorldStorage(seed = 2026) {
     };
 
     const applyColumnEdits = (cx, cz, blocks) => {
-        const colMap = edits.get(colKey(cx, cz));
+        const colMap = activeEdits().get(colKey(cx, cz));
         if (!colMap || colMap.size === 0) return false;
         for (const [idx, id] of colMap.entries()) {
             if (idx >= 0 && idx < blocks.length) blocks[idx] = id;
         }
         return true;
+    };
+
+    const exportEdits = () => {
+        const out = [];
+        for (const [k, colMap] of activeEdits().entries()) {
+            if (!colMap || colMap.size === 0) continue;
+            const [cxStr, czStr] = k.split(",");
+            const entries = [];
+            for (const [idx, id] of colMap.entries()) entries.push(idx, id);
+            out.push([Number(cxStr), Number(czStr), entries]);
+        }
+        return out;
+    };
+
+    const enterGuestOverlay = (remoteEdits = []) => {
+        guestEdits.clear();
+        guestMode = true;
+        if (!Array.isArray(remoteEdits)) return;
+        for (const row of remoteEdits) {
+            if (!Array.isArray(row) || row.length < 3) continue;
+            const [cx, cz, entries] = row;
+            if (!Array.isArray(entries)) continue;
+            const colMap = new Map();
+            for (let i = 0; i < entries.length; i += 2) {
+                colMap.set(entries[i], entries[i + 1]);
+            }
+            if (colMap.size > 0) guestEdits.set(colKey(cx, cz), colMap);
+        }
+    };
+
+    const exitGuestOverlay = () => {
+        guestEdits.clear();
+        guestMode = false;
     };
 
     const loadAll = async () => {
@@ -161,7 +199,7 @@ export function createWorldStorage(seed = 2026) {
     };
 
     const savePlayer = (state) => {
-        if (closed) return;
+        if (closed || guestMode) return;
         pendingPlayer = state;
         if (!playerTimer) {
             playerTimer = setTimeout(flushPlayer, 800);
@@ -236,13 +274,17 @@ export function createWorldStorage(seed = 2026) {
     return {
         recordEdit,
         applyColumnEdits,
+        exportEdits,
+        enterGuestOverlay,
+        exitGuestOverlay,
+        isGuestMode: () => guestMode,
         loadAll,
         savePlayer,
         loadPlayer,
         clearAll,
         editCount: () => {
             let total = 0;
-            for (const m of edits.values()) total += m.size;
+            for (const m of activeEdits().values()) total += m.size;
             return total;
         },
         destroy

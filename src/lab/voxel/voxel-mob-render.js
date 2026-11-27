@@ -3,6 +3,7 @@ import { buildCatVertices, FLOATS_PER_CAT, FLOATS_PER_VERTEX, MAX_CATS } from ".
 import { buildChickenVertices, FLOATS_PER_CHICKEN, MAX_CHICKENS } from "./voxel-mob-chicken-model.js";
 import { buildGolemVertices, FLOATS_PER_GOLEM, MAX_GOLEMS } from "./voxel-mob-golem-model.js";
 import { buildVillagerVertices, FLOATS_PER_VILLAGER, MAX_VILLAGERS } from "./voxel-mob-villager-model.js";
+import { buildPlayerVertices, FLOATS_PER_PLAYER, MAX_REMOTE_PLAYERS } from "./voxel-player-model.js";
 
 const MOB_DRAW_DISTANCE = 96;
 const FLOAT_BYTES = 4;
@@ -10,7 +11,8 @@ const TOTAL_FLOATS =
     MAX_CATS * FLOATS_PER_CAT +
     MAX_CHICKENS * FLOATS_PER_CHICKEN +
     MAX_VILLAGERS * FLOATS_PER_VILLAGER +
-    MAX_GOLEMS * FLOATS_PER_GOLEM;
+    MAX_GOLEMS * FLOATS_PER_GOLEM +
+    MAX_REMOTE_PLAYERS * FLOATS_PER_PLAYER;
 const NO_DRAW = Object.freeze({ drawCalls: 0, triCount: 0 });
 
 export function createMobGeometry(gl) {
@@ -44,6 +46,7 @@ export function fillMobStage(mobs, timeSec, eye, stage, frustumPlanes = null) {
     let chickenCount = 0;
     let villagerCount = 0;
     let golemCount = 0;
+    let playerCount = 0;
     for (const mob of mobs) {
         const kind = mob.kind;
         if (kind === "chicken") {
@@ -52,6 +55,8 @@ export function fillMobStage(mobs, timeSec, eye, stage, frustumPlanes = null) {
             if (villagerCount >= MAX_VILLAGERS) continue;
         } else if (kind === "golem") {
             if (golemCount >= MAX_GOLEMS) continue;
+        } else if (kind === "player") {
+            if (playerCount >= MAX_REMOTE_PLAYERS) continue;
         } else if (catCount >= MAX_CATS) {
             continue;
         }
@@ -86,6 +91,9 @@ export function fillMobStage(mobs, timeSec, eye, stage, frustumPlanes = null) {
         } else if (kind === "golem") {
             cursor = buildGolemVertices(mob, timeSec, stage, cursor);
             golemCount += 1;
+        } else if (kind === "player") {
+            cursor = buildPlayerVertices(mob, timeSec, stage, cursor);
+            playerCount += 1;
         } else {
             cursor = buildCatVertices(mob, timeSec, stage, cursor);
             catCount += 1;
