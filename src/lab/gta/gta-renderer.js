@@ -3,6 +3,7 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { QUALITY_PRESETS } from "./gta-perf-governor.js";
 
 const SKY_VS = `
 varying vec3 vWorldDir;
@@ -95,17 +96,18 @@ export function createGtaRenderer(canvas, hooks = {}) {
         return null;
     }
 
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    let quality = QUALITY_PRESETS.balanced;
+    renderer.shadowMap.enabled = quality.shadowsEnabled;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.05;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.info.autoReset = false;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x9fbcd4, 0.00115);
+    scene.fog = new THREE.FogExp2(0x9fbcd4, 0.00145);
 
-    const camera = new THREE.PerspectiveCamera(60, 16 / 9, 0.25, 1100);
+    const camera = new THREE.PerspectiveCamera(60, 16 / 9, 0.3, quality.farClip);
 
     const skyUniforms = {
         uTopColor: { value: new THREE.Color(0x1f62a8) },
@@ -121,11 +123,11 @@ export function createGtaRenderer(canvas, hooks = {}) {
         side: THREE.BackSide,
         depthWrite: false
     });
-    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(880, 28, 18), skyMat);
+    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(420, 24, 14), skyMat);
     scene.add(skyDome);
 
     const envScene = new THREE.Scene();
-    const envDome = new THREE.Mesh(new THREE.SphereGeometry(50, 20, 14), skyMat);
+    const envDome = new THREE.Mesh(new THREE.SphereGeometry(50, 18, 12), skyMat);
     envScene.add(envDome);
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
@@ -149,27 +151,27 @@ export function createGtaRenderer(canvas, hooks = {}) {
         lastMoodKey = "";
     };
 
-    const hemiLight = new THREE.HemisphereLight(0xc2e2ff, 0x323842, 0.78);
+    const hemiLight = new THREE.HemisphereLight(0xc2e2ff, 0x323842, 0.8);
     scene.add(hemiLight);
 
     const sunLight = new THREE.DirectionalLight(0xfff3d8, 3.1);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.castShadow = quality.shadowsEnabled;
+    sunLight.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
     sunLight.shadow.camera.near = 10;
-    sunLight.shadow.camera.far = 360;
-    const sc = 96;
-    sunLight.shadow.camera.left = -sc;
-    sunLight.shadow.camera.right = sc;
-    sunLight.shadow.camera.top = sc;
-    sunLight.shadow.camera.bottom = -sc;
-    sunLight.shadow.bias = -0.0004;
-    sunLight.shadow.normalBias = 0.035;
+    sunLight.shadow.camera.far = 310;
+    const sc0 = quality.shadowExtent;
+    sunLight.shadow.camera.left = -sc0;
+    sunLight.shadow.camera.right = sc0;
+    sunLight.shadow.camera.top = sc0;
+    sunLight.shadow.camera.bottom = -sc0;
+    sunLight.shadow.bias = -0.0005;
+    sunLight.shadow.normalBias = 0.04;
     scene.add(sunLight);
     scene.add(sunLight.target);
 
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(640, 360), 0.24, 0.38, 1.02);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(320, 180), 0.22, 0.36, 1.04);
     const outputPass = new OutputPass();
     composer.addPass(renderPass);
     composer.addPass(bloomPass);
@@ -196,13 +198,51 @@ export function createGtaRenderer(canvas, hooks = {}) {
         renderScale = Math.max(0.55, Math.min(1, scale));
         const w = Math.max(2, canvas.clientWidth || window.innerWidth || 1280);
         const h = Math.max(2, canvas.clientHeight || window.innerHeight || 720);
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.75) * renderScale;
+        const dpr = Math.min(window.devicePixelRatio || 1, quality.maxDpr) * renderScale;
         renderer.setPixelRatio(dpr);
         renderer.setSize(w, h, false);
         composer.setPixelRatio(dpr);
         composer.setSize(w, h);
+        const bw = Math.max(2, Math.floor(w * dpr * quality.bloomScale));
+        const bh = Math.max(2, Math.floor(h * dpr * quality.bloomScale));
+        bloomPass.setSize(bw, bh);
         camera.aspect = w / h;
+        camera.far = quality.farClip;
         camera.updateProjectionMatrix();
+    };
+
+    const setQuality = (presetKey, nextScale = null) => {
+        quality = QUALITY_PRESETS[presetKey] || QUALITY_PRESETS.balanced;
+        renderer.shadowMap.enabled = quality.shadowsEnabled;
+        sunLight.castShadow = quality.shadowsEnabled;
+        if (sunLight.shadow.mapSize.width !== quality.shadowSize) {
+            sunLight.shadow.mapSize.set(quality.shadowSize, quality.shadowSize);
+            if (sunLight.shadow.map) {
+                sunLight.shadow.map.dispose();
+                sunLight.shadow.map = null;
+            }
+        }
+        const ex = quality.shadowExtent;
+        sunLight.shadow.camera.left = -ex;
+        sunLight.shadow.camera.right = ex;
+        sunLight.shadow.camera.top = ex;
+        sunLight.shadow.camera.bottom = -ex;
+        sunLight.shadow.camera.updateProjectionMatrix();
+        bloomPass.enabled = quality.bloomEnabled;
+        resize(nextScale !== null ? nextScale : quality.maxResScale);
+    };
+
+    const warmShaders = async () => {
+        if (lost) return;
+        try {
+            if (typeof renderer.compileAsync === "function") {
+                await renderer.compileAsync(scene, camera);
+            } else {
+                renderer.compile(scene, camera);
+            }
+        } catch {
+            renderer.compile(scene, camera);
+        }
     };
 
     const updateAtmosphere = (timeOfDay, rainIntensity, focusPos) => {
@@ -214,24 +254,26 @@ export function createGtaRenderer(canvas, hooks = {}) {
         skyUniforms.uNight.value = m.night;
 
         scene.fog.color.copy(m.fogColor);
-        scene.fog.density = 0.0011 + rainIntensity * 0.0013 + m.night * 0.00055;
+        const farFog = quality.farClip < 420 ? 0.00185 : 0.00138;
+        scene.fog.density = farFog + rainIntensity * 0.0012 + m.night * 0.00055;
 
         hemiLight.color.copy(m.horizon);
         hemiLight.intensity = 0.28 + m.day * 0.56 - rainIntensity * 0.14;
         sunLight.color.copy(m.sunColor);
         sunLight.intensity = (0.24 + m.day * 2.95) * (1 - rainIntensity * 0.48);
         renderer.toneMappingExposure = 0.96 + m.day * 0.14 + m.sunset * 0.08 - m.night * 0.08;
-        bloomPass.strength = 0.18 + m.night * 0.24 + m.sunset * 0.08;
+        bloomPass.strength = 0.16 + m.night * 0.22 + m.sunset * 0.08;
 
         if (focusPos) {
             skyDome.position.set(focusPos.x, 0, focusPos.z);
-            const sx = Math.round(focusPos.x / 4) * 4;
-            const sz = Math.round(focusPos.z / 4) * 4;
+            const snap = 4;
+            const sx = Math.round(focusPos.x / snap) * snap;
+            const sz = Math.round(focusPos.z / snap) * snap;
             sunLight.target.position.set(sx, focusPos.y || 0, sz);
             sunLight.position.set(
-                sx + m.sunDir.x * 165,
-                (focusPos.y || 0) + Math.max(28, m.sunDir.y * 165),
-                sz + m.sunDir.z * 165
+                sx + m.sunDir.x * 155,
+                (focusPos.y || 0) + Math.max(28, m.sunDir.y * 155),
+                sz + m.sunDir.z * 155
             );
             sunLight.target.updateMatrixWorld();
         }
@@ -264,7 +306,11 @@ export function createGtaRenderer(canvas, hooks = {}) {
     const render = () => {
         if (lost) return { drawCalls: 0, triangles: 0 };
         renderer.info.reset();
-        composer.render();
+        if (quality.bloomEnabled) {
+            composer.render();
+        } else {
+            renderer.render(scene, camera);
+        }
         return {
             drawCalls: renderer.info.render.calls,
             triangles: renderer.info.render.triangles
@@ -292,10 +338,13 @@ export function createGtaRenderer(canvas, hooks = {}) {
         scene,
         camera,
         setHdris,
+        setQuality,
+        warmShaders,
         resize,
         updateAtmosphere,
         render,
         getScale: () => renderScale,
+        getQuality: () => quality.key,
         isLost: () => lost,
         dispose
     };

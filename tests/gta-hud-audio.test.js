@@ -70,6 +70,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
         hud = createGtaHud(root, {
             onTime: (v) => events.push(["time", v]),
             onWeather: (v) => events.push(["weather", v]),
+            onQuality: (v) => events.push(["quality", v]),
             onGps: (v) => events.push(["gps", v]),
             onSpawnCar: (v) => events.push(["spawn", v]),
             onCamCycle: () => events.push(["cam"]),
@@ -125,6 +126,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
 
         root.querySelector('[data-gta-time="sunset"]').click();
         root.querySelector('[data-gta-weather="rain"]').click();
+        root.querySelector('[data-gta-quality="fast"]').click();
         root.querySelector('[data-gta-gps="beach"]').click();
         root.querySelector('[data-gta-spawn="gauntlet"]').click();
         root.querySelector("[data-gta-cam-cycle]").click();
@@ -135,6 +137,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
         expect(events).toEqual([
             ["time", "sunset"],
             ["weather", "rain"],
+            ["quality", "fast"],
             ["gps", "beach"],
             ["spawn", "gauntlet"],
             ["cam"],

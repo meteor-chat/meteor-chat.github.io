@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import {
     buildGlassCanopyGeometry,
     buildLoftedHullGeometry,
@@ -30,6 +31,75 @@ function getLoftedGeos(kind) {
     return { hull: sharedSedanHull, glass: sharedSedanGlass };
 }
 
+function normalizeGeoForMerge(geo, matrix, keepUv) {
+    const raw = geo.index ? geo.toNonIndexed() : geo.clone();
+    raw.applyMatrix4(matrix);
+    if (!raw.attributes.normal) raw.computeVertexNormals();
+    const out = new THREE.BufferGeometry();
+    out.setAttribute("position", raw.attributes.position);
+    out.setAttribute("normal", raw.attributes.normal);
+    if (keepUv && raw.attributes.uv) out.setAttribute("uv", raw.attributes.uv);
+    raw.dispose();
+    return out;
+}
+
+function mergeStaticModelByMaterial(rootObj) {
+    rootObj.updateMatrixWorld(true);
+    const invRoot = new THREE.Matrix4().copy(rootObj.matrixWorld).invert();
+    const groups = new Map();
+    const toRemove = [];
+
+    rootObj.traverse((child) => {
+        if (!child.isMesh || !child.geometry || Array.isArray(child.material)) return;
+        const mat = child.material;
+        let bucket = groups.get(mat);
+        if (!bucket) {
+            bucket = { mat, meshes: [], castShadow: false, receiveShadow: false };
+            groups.set(mat, bucket);
+        }
+        bucket.meshes.push(child);
+        if (child.castShadow) bucket.castShadow = true;
+        if (child.receiveShadow) bucket.receiveShadow = true;
+    });
+
+    const mergedRoot = new THREE.Group();
+    const localMat = new THREE.Matrix4();
+    for (const bucket of groups.values()) {
+        if (bucket.meshes.length === 1) {
+            const m = bucket.meshes[0];
+            localMat.multiplyMatrices(invRoot, m.matrixWorld);
+            const g = m.geometry.clone();
+            g.applyMatrix4(localMat);
+            const mesh = new THREE.Mesh(g, bucket.mat);
+            mesh.castShadow = bucket.castShadow;
+            mesh.receiveShadow = bucket.receiveShadow;
+            mesh.matrixAutoUpdate = false;
+            mesh.updateMatrix();
+            mergedRoot.add(mesh);
+            toRemove.push(m);
+            continue;
+        }
+        const allHaveUv = bucket.meshes.every((m) => Boolean(m.geometry.attributes.uv));
+        const parts = [];
+        for (const m of bucket.meshes) {
+            localMat.multiplyMatrices(invRoot, m.matrixWorld);
+            parts.push(normalizeGeoForMerge(m.geometry, localMat, allHaveUv));
+            toRemove.push(m);
+        }
+        const merged = mergeGeometries(parts, false);
+        for (const p of parts) p.dispose();
+        if (merged) {
+            const mesh = new THREE.Mesh(merged, bucket.mat);
+            mesh.castShadow = bucket.castShadow;
+            mesh.receiveShadow = bucket.receiveShadow;
+            mesh.matrixAutoUpdate = false;
+            mesh.updateMatrix();
+            mergedRoot.add(mesh);
+        }
+    }
+    return toRemove.length > 0 ? mergedRoot : rootObj;
+}
+
 function extractFerrariWheelTemplate(ferrariGltf, wheelName) {
     if (!ferrariGltf || !ferrariGltf.scene) return null;
     const node = ferrariGltf.scene.getObjectByName(wheelName);
@@ -38,12 +108,14 @@ function extractFerrariWheelTemplate(ferrariGltf, wheelName) {
     clone.position.set(0, 0, 0);
     clone.traverse((child) => {
         if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
+            const mName = child.material ? child.material.name : "";
+            child.castShadow = mName === "Tires";
+            child.receiveShadow = false;
         }
     });
+    const merged = mergeStaticModelByMaterial(clone);
     const pivot = new THREE.Group();
-    pivot.add(clone);
+    pivot.add(merged);
     return pivot;
 }
 
@@ -77,6 +149,8 @@ function addContactShadow(parent, spec) {
     );
     plane.rotation.x = -Math.PI * 0.5;
     plane.position.y = -spec.restHeight + 0.04;
+    plane.matrixAutoUpdate = false;
+    plane.updateMatrix();
     parent.add(plane);
 }
 
@@ -98,14 +172,14 @@ function buildFerrariBody(spec, ferrariGltf, paintHex, textures) {
     });
     const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0x0b1524,
-        metalness: 0.15,
+        metalness: 0.16,
         roughness: 0.04,
-        transmission: 0.35,
         transparent: true,
-        opacity: 0.78,
+        opacity: 0.44,
         clearcoat: 1.0,
         clearcoatRoughness: 0.02,
-        envMapIntensity: 2.0
+        envMapIntensity: 2.0,
+        depthWrite: false
     });
     const tailMat = new THREE.MeshStandardMaterial({
         color: 0xdc2626,
@@ -124,7 +198,7 @@ function buildFerrariBody(spec, ferrariGltf, paintHex, textures) {
     clone.traverse((child) => {
         if (!child.isMesh) return;
         const mName = child.material ? child.material.name : "";
-        child.castShadow = mName === "Body_Color" || child.name === "body" || mName === "Tires";
+        child.castShadow = mName === "Body_Color" || child.name === "body";
         child.receiveShadow = true;
         if (mName === "Body_Color" || child.name === "body") {
             child.material = paintMat;
@@ -137,15 +211,20 @@ function buildFerrariBody(spec, ferrariGltf, paintHex, textures) {
         }
     });
 
-    clone.rotation.y = Math.PI;
-    clone.position.set(0, -spec.restHeight + 0.04, 0.17);
-    bodyRoot.add(clone);
+    const mergedBody = mergeStaticModelByMaterial(clone);
+    mergedBody.rotation.y = Math.PI;
+    mergedBody.position.set(0, -spec.restHeight + 0.04, 0.17);
+    mergedBody.matrixAutoUpdate = false;
+    mergedBody.updateMatrix();
+    bodyRoot.add(mergedBody);
 
     if (textures && textures.plate) {
         const plateMat = new THREE.MeshStandardMaterial({ map: textures.plate, roughness: 0.38, metalness: 0.15 });
         const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.2), plateMat);
         plate.position.set(0, -spec.restHeight + 0.56, -2.14);
         plate.rotation.y = Math.PI;
+        plate.matrixAutoUpdate = false;
+        plate.updateMatrix();
         bodyRoot.add(plate);
     }
 
@@ -167,15 +246,13 @@ function buildSculptedBody(spec, paintHex, textures) {
         clearcoatRoughness: 0.03,
         envMapIntensity: 1.8
     });
-    const glassMat = new THREE.MeshPhysicalMaterial({
+    const glassMat = new THREE.MeshStandardMaterial({
         color: 0x0a1320,
-        metalness: 0.22,
-        roughness: 0.04,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.02,
-        envMapIntensity: 2.0
+        metalness: 0.72,
+        roughness: 0.08,
+        envMapIntensity: 1.9
     });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe8eef5, metalness: 0.96, roughness: 0.1 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe8eef5, metalness: 0.94, roughness: 0.12 });
     const headMat = new THREE.MeshStandardMaterial({
         color: 0xf8fafc,
         emissive: 0xfff4d6,
@@ -193,55 +270,69 @@ function buildSculptedBody(spec, paintHex, textures) {
     hullMesh.receiveShadow = true;
     bodyRoot.add(hullMesh);
 
-    const glassMesh = new THREE.Mesh(glass, glassMat);
-    bodyRoot.add(glassMesh);
-
+    const glassParts = [glass.clone()];
     const tailZ = spec.suv ? -2.41 : -2.26;
     const headZ = spec.suv ? 2.48 : 2.3;
     const hw = spec.suv ? 0.8 : 0.68;
 
+    const headParts = [];
+    const tailParts = [];
+    const chromeParts = [];
+
     for (const sx of [-hw, hw]) {
-        const hl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.08), headMat);
-        hl.position.set(sx * 0.88, spec.suv ? 0.74 : 0.58, headZ);
-        bodyRoot.add(hl);
+        const hl = new THREE.BoxGeometry(0.34, 0.12, 0.08);
+        hl.translate(sx * 0.88, spec.suv ? 0.74 : 0.58, headZ);
+        headParts.push(hl);
 
-        const tl = new THREE.Mesh(
-            spec.suv ? new THREE.BoxGeometry(0.09, 0.54, 0.12) : new THREE.BoxGeometry(0.42, 0.12, 0.08),
-            tailMat
-        );
-        tl.position.set(sx * (spec.suv ? 1.02 : 0.98), spec.suv ? 0.86 : 0.68, tailZ);
-        bodyRoot.add(tl);
+        const tl = spec.suv ? new THREE.BoxGeometry(0.09, 0.54, 0.12) : new THREE.BoxGeometry(0.42, 0.12, 0.08);
+        tl.translate(sx * (spec.suv ? 1.02 : 0.98), spec.suv ? 0.86 : 0.68, tailZ);
+        tailParts.push(tl);
 
-        const sign = Math.sign(sx);
-        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.044, 0.2, 10), chromeMat);
-        pipe.rotation.x = Math.PI * 0.5;
-        pipe.position.set(sx * 0.78, 0.25, tailZ - 0.04);
-        bodyRoot.add(pipe);
-
-        const mirror = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), paintMat);
-        mirror.scale.set(1.4, 0.65, 0.9);
-        mirror.position.set(sign * (spec.suv ? 1.04 : 0.96), spec.suv ? 1.08 : 0.94, spec.suv ? 0.72 : 0.42);
-        bodyRoot.add(mirror);
+        const pipe = new THREE.CylinderGeometry(0.044, 0.044, 0.2, 10);
+        pipe.rotateX(Math.PI * 0.5);
+        pipe.translate(sx * 0.78, 0.25, tailZ - 0.04);
+        chromeParts.push(pipe);
     }
 
-    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(spec.suv ? 1.48 : 1.18, 0.045, 0.05), chromeMat);
-    chromeTrim.position.set(0, spec.suv ? 0.72 : 0.62, tailZ - 0.04);
-    bodyRoot.add(chromeTrim);
+    const trim = new THREE.BoxGeometry(spec.suv ? 1.48 : 1.18, 0.045, 0.05);
+    trim.translate(0, spec.suv ? 0.72 : 0.62, tailZ - 0.04);
+    chromeParts.push(trim);
 
     if (spec.suv) {
-        const rearWindow = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.52), glassMat);
-        rearWindow.position.set(0, 1.24, tailZ + 0.04);
-        rearWindow.rotation.set(-0.22, Math.PI, 0);
-        bodyRoot.add(rearWindow);
-
-        const railGeo = new THREE.CylinderGeometry(0.022, 0.022, 2.0, 6);
-        railGeo.rotateX(Math.PI * 0.5);
+        const rw = new THREE.PlaneGeometry(1.42, 0.52);
+        rw.rotateY(Math.PI);
+        rw.rotateX(-0.22);
+        rw.translate(0, 1.24, tailZ + 0.04);
+        glassParts.push(rw);
         for (const rx of [-0.72, 0.72]) {
-            const rail = new THREE.Mesh(railGeo, chromeMat);
-            rail.position.set(rx, 1.7, -0.4);
-            bodyRoot.add(rail);
+            const rail = new THREE.CylinderGeometry(0.022, 0.022, 2.0, 6);
+            rail.rotateX(Math.PI * 0.5);
+            rail.translate(rx, 1.7, -0.4);
+            chromeParts.push(rail);
         }
     }
+
+    const glassMerged = mergeGeometries(
+        glassParts.map((g) => normalizeGeoForMerge(g, new THREE.Matrix4(), false)),
+        false
+    );
+    for (const g of glassParts) g.dispose();
+    if (glassMerged) bodyRoot.add(new THREE.Mesh(glassMerged, glassMat));
+
+    const headMerged = mergeGeometries(headParts, false);
+    for (const g of headParts) g.dispose();
+    if (headMerged) bodyRoot.add(new THREE.Mesh(headMerged, headMat));
+
+    const tailMerged = mergeGeometries(tailParts, false);
+    for (const g of tailParts) g.dispose();
+    if (tailMerged) bodyRoot.add(new THREE.Mesh(tailMerged, tailMat));
+
+    const chromeMerged = mergeGeometries(
+        chromeParts.map((g) => normalizeGeoForMerge(g, new THREE.Matrix4(), false)),
+        false
+    );
+    for (const g of chromeParts) g.dispose();
+    if (chromeMerged) bodyRoot.add(new THREE.Mesh(chromeMerged, chromeMat));
 
     if (textures && textures.plate) {
         const plateMat = new THREE.MeshStandardMaterial({ map: textures.plate, roughness: 0.4, metalness: 0.12 });

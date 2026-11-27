@@ -105,6 +105,13 @@ export function createGtaHud(root, callbacks = {}) {
             if (callbacks.onWeather) callbacks.onWeather(v);
         });
     }
+    for (const btn of root.querySelectorAll("[data-gta-quality]")) {
+        bind(btn, "click", () => {
+            const v = btn.getAttribute("data-gta-quality");
+            setActiveGroup("data-gta-quality", v);
+            if (callbacks.onQuality) callbacks.onQuality(v);
+        });
+    }
     for (const btn of root.querySelectorAll("[data-gta-gps]")) {
         bind(btn, "click", () => {
             const v = btn.getAttribute("data-gta-gps");

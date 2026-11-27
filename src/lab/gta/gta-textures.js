@@ -292,6 +292,9 @@ float gtaNoise(vec2 p) {
         u.y
     );
 }
+float gtaFbm2(vec2 p) {
+    return 0.65 * gtaNoise(p) + 0.35 * gtaNoise(p * 2.04);
+}
 float gtaFbm(vec2 p) {
     float v = 0.0;
     float a = 0.5;
@@ -306,11 +309,19 @@ float gtaFbm(vec2 p) {
             .replace(
                 "#include <color_fragment>",
                 `#include <color_fragment>
-float puddleFbm = gtaFbm(vRoadWorldPos.xz * 0.068 + vec2(1.7, 3.1));
-float microNoise = gtaNoise(vRoadWorldPos.xz * 0.65);
-float roadTrack = ${isIntersection ? "0.1" : "exp(-pow((abs(vRoadUv.x - 0.5) - 0.24) * 7.5, 2.0)) * 0.14"};
-float puddleThresh = mix(0.88, 0.44, uWetness);
-float puddleMask = smoothstep(puddleThresh, puddleThresh + 0.15, puddleFbm + roadTrack + microNoise * 0.06) * uWetness;
+float roadCamDist = length(vRoadWorldPos.xz - cameraPosition.xz);
+float puddleMask = 0.0;
+float microNoise = 0.5;
+if (roadCamDist < 165.0) {
+    float puddleFbm = roadCamDist < 90.0
+        ? gtaFbm(vRoadWorldPos.xz * 0.068 + vec2(1.7, 3.1))
+        : gtaFbm2(vRoadWorldPos.xz * 0.068 + vec2(1.7, 3.1));
+    microNoise = roadCamDist < 90.0 ? gtaNoise(vRoadWorldPos.xz * 0.65) : 0.5;
+    float roadTrack = ${isIntersection ? "0.1" : "exp(-pow((abs(vRoadUv.x - 0.5) - 0.24) * 7.5, 2.0)) * 0.14"};
+    float puddleThresh = mix(0.88, 0.44, uWetness);
+    float distFade = 1.0 - smoothstep(115.0, 165.0, roadCamDist);
+    puddleMask = smoothstep(puddleThresh, puddleThresh + 0.15, puddleFbm + roadTrack + microNoise * 0.06) * uWetness * distFade;
+}
 float dampFactor = mix(1.0, 0.56, uWetness * 0.65);
 diffuseColor.rgb *= mix(dampFactor, 0.34, puddleMask);
 ${

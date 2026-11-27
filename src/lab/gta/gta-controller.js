@@ -2,13 +2,13 @@ import initJolt from "jolt-physics";
 import * as THREE from "three";
 import { loadGtaAssets } from "./gta-assets.js";
 import { createGtaAudio } from "./gta-audio.js";
-import { buildHydrantGeometry } from "./gta-building-meshes.js";
 import { createGtaCamera } from "./gta-camera.js";
 import { createGtaCharacter } from "./gta-character.js";
 import { buildCityData } from "./gta-city-data.js";
 import { createCityScene } from "./gta-city-gen.js";
 import { createGtaHud } from "./gta-hud.js";
 import { createGtaParticles } from "./gta-particles.js";
+import { createPerfGovernor } from "./gta-perf-governor.js";
 import { createJoltWorld } from "./gta-physics-world.js";
 import { createGtaRenderer } from "./gta-renderer.js";
 import {
@@ -21,6 +21,7 @@ import {
 } from "./gta-road-graph.js";
 import { createGtaTextures } from "./gta-textures.js";
 import { createTrafficSystem } from "./gta-traffic-ai.js";
+import { createTrafficRenderer } from "./gta-traffic-render.js";
 import { createVehicleVisual } from "./gta-vehicle-meshes.js";
 import { JoltCar } from "./gta-vehicle-physics.js";
 import { findNearestEnterableVehicle } from "./gta-vehicle-specs.js";
@@ -42,6 +43,7 @@ export async function createGtaApp(root) {
         wetness: 0.82,
         rainIntensity: 0,
         gpsKey: "downtown",
+        quality: "balanced",
         cash: 201300,
         hp: 100,
         armor: 100,
@@ -52,6 +54,7 @@ export async function createGtaApp(root) {
     };
 
     const audio = createGtaAudio();
+    const perfGov = createPerfGovernor(state.quality);
     let hud = null;
     let rendererCtx = null;
     let world = null;
@@ -62,10 +65,8 @@ export async function createGtaApp(root) {
     let character = null;
     let cameraCtl = null;
     let traffic = null;
+    let trafficRender = null;
     const cars = [];
-    const civVisuals = [];
-    const pedMeshes = [];
-    const propMeshes = [];
     let propBodies = [];
     let rafId = 0;
 
@@ -92,7 +93,12 @@ export async function createGtaApp(root) {
         if (traffic) {
             for (let i = 0; i < traffic.cars.length; i += 1) {
                 const tc = traffic.cars[i];
-                list.push({ kind: "civ", idx: i, name: tc.preset === "cavalcade" ? "Cavalcade SUV" : tc.preset === "gauntlet" ? "Gauntlet ZL1" : "Elegy GT-R", pos: tc.pos });
+                list.push({
+                    kind: "civ",
+                    idx: i,
+                    name: tc.preset === "cavalcade" ? "Cavalcade SUV" : tc.preset === "gauntlet" ? "Gauntlet ZL1" : "Elegy GT-R",
+                    pos: tc.pos
+                });
             }
         }
         return list;
@@ -172,6 +178,12 @@ export async function createGtaApp(root) {
         onWeather: (w) => {
             state.weather = w;
         },
+        onQuality: (q) => {
+            state.quality = q;
+            const next = perfGov.setPreset(q);
+            if (rendererCtx) rendererCtx.setQuality(next.preset.key, next.scale);
+            hud.showToast(`Graphics: ${next.preset.label}`, 1.8);
+        },
         onGps: (key) => {
             state.gpsKey = key;
             const dest = GPS_DESTINATIONS[key];
@@ -214,36 +226,14 @@ export async function createGtaApp(root) {
     assets = loadedAssets;
     rendererCtx.setHdris(assets.hdris);
 
-    hud.setLoader("Building Los Santos 5-District Architecture & Wet Streets...", 76);
+    hud.setLoader("Building 3x3 Spatial Los Santos Sectors & Wet Streets...", 76);
     const cityData = buildCityData(2026);
     textures = createGtaTextures();
     cityScene = createCityScene(rendererCtx.scene, cityData, textures, assets);
     world = createJoltWorld(Jolt);
     propBodies = world.populateCityColliders(cityData, heightAt);
 
-    const hydrantGeo = buildHydrantGeometry();
-    const hydrantMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.36, metalness: 0.55 });
-    const binGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.86, 12);
-    const binMat = new THREE.MeshStandardMaterial({ color: 0x525a66, roughness: 0.42, metalness: 0.72 });
-    const coneGeo = new THREE.ConeGeometry(0.22, 0.68, 12);
-    const coneMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.1 });
-    for (let i = 0; i < propBodies.length; i += 1) {
-        const pb = propBodies[i];
-        let obj = null;
-        if (pb.kind === "hydrant") {
-            obj = new THREE.Mesh(hydrantGeo, hydrantMat);
-        } else if (pb.kind === "bollard") {
-            obj = new THREE.Mesh(binGeo, binMat);
-        } else {
-            obj = new THREE.Mesh(coneGeo, coneMat);
-        }
-        obj.castShadow = true;
-        obj.receiveShadow = true;
-        rendererCtx.scene.add(obj);
-        propMeshes.push(obj);
-    }
-
-    hud.setLoader("Spawning Supercar Fleet, Rigged Character & Traffic...", 90);
+    hud.setLoader("Spawning Supercar Fleet, Rigged Character & Instanced Traffic...", 88);
     for (const pc of cityData.safehouse.parkedCars) {
         spawnCarAt(pc.preset, pc.x, pc.z, pc.yaw);
     }
@@ -253,37 +243,11 @@ export async function createGtaApp(root) {
     cameraCtl.snap(character.state.pos, 0);
     particles = createGtaParticles(rendererCtx.scene);
     traffic = createTrafficSystem(cityData.graph, 2026);
+    trafficRender = createTrafficRenderer(rendererCtx.scene, traffic, propBodies);
 
-    for (const c of traffic.cars) {
-        const vis = createVehicleVisual(c.preset, textures, c.color, true, assets);
-        vis.chassis.position.set(c.pos.x, c.pos.y + vis.restHeight, c.pos.z);
-        rendererCtx.scene.add(vis.chassis);
-        civVisuals.push(vis);
-    }
-
-    const pedTorsoGeo = new THREE.CapsuleGeometry(0.18, 0.46, 5, 10);
-    const pedHeadGeo = new THREE.SphereGeometry(0.13, 10, 8);
-    const pedLegGeo = new THREE.CapsuleGeometry(0.08, 0.56, 4, 8);
-    const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xd9a884, roughness: 0.72 });
-    const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
-    for (const p of traffic.peds) {
-        const g = new THREE.Group();
-        const shirtMat = new THREE.MeshStandardMaterial({ color: p.shirtColor, roughness: 0.78 });
-        const torso = new THREE.Mesh(pedTorsoGeo, shirtMat);
-        torso.position.y = 1.12;
-        torso.castShadow = true;
-        const head = new THREE.Mesh(pedHeadGeo, pedSkinMat);
-        head.position.y = 1.62;
-        head.castShadow = true;
-        const legL = new THREE.Mesh(pedLegGeo, pedPantsMat);
-        legL.position.set(-0.09, 0.42, 0);
-        const legR = new THREE.Mesh(pedLegGeo, pedPantsMat);
-        legR.position.set(0.09, 0.42, 0);
-        g.add(torso, head, legL, legR);
-        g.position.set(p.x, p.y, p.z);
-        rendererCtx.scene.add(g);
-        pedMeshes.push(g);
-    }
+    hud.setLoader("Pre-Compiling WebGL 2.0 Shaders...", 95);
+    rendererCtx.updateAtmosphere(state.timeOfDay, 0, character.state.pos);
+    await rendererCtx.warmShaders();
 
     const keys = new Set();
     let dragging = false;
@@ -372,6 +336,9 @@ export async function createGtaApp(root) {
         lastTime = now;
         state.timeSec += dt;
 
+        const drs = perfGov.sample(rawDt);
+        if (drs.changed) rendererCtx.resize(drs.scale);
+
         if (state.autoCycle) state.timeOfDay = (state.timeOfDay + dt * 0.014) % 1;
         const targetRain = state.weather === "rain" ? 1 : 0;
         const targetWet = state.weather === "clear" ? 0.05 : state.weather === "wet" ? 0.85 : 1.0;
@@ -408,22 +375,6 @@ export async function createGtaApp(root) {
             }
         });
 
-        for (let i = 0; i < cars.length; i += 1) {
-            const c = cars[i];
-            c.physics.applyPoseTo(c.visual.chassis, c.visual.wheels, alpha);
-            c.visual.setBrakeGlow(c.physics.braking);
-        }
-
-        for (let i = 0; i < propBodies.length; i += 1) {
-            const pb = propBodies[i].body;
-            const p = pb.GetPosition();
-            const q = pb.GetRotation();
-            const m = propMeshes[i];
-            if (!m) continue;
-            m.position.set(p.GetX(), p.GetY() - 0.5, p.GetZ());
-            m.quaternion.set(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
-        }
-
         const viewYaw = cameraCtl.getViewYaw();
         if (!isDriving) {
             character.update(
@@ -446,6 +397,18 @@ export async function createGtaApp(root) {
         const heroYaw = activePose ? Math.atan2(activeCar.physics.renderFwd.x, activeCar.physics.renderFwd.z) : character.state.yaw;
         const heroSpeed = activeCar ? activeCar.physics.speed : 0;
 
+        for (let i = 0; i < cars.length; i += 1) {
+            const c = cars[i];
+            const cp = c.physics.pose.position;
+            const visible = i === state.activeCarIndex || Math.hypot(cp.x - heroPos.x, cp.z - heroPos.z) < 185;
+            c.visual.chassis.visible = visible;
+            for (const w of c.visual.wheels) w.visible = visible;
+            if (visible) {
+                c.physics.applyPoseTo(c.visual.chassis, c.visual.wheels, alpha);
+                c.visual.setBrakeGlow(c.physics.braking);
+            }
+        }
+
         const headingYaw = cameraCtl.update(dt, {
             isDriving,
             targetPos: heroPos,
@@ -463,21 +426,7 @@ export async function createGtaApp(root) {
             cameraCtl.addShake(Math.min(0.45, impactSpd * 0.015));
             audio.playCrash(impactSpd / 18);
         });
-
-        for (let i = 0; i < traffic.cars.length; i += 1) {
-            const c = traffic.cars[i];
-            const vis = civVisuals[i];
-            vis.chassis.position.set(c.pos.x, c.pos.y + vis.restHeight, c.pos.z);
-            vis.chassis.rotation.set(0, c.yaw, 0);
-            vis.spinWheels(c.speed * dt);
-            vis.setBrakeGlow(c.stopped);
-        }
-        for (let i = 0; i < traffic.peds.length; i += 1) {
-            const p = traffic.peds[i];
-            const mesh = pedMeshes[i];
-            mesh.position.set(p.x, p.y + Math.abs(Math.sin(p.phase)) * 0.06, p.z);
-            mesh.rotation.y = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : (p.dir > 0 ? 0 : Math.PI);
-        }
+        trafficRender.update(dt);
 
         if (activeCar && activeCar.physics.drifting) {
             smokeAcc += dt;
@@ -530,7 +479,7 @@ export async function createGtaApp(root) {
         if (!isDriving) {
             const near = findNearestEnterableVehicle(heroPos.x, heroPos.z, collectEnterableCandidates(), 5.4);
             if (near) {
-                promptText = near.kind === "jolt" ? `Press F to Enter ${near.name}` : `Press F to Hijack ${near.name}`;
+                promptText = near.kind === "jolt" ? `Press F to Enter ${near.name}` : `Press F to Enter ${near.name}`;
             }
         }
 
@@ -586,7 +535,7 @@ export async function createGtaApp(root) {
                 c.physics.dispose();
                 c.visual.dispose(rendererCtx.scene);
             }
-            for (const v of civVisuals) v.dispose(rendererCtx.scene);
+            if (trafficRender) trafficRender.dispose();
             if (character) character.dispose();
             if (particles) particles.dispose();
             if (cityScene) cityScene.dispose();

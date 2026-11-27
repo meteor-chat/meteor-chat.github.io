@@ -38,8 +38,12 @@ describe("Los Santos 3D Routing, Importmap & Compliance", () => {
         expect(html).toContain("data-gta-cash");
         expect(html).toContain("data-gta-speedo");
         expect(html).toContain("data-gta-settings");
+        expect(html).toContain('data-gta-quality="balanced"');
         expect(html).toMatch(/data-gta-context-lost[^>]*hidden/);
         expect(html).toMatch(/data-gta-gpu hidden/);
+
+        const vehSrc = readFileSync("src/lab/gta/gta-vehicle-meshes.js", "utf8");
+        expect(vehSrc).not.toMatch(/transmission\s*:/);
     });
 
     it("keeps every GTA file <= 1000 lines with zero comments, zero em-dashes, and font-weight <= 600", () => {

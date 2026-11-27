@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
-const MAX_SMOKE = 180;
-const MAX_SPARKS = 120;
-const MAX_SKIDS = 240;
-const RAIN_COUNT = 320;
+const MAX_SMOKE = 140;
+const MAX_SPARKS = 96;
+const MAX_SKIDS = 200;
+const RAIN_COUNT = 260;
 
 export function createGtaParticles(scene) {
     const dummy = new THREE.Object3D();
@@ -18,23 +18,27 @@ export function createGtaParticles(scene) {
     });
     const smokeInst = new THREE.InstancedMesh(smokeGeo, smokeMat, MAX_SMOKE);
     smokeInst.frustumCulled = false;
+    smokeInst.visible = false;
     scene.add(smokeInst);
 
     const smokePool = Array.from({ length: MAX_SMOKE }, () => ({
         x: 0, y: -999, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 1, scale: 0.4
     }));
     let smokeCursor = 0;
+    let activeSmoke = 0;
 
     const sparkGeo = new THREE.BoxGeometry(0.08, 0.08, 0.34);
     const sparkMat = new THREE.MeshBasicMaterial({ color: 0xffb74d });
     const sparkInst = new THREE.InstancedMesh(sparkGeo, sparkMat, MAX_SPARKS);
     sparkInst.frustumCulled = false;
+    sparkInst.visible = false;
     scene.add(sparkInst);
 
     const sparkPool = Array.from({ length: MAX_SPARKS }, () => ({
         x: 0, y: -999, z: 0, vx: 0, vy: 0, vz: 0, life: 0, maxLife: 0.4
     }));
     let sparkCursor = 0;
+    let activeSparks = 0;
 
     const skidGeo = new THREE.PlaneGeometry(0.32, 0.95);
     skidGeo.rotateX(-Math.PI * 0.5);
@@ -46,6 +50,7 @@ export function createGtaParticles(scene) {
     });
     const skidInst = new THREE.InstancedMesh(skidGeo, skidMat, MAX_SKIDS);
     skidInst.frustumCulled = false;
+    skidInst.visible = false;
     scene.add(skidInst);
     let skidCursor = 0;
 
@@ -67,13 +72,16 @@ export function createGtaParticles(scene) {
         speed: 24 + Math.random() * 10
     }));
 
-    for (let i = 0; i < MAX_SKIDS; i += 1) {
+    const hideAll = (inst, count) => {
         dummy.position.set(0, -999, 0);
         dummy.scale.set(0.001, 0.001, 0.001);
         dummy.updateMatrix();
-        skidInst.setMatrixAt(i, dummy.matrix);
-    }
-    skidInst.instanceMatrix.needsUpdate = true;
+        for (let i = 0; i < count; i += 1) inst.setMatrixAt(i, dummy.matrix);
+        inst.instanceMatrix.needsUpdate = true;
+    };
+    hideAll(smokeInst, MAX_SMOKE);
+    hideAll(sparkInst, MAX_SPARKS);
+    hideAll(skidInst, MAX_SKIDS);
 
     const spawnTireSmoke = (x, y, z, yaw = 0) => {
         const p = smokePool[smokeCursor % MAX_SMOKE];
@@ -87,6 +95,8 @@ export function createGtaParticles(scene) {
         p.maxLife = 0.65 + Math.random() * 0.45;
         p.life = p.maxLife;
         p.scale = 0.45 + Math.random() * 0.35;
+        activeSmoke = MAX_SMOKE;
+        smokeInst.visible = true;
     };
 
     const spawnSkid = (x, y, z, yaw) => {
@@ -98,6 +108,7 @@ export function createGtaParticles(scene) {
         dummy.updateMatrix();
         skidInst.setMatrixAt(idx, dummy.matrix);
         skidInst.instanceMatrix.needsUpdate = true;
+        skidInst.visible = true;
     };
 
     const spawnSparks = (x, y, z, count = 14) => {
@@ -115,51 +126,70 @@ export function createGtaParticles(scene) {
             p.maxLife = 0.25 + Math.random() * 0.28;
             p.life = p.maxLife;
         }
+        activeSparks = MAX_SPARKS;
+        sparkInst.visible = true;
     };
 
     const update = (dt, focusPos, rainIntensity = 0) => {
         const d = Math.min(0.05, Math.max(0.001, dt));
-        for (let i = 0; i < MAX_SMOKE; i += 1) {
-            const p = smokePool[i];
-            if (p.life > 0) {
-                p.life -= d;
-                p.x += p.vx * d;
-                p.y += p.vy * d;
-                p.z += p.vz * d;
-                const progress = 1 - Math.max(0, p.life / p.maxLife);
-                const s = p.scale * (0.7 + progress * 2.1) * Math.max(0.01, p.life / p.maxLife);
-                dummy.position.set(p.x, p.y, p.z);
-                dummy.rotation.set(progress * 2, progress * 1.4, 0);
-                dummy.scale.set(s, s, s);
-            } else {
-                dummy.position.set(0, -999, 0);
-                dummy.scale.set(0.001, 0.001, 0.001);
-            }
-            dummy.updateMatrix();
-            smokeInst.setMatrixAt(i, dummy.matrix);
-        }
-        smokeInst.instanceMatrix.needsUpdate = true;
 
-        for (let i = 0; i < MAX_SPARKS; i += 1) {
-            const p = sparkPool[i];
-            if (p.life > 0) {
-                p.life -= d;
-                p.vy -= 18 * d;
-                p.x += p.vx * d;
-                p.y += p.vy * d;
-                p.z += p.vz * d;
-                const s = Math.max(0.05, p.life / p.maxLife);
-                dummy.position.set(p.x, p.y, p.z);
-                dummy.rotation.set(0, Math.atan2(p.vx, p.vz), 0);
-                dummy.scale.set(s, s, s * 1.6);
-            } else {
-                dummy.position.set(0, -999, 0);
-                dummy.scale.set(0.001, 0.001, 0.001);
+        if (activeSmoke > 0) {
+            let alive = 0;
+            for (let i = 0; i < MAX_SMOKE; i += 1) {
+                const p = smokePool[i];
+                if (p.life > 0) {
+                    p.life -= d;
+                    if (p.life > 0) {
+                        alive += 1;
+                        p.x += p.vx * d;
+                        p.y += p.vy * d;
+                        p.z += p.vz * d;
+                        const progress = 1 - Math.max(0, p.life / p.maxLife);
+                        const s = p.scale * (0.7 + progress * 2.1) * Math.max(0.01, p.life / p.maxLife);
+                        dummy.position.set(p.x, p.y, p.z);
+                        dummy.rotation.set(progress * 2, progress * 1.4, 0);
+                        dummy.scale.set(s, s, s);
+                    } else {
+                        dummy.position.set(0, -999, 0);
+                        dummy.scale.set(0.001, 0.001, 0.001);
+                    }
+                    dummy.updateMatrix();
+                    smokeInst.setMatrixAt(i, dummy.matrix);
+                }
             }
-            dummy.updateMatrix();
-            sparkInst.setMatrixAt(i, dummy.matrix);
+            smokeInst.instanceMatrix.needsUpdate = true;
+            activeSmoke = alive;
+            if (alive === 0) smokeInst.visible = false;
         }
-        sparkInst.instanceMatrix.needsUpdate = true;
+
+        if (activeSparks > 0) {
+            let alive = 0;
+            for (let i = 0; i < MAX_SPARKS; i += 1) {
+                const p = sparkPool[i];
+                if (p.life > 0) {
+                    p.life -= d;
+                    if (p.life > 0) {
+                        alive += 1;
+                        p.vy -= 18 * d;
+                        p.x += p.vx * d;
+                        p.y += p.vy * d;
+                        p.z += p.vz * d;
+                        const s = Math.max(0.05, p.life / p.maxLife);
+                        dummy.position.set(p.x, p.y, p.z);
+                        dummy.rotation.set(0, Math.atan2(p.vx, p.vz), 0);
+                        dummy.scale.set(s, s, s * 1.6);
+                    } else {
+                        dummy.position.set(0, -999, 0);
+                        dummy.scale.set(0.001, 0.001, 0.001);
+                    }
+                    dummy.updateMatrix();
+                    sparkInst.setMatrixAt(i, dummy.matrix);
+                }
+            }
+            sparkInst.instanceMatrix.needsUpdate = true;
+            activeSparks = alive;
+            if (alive === 0) sparkInst.visible = false;
+        }
 
         rainInst.visible = rainIntensity > 0.05 && Boolean(focusPos);
         if (rainInst.visible) {
