@@ -244,7 +244,7 @@ function buildMazeBankTower(group, mt, glassMat, concreteMat) {
     const beaconMat = new THREE.MeshStandardMaterial({
         color: 0xff3b30,
         emissive: 0xff2d20,
-        emissiveIntensity: 3.2
+        emissiveIntensity: 2.1
     });
     const beacon = new THREE.Mesh(new THREE.TorusGeometry(mt.radius * 0.72, 0.42, 8, 24), beaconMat);
     beacon.rotation.x = Math.PI * 0.5;
@@ -402,19 +402,19 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     const curbBuckets = Array.from({ length: SECTOR_COUNT }, () => []);
 
     for (const rz of Z_ROADS) {
-        addSegmentedRoad(roadBuckets, -278, rz, 278, rz, ROAD_HALF_WIDTH * 2, 24, 0.09);
-        addSegmentedRoad(walkBuckets, -278, rz - 10.6, 278, rz - 10.6, 4.4, 18, 0.22);
-        addSegmentedRoad(walkBuckets, -278, rz + 10.6, 278, rz + 10.6, 4.4, 18, 0.22);
-        addSegmentedRoad(curbBuckets, -278, rz - 8.45, 278, rz - 8.45, 0.34, 15, 0.23);
-        addSegmentedRoad(curbBuckets, -278, rz + 8.45, 278, rz + 8.45, 0.34, 15, 0.23);
+        addSegmentedRoad(roadBuckets, -278, rz, 278, rz, ROAD_HALF_WIDTH * 2, 24, 0.032);
+        addSegmentedRoad(walkBuckets, -278, rz - 10.6, 278, rz - 10.6, 4.4, 18, 0.068);
+        addSegmentedRoad(walkBuckets, -278, rz + 10.6, 278, rz + 10.6, 4.4, 18, 0.068);
+        addSegmentedRoad(curbBuckets, -278, rz - 8.45, 278, rz - 8.45, 0.34, 15, 0.076);
+        addSegmentedRoad(curbBuckets, -278, rz + 8.45, 278, rz + 8.45, 0.34, 15, 0.076);
     }
     for (const rx of X_ROADS) {
-        addSegmentedRoad(roadBuckets, rx, -278, rx, 278, ROAD_HALF_WIDTH * 2, 24, 0.075);
-        addSegmentedRoad(walkBuckets, rx - 10.6, -278, rx - 10.6, 278, 4.4, 18, 0.2);
-        addSegmentedRoad(walkBuckets, rx + 10.6, -278, rx + 10.6, 278, 4.4, 18, 0.2);
+        addSegmentedRoad(roadBuckets, rx, -278, rx, 278, ROAD_HALF_WIDTH * 2, 24, 0.024);
+        addSegmentedRoad(walkBuckets, rx - 10.6, -278, rx - 10.6, 278, 4.4, 18, 0.062);
+        addSegmentedRoad(walkBuckets, rx + 10.6, -278, rx + 10.6, 278, 4.4, 18, 0.062);
     }
     const driveSec = computeSectorIndex(0, -285, SECTOR_GRID, WORLD_HALF);
-    roadBuckets[driveSec].push(buildRoadRibbonGeometry(0, -300, 0, -270, 16, 12, 0.11));
+    roadBuckets[driveSec].push(buildRoadRibbonGeometry(0, -300, 0, -270, 16, 12, 0.045));
 
     for (let s = 0; s < SECTOR_COUNT; s += 1) {
         const rm = mergeStaticParts(roadBuckets[s], roadMat, false, true, true);
@@ -433,7 +433,7 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     let idx = 0;
     for (const rz of Z_ROADS) {
         for (const rx of X_ROADS) {
-            dummy.position.set(rx, heightAt(rx, rz) + 0.115, rz);
+            dummy.position.set(rx, heightAt(rx, rz) + 0.046, rz);
             dummy.rotation.set(0, 0, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
@@ -445,21 +445,21 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     interInst.computeBoundingSphere();
     root.add(interInst);
 
-    const concreteTileMat = makePbrMat(pbr.concreteTile, 0xd8dce2, 0.58, 0.16, 0.95);
-    const stuccoMat = makePbrMat(pbr.stucco, 0xeee9df, 0.72, 0.05, 0.85);
-    const brickMat = makePbrMat(pbr.brick, 0xc9b49e, 0.84, 0.04, 1.0);
-    const concreteWallMat = makePbrMat(pbr.concreteWall, 0xbabec4, 0.82, 0.08, 0.9);
-    const awningMat = new THREE.MeshStandardMaterial({ color: 0xb92c25, roughness: 0.58, metalness: 0.1 });
+    const concreteTileMat = makePbrMat(pbr.concreteTile, 0xc8ced6, 0.64, 0.12, 0.85);
+    const stuccoMat = makePbrMat(pbr.stucco, 0xddd6ca, 0.78, 0.04, 0.8);
+    const brickMat = makePbrMat(pbr.brick, 0xc4ae98, 0.86, 0.04, 0.9);
+    const concreteWallMat = makePbrMat(pbr.concreteWall, 0xb2b7be, 0.84, 0.06, 0.85);
+    const awningMat = new THREE.MeshStandardMaterial({ color: 0xb92c25, roughness: 0.62, metalness: 0.08 });
 
     const facadeGlassMat = new THREE.MeshStandardMaterial({
-        color: 0x9fc4dc,
+        color: 0x82a7c2,
         map: textures.glassInterior.map,
         emissiveMap: textures.glassInterior.emissiveMap,
         emissive: new THREE.Color(0xfff1d6),
-        emissiveIntensity: 0.08,
-        metalness: 0.78,
-        roughness: 0.12,
-        envMapIntensity: 1.55
+        emissiveIntensity: 0.06,
+        metalness: 0.62,
+        roughness: 0.18,
+        envMapIntensity: 0.82
     });
 
     const archetypes = buildArchitecturalArchetypes();
@@ -539,9 +539,9 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     oceanGeo.rotateX(-Math.PI * 0.5);
     const oceanMat = new THREE.MeshStandardMaterial({
         color: 0x0b4c73,
-        roughness: 0.1,
-        metalness: 0.35,
-        envMapIntensity: 1.65
+        roughness: 0.18,
+        metalness: 0.28,
+        envMapIntensity: 0.8
     });
     const ocean = new THREE.Mesh(oceanGeo, oceanMat);
     ocean.position.set(0, OCEAN_LEVEL, 510);
@@ -592,11 +592,7 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         root.add(pTrunks, pCrowns);
     }
 
-    const treeSpots = [
-        [-14, -224], [14, -148], [-14, -52], [14, 38], [-14, 128],
-        [76, -135], [-76, -45], [76, 45], [-76, 135], [14, -210],
-        [-104, -135], [104, -45], [-104, 45], [104, 135]
-    ];
+    const blList = cityData.broadleafTrees || [];
     const blTree = buildBroadleafTreeGeometries();
     const blCanopyMat = new THREE.MeshStandardMaterial({
         map: textures.broadleaf,
@@ -605,25 +601,26 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         metalness: 0.02,
         side: THREE.DoubleSide
     });
-    const blTrunks = new THREE.InstancedMesh(blTree.trunk, trunkMat, treeSpots.length);
-    const blCanopies = new THREE.InstancedMesh(blTree.canopy, blCanopyMat, treeSpots.length);
-    blTrunks.castShadow = true;
-    blCanopies.castShadow = true;
-    for (let i = 0; i < treeSpots.length; i += 1) {
-        const [tx, tz] = treeSpots[i];
-        const sc = 1.05 + (i % 3) * 0.18;
-        dummy.position.set(tx, heightAt(tx, tz), tz);
-        dummy.rotation.set(0, i * 1.4, 0);
-        dummy.scale.setScalar(sc);
-        dummy.updateMatrix();
-        blTrunks.setMatrixAt(i, dummy.matrix);
-        blCanopies.setMatrixAt(i, dummy.matrix);
+    if (blList.length > 0) {
+        const blTrunks = new THREE.InstancedMesh(blTree.trunk, trunkMat, blList.length);
+        const blCanopies = new THREE.InstancedMesh(blTree.canopy, blCanopyMat, blList.length);
+        blTrunks.castShadow = true;
+        blCanopies.castShadow = true;
+        for (let i = 0; i < blList.length; i += 1) {
+            const t = blList[i];
+            dummy.position.set(t.x, t.y, t.z);
+            dummy.rotation.set(0, t.yaw, 0);
+            dummy.scale.setScalar(t.scale);
+            dummy.updateMatrix();
+            blTrunks.setMatrixAt(i, dummy.matrix);
+            blCanopies.setMatrixAt(i, dummy.matrix);
+        }
+        blTrunks.instanceMatrix.needsUpdate = true;
+        blCanopies.instanceMatrix.needsUpdate = true;
+        blTrunks.computeBoundingSphere();
+        blCanopies.computeBoundingSphere();
+        root.add(blTrunks, blCanopies);
     }
-    blTrunks.instanceMatrix.needsUpdate = true;
-    blCanopies.instanceMatrix.needsUpdate = true;
-    blTrunks.computeBoundingSphere();
-    blCanopies.computeBoundingSphere();
-    root.add(blTrunks, blCanopies);
 
     const poleGeo = new THREE.CylinderGeometry(0.1, 0.15, 7.8, 6);
     const armGeo = new THREE.CylinderGeometry(0.06, 0.08, 2.2, 5);

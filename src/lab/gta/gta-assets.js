@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { softClampRadianceValue } from "./gta-perf-governor.js";
 
 const THREE_GH = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r187/examples";
 const PH_BASE = "https://dl.polyhaven.org/file/ph-assets";
@@ -60,6 +61,33 @@ export const GTA_ASSET_URLS = Object.freeze({
         }
     }
 });
+
+export function clampHdriRadiance(tex, knee = 4.5, ceiling = 8.0) {
+    if (!tex || !tex.image || !tex.image.data) return tex;
+    const data = tex.image.data;
+
+    if (data instanceof Float32Array) {
+        for (let i = 0; i < data.length; i += 4) {
+            data[i] = softClampRadianceValue(data[i], knee, ceiling);
+            data[i + 1] = softClampRadianceValue(data[i + 1], knee, ceiling);
+            data[i + 2] = softClampRadianceValue(data[i + 2], knee, ceiling);
+        }
+        tex.needsUpdate = true;
+    } else if (data instanceof Uint16Array && THREE.DataUtils) {
+        const fromHalf = THREE.DataUtils.fromHalfFloat;
+        const toHalf = THREE.DataUtils.toHalfFloat;
+        for (let i = 0; i < data.length; i += 4) {
+            const r = fromHalf(data[i]);
+            const g = fromHalf(data[i + 1]);
+            const b = fromHalf(data[i + 2]);
+            if (r > knee) data[i] = toHalf(softClampRadianceValue(r, knee, ceiling));
+            if (g > knee) data[i + 1] = toHalf(softClampRadianceValue(g, knee, ceiling));
+            if (b > knee) data[i + 2] = toHalf(softClampRadianceValue(b, knee, ceiling));
+        }
+        tex.needsUpdate = true;
+    }
+    return tex;
+}
 
 function withTimeout(promise, ms = 14000) {
     return new Promise((resolve) => {
@@ -126,6 +154,7 @@ export async function loadGtaAssets(onProgress = null) {
     const loadHdri = (url) =>
         withTimeout(
             rgbeLoader.loadAsync(url).then((tex) => {
+                clampHdriRadiance(tex, 4.5, 8.0);
                 tex.mapping = THREE.EquirectangularReflectionMapping;
                 loadedTexList.push(tex);
                 return tex;

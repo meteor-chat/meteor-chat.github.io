@@ -8,8 +8,10 @@ import {
     heightAt
 } from "./gta-road-graph.js";
 
+import { VEHICLE_PRESETS } from "./gta-vehicle-specs.js";
+
 const CIVILIAN_COLORS = [
-    0xdbe4ee, 0x263142, 0x8f2424, 0x1e4d6b, 0x4b5563, 0xb45309, 0x1f2937, 0xcbd5e1
+    0xb2beca, 0x263142, 0x8f2424, 0x1e4d6b, 0x4b5563, 0xa85517, 0x1f2937, 0x9aa6b4
 ];
 const CIVILIAN_PRESETS = ["elegy", "cavalcade", "gauntlet"];
 
@@ -63,6 +65,10 @@ export function createTrafficSystem(graph, seed = 2026) {
     }
 
     const pedCount = 20;
+    const pedShirts = [0x2a4d7a, 0x9e2b2b, 0x2f6b47, 0xb38226, 0xc8ccd2, 0x5c3c82, 0x374151, 0x9a4a2a];
+    const pedPants = [0x1e293b, 0x2d3a4b, 0x3f3a34, 0x242830, 0x5c5346];
+    const pedSkins = [0xe0b494, 0xc8956e, 0x9e6d4b, 0xead0b7, 0x7a5036];
+    const pedHairs = [0x181512, 0x3b2a1e, 0x6b4b2a, 0x282422, 0x8c6d46];
     for (let i = 0; i < pedCount; i += 1) {
         const alongX = i % 2 === 0;
         const roadCoord = alongX
@@ -80,9 +86,63 @@ export function createTrafficSystem(graph, seed = 2026) {
             dir: rng() < 0.5 ? 1 : -1,
             speed: 1.5 + rng() * 0.8,
             phase: rng() * Math.PI * 2,
-            shirtColor: [0x2563eb, 0xdc2626, 0x16a34a, 0xeab308, 0xe2e8f0, 0x7c3aed][i % 6]
+            shirtColor: pedShirts[i % pedShirts.length],
+            pantsColor: pedPants[i % pedPants.length],
+            skinColor: pedSkins[i % pedSkins.length],
+            hairColor: pedHairs[i % pedHairs.length]
         });
     }
+
+    let physWorld = null;
+    const attachColliders = (world) => {
+        if (!world || !world.createKinematicBox) return;
+        physWorld = world;
+        for (let i = 0; i < cars.length; i += 1) {
+            const c = cars[i];
+            const spec = VEHICLE_PRESETS[c.preset] || VEHICLE_PRESETS.elegy;
+            c.body = world.createKinematicBox({
+                x: c.pos.x,
+                y: c.pos.y + spec.halfExtents[1] + 0.16,
+                z: c.pos.z,
+                hx: spec.halfExtents[0] * 0.96,
+                hy: spec.halfExtents[1] + 0.14,
+                hz: spec.halfExtents[2] * 0.96,
+                yaw: c.yaw
+            });
+            c.bodyHalfY = spec.halfExtents[1] + 0.16;
+        }
+    };
+
+    const syncPhysics = (dt) => {
+        if (!physWorld) return;
+        for (let i = 0; i < cars.length; i += 1) {
+            const c = cars[i];
+            if (!c.body) continue;
+            physWorld.moveKinematic(c.body, c.pos.x, c.pos.y + (c.bodyHalfY || 0.72), c.pos.z, c.yaw, dt);
+        }
+    };
+
+    const teleportCar = (index, x, z) => {
+        const c = cars[index];
+        if (!c) return;
+        c.pos.x = x;
+        c.pos.z = z;
+        c.pos.y = heightAt(x, z);
+        if (physWorld && c.body) {
+            physWorld.teleportBody(c.body, c.pos.x, c.pos.y + (c.bodyHalfY || 0.72), c.pos.z, c.yaw);
+        }
+    };
+
+    const dispose = () => {
+        if (!physWorld) return;
+        for (let i = 0; i < cars.length; i += 1) {
+            if (cars[i].body) {
+                physWorld.removeBody(cars[i].body);
+                cars[i].body = null;
+            }
+        }
+        physWorld = null;
+    };
 
     const update = (dt, timeSec, playerState, onCrash = null) => {
         const stepDt = Math.min(0.05, Math.max(0.001, dt));
@@ -185,5 +245,5 @@ export function createTrafficSystem(graph, seed = 2026) {
         }
     };
 
-    return { cars, peds, update };
+    return { cars, peds, update, attachColliders, syncPhysics, teleportCar, dispose };
 }

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 const SUV_STATIONS = [
     { z: -2.48, y0: 0.34, y1: 0.72, y2: 0.96, y3: 1.0, w0: 0.86, w1: 0.94, w2: 0.88, w3: 0.72 },
@@ -133,16 +134,16 @@ export function buildGlassCanopyGeometry(kind = "suv") {
     const raw =
         kind === "suv"
             ? [
-                  { z: -2.18, y0: 1.04, y3: 1.54, w2: 0.94, w3: 0.76 },
-                  { z: -1.48, y0: 1.05, y3: 1.62, w2: 0.98, w3: 0.8 },
-                  { z: 0.36, y0: 1.05, y3: 1.63, w2: 0.98, w3: 0.8 },
-                  { z: 0.98, y0: 1.04, y3: 1.17, w2: 0.96, w3: 0.83 }
+                  { z: -2.22, y0: 1.03, y3: 1.56, w2: 0.99, w3: 0.81 },
+                  { z: -1.48, y0: 1.04, y3: 1.65, w2: 1.03, w3: 0.85 },
+                  { z: 0.36, y0: 1.04, y3: 1.66, w2: 1.03, w3: 0.85 },
+                  { z: 1.04, y0: 1.03, y3: 1.19, w2: 1.01, w3: 0.88 }
               ]
             : [
-                  { z: -1.3, y0: 0.93, y3: 1.04, w2: 0.92, w3: 0.8 },
-                  { z: -0.84, y0: 0.94, y3: 1.35, w2: 0.92, w3: 0.74 },
-                  { z: 0.16, y0: 0.94, y3: 1.37, w2: 0.92, w3: 0.74 },
-                  { z: 0.78, y0: 0.92, y3: 1.02, w2: 0.9, w3: 0.78 }
+                  { z: -1.36, y0: 0.92, y3: 1.06, w2: 0.96, w3: 0.84 },
+                  { z: -0.86, y0: 0.93, y3: 1.38, w2: 0.97, w3: 0.79 },
+                  { z: 0.18, y0: 0.93, y3: 1.4, w2: 0.97, w3: 0.79 },
+                  { z: 0.84, y0: 0.91, y3: 1.04, w2: 0.95, w3: 0.83 }
               ];
     const stations = raw.map((s) => ({
         z: s.z,
@@ -151,9 +152,9 @@ export function buildGlassCanopyGeometry(kind = "suv") {
         y2: s.y0 + 0.08,
         y3: s.y3,
         w0: s.w2,
-        w1: s.w2 + 0.025,
-        w2: s.w2 + 0.02,
-        w3: s.w3 + 0.02
+        w1: s.w2 + 0.03,
+        w2: s.w2 + 0.028,
+        w3: s.w3 + 0.025
     }));
     const ringLen = 16;
     const positions = [];
@@ -177,6 +178,130 @@ export function buildGlassCanopyGeometry(kind = "suv") {
     geo.setIndex(indices);
     geo.computeVertexNormals();
     return geo;
+}
+
+function normNoUv(geo) {
+    const raw = geo.index ? geo.toNonIndexed() : geo.clone();
+    if (!raw.attributes.normal) raw.computeVertexNormals();
+    const out = new THREE.BufferGeometry();
+    out.setAttribute("position", raw.attributes.position);
+    out.setAttribute("normal", raw.attributes.normal);
+    raw.dispose();
+    return out;
+}
+
+function mergeNormalized(list) {
+    const norm = list.map((g) => normNoUv(g));
+    for (const g of list) g.dispose();
+    const merged = mergeGeometries(norm, false);
+    for (const g of norm) g.dispose();
+    return merged;
+}
+
+export function buildVehicleDetailGeometries(kind = "sedan") {
+    const isSuv = kind === "suv";
+    const tailZ = isSuv ? -2.47 : -2.31;
+    const headZ = isSuv ? 2.52 : 2.34;
+    const hw = isSuv ? 0.78 : 0.68;
+
+    const glassParts = [buildGlassCanopyGeometry(kind)];
+    if (isSuv) {
+        const rw = new THREE.PlaneGeometry(1.48, 0.56);
+        rw.rotateY(Math.PI);
+        rw.rotateX(-0.18);
+        rw.translate(0, 1.28, tailZ + 0.14);
+        glassParts.push(rw);
+    }
+
+    const trimParts = [];
+    const fBumper = new THREE.BoxGeometry(isSuv ? 1.88 : 1.72, 0.24, 0.22);
+    fBumper.translate(0, 0.34, headZ - 0.02);
+    trimParts.push(fBumper);
+
+    const rBumper = new THREE.BoxGeometry(isSuv ? 1.9 : 1.76, 0.26, 0.22);
+    rBumper.translate(0, 0.36, tailZ + 0.04);
+    trimParts.push(rBumper);
+
+    const grille = new THREE.BoxGeometry(isSuv ? 1.18 : 1.02, isSuv ? 0.32 : 0.22, 0.12);
+    grille.translate(0, isSuv ? 0.68 : 0.52, headZ + 0.02);
+    trimParts.push(grille);
+
+    const pillarZ = isSuv ? [-1.52, -0.52, 0.42] : [-0.88, -0.25, 0.24];
+    for (const sx of [-1, 1]) {
+        const skirt = new THREE.BoxGeometry(0.14, 0.14, isSuv ? 2.4 : 2.15);
+        skirt.translate(sx * (isSuv ? 1.04 : 0.96), 0.24, -0.05);
+        trimParts.push(skirt);
+
+        const mirror = new THREE.BoxGeometry(0.24, 0.12, 0.16);
+        mirror.translate(sx * (isSuv ? 1.1 : 1.02), isSuv ? 1.08 : 0.94, isSuv ? 0.68 : 0.42);
+        trimParts.push(mirror);
+
+        for (const pz of pillarZ) {
+            const pil = new THREE.BoxGeometry(0.08, isSuv ? 0.58 : 0.44, 0.11);
+            pil.translate(sx * (isSuv ? 0.93 : 0.88), isSuv ? 1.34 : 1.16, pz);
+            trimParts.push(pil);
+        }
+
+        if (isSuv) {
+            const rail = new THREE.BoxGeometry(0.06, 0.07, 2.2);
+            rail.translate(sx * 0.72, 1.71, -0.55);
+            trimParts.push(rail);
+        }
+    }
+
+    const chromeParts = [];
+    const grilleBar = new THREE.BoxGeometry(isSuv ? 1.16 : 0.98, 0.045, 0.15);
+    grilleBar.translate(0, isSuv ? 0.72 : 0.54, headZ + 0.04);
+    chromeParts.push(grilleBar);
+
+    const rearBar = new THREE.BoxGeometry(isSuv ? 1.44 : 1.18, 0.045, 0.08);
+    rearBar.translate(0, isSuv ? 0.76 : 0.64, tailZ - 0.03);
+    chromeParts.push(rearBar);
+
+    const headParts = [];
+    const tailParts = [];
+    for (const sx of [-hw, hw]) {
+        const hl = new THREE.BoxGeometry(0.36, 0.13, 0.12);
+        hl.translate(sx * 0.9, isSuv ? 0.74 : 0.58, headZ);
+        headParts.push(hl);
+
+        const tl = isSuv ? new THREE.BoxGeometry(0.14, 0.48, 0.12) : new THREE.BoxGeometry(0.44, 0.13, 0.1);
+        tl.translate(sx * (isSuv ? 1.02 : 0.96), isSuv ? 0.88 : 0.68, tailZ - 0.01);
+        tailParts.push(tl);
+
+        const pipe = new THREE.CylinderGeometry(0.042, 0.042, 0.22, 8);
+        pipe.rotateX(Math.PI * 0.5);
+        pipe.translate(sx * 0.76, 0.25, tailZ - 0.06);
+        chromeParts.push(pipe);
+    }
+
+    const plateGeo = new THREE.PlaneGeometry(0.44, 0.2);
+    plateGeo.rotateY(Math.PI);
+    plateGeo.translate(0, isSuv ? 0.58 : 0.5, tailZ - 0.08);
+
+    return {
+        glass: mergeNormalized(glassParts),
+        trim: mergeNormalized(trimParts),
+        chrome: mergeNormalized(chromeParts),
+        headlights: mergeNormalized(headParts),
+        taillights: mergeNormalized(tailParts),
+        plate: plateGeo
+    };
+}
+
+export function buildSplitWheelGeometries() {
+    const tireGeo = new THREE.CylinderGeometry(0.37, 0.37, 0.27, 16);
+    tireGeo.rotateZ(Math.PI * 0.5);
+    const rimParts = [];
+    const hub = new THREE.CylinderGeometry(0.245, 0.245, 0.285, 12);
+    hub.rotateZ(Math.PI * 0.5);
+    rimParts.push(hub);
+    for (let s = 0; s < 5; s += 1) {
+        const spoke = new THREE.BoxGeometry(0.295, 0.44, 0.045);
+        spoke.rotateX((s * Math.PI) / 5);
+        rimParts.push(spoke);
+    }
+    return { tireGeo: normNoUv(tireGeo), rimGeo: mergeNormalized(rimParts) };
 }
 
 export function buildSculptedWheelMesh(radius, width, lightweight = false) {

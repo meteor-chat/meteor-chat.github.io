@@ -43,6 +43,7 @@ export function buildCityData(seed = 2026) {
         height: 138
     };
     addBoxCollider(mazeX, mazeBaseY + 69, mazeZ, 16, 69, 16);
+    addBoxCollider(mazeX, mazeBaseY + 6, mazeZ, 23.5, 6, 23.5);
 
     const craneX = 45;
     const craneZ = -45;
@@ -57,6 +58,8 @@ export function buildCityData(seed = 2026) {
         craneHeight: 68
     };
     addBoxCollider(craneX - 10, craneY + 14, craneZ, 11, 14, 16);
+    addBoxCollider(craneX + 12, craneY + 34, craneZ - 6, 1.4, 34, 1.4);
+    addBoxCollider(craneX - 9.5, craneY + 0.65, craneZ + 18.2, 10.6, 0.65, 0.45);
 
     for (let bz = 0; bz < Z_ROADS.length - 1; bz += 1) {
         const z0 = Z_ROADS[bz] + SIDEWALK_HALF_WIDTH + 2;
@@ -236,6 +239,42 @@ export function buildCityData(seed = 2026) {
         });
     }
 
+    const broadleafCoords = [
+        [-14, -224], [14, -148], [-14, -52], [14, 38], [-14, 128],
+        [76, -135], [-76, -45], [76, 45], [-76, 135], [14, -210],
+        [-104, -135], [104, -45], [-104, 45], [104, 135]
+    ];
+    const broadleafTrees = broadleafCoords.map(([tx, tz], i) => ({
+        x: tx,
+        y: heightAt(tx, tz),
+        z: tz,
+        scale: 1.05 + (i % 3) * 0.18,
+        yaw: i * 1.4
+    }));
+
+    for (const p of palms) {
+        addBoxCollider(p.x, p.y + 4.5, p.z, 0.36, 4.5, 0.36);
+    }
+    for (const t of broadleafTrees) {
+        addBoxCollider(t.x, t.y + 3.2, t.z, 0.44, 3.2, 0.44);
+    }
+    for (const l of lamps) {
+        addBoxCollider(l.x, l.y + 4.0, l.z, 0.28, 4.0, 0.28);
+    }
+    for (const tl of trafficLights) {
+        addBoxCollider(tl.x, tl.y + 3.8, tl.z, 0.32, 3.8, 0.32);
+    }
+
+    const vwZ = -352;
+    const vwWidths = [7, 3, 7, 6, 8, 7, 7, 7];
+    let vwX = -46;
+    for (let i = 0; i < vwWidths.length; i += 1) {
+        const w = vwWidths[i];
+        const cx = vwX + w * 0.5;
+        addBoxCollider(cx, heightAt(cx, vwZ) + 6.5, vwZ, w * 0.5, 6.2, 0.7);
+        vwX += w + 4.2;
+    }
+
     const safehouse = {
         x: SAFEHOUSE_ORIGIN.x,
         y: heightAt(SAFEHOUSE_ORIGIN.x, SAFEHOUSE_ORIGIN.z),
@@ -251,6 +290,8 @@ export function buildCityData(seed = 2026) {
     addBoxCollider(safehouse.x - 16, safehouse.y + 3.2, safehouse.z - 4, 2.2, 3.2, 8);
     addBoxCollider(safehouse.x + 16, safehouse.y + 3.2, safehouse.z - 4, 2.2, 3.2, 8);
     addBoxCollider(safehouse.x, safehouse.y + 3.2, safehouse.z - 12, 18, 3.2, 1.4);
+    addBoxCollider(safehouse.x - 10.5, safehouse.y + 0.65, safehouse.z + 10.8, 5.8, 0.65, 0.22);
+    addBoxCollider(safehouse.x + 10.5, safehouse.y + 0.65, safehouse.z + 10.8, 5.8, 0.65, 0.22);
 
     return {
         graph,
@@ -259,6 +300,7 @@ export function buildCityData(seed = 2026) {
         constructionSite,
         safehouse,
         palms,
+        broadleafTrees,
         lamps,
         trafficLights,
         billboards,

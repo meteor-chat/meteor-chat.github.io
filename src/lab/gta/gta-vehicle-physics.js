@@ -1,9 +1,16 @@
 import * as THREE from "three";
-import { SURFACES, VEHICLE_PRESETS, computeGearAndRpm, computeTireGrip } from "./gta-vehicle-specs.js";
+import {
+    SURFACES,
+    VEHICLE_PRESETS,
+    computeGearAndRpm,
+    computeTireGrip,
+    stepVehicleSteering
+} from "./gta-vehicle-specs.js";
 
 const DEG = Math.PI / 180;
-const LONG_CURVE = [[0, 0], [0.06, 1.25], [0.22, 1.04]];
-const LAT_CURVE = [[0, 0], [3, 1.25], [20, 1.02]];
+const LONG_CURVE = [[0, 0], [0.06, 1.42], [0.22, 1.18]];
+const LAT_CURVE = [[0, 0], [3, 1.62], [20, 1.28]];
+const GEAR_RATIOS = [3.85, 2.65, 1.88, 1.38, 1.02];
 
 function yawQuat(yaw) {
     return { x: 0, y: Math.sin(yaw * 0.5), z: 0, w: Math.cos(yaw * 0.5) };
@@ -17,31 +24,29 @@ export class JoltCar {
             spawn: options.spawn || { x: 0, z: 0 },
             yaw: options.yaw || 0,
             heightAt: options.heightAt || null,
-            angularDamping: 0.48,
+            angularDamping: 0.26,
             maxPitchRoll: 62 * DEG,
             suspMinFrac: 0.42,
             suspMaxFrac: 1.24,
             castRadiusFrac: 0.52,
-            maxSteer: 35 * DEG,
-            steerSmoothing: 0.16,
-            highSpeedSteer: 0.54,
-            maxBrakeTorque: 6400,
-            maxHandBrakeTorque: 26000,
-            minRPM: 850,
-            maxRPM: 7000,
-            gearRatio: 3.1,
-            reverseRatio: -3.2,
-            clutchStrength: 11,
+            maxSteer: 42 * DEG,
+            highSpeedSteer: 0.46,
+            maxBrakeTorque: 9400,
+            maxHandBrakeTorque: 28000,
+            minRPM: 900,
+            maxRPM: 7400,
+            reverseRatio: -3.6,
+            clutchStrength: 14,
             topSpeedDrag: 1.9,
-            reverseRearmSpeed: 0.35,
-            holdBrakeOn: 0.5,
-            holdBrakeOff: 1.0,
+            reverseRearmSpeed: 0.9,
+            holdBrakeOn: 0.45,
+            holdBrakeOff: 0.9,
             parkPinSpeed: 0.35,
             sleepSpeed: 0.05,
-            handbrakeDecel: 9.5,
+            handbrakeDecel: 8.2,
             airGravity: 1.85,
-            wetLong: 0.26,
-            wetLat: 0.34,
+            wetLong: 0.14,
+            wetLat: 0.16,
             waterFloatOffset: 0.45,
             waterBuoyancy: 14,
             waterDamping: 4,
@@ -165,10 +170,10 @@ export class JoltCar {
         c.mEngine.mMaxRPM = o.maxRPM;
         c.mTransmission.mMode = Jolt.ETransmissionMode_Auto;
         c.mTransmission.mGearRatios.clear();
-        c.mTransmission.mGearRatios.push_back(o.gearRatio);
+        for (const ratio of GEAR_RATIOS) c.mTransmission.mGearRatios.push_back(ratio);
         c.mTransmission.mReverseGearRatios.clear();
         c.mTransmission.mReverseGearRatios.push_back(o.reverseRatio);
-        c.mTransmission.mSwitchTime = 0;
+        c.mTransmission.mSwitchTime = 0.08;
         c.mTransmission.mClutchStrength = o.clutchStrength;
         c.mDifferentials.clear();
         for (const [l, r, share] of o.differentials) {
@@ -228,11 +233,15 @@ export class JoltCar {
         this.bi.AddImpulse(this.bodyId, this._imp);
     }
 
+    #angularImpulse(x, y, z) {
+        this._imp.Set(x, y, z);
+        this.bi.AddAngularImpulse(this.bodyId, this._imp);
+    }
+
     update(dt, input = {}, env = {}) {
         const { o, bi } = this;
         const heightAt = env.heightAt ?? o.heightAt;
         const handbrake = Boolean(input.handbrake);
-        this._steer += ((input.steer ?? 0) - this._steer) * o.steerSmoothing;
 
         this.#readPose(this._pos, this._quat);
         this._prev.pos.copy(this._pos);
@@ -263,11 +272,12 @@ export class JoltCar {
         const latSpeed = lvx * this._right.x + lvz * this._right.z;
         const m = o.mass;
 
-        const taper =
-            1 -
-            (1 - o.highSpeedSteer) *
-                THREE.MathUtils.smoothstep(Math.min(1, hSpeed / (o.topSpeed * 0.85)), 0.12, 0.8);
-        this._steerAngle = this._steer * o.maxSteer * taper;
+        const steerStep = stepVehicleSteering(this._steer, input.steer ?? 0, hSpeed, o.topSpeed, dt, {
+            highSpeedSteer: o.highSpeedSteer
+        });
+        this._steer = steerStep.rawSteer;
+        const effectiveSteer = steerStep.effectiveSteer;
+        this._steerAngle = effectiveSteer * o.maxSteer;
 
         const waterY = env.waterLevelAt ? env.waterLevelAt(cx, cz) : null;
         this.inWater = waterY != null;
@@ -322,7 +332,8 @@ export class JoltCar {
             if (fwdSpeed > o.reverseRearmSpeed) {
                 brake = brakeIn;
                 this._revArm = false;
-            } else if (this._revArm) {
+            } else if (fwdSpeed <= 0.55 || this._revArm) {
+                this._revArm = true;
                 throttle = -brakeIn;
             } else {
                 brake = brakeIn;
@@ -338,7 +349,7 @@ export class JoltCar {
             }
         }
 
-        this.controller.SetDriverInput(throttle, this._steer, brake, handbrake ? 1 : 0);
+        this.controller.SetDriverInput(throttle, effectiveSteer, brake, handbrake ? 1 : 0);
 
         const airborne = !anyContact;
         if (airborne !== this._wasAirborne) {
@@ -346,6 +357,20 @@ export class JoltCar {
             bi.SetGravityFactor(this.bodyId, airborne ? o.airGravity : 1);
         }
         const grounded = anyContact && !this.inWater;
+        if (grounded && hSpeed > 1.4) {
+            const ang = this.body.GetAngularVelocity();
+            const yawRate = ang.GetY();
+            const dirSign = fwdSpeed >= -0.3 ? 1 : -1;
+            const speedBlend = Math.min(1, hSpeed / 11);
+            const targetYawRate = -effectiveSteer * dirSign * (handbrake ? 2.55 : 1.75) * speedBlend;
+            const yawErr = targetYawRate - yawRate;
+            this.#angularImpulse(0, yawErr * m * 0.42 * dt, 0);
+
+            if (!handbrake && Math.abs(latSpeed) > 0.6) {
+                const latDamp = -latSpeed * m * 2.1 * dt;
+                this.#impulse(this._right.x * latDamp, 0, this._right.z * latDamp);
+            }
+        }
         const nitroOn = Boolean(input.nitro) && throttle > 0.2 && grounded && fwdSpeed < o.topSpeed * 1.18;
         this.nitroActive = nitroOn;
         if (nitroOn) {

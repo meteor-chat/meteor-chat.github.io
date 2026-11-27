@@ -1,7 +1,33 @@
 import * as THREE from "three";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
-import { dampAngle } from "./gta-camera-math.js";
+import { computeCameraRelativeMove, dampAngle } from "./gta-camera-math.js";
 import { WORLD_HALF, heightAt } from "./gta-road-graph.js";
+
+function canMoveStep(world, pos, dx, dz) {
+    const dist = Math.hypot(dx, dz);
+    if (dist <= 0.0005 || !world) return true;
+    const ux = dx / dist;
+    const uz = dz / dist;
+    const px = -uz * 0.28;
+    const pz = ux * 0.28;
+    const reach = dist + 0.42;
+    const probes = [
+        [0, 0.55, 0],
+        [0, 1.25, 0],
+        [px, 0.85, pz],
+        [-px, 0.85, -pz]
+    ];
+    for (let i = 0; i < probes.length; i += 1) {
+        const [ox, oy, oz] = probes[i];
+        const hit = world.castRay(
+            { x: pos.x + ox, y: pos.y + oy, z: pos.z + oz },
+            { x: ux, y: 0, z: uz },
+            reach
+        );
+        if (hit) return false;
+    }
+    return true;
+}
 
 function buildSmoothFallbackCharacter() {
     const group = new THREE.Group();
@@ -126,39 +152,28 @@ export function createGtaCharacter(scene, spawn = { x: 0, y: 12.6, z: -304 }, as
         if (!state.visible) return;
         const fwd = (input.forward ? 1 : 0) - (input.backward ? 1 : 0);
         const side = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-        const moveMag = Math.hypot(fwd, side);
         const sprint = Boolean(input.sprint);
         const speed = sprint ? 9.8 : 4.9;
-
-        let mx = 0;
-        let mz = 0;
-        if (moveMag > 0.01) {
-            const nf = fwd / moveMag;
-            const ns = side / moveMag;
-            const sinY = Math.sin(cameraYaw);
-            const cosY = Math.cos(cameraYaw);
-            mx = (sinY * nf - cosY * ns) * speed;
-            mz = (cosY * nf + sinY * ns) * speed;
-            const desiredYaw = Math.atan2(mx, mz);
-            state.yaw = dampAngle(state.yaw, desiredYaw, 13, dt);
+        const mv = computeCameraRelativeMove(fwd, side, cameraYaw, speed);
+        const moveMag = mv.moveMag;
+        const mx = mv.mx;
+        const mz = mv.mz;
+        if (mv.desiredYaw !== null) {
+            state.yaw = dampAngle(state.yaw, mv.desiredYaw, 14, dt);
         }
 
         const stepX = mx * dt;
         const stepZ = mz * dt;
-        const distStep = Math.hypot(stepX, stepZ);
-        if (distStep > 0.0005 && world) {
-            const hit = world.castRay(
-                { x: state.pos.x, y: state.pos.y + 0.9, z: state.pos.z },
-                { x: stepX, y: 0, z: stepZ },
-                distStep + 0.45
-            );
-            if (!hit) {
-                state.pos.x += stepX;
-                state.pos.z += stepZ;
-            }
-        } else {
+        if (canMoveStep(world, state.pos, stepX, stepZ)) {
             state.pos.x += stepX;
             state.pos.z += stepZ;
+        } else {
+            if (Math.abs(stepX) > 0.0005 && canMoveStep(world, state.pos, stepX, 0)) {
+                state.pos.x += stepX;
+            }
+            if (Math.abs(stepZ) > 0.0005 && canMoveStep(world, state.pos, 0, stepZ)) {
+                state.pos.z += stepZ;
+            }
         }
 
         state.pos.x = Math.max(-WORLD_HALF + 8, Math.min(WORLD_HALF - 8, state.pos.x));

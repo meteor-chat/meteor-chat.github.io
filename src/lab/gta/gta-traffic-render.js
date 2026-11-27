@@ -2,14 +2,18 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { buildHydrantGeometry } from "./gta-building-meshes.js";
 import {
-    buildGlassCanopyGeometry,
     buildLoftedHullGeometry,
+    buildSplitWheelGeometries,
+    buildVehicleDetailGeometries,
     createContactShadowTexture
 } from "./gta-car-sculpt.js";
 import { VEHICLE_PRESETS } from "./gta-vehicle-specs.js";
 
-function normalizeGeo(geo) {
+const FERRARI_WHEELS = new Set(["wheel_fl", "wheel_fr", "wheel_rl", "wheel_rr"]);
+
+function normalizeGeo(geo, mat4 = null) {
     const g = geo.index ? geo.toNonIndexed() : geo.clone();
+    if (mat4) g.applyMatrix4(mat4);
     if (!g.attributes.normal) g.computeVertexNormals();
     const out = new THREE.BufferGeometry();
     out.setAttribute("position", g.attributes.position);
@@ -18,43 +22,133 @@ function normalizeGeo(geo) {
     return out;
 }
 
-function buildCombinedWheelGeo() {
-    const tire = new THREE.CylinderGeometry(0.37, 0.37, 0.27, 14);
-    tire.rotateZ(Math.PI * 0.5);
-    const rim = new THREE.CylinderGeometry(0.24, 0.24, 0.285, 10);
-    rim.rotateZ(Math.PI * 0.5);
-    const merged = mergeGeometries([normalizeGeo(tire), normalizeGeo(rim)], false);
-    tire.dispose();
-    rim.dispose();
-    return merged;
-}
-
-function buildTrimGeo(isSuv) {
-    const parts = [normalizeGeo(buildGlassCanopyGeometry(isSuv ? "suv" : "sedan"))];
-    const tailZ = isSuv ? -2.41 : -2.26;
-    const headZ = isSuv ? 2.48 : 2.3;
-    const hw = isSuv ? 0.78 : 0.68;
-
-    for (const sx of [-hw, hw]) {
-        const hl = new THREE.BoxGeometry(0.34, 0.12, 0.08);
-        hl.translate(sx * 0.88, isSuv ? 0.74 : 0.58, headZ);
-        parts.push(normalizeGeo(hl));
-        hl.dispose();
-
-        const tl = isSuv ? new THREE.BoxGeometry(0.09, 0.5, 0.1) : new THREE.BoxGeometry(0.4, 0.12, 0.08);
-        tl.translate(sx, isSuv ? 0.86 : 0.68, tailZ);
-        parts.push(normalizeGeo(tl));
-        tl.dispose();
-    }
+function mergeList(parts) {
+    if (!parts.length) return null;
     const merged = mergeGeometries(parts, false);
     for (const p of parts) p.dispose();
     return merged;
 }
 
-export function createTrafficRenderer(scene, traffic, propBodies) {
+function extractFerrariInstancedGeos(ferrariGltf) {
+    if (!ferrariGltf || !ferrariGltf.scene) return null;
+    const clone = ferrariGltf.scene.clone(true);
+    for (const wn of FERRARI_WHEELS) {
+        const w = clone.getObjectByName(wn);
+        if (w && w.parent) w.parent.remove(w);
+    }
+    clone.updateMatrixWorld(true);
+    const invRoot = new THREE.Matrix4().copy(clone.matrixWorld).invert();
+    const align = new THREE.Matrix4()
+        .makeTranslation(0, 0.04, 0.17)
+        .multiply(new THREE.Matrix4().makeRotationY(Math.PI));
+    const mLocal = new THREE.Matrix4();
+
+    const buckets = { body: [], glass: [], trim: [], chrome: [], headlights: [], taillights: [] };
+    clone.traverse((child) => {
+        if (!child.isMesh || !child.geometry || Array.isArray(child.material)) return;
+        const mName = child.material ? child.material.name || "" : "";
+        const cName = child.name || "";
+        mLocal.multiplyMatrices(invRoot, child.matrixWorld);
+        mLocal.premultiply(align);
+        const geo = normalizeGeo(child.geometry, mLocal);
+        if (mName === "Body_Color" || cName === "body") buckets.body.push(geo);
+        else if (mName === "Glass_Gray" || cName === "glass") buckets.glass.push(geo);
+        else if (mName === "Taillight_Glass" || cName === "lights_red") buckets.taillights.push(geo);
+        else if (mName === "Projector_Glass" || cName === "lights") buckets.headlights.push(geo);
+        else if (/chrome|metal|silver|badge|exhaust|alu/i.test(mName)) buckets.chrome.push(geo);
+        else buckets.trim.push(geo);
+    });
+
+    if (buckets.body.length === 0) return null;
+    const plate = new THREE.PlaneGeometry(0.42, 0.2);
+    plate.rotateY(Math.PI);
+    plate.translate(0, 0.56, -2.14);
+
+    return {
+        hull: mergeList(buckets.body),
+        glass: mergeList(buckets.glass),
+        trim: mergeList(buckets.trim),
+        chrome: mergeList(buckets.chrome),
+        headlights: mergeList(buckets.headlights),
+        taillights: mergeList(buckets.taillights),
+        plate
+    };
+}
+
+function buildCivilianPedGeometries() {
+    const torsoParts = [];
+    const chest = new THREE.CylinderGeometry(0.19, 0.15, 0.54, 10);
+    chest.scale(1.18, 1, 0.68);
+    torsoParts.push(normalizeGeo(chest));
+    chest.dispose();
+    const shoulders = new THREE.CapsuleGeometry(0.11, 0.26, 4, 8);
+    shoulders.rotateZ(Math.PI * 0.5);
+    shoulders.translate(0, 0.21, 0);
+    torsoParts.push(normalizeGeo(shoulders));
+    shoulders.dispose();
+    const collar = new THREE.CylinderGeometry(0.085, 0.11, 0.08, 8);
+    collar.translate(0, 0.29, 0);
+    torsoParts.push(normalizeGeo(collar));
+    collar.dispose();
+
+    const headParts = [];
+    const skull = new THREE.SphereGeometry(0.125, 10, 8);
+    skull.scale(0.92, 1.08, 0.96);
+    skull.translate(0, 0.08, 0);
+    headParts.push(normalizeGeo(skull));
+    skull.dispose();
+    const neck = new THREE.CylinderGeometry(0.055, 0.068, 0.1, 8);
+    neck.translate(0, -0.05, 0);
+    headParts.push(normalizeGeo(neck));
+    neck.dispose();
+
+    const hairParts = [];
+    const crown = new THREE.SphereGeometry(0.132, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.58);
+    crown.scale(0.94, 1.06, 1.0);
+    crown.translate(0, 0.095, -0.01);
+    hairParts.push(normalizeGeo(crown));
+    crown.dispose();
+    const shades = new THREE.BoxGeometry(0.18, 0.045, 0.06);
+    shades.translate(0, 0.09, 0.11);
+    hairParts.push(normalizeGeo(shades));
+    shades.dispose();
+
+    const armParts = [];
+    const upper = new THREE.CylinderGeometry(0.062, 0.052, 0.48, 8);
+    upper.translate(0, -0.22, 0);
+    armParts.push(normalizeGeo(upper));
+    upper.dispose();
+    const hand = new THREE.SphereGeometry(0.048, 6, 5);
+    hand.translate(0, -0.47, 0.01);
+    armParts.push(normalizeGeo(hand));
+    hand.dispose();
+
+    const legGeo = new THREE.CylinderGeometry(0.082, 0.062, 0.68, 8);
+    legGeo.translate(0, -0.34, 0);
+    const shoeGeo = new THREE.BoxGeometry(0.11, 0.08, 0.22);
+    shoeGeo.translate(0, -0.68, 0.05);
+
+    const pedShadowGeo = new THREE.PlaneGeometry(0.75, 0.75);
+    pedShadowGeo.rotateX(-Math.PI * 0.5);
+
+    return {
+        torso: mergeList(torsoParts),
+        head: mergeList(headParts),
+        hair: mergeList(hairParts),
+        arm: mergeList(armParts),
+        leg: normalizeGeo(legGeo),
+        shoe: normalizeGeo(shoeGeo),
+        shadow: pedShadowGeo
+    };
+}
+
+export function createTrafficRenderer(scene, traffic, propBodies, assets = null, textures = null) {
     const dummy = new THREE.Object3D();
     const wheelDummy = new THREE.Object3D();
     const col = new THREE.Color();
+    const ownedGeos = [];
+    const ownedMats = [];
+    const ownedMeshes = [];
 
     const sedanCars = [];
     const suvCars = [];
@@ -68,84 +162,157 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
 
     const hullMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        metalness: 0.72,
-        roughness: 0.24,
-        envMapIntensity: 1.45
+        metalness: 0.56,
+        roughness: 0.28,
+        envMapIntensity: 0.72
+    });
+    const glassMat = new THREE.MeshStandardMaterial({
+        color: 0x0c1624,
+        metalness: 0.58,
+        roughness: 0.12,
+        envMapIntensity: 0.92
     });
     const trimMat = new THREE.MeshStandardMaterial({
-        color: 0x16202e,
-        metalness: 0.68,
-        roughness: 0.14,
-        envMapIntensity: 1.6
+        color: 0x1b2028,
+        metalness: 0.25,
+        roughness: 0.72,
+        envMapIntensity: 0.45
     });
-    const wheelMat = new THREE.MeshStandardMaterial({
-        color: 0x2a303a,
-        roughness: 0.62,
-        metalness: 0.45
+    const chromeMat = new THREE.MeshStandardMaterial({
+        color: 0xc9d2dc,
+        metalness: 0.82,
+        roughness: 0.22,
+        envMapIntensity: 0.85
+    });
+    const headMat = new THREE.MeshStandardMaterial({
+        color: 0xf4f6fa,
+        emissive: 0xfff0cc,
+        emissiveIntensity: 1.2,
+        roughness: 0.18
+    });
+    const tailMat = new THREE.MeshStandardMaterial({
+        color: 0xa81c1c,
+        emissive: 0xdc2626,
+        emissiveIntensity: 1.35,
+        roughness: 0.2
+    });
+    const plateMat = new THREE.MeshStandardMaterial({
+        map: textures ? textures.plate : null,
+        color: textures ? 0xffffff : 0xdbe2ea,
+        roughness: 0.48,
+        metalness: 0.1
+    });
+    const tireMat = new THREE.MeshStandardMaterial({
+        color: 0x171a20,
+        roughness: 0.86,
+        metalness: 0.08
+    });
+    const rimMat = new THREE.MeshStandardMaterial({
+        color: 0xbcc6d2,
+        roughness: 0.24,
+        metalness: 0.84,
+        envMapIntensity: 0.8
     });
     const shadowTex = createContactShadowTexture();
     const shadowMat = new THREE.MeshBasicMaterial({
         map: shadowTex,
         transparent: true,
         depthWrite: false,
-        opacity: 0.62
+        opacity: 0.6
     });
-
-    const sedanHullGeo = buildLoftedHullGeometry("sedan");
-    const suvHullGeo = buildLoftedHullGeometry("suv");
-    const sedanTrimGeo = buildTrimGeo(false);
-    const suvTrimGeo = buildTrimGeo(true);
-    const wheelGeo = buildCombinedWheelGeo();
-    const shadowGeo = new THREE.PlaneGeometry(2.35, 4.95);
-    shadowGeo.rotateX(-Math.PI * 0.5);
+    ownedMats.push(hullMat, glassMat, trimMat, chromeMat, headMat, tailMat, plateMat, tireMat, rimMat, shadowMat);
 
     const makePool = (geo, mat, count, castShadow = false) => {
+        if (!geo) return null;
+        ownedGeos.push(geo);
         const inst = new THREE.InstancedMesh(geo, mat, Math.max(1, count));
         inst.castShadow = castShadow;
         inst.receiveShadow = castShadow;
         inst.frustumCulled = false;
         if (count === 0) inst.visible = false;
         scene.add(inst);
+        ownedMeshes.push(inst);
         return inst;
     };
 
-    const sedanHulls = makePool(sedanHullGeo, hullMat, sedanCars.length, true);
-    const sedanTrims = makePool(sedanTrimGeo, trimMat, sedanCars.length, false);
-    const suvHulls = makePool(suvHullGeo, hullMat, suvCars.length, true);
-    const suvTrims = makePool(suvTrimGeo, trimMat, suvCars.length, false);
+    const buildCarPools = (geos, list) => {
+        const n = list.length;
+        const pools = {
+            hull: makePool(geos.hull, hullMat, n, true),
+            glass: makePool(geos.glass, glassMat, n, false),
+            trim: makePool(geos.trim, trimMat, n, false),
+            chrome: makePool(geos.chrome, chromeMat, n, false),
+            headlights: makePool(geos.headlights, headMat, n, false),
+            taillights: makePool(geos.taillights, tailMat, n, false),
+            plate: makePool(geos.plate, plateMat, n, false)
+        };
+        if (pools.hull && n > 0) {
+            for (let i = 0; i < n; i += 1) {
+                col.setHex(list[i].car.color);
+                pools.hull.setColorAt(i, col);
+            }
+            if (pools.hull.instanceColor) pools.hull.instanceColor.needsUpdate = true;
+        }
+        return pools;
+    };
+
+    const ferrariGeos = assets && assets.models ? extractFerrariInstancedGeos(assets.models.ferrari) : null;
+    const sedanDetail = ferrariGeos ? null : buildVehicleDetailGeometries("sedan");
+    const sedanGeos = ferrariGeos || {
+        hull: buildLoftedHullGeometry("sedan"),
+        ...sedanDetail
+    };
+    const suvDetail = buildVehicleDetailGeometries("suv");
+    const suvGeos = {
+        hull: buildLoftedHullGeometry("suv"),
+        ...suvDetail
+    };
+
+    const sedanPools = buildCarPools(sedanGeos, sedanCars);
+    const suvPools = buildCarPools(suvGeos, suvCars);
 
     const totalCars = sedanCars.length + suvCars.length;
-    const allWheels = makePool(wheelGeo, wheelMat, totalCars * 4, false);
+    const { tireGeo, rimGeo } = buildSplitWheelGeometries();
+    const allTires = makePool(tireGeo, tireMat, totalCars * 4, false);
+    const allRims = makePool(rimGeo, rimMat, totalCars * 4, false);
+    const shadowGeo = new THREE.PlaneGeometry(2.35, 4.95);
+    shadowGeo.rotateX(-Math.PI * 0.5);
     const allShadows = makePool(shadowGeo, shadowMat, totalCars, false);
 
-    for (let i = 0; i < sedanCars.length; i += 1) {
-        col.setHex(sedanCars[i].car.color);
-        sedanHulls.setColorAt(i, col);
-    }
-    if (sedanHulls.instanceColor) sedanHulls.instanceColor.needsUpdate = true;
+    const pedGeos = buildCivilianPedGeometries();
+    const pedShirtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78, metalness: 0.04 });
+    const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.72, metalness: 0.02 });
+    const pedHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0.1 });
+    const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.04 });
+    const pedShoeMat = new THREE.MeshStandardMaterial({ color: 0x262b33, roughness: 0.72, metalness: 0.06 });
+    ownedMats.push(pedShirtMat, pedSkinMat, pedHairMat, pedPantsMat, pedShoeMat);
 
-    for (let i = 0; i < suvCars.length; i += 1) {
-        col.setHex(suvCars[i].car.color);
-        suvHulls.setColorAt(i, col);
-    }
-    if (suvHulls.instanceColor) suvHulls.instanceColor.needsUpdate = true;
+    const pedCount = traffic.peds.length;
+    const pedTorsos = makePool(pedGeos.torso, pedShirtMat, pedCount, true);
+    const pedHeads = makePool(pedGeos.head, pedSkinMat, pedCount, false);
+    const pedHairs = makePool(pedGeos.hair, pedHairMat, pedCount, false);
+    const pedArms = makePool(pedGeos.arm, pedShirtMat, pedCount * 2, false);
+    const pedLegs = makePool(pedGeos.leg, pedPantsMat, pedCount * 2, false);
+    const pedShoes = makePool(pedGeos.shoe, pedShoeMat, pedCount * 2, false);
+    const pedShadows = makePool(pedGeos.shadow, shadowMat, pedCount, false);
 
-    const pedTorsoGeo = new THREE.CapsuleGeometry(0.18, 0.46, 4, 8);
-    const pedHeadGeo = new THREE.SphereGeometry(0.13, 8, 6);
-    const pedLegGeo = new THREE.CapsuleGeometry(0.08, 0.56, 4, 6);
-    const pedTorsoMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78 });
-    const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xd9a884, roughness: 0.72 });
-    const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
-
-    const pedTorsos = makePool(pedTorsoGeo, pedTorsoMat, traffic.peds.length, false);
-    const pedHeads = makePool(pedHeadGeo, pedSkinMat, traffic.peds.length, false);
-    const pedLegs = makePool(pedLegGeo, pedPantsMat, traffic.peds.length * 2, false);
-
-    for (let i = 0; i < traffic.peds.length; i += 1) {
-        col.setHex(traffic.peds[i].shirtColor);
+    for (let i = 0; i < pedCount; i += 1) {
+        const p = traffic.peds[i];
+        col.setHex(p.shirtColor || 0x2a4d7a);
         pedTorsos.setColorAt(i, col);
+        pedArms.setColorAt(i * 2, col);
+        pedArms.setColorAt(i * 2 + 1, col);
+        col.setHex(p.skinColor || 0xd9a884);
+        pedHeads.setColorAt(i, col);
+        col.setHex(p.hairColor || 0x241d18);
+        pedHairs.setColorAt(i, col);
+        col.setHex(p.pantsColor || 0x1e293b);
+        pedLegs.setColorAt(i * 2, col);
+        pedLegs.setColorAt(i * 2 + 1, col);
     }
-    if (pedTorsos.instanceColor) pedTorsos.instanceColor.needsUpdate = true;
+    for (const inst of [pedTorsos, pedHeads, pedHairs, pedArms, pedLegs]) {
+        if (inst && inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    }
 
     const hydrants = [];
     const bins = [];
@@ -157,19 +324,17 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
         else cones.push(pb.body);
     }
 
-    const hydrantGeo = buildHydrantGeometry();
-    const hydrantMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.36, metalness: 0.55 });
-    const binGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.86, 10);
-    const binMat = new THREE.MeshStandardMaterial({ color: 0x525a66, roughness: 0.42, metalness: 0.72 });
-    const coneGeo = new THREE.ConeGeometry(0.22, 0.68, 10);
-    const coneMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.1 });
+    const hydrantMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.42, metalness: 0.48 });
+    const binMat = new THREE.MeshStandardMaterial({ color: 0x525a66, roughness: 0.46, metalness: 0.62 });
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.48, metalness: 0.08 });
+    ownedMats.push(hydrantMat, binMat, coneMat);
 
-    const hydrantsInst = makePool(hydrantGeo, hydrantMat, hydrants.length, false);
-    const binsInst = makePool(binGeo, binMat, bins.length, false);
-    const conesInst = makePool(coneGeo, coneMat, cones.length, false);
+    const hydrantsInst = makePool(buildHydrantGeometry(), hydrantMat, hydrants.length, false);
+    const binsInst = makePool(new THREE.CylinderGeometry(0.24, 0.2, 0.86, 10), binMat, bins.length, false);
+    const conesInst = makePool(new THREE.ConeGeometry(0.22, 0.68, 10), coneMat, cones.length, false);
 
     const syncPropPool = (bodies, inst, forceAll) => {
-        if (bodies.length === 0) return;
+        if (!inst || bodies.length === 0) return;
         let dirty = false;
         for (let i = 0; i < bodies.length; i += 1) {
             const b = bodies[i];
@@ -190,7 +355,8 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
     syncPropPool(bins, binsInst, true);
     syncPropPool(cones, conesInst, true);
 
-    const writeCarGroup = (list, hullInst, trimInst, dt, wheelBaseIdx, shadowBaseIdx) => {
+    const writeCarGroup = (list, pools, dt, wheelBaseIdx, shadowBaseIdx) => {
+        const poolList = [pools.hull, pools.glass, pools.trim, pools.chrome, pools.headlights, pools.taillights, pools.plate].filter(Boolean);
         let wi = wheelBaseIdx;
         let si = shadowBaseIdx;
         for (let i = 0; i < list.length; i += 1) {
@@ -203,10 +369,11 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
             dummy.rotation.set(0, c.yaw, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
-            hullInst.setMatrixAt(i, dummy.matrix);
-            trimInst.setMatrixAt(i, dummy.matrix);
+            for (let p = 0; p < poolList.length; p += 1) {
+                poolList[p].setMatrixAt(i, dummy.matrix);
+            }
 
-            dummy.position.set(c.pos.x, c.pos.y + 0.06, c.pos.z);
+            dummy.position.set(c.pos.x, c.pos.y + 0.05, c.pos.z);
             dummy.updateMatrix();
             allShadows.setMatrixAt(si, dummy.matrix);
             si += 1;
@@ -229,57 +396,84 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
                 wheelDummy.rotation.set(item.spin, c.yaw, 0, "YXZ");
                 wheelDummy.scale.set(1, spec.wheelRadius / 0.37, spec.wheelRadius / 0.37);
                 wheelDummy.updateMatrix();
-                allWheels.setMatrixAt(wi, wheelDummy.matrix);
+                allTires.setMatrixAt(wi, wheelDummy.matrix);
+                allRims.setMatrixAt(wi, wheelDummy.matrix);
                 wi += 1;
             }
         }
         if (list.length > 0) {
-            hullInst.instanceMatrix.needsUpdate = true;
-            trimInst.instanceMatrix.needsUpdate = true;
+            for (let p = 0; p < poolList.length; p += 1) {
+                poolList[p].instanceMatrix.needsUpdate = true;
+            }
         }
         return { wheelIdx: wi, shadowIdx: si };
     };
 
     const update = (dt) => {
-        const r1 = writeCarGroup(sedanCars, sedanHulls, sedanTrims, dt, 0, 0);
-        writeCarGroup(suvCars, suvHulls, suvTrims, dt, r1.wheelIdx, r1.shadowIdx);
+        const r1 = writeCarGroup(sedanCars, sedanPools, dt, 0, 0);
+        writeCarGroup(suvCars, suvPools, dt, r1.wheelIdx, r1.shadowIdx);
         if (totalCars > 0) {
-            allWheels.instanceMatrix.needsUpdate = true;
+            allTires.instanceMatrix.needsUpdate = true;
+            allRims.instanceMatrix.needsUpdate = true;
             allShadows.instanceMatrix.needsUpdate = true;
         }
 
-        for (let i = 0; i < traffic.peds.length; i += 1) {
+        for (let i = 0; i < pedCount; i += 1) {
             const p = traffic.peds[i];
             const yaw = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : p.dir > 0 ? 0 : Math.PI;
-            const bob = Math.abs(Math.sin(p.phase)) * 0.06;
-            const swing = Math.sin(p.phase) * 0.38;
+            const bob = Math.abs(Math.sin(p.phase)) * 0.045;
+            const swing = Math.sin(p.phase) * 0.42;
             const cosY = Math.cos(yaw);
             const sinY = Math.sin(yaw);
 
-            dummy.position.set(p.x, p.y + 1.12 + bob, p.z);
+            dummy.position.set(p.x, p.y + 1.08 + bob, p.z);
             dummy.rotation.set(0, yaw, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
             pedTorsos.setMatrixAt(i, dummy.matrix);
 
-            dummy.position.set(p.x, p.y + 1.62 + bob, p.z);
+            dummy.position.set(p.x, p.y + 1.48 + bob, p.z);
             dummy.updateMatrix();
             pedHeads.setMatrixAt(i, dummy.matrix);
+            pedHairs.setMatrixAt(i, dummy.matrix);
 
-            dummy.position.set(p.x - 0.09 * cosY, p.y + 0.42, p.z + 0.09 * sinY);
+            dummy.position.set(p.x, p.y + 0.08, p.z);
+            dummy.rotation.set(0, 0, 0);
+            dummy.updateMatrix();
+            pedShadows.setMatrixAt(i, dummy.matrix);
+
+            const armOff = 0.255;
+            dummy.position.set(p.x - armOff * cosY, p.y + 1.32 + bob, p.z + armOff * sinY);
+            dummy.rotation.set(-swing * 0.85, yaw, 0, "YXZ");
+            dummy.updateMatrix();
+            pedArms.setMatrixAt(i * 2, dummy.matrix);
+
+            dummy.position.set(p.x + armOff * cosY, p.y + 1.32 + bob, p.z - armOff * sinY);
+            dummy.rotation.set(swing * 0.85, yaw, 0, "YXZ");
+            dummy.updateMatrix();
+            pedArms.setMatrixAt(i * 2 + 1, dummy.matrix);
+
+            const legOff = 0.105;
+            dummy.position.set(p.x - legOff * cosY, p.y + 0.78 + bob * 0.4, p.z + legOff * sinY);
             dummy.rotation.set(swing, yaw, 0, "YXZ");
             dummy.updateMatrix();
             pedLegs.setMatrixAt(i * 2, dummy.matrix);
+            pedShoes.setMatrixAt(i * 2, dummy.matrix);
 
-            dummy.position.set(p.x + 0.09 * cosY, p.y + 0.42, p.z - 0.09 * sinY);
+            dummy.position.set(p.x + legOff * cosY, p.y + 0.78 + bob * 0.4, p.z - legOff * sinY);
             dummy.rotation.set(-swing, yaw, 0, "YXZ");
             dummy.updateMatrix();
             pedLegs.setMatrixAt(i * 2 + 1, dummy.matrix);
+            pedShoes.setMatrixAt(i * 2 + 1, dummy.matrix);
         }
-        if (traffic.peds.length > 0) {
+        if (pedCount > 0) {
             pedTorsos.instanceMatrix.needsUpdate = true;
             pedHeads.instanceMatrix.needsUpdate = true;
+            pedHairs.instanceMatrix.needsUpdate = true;
+            pedArms.instanceMatrix.needsUpdate = true;
             pedLegs.instanceMatrix.needsUpdate = true;
+            pedShoes.instanceMatrix.needsUpdate = true;
+            pedShadows.instanceMatrix.needsUpdate = true;
         }
 
         syncPropPool(hydrants, hydrantsInst, false);
@@ -288,25 +482,10 @@ export function createTrafficRenderer(scene, traffic, propBodies) {
     };
 
     const dispose = () => {
-        const meshes = [
-            sedanHulls, sedanTrims, suvHulls, suvTrims, allWheels, allShadows,
-            pedTorsos, pedHeads, pedLegs, hydrantsInst, binsInst, conesInst
-        ];
-        for (const m of meshes) {
-            scene.remove(m);
-            m.geometry.dispose();
-        }
-        hullMat.dispose();
-        trimMat.dispose();
-        wheelMat.dispose();
-        shadowMat.dispose();
+        for (const m of ownedMeshes) scene.remove(m);
+        for (const g of ownedGeos) g.dispose();
+        for (const mat of ownedMats) mat.dispose();
         shadowTex.dispose();
-        pedTorsoMat.dispose();
-        pedSkinMat.dispose();
-        pedPantsMat.dispose();
-        hydrantMat.dispose();
-        binMat.dispose();
-        coneMat.dispose();
     };
 
     return { update, dispose };

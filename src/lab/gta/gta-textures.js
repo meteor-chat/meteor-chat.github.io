@@ -243,16 +243,16 @@ function drawBroadleafTexture() {
 export function createWetRoadMaterial(pbrAsphalt, fallbackAsphalt, isIntersection = false) {
     const wetnessUniform = { value: 0.78 };
     const mat = new THREE.MeshPhysicalMaterial({
-        color: 0x4b515b,
+        color: 0x454b54,
         map: (pbrAsphalt && pbrAsphalt.map) || fallbackAsphalt,
         normalMap: pbrAsphalt ? pbrAsphalt.normalMap : null,
-        normalScale: new THREE.Vector2(1.05, 1.05),
+        normalScale: new THREE.Vector2(0.52, 0.52),
         roughnessMap: pbrAsphalt ? pbrAsphalt.roughnessMap : null,
-        roughness: 0.84,
-        metalness: 0.06,
-        clearcoat: 0.9,
-        clearcoatRoughness: 0.05,
-        envMapIntensity: 1.5
+        roughness: 0.86,
+        metalness: 0.04,
+        clearcoat: 0.65,
+        clearcoatRoughness: 0.1,
+        envMapIntensity: 0.76
     });
 
     mat.onBeforeCompile = (shader) => {
@@ -352,13 +352,13 @@ diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.62, 0.18, 0.15), clamp(redCurb, 
             .replace(
                 "#include <roughnessmap_fragment>",
                 `#include <roughnessmap_fragment>
-roughnessFactor = mix(roughnessFactor * mix(0.95, 0.62, uWetness), 0.035, puddleMask);`
+roughnessFactor = mix(roughnessFactor * mix(0.95, 0.72, uWetness), 0.1, puddleMask);`
             )
             .replace(
                 "#include <clearcoat_roughness_fragment>",
                 `#include <clearcoat_roughness_fragment>
-clearcoatRoughness = mix(0.48 - uWetness * 0.22, 0.02, puddleMask);
-clearcoat = mix(0.08 + uWetness * 0.35, 1.0, puddleMask);`
+clearcoatRoughness = mix(0.52 - uWetness * 0.2, 0.08, puddleMask);
+clearcoat = mix(0.06 + uWetness * 0.24, 0.78, puddleMask);`
             );
     };
 

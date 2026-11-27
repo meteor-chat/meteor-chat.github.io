@@ -121,6 +121,29 @@ export function createJoltWorld(Jolt, options = {}) {
         return addBody(bcs, false);
     };
 
+    const createKinematicBox = ({ x, y, z, hx, hy, hz, yaw = 0, friction = 0.55 }) => {
+        sPos.Set(x, y, z);
+        sRot.Set(0, Math.sin(yaw * 0.5), 0, Math.cos(yaw * 0.5));
+        const bcs = new Jolt.BodyCreationSettings(boxShape(hx, hy, hz), sPos, sRot, Jolt.EMotionType_Kinematic, LAYER_MOVING);
+        bcs.mFriction = friction;
+        bcs.mRestitution = 0.15;
+        return addBody(bcs, true);
+    };
+
+    const moveKinematic = (body, x, y, z, yaw, dt) => {
+        if (!body || !trackedBodies.has(body)) return;
+        sPos.Set(x, y, z);
+        sRot.Set(0, Math.sin(yaw * 0.5), 0, Math.cos(yaw * 0.5));
+        bodyInterface.MoveKinematic(body.GetID(), sPos, sRot, Math.max(0.004, dt));
+    };
+
+    const teleportBody = (body, x, y, z, yaw = 0) => {
+        if (!body || !trackedBodies.has(body)) return;
+        sPos.Set(x, y, z);
+        sRot.Set(0, Math.sin(yaw * 0.5), 0, Math.cos(yaw * 0.5));
+        bodyInterface.SetPositionAndRotation(body.GetID(), sPos, sRot, Jolt.EActivation_Activate);
+    };
+
     const createStaticCompound = (boxes, ox = 0, oz = 0, friction = o.staticFriction) => {
         if (!boxes.length) return null;
         const cs = new Jolt.StaticCompoundShapeSettings();
@@ -220,7 +243,7 @@ export function createJoltWorld(Jolt, options = {}) {
     };
 
     const populateCityColliders = (cityData, heightAtFn) => {
-        const cells = 96;
+        const cells = 128;
         const n = cells + 1;
         const size = WORLD_HALF * 2;
         const heights = new Float32Array(n * n);
@@ -312,6 +335,9 @@ export function createJoltWorld(Jolt, options = {}) {
         createDynamicShape,
         createDynamicBox,
         createStaticBox,
+        createKinematicBox,
+        moveKinematic,
+        teleportBody,
         createStaticCompound,
         createHeightfieldChunk,
         populateCityColliders,

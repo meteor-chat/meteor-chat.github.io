@@ -55,16 +55,19 @@ export function computeMoodPalette(timeOfDay, rainIntensity = 0) {
         .lerp(new THREE.Color(0x060b16), night)
         .lerp(new THREE.Color(0x4a5b6e), rainIntensity * 0.5);
 
-    const horizon = new THREE.Color(0xa6cde8)
-        .lerp(new THREE.Color(0xf09356), sunset * 0.85)
+    const horizon = new THREE.Color(0x9bc0dc)
+        .lerp(new THREE.Color(0xd67c44), sunset * 0.84)
         .lerp(new THREE.Color(0x131e33), night)
         .lerp(new THREE.Color(0x6d7d8c), rainIntensity * 0.55);
 
-    const sunColor = new THREE.Color(0xfff4df)
-        .lerp(new THREE.Color(0xff9b54), sunset * 0.82)
+    const sunColor = new THREE.Color(0xfff1d8)
+        .lerp(new THREE.Color(0xf5924c), sunset * 0.82)
         .lerp(new THREE.Color(0x7898c8), night);
 
-    const fogColor = horizon.clone().lerp(new THREE.Color(0x9cb9d2), day * 0.32);
+    const fogColor = horizon
+        .clone()
+        .lerp(new THREE.Color(0x8ea9c2), day * 0.34)
+        .lerp(new THREE.Color(0xa66b48), sunset * 0.35);
 
     return {
         day,
@@ -171,7 +174,7 @@ export function createGtaRenderer(canvas, hooks = {}) {
 
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(320, 180), 0.22, 0.36, 1.04);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(320, 180), 0.08, 0.22, 1.6);
     const outputPass = new OutputPass();
     composer.addPass(renderPass);
     composer.addPass(bloomPass);
@@ -258,11 +261,13 @@ export function createGtaRenderer(canvas, hooks = {}) {
         scene.fog.density = farFog + rainIntensity * 0.0012 + m.night * 0.00055;
 
         hemiLight.color.copy(m.horizon);
-        hemiLight.intensity = 0.28 + m.day * 0.56 - rainIntensity * 0.14;
+        hemiLight.intensity = 0.24 + m.day * 0.36 - rainIntensity * 0.08;
         sunLight.color.copy(m.sunColor);
-        sunLight.intensity = (0.24 + m.day * 2.95) * (1 - rainIntensity * 0.48);
-        renderer.toneMappingExposure = 0.96 + m.day * 0.14 + m.sunset * 0.08 - m.night * 0.08;
-        bloomPass.strength = 0.16 + m.night * 0.22 + m.sunset * 0.08;
+        sunLight.intensity = (0.22 + m.day * 1.48 + m.sunset * 0.22) * (1 - rainIntensity * 0.42);
+        renderer.toneMappingExposure = 0.86 - m.sunset * 0.04 + m.night * 0.02;
+        bloomPass.threshold = 1.62 - m.night * 0.56;
+        bloomPass.strength = 0.06 + m.sunset * 0.03 + m.night * 0.16;
+        bloomPass.radius = 0.22;
 
         if (focusPos) {
             skyDome.position.set(focusPos.x, 0, focusPos.z);
@@ -286,8 +291,10 @@ export function createGtaRenderer(canvas, hooks = {}) {
                 scene.background = hdriRaw[wantKey];
                 skyDome.visible = false;
             }
-            scene.backgroundIntensity = wantKey === "night" ? 0.55 : 1.0 - rainIntensity * 0.32;
-            scene.environmentIntensity = wantKey === "night" ? 0.42 : 1.05 - rainIntensity * 0.25;
+            const baseBg = wantKey === "night" ? 0.52 : wantKey === "sunset" ? 0.72 : 0.84;
+            const baseEnv = wantKey === "night" ? 0.38 : wantKey === "sunset" ? 0.52 : 0.62;
+            scene.backgroundIntensity = Math.max(0.28, baseBg - rainIntensity * 0.22);
+            scene.environmentIntensity = Math.max(0.24, baseEnv - rainIntensity * 0.14);
         } else {
             skyDome.visible = true;
             scene.background = null;

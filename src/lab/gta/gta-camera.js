@@ -4,6 +4,7 @@ import {
     computeCameraOffsets,
     computeDynamicFov,
     dampAngle,
+    resolveCameraViewYaw,
     wrapAngle
 } from "./gta-camera-math.js";
 
@@ -11,6 +12,8 @@ export function createGtaCamera(camera) {
     let modeIdx = 0;
     let followYaw = 0;
     let orbitYaw = 0;
+    let activeViewYaw = 0;
+    let lastDriving = false;
     let orbitPitch = 0.08;
     let orbitIdle = 0;
     let shakePower = 0;
@@ -23,6 +26,7 @@ export function createGtaCamera(camera) {
         orbitYaw = wrapAngle(orbitYaw - dx * 0.0042);
         orbitPitch = Math.max(-0.26, Math.min(0.55, orbitPitch + dy * 0.0032));
         orbitIdle = 0;
+        if (!lastDriving) activeViewYaw = orbitYaw;
     };
 
     const addShake = (amount) => {
@@ -35,11 +39,13 @@ export function createGtaCamera(camera) {
     };
 
     const snap = (pos, yaw) => {
-        followYaw = yaw;
-        orbitYaw = 0;
+        const safeYaw = wrapAngle(yaw || 0);
+        followYaw = safeYaw;
+        orbitYaw = lastDriving ? 0 : safeYaw;
+        activeViewYaw = safeYaw;
         orbitPitch = 0.08;
-        smoothPos.set(pos.x - Math.sin(yaw) * 4, pos.y + 2.2, pos.z - Math.cos(yaw) * 4);
-        smoothLook.set(pos.x + Math.sin(yaw) * 6, pos.y + 1.4, pos.z + Math.cos(yaw) * 6);
+        smoothPos.set(pos.x - Math.sin(safeYaw) * 4, pos.y + 2.2, pos.z - Math.cos(safeYaw) * 4);
+        smoothLook.set(pos.x + Math.sin(safeYaw) * 6, pos.y + 1.4, pos.z + Math.cos(safeYaw) * 6);
         camera.position.copy(smoothPos);
         camera.lookAt(smoothLook);
     };
@@ -51,20 +57,32 @@ export function createGtaCamera(camera) {
         const speed = ctx.speed || 0;
         const offsets = computeCameraOffsets(mode, isDriving);
 
+        if (isDriving !== lastDriving) {
+            if (isDriving) {
+                followYaw = wrapAngle(ctx.targetYaw || activeViewYaw);
+                orbitYaw = 0;
+            } else {
+                orbitYaw = activeViewYaw;
+                followYaw = activeViewYaw;
+            }
+            lastDriving = isDriving;
+        }
+
         orbitIdle += stepDt;
         if (isDriving) {
             const targetYaw = ctx.targetYaw || 0;
-            const followRate = speed > 2 ? 4.8 : 2.2;
+            const followRate = speed > 2 ? 5.6 : 2.6;
             followYaw = dampAngle(followYaw, targetYaw, followRate, stepDt);
-            if (orbitIdle > 1.8 && speed > 1.5) {
-                orbitYaw = dampAngle(orbitYaw, 0, 3.2, stepDt);
-                orbitPitch += (0.08 - orbitPitch) * Math.min(1, stepDt * 3.0);
+            if (orbitIdle > 1.4 && speed > 1.2) {
+                orbitYaw = dampAngle(orbitYaw, 0, 3.8, stepDt);
+                orbitPitch += (0.08 - orbitPitch) * Math.min(1, stepDt * 3.2);
             }
         } else {
             followYaw = wrapAngle(orbitYaw);
         }
 
-        const viewYaw = isDriving ? wrapAngle(followYaw + orbitYaw) : followYaw;
+        const viewYaw = resolveCameraViewYaw(isDriving, followYaw, orbitYaw);
+        activeViewYaw = viewYaw;
         const sinY = Math.sin(viewYaw);
         const cosY = Math.cos(viewYaw);
         const rightX = -cosY;
@@ -134,6 +152,6 @@ export function createGtaCamera(camera) {
         cycleMode,
         snap,
         getMode: () => CAMERA_MODES[modeIdx],
-        getViewYaw: () => wrapAngle(followYaw + orbitYaw)
+        getViewYaw: () => activeViewYaw
     };
 }

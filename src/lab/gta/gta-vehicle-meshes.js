@@ -164,35 +164,35 @@ function buildFerrariBody(spec, ferrariGltf, paintHex, textures) {
 
     const paintMat = new THREE.MeshPhysicalMaterial({
         color: paintHex,
-        metalness: 0.86,
-        roughness: 0.14,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.025,
-        envMapIntensity: 1.85
+        metalness: 0.76,
+        roughness: 0.18,
+        clearcoat: 0.92,
+        clearcoatRoughness: 0.04,
+        envMapIntensity: 1.02
     });
     const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0x0b1524,
         metalness: 0.16,
-        roughness: 0.04,
+        roughness: 0.06,
         transparent: true,
-        opacity: 0.44,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.02,
-        envMapIntensity: 2.0,
+        opacity: 0.46,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.04,
+        envMapIntensity: 1.1,
         depthWrite: false
     });
     const tailMat = new THREE.MeshStandardMaterial({
         color: 0xdc2626,
         emissive: 0xff1a1a,
-        emissiveIntensity: 1.65,
-        roughness: 0.16,
+        emissiveIntensity: 1.35,
+        roughness: 0.18,
         metalness: 0.2
     });
     const headMat = new THREE.MeshStandardMaterial({
-        color: 0xf8fafc,
-        emissive: 0xfff5db,
-        emissiveIntensity: 2.1,
-        roughness: 0.12
+        color: 0xf4f6fa,
+        emissive: 0xfff2d6,
+        emissiveIntensity: 1.35,
+        roughness: 0.14
     });
 
     clone.traverse((child) => {
@@ -240,29 +240,29 @@ function buildSculptedBody(spec, paintHex, textures) {
 
     const paintMat = new THREE.MeshPhysicalMaterial({
         color: paintHex,
-        metalness: 0.84,
-        roughness: 0.16,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.03,
-        envMapIntensity: 1.8
+        metalness: 0.72,
+        roughness: 0.2,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.05,
+        envMapIntensity: 1.0
     });
     const glassMat = new THREE.MeshStandardMaterial({
         color: 0x0a1320,
-        metalness: 0.72,
-        roughness: 0.08,
-        envMapIntensity: 1.9
+        metalness: 0.62,
+        roughness: 0.1,
+        envMapIntensity: 1.05
     });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe8eef5, metalness: 0.94, roughness: 0.12 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd0d8e2, metalness: 0.86, roughness: 0.18, envMapIntensity: 0.95 });
     const headMat = new THREE.MeshStandardMaterial({
-        color: 0xf8fafc,
-        emissive: 0xfff4d6,
-        emissiveIntensity: 2.2
+        color: 0xf4f6fa,
+        emissive: 0xfff0cc,
+        emissiveIntensity: 1.35
     });
     const tailMat = new THREE.MeshStandardMaterial({
         color: 0xb91c1c,
         emissive: 0xdc2626,
-        emissiveIntensity: 1.35,
-        roughness: 0.18
+        emissiveIntensity: 1.25,
+        roughness: 0.2
     });
 
     const hullMesh = new THREE.Mesh(hull, paintMat);
@@ -381,7 +381,7 @@ export function createVehicleVisual(presetKey, textures, colorOverride = null, a
     };
 
     const setBrakeGlow = (braking) => {
-        if (built.tailMat) built.tailMat.emissiveIntensity = braking ? 4.4 : 1.55;
+        if (built.tailMat) built.tailMat.emissiveIntensity = braking ? 2.8 : 1.25;
     };
 
     const dispose = (scene) => {

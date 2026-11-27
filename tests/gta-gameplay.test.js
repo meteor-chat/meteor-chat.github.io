@@ -1,11 +1,15 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "fs";
+import { computeCameraRelativeMove, resolveCameraViewYaw } from "../src/lab/gta/gta-camera-math.js";
+import { softClampRadianceValue } from "../src/lab/gta/gta-perf-governor.js";
 import { buildRoadGraph } from "../src/lab/gta/gta-road-graph.js";
 import { createTrafficSystem } from "../src/lab/gta/gta-traffic-ai.js";
 import {
     VEHICLE_PRESETS,
     computeGearAndRpm,
     computeTireGrip,
-    findNearestEnterableVehicle
+    findNearestEnterableVehicle,
+    stepVehicleSteering
 } from "../src/lab/gta/gta-vehicle-specs.js";
 
 describe("Los Santos Vehicle Specs & Traffic AI", () => {
@@ -82,5 +86,49 @@ describe("Los Santos Vehicle Specs & Traffic AI", () => {
         );
         expect(crashCount).toBe(1);
         expect(target.knockTimer).toBeGreaterThan(0);
+    });
+
+    it("keeps on-foot camera getViewYaw single-counted and moves WASD strictly relative to camera", () => {
+        const camSrc = readFileSync("src/lab/gta/gta-camera.js", "utf8");
+        expect(camSrc).toContain("getViewYaw: () => activeViewYaw");
+        expect(camSrc).not.toContain("getViewYaw: () => wrapAngle(followYaw + orbitYaw)");
+
+        const rightYaw = resolveCameraViewYaw(false, -Math.PI * 0.5, -Math.PI * 0.5);
+        expect(rightYaw).toBeCloseTo(-Math.PI * 0.5, 5);
+
+        const fwdMove = computeCameraRelativeMove(1, 0, rightYaw, 5);
+        expect(fwdMove.mx).toBeCloseTo(-5, 4);
+        expect(Math.abs(fwdMove.mz)).toBeLessThan(1e-4);
+
+        const backMove = computeCameraRelativeMove(-1, 0, rightYaw, 5);
+        expect(backMove.mx).toBeCloseTo(5, 4);
+        expect(Math.abs(backMove.mz)).toBeLessThan(1e-4);
+
+        const rightMove = computeCameraRelativeMove(0, 1, rightYaw, 5);
+        expect(Math.abs(rightMove.mx)).toBeLessThan(1e-4);
+        expect(rightMove.mz).toBeCloseTo(-5, 4);
+
+        const leftMove = computeCameraRelativeMove(0, -1, rightYaw, 5);
+        expect(Math.abs(leftMove.mx)).toBeLessThan(1e-4);
+        expect(leftMove.mz).toBeCloseTo(5, 4);
+    });
+
+    it("tunes responsive asymmetric vehicle steering with highway speed taper and clamps extreme HDRI glare", () => {
+        const turnIn = stepVehicleSteering(0, 1, 8, 52, 0.1);
+        expect(turnIn.rawSteer).toBeGreaterThan(0.55);
+        expect(turnIn.speedFactor).toBeCloseTo(1, 3);
+
+        const recenter = stepVehicleSteering(1, 0, 8, 52, 0.1);
+        expect(recenter.rawSteer).toBeLessThan(0.3);
+
+        const counter = stepVehicleSteering(0.8, -1, 10, 52, 0.08);
+        expect(counter.rawSteer).toBeLessThan(-0.3);
+
+        const highway = stepVehicleSteering(1, 1, 46, 52, 0.05);
+        expect(highway.effectiveSteer).toBeLessThan(0.55);
+
+        expect(softClampRadianceValue(1.5, 4.5, 8.0)).toBeCloseTo(1.5, 4);
+        expect(softClampRadianceValue(180.0, 4.5, 8.0)).toBeLessThan(8.01);
+        expect(softClampRadianceValue(180.0, 4.5, 8.0)).toBeGreaterThan(7.5);
     });
 });

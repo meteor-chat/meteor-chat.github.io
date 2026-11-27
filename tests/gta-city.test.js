@@ -78,6 +78,10 @@ describe("Los Santos Road Graph, Terrain & City Generation", () => {
         expect(a.buildings.length).toBe(b.buildings.length);
         expect(a.buildings.length).toBeGreaterThan(100);
         expect(a.staticBoxes.length).toBe(b.staticBoxes.length);
+        expect(a.broadleafTrees.length).toBe(14);
+        expect(a.staticBoxes.length).toBeGreaterThan(
+            a.buildings.length + a.lamps.length + a.palms.length + a.trafficLights.length + a.broadleafTrees.length
+        );
         expect(a.palms.length).toBeGreaterThan(150);
         expect(a.lamps.length).toBeGreaterThan(40);
         expect(a.trafficLights.length).toBeGreaterThan(20);

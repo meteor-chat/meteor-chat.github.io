@@ -36,3 +36,19 @@ export function computeCameraOffsets(mode, isDriving) {
     }
     return { back: 6.2, up: 2.35, right: 0, lookUp: 1.1, lookAhead: 6.5 };
 }
+
+export function resolveCameraViewYaw(isDriving, followYaw, orbitYaw) {
+    return isDriving ? wrapAngle(followYaw + orbitYaw) : wrapAngle(orbitYaw);
+}
+
+export function computeCameraRelativeMove(fwd, side, cameraYaw, speed) {
+    const moveMag = Math.hypot(fwd, side);
+    if (moveMag <= 0.01) return { mx: 0, mz: 0, moveMag: 0, desiredYaw: null };
+    const nf = fwd / moveMag;
+    const ns = side / moveMag;
+    const sinY = Math.sin(cameraYaw);
+    const cosY = Math.cos(cameraYaw);
+    const mx = (sinY * nf - cosY * ns) * speed;
+    const mz = (cosY * nf + sinY * ns) * speed;
+    return { mx, mz, moveMag, desiredYaw: Math.atan2(mx, mz) };
+}

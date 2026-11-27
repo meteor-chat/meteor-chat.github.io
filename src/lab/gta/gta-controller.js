@@ -127,8 +127,7 @@ export async function createGtaApp(root) {
         } else if (near.kind === "civ") {
             const tc = traffic.cars[near.idx];
             const entry = spawnCarAt(tc.preset, tc.pos.x, tc.pos.z, tc.yaw, tc.color);
-            tc.pos.x = 240;
-            tc.pos.z = -240;
+            traffic.teleportCar(near.idx, 240, -240);
             state.activeCarIndex = cars.length - 1;
             character.setVisible(false);
             audio.playDoor();
@@ -243,7 +242,8 @@ export async function createGtaApp(root) {
     cameraCtl.snap(character.state.pos, 0);
     particles = createGtaParticles(rendererCtx.scene);
     traffic = createTrafficSystem(cityData.graph, 2026);
-    trafficRender = createTrafficRenderer(rendererCtx.scene, traffic, propBodies);
+    traffic.attachColliders(world);
+    trafficRender = createTrafficRenderer(rendererCtx.scene, traffic, propBodies, assets, textures);
 
     hud.setLoader("Pre-Compiling WebGL 2.0 Shaders...", 95);
     rendererCtx.updateAtmosphere(state.timeOfDay, 0, character.state.pos);
@@ -370,6 +370,7 @@ export async function createGtaApp(root) {
         const idleInput = { throttle: 0, brake: 0, steer: 0, handbrake: false, nitro: false };
 
         const alpha = world.step(dt, (h) => {
+            if (traffic) traffic.syncPhysics(h);
             for (let i = 0; i < cars.length; i += 1) {
                 cars[i].physics.update(h, i === state.activeCarIndex ? carInput : idleInput, env);
             }
@@ -536,6 +537,7 @@ export async function createGtaApp(root) {
                 c.visual.dispose(rendererCtx.scene);
             }
             if (trafficRender) trafficRender.dispose();
+            if (traffic) traffic.dispose();
             if (character) character.dispose();
             if (particles) particles.dispose();
             if (cityScene) cityScene.dispose();

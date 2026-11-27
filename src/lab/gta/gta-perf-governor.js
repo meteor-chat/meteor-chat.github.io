@@ -47,6 +47,12 @@ export function computeSectorIndex(x, z, gridSize = 3, worldHalf = 384) {
     return gz * gridSize + gx;
 }
 
+export function softClampRadianceValue(v, knee = 4.5, ceiling = 8.0) {
+    if (v <= knee) return v;
+    const span = Math.max(0.5, ceiling - knee);
+    return knee + span * (1 - Math.exp(-(v - knee) / span));
+}
+
 export function createPerfGovernor(initialPreset = "balanced") {
     let preset = QUALITY_PRESETS[initialPreset] || QUALITY_PRESETS.balanced;
     let scale = preset.maxResScale;
