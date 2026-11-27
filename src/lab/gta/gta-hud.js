@@ -31,12 +31,9 @@ export function createGtaHud(root, callbacks = {}) {
         draws: q("[data-gta-draws]"),
         scale: q("[data-gta-scale]"),
         gpu: q("[data-gta-gpu]"),
-        wanted: q("[data-gta-wanted]"),
-        stars: Array.from(root.querySelectorAll("[data-gta-star]")),
         cash: q("[data-gta-cash]"),
         settingsToggle: q("[data-gta-settings-toggle]"),
         settings: q("[data-gta-settings]"),
-        radarFrame: q("[data-gta-radar-frame]"),
         radar: q("[data-gta-radar]"),
         gpsDist: q("[data-gta-gps-dist]"),
         hp: q("[data-gta-hp]"),
@@ -119,11 +116,6 @@ export function createGtaHud(root, callbacks = {}) {
         bind(btn, "click", () => {
             if (callbacks.onSpawnCar) callbacks.onSpawnCar(btn.getAttribute("data-gta-spawn"));
             toggleSettings(false);
-        });
-    }
-    for (const btn of root.querySelectorAll("[data-gta-wanted-set]")) {
-        bind(btn, "click", () => {
-            if (callbacks.onWantedSet) callbacks.onWantedSet(Number(btn.getAttribute("data-gta-wanted-set")));
         });
     }
     bind(q("[data-gta-cam-cycle]"), "click", () => {
@@ -247,24 +239,7 @@ export function createGtaHud(root, callbacks = {}) {
             }
         }
 
-        if (snap.policeUnits && snap.policeUnits.length > 0) {
-            const redFlash = Math.floor(snap.timeSec * 6) % 2 === 0;
-            for (const u of snap.policeUnits) {
-                const [ux, uy] = toLocal(u.pos.x, u.pos.z);
-                radarCtx.fillStyle = redFlash ? "#ef4444" : "#3b82f6";
-                radarCtx.beginPath();
-                radarCtx.arc(ux, uy, 3.8, 0, Math.PI * 2);
-                radarCtx.fill();
-            }
-        }
-
         radarCtx.restore();
-
-        if (snap.wantedStars > 0) {
-            const flashRed = Math.floor(snap.timeSec * 5) % 2 === 0;
-            radarCtx.fillStyle = flashRed ? "rgba(239, 68, 68, 0.16)" : "rgba(59, 130, 246, 0.16)";
-            radarCtx.fillRect(0, 0, w, h);
-        }
 
         radarCtx.fillStyle = "#ffffff";
         radarCtx.strokeStyle = "#0f172a";
@@ -315,21 +290,6 @@ export function createGtaHud(root, callbacks = {}) {
             } else {
                 els.gpsDist.hidden = true;
             }
-        }
-
-        for (let i = 0; i < els.stars.length; i += 1) {
-            els.stars[i].classList.toggle("active", i < snap.wantedStars);
-        }
-        const flashRed = snap.wantedStars > 0 && Math.floor(snap.timeSec * 5) % 2 === 0;
-        const flashBlue = snap.wantedStars > 0 && !flashRed;
-        if (els.wanted) {
-            els.wanted.classList.toggle("flash-red", flashRed && !snap.evading);
-            els.wanted.classList.toggle("flash-blue", flashBlue && !snap.evading);
-            els.wanted.classList.toggle("evading", snap.evading && Math.floor(snap.timeSec * 4) % 2 === 0);
-        }
-        if (els.radarFrame) {
-            els.radarFrame.classList.toggle("wanted-red", flashRed);
-            els.radarFrame.classList.toggle("wanted-blue", flashBlue);
         }
 
         if (els.radioBtn) {

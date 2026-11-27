@@ -1,86 +1,111 @@
 import * as THREE from "three";
-import { OCEAN_LEVEL, WORLD_HALF, heightAt } from "./gta-road-graph.js";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
+import { dampAngle } from "./gta-camera-math.js";
+import { WORLD_HALF, heightAt } from "./gta-road-graph.js";
 
-const WALK_SPEED = 4.6;
-const SPRINT_SPEED = 8.4;
-const GRAVITY = -22;
-const JUMP_SPEED = 7.6;
+function buildSmoothFallbackCharacter() {
+    const group = new THREE.Group();
+    const jacketMat = new THREE.MeshStandardMaterial({ color: 0x1a1f28, roughness: 0.78 });
+    const hoodMat = new THREE.MeshStandardMaterial({ color: 0xb82828, roughness: 0.82 });
+    const jeansMat = new THREE.MeshStandardMaterial({ color: 0x202c3d, roughness: 0.84 });
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0xd6a47f, roughness: 0.72 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xeef2f6, roughness: 0.55 });
 
-export function createGtaCharacter(scene, spawn) {
-    const root = new THREE.Group();
-    const jacketMat = new THREE.MeshPhysicalMaterial({
-        color: 0x16181e,
-        roughness: 0.38,
-        metalness: 0.12,
-        clearcoat: 0.55,
-        clearcoatRoughness: 0.35
-    });
-    const hoodMat = new THREE.MeshStandardMaterial({ color: 0xc92a2a, roughness: 0.78 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0xa47454, roughness: 0.72 });
-    const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1f2630, roughness: 0.84 });
-    const capMat = new THREE.MeshStandardMaterial({ color: 0xbcb3a4, roughness: 0.8 });
-    const shoeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.6 });
-
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.66, 0.3), jacketMat);
-    torso.position.y = 1.15;
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.21, 0.44, 6, 12), jacketMat);
+    torso.position.y = 1.18;
+    torso.scale.set(1.18, 1, 0.72);
     torso.castShadow = true;
-    root.add(torso);
+    group.add(torso);
 
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.24, 0.22), hoodMat);
-    hood.position.set(0, 1.44, -0.11);
-    root.add(hood);
+    const hood = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), hoodMat);
+    hood.position.set(0, 1.44, -0.1);
+    hood.scale.set(1.1, 0.7, 1.0);
+    group.add(hood);
 
-    const backEmblem = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.28, 0.04), hoodMat);
-    backEmblem.position.set(0, 1.16, -0.15);
-    root.add(backEmblem);
-
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.3, 0.28), skinMat);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.135, 14, 12), skinMat);
     head.position.y = 1.66;
     head.castShadow = true;
-    root.add(head);
+    group.add(head);
 
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 0.31), capMat);
-    cap.position.set(0, 1.78, -0.01);
-    root.add(cap);
+    const leftArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.068, 0.48, 5, 10), jacketMat);
+    leftArm.position.set(-0.3, 1.16, 0);
+    leftArm.castShadow = true;
+    const rightArm = leftArm.clone();
+    rightArm.position.x = 0.3;
+    group.add(leftArm, rightArm);
 
-    const armGeo = new THREE.BoxGeometry(0.16, 0.58, 0.18);
-    armGeo.translate(0, -0.24, 0);
-    const armL = new THREE.Mesh(armGeo, jacketMat);
-    armL.position.set(-0.36, 1.42, 0);
-    armL.castShadow = true;
-    const armR = new THREE.Mesh(armGeo, jacketMat);
-    armR.position.set(0.36, 1.42, 0);
-    armR.castShadow = true;
-    root.add(armL, armR);
+    const leftLeg = new THREE.Mesh(new THREE.CapsuleGeometry(0.088, 0.62, 5, 10), jeansMat);
+    leftLeg.position.set(-0.12, 0.46, 0);
+    leftLeg.castShadow = true;
+    const rightLeg = leftLeg.clone();
+    rightLeg.position.x = 0.12;
+    group.add(leftLeg, rightLeg);
 
-    const legGeo = new THREE.BoxGeometry(0.2, 0.72, 0.22);
-    legGeo.translate(0, -0.36, 0);
-    const legL = new THREE.Mesh(legGeo, pantsMat);
-    legL.position.set(-0.14, 0.82, 0);
-    legL.castShadow = true;
-    const legR = new THREE.Mesh(legGeo, pantsMat);
-    legR.position.set(0.14, 0.82, 0);
-    legR.castShadow = true;
-    root.add(legL, legR);
+    const shoeL = new THREE.Mesh(new THREE.CapsuleGeometry(0.068, 0.14, 5, 8), shoeMat);
+    shoeL.rotation.x = Math.PI * 0.5;
+    shoeL.position.set(-0.12, 0.07, 0.05);
+    const shoeR = shoeL.clone();
+    shoeR.position.x = 0.12;
+    group.add(shoeL, shoeR);
 
-    const shoeGeo = new THREE.BoxGeometry(0.21, 0.12, 0.3);
-    const shoeL = new THREE.Mesh(shoeGeo, shoeMat);
-    shoeL.position.set(0, -0.7, 0.04);
-    legL.add(shoeL);
-    const shoeR = new THREE.Mesh(shoeGeo, shoeMat);
-    shoeR.position.set(0, -0.7, 0.04);
-    legR.add(shoeR);
+    return { group, leftArm, rightArm, leftLeg, rightLeg };
+}
+
+export function createGtaCharacter(scene, spawn = { x: 0, y: 12.6, z: -304 }, assets = null) {
+    const root = new THREE.Group();
+    root.position.set(spawn.x, spawn.y, spawn.z);
+
+    let mixer = null;
+    let actions = null;
+    let activeClip = "Idle";
+    let fallbackRig = null;
+
+    const soldierGltf = assets && assets.models ? assets.models.soldier : null;
+    if (soldierGltf && soldierGltf.scene) {
+        const model = SkeletonUtils.clone(soldierGltf.scene);
+        model.rotation.y = Math.PI;
+        model.traverse((child) => {
+            if (child.isMesh) {
+                child.castShadow = true;
+                child.receiveShadow = true;
+            }
+        });
+        root.add(model);
+
+        if (soldierGltf.animations && soldierGltf.animations.length > 0) {
+            mixer = new THREE.AnimationMixer(model);
+            actions = {};
+            for (const clip of soldierGltf.animations) {
+                actions[clip.name] = mixer.clipAction(clip);
+            }
+            if (actions.Idle) {
+                actions.Idle.play();
+                activeClip = "Idle";
+            }
+        }
+    } else {
+        fallbackRig = buildSmoothFallbackCharacter();
+        root.add(fallbackRig.group);
+    }
 
     scene.add(root);
 
     const state = {
         pos: new THREE.Vector3(spawn.x, spawn.y, spawn.z),
-        velY: 0,
+        vel: new THREE.Vector3(),
         yaw: 0,
-        onGround: true,
-        stridePhase: 0,
-        visible: true,
-        moving: false
+        grounded: true,
+        walkPhase: 0,
+        visible: true
+    };
+
+    const switchAnim = (nextName) => {
+        if (!actions || activeClip === nextName || !actions[nextName]) return;
+        const prev = actions[activeClip];
+        const next = actions[nextName];
+        next.reset().setEffectiveTimeScale(1).setEffectiveWeight(1).play();
+        if (prev) prev.crossFadeTo(next, 0.22, false);
+        activeClip = nextName;
     };
 
     const setVisible = (v) => {
@@ -90,98 +115,107 @@ export function createGtaCharacter(scene, spawn) {
 
     const place = (x, y, z, yaw = 0) => {
         state.pos.set(x, y, z);
-        state.velY = 0;
+        state.vel.set(0, 0, 0);
         state.yaw = yaw;
-        state.onGround = true;
+        state.grounded = true;
         root.position.copy(state.pos);
         root.rotation.y = yaw;
     };
 
-    const update = (dt, input, camYaw, world) => {
+    const update = (dt, input, cameraYaw, world) => {
         if (!state.visible) return;
-        const stepDt = Math.min(0.05, Math.max(0.001, dt));
-        const forward = (input.forward ? 1 : 0) - (input.backward ? 1 : 0);
-        const strafe = (input.right ? 1 : 0) - (input.left ? 1 : 0);
-        const len = Math.hypot(forward, strafe);
-        const speed = input.sprint ? SPRINT_SPEED : WALK_SPEED;
+        const fwd = (input.forward ? 1 : 0) - (input.backward ? 1 : 0);
+        const side = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+        const moveMag = Math.hypot(fwd, side);
+        const sprint = Boolean(input.sprint);
+        const speed = sprint ? 9.8 : 4.9;
 
-        let dx = 0;
-        let dz = 0;
-        if (len > 0.01) {
-            const nf = forward / len;
-            const ns = strafe / len;
-            const sinY = Math.sin(camYaw);
-            const cosY = Math.cos(camYaw);
-            const wx = sinY * nf - cosY * ns;
-            const wz = cosY * nf + sinY * ns;
-            dx = wx * speed * stepDt;
-            dz = wz * speed * stepDt;
-            const targetYaw = Math.atan2(wx, wz);
-            let diff = (targetYaw - state.yaw + Math.PI * 3) % (Math.PI * 2) - Math.PI;
-            state.yaw += diff * Math.min(1, stepDt * 12);
-            state.moving = true;
-        } else {
-            state.moving = false;
+        let mx = 0;
+        let mz = 0;
+        if (moveMag > 0.01) {
+            const nf = fwd / moveMag;
+            const ns = side / moveMag;
+            const sinY = Math.sin(cameraYaw);
+            const cosY = Math.cos(cameraYaw);
+            mx = (sinY * nf - cosY * ns) * speed;
+            mz = (cosY * nf + sinY * ns) * speed;
+            const desiredYaw = Math.atan2(mx, mz);
+            state.yaw = dampAngle(state.yaw, desiredYaw, 13, dt);
         }
 
-        if (dx !== 0 || dz !== 0) {
-            const moveLen = Math.hypot(dx, dz);
-            const rayHit = world.castRay(
+        const stepX = mx * dt;
+        const stepZ = mz * dt;
+        const distStep = Math.hypot(stepX, stepZ);
+        if (distStep > 0.0005 && world) {
+            const hit = world.castRay(
                 { x: state.pos.x, y: state.pos.y + 0.9, z: state.pos.z },
-                { x: dx / moveLen, y: 0, z: dz / moveLen },
-                moveLen + 0.55
+                { x: stepX, y: 0, z: stepZ },
+                distStep + 0.45
             );
-            if (!rayHit) {
-                state.pos.x = Math.max(-WORLD_HALF + 12, Math.min(WORLD_HALF - 12, state.pos.x + dx));
-                state.pos.z = Math.max(-WORLD_HALF + 12, Math.min(WORLD_HALF - 12, state.pos.z + dz));
+            if (!hit) {
+                state.pos.x += stepX;
+                state.pos.z += stepZ;
+            }
+        } else {
+            state.pos.x += stepX;
+            state.pos.z += stepZ;
+        }
+
+        state.pos.x = Math.max(-WORLD_HALF + 8, Math.min(WORLD_HALF - 8, state.pos.x));
+        state.pos.z = Math.max(-WORLD_HALF + 8, Math.min(WORLD_HALF - 8, state.pos.z));
+
+        if (input.jump && state.grounded) {
+            state.vel.y = 6.8;
+            state.grounded = false;
+        }
+        state.vel.y -= 19.6 * dt;
+        state.pos.y += state.vel.y * dt;
+
+        let groundY = heightAt(state.pos.x, state.pos.z);
+        if (world) {
+            const downHit = world.castRay(
+                { x: state.pos.x, y: state.pos.y + 1.4, z: state.pos.z },
+                { x: 0, y: -1, z: 0 },
+                4.2
+            );
+            if (downHit && downHit.point.y > groundY - 0.5) {
+                groundY = Math.max(groundY, downHit.point.y);
             }
         }
-
-        if (input.jump && state.onGround) {
-            state.velY = JUMP_SPEED;
-            state.onGround = false;
+        if (state.pos.y <= groundY + 0.02) {
+            state.pos.y = groundY + 0.02;
+            state.vel.y = 0;
+            state.grounded = true;
         }
-        state.velY += GRAVITY * stepDt;
-        state.pos.y += state.velY * stepDt;
-
-        let groundY = Math.max(OCEAN_LEVEL + 0.1, heightAt(state.pos.x, state.pos.z));
-        const downHit = world.castRay(
-            { x: state.pos.x, y: state.pos.y + 1.2, z: state.pos.z },
-            { x: 0, y: -1, z: 0 },
-            2.6
-        );
-        if (downHit && downHit.point.y > groundY - 0.1 && downHit.point.y <= state.pos.y + 0.75) {
-            groundY = downHit.point.y;
-        }
-        if (state.pos.y <= groundY) {
-            state.pos.y = groundY;
-            state.velY = 0;
-            state.onGround = true;
-        }
-
-        if (state.moving) {
-            state.stridePhase += stepDt * (input.sprint ? 12.5 : 8.5);
-        } else {
-            state.stridePhase *= Math.max(0, 1 - stepDt * 10);
-        }
-        const swing = state.moving ? Math.sin(state.stridePhase) * (input.sprint ? 0.85 : 0.55) : 0;
-        legL.rotation.x = swing;
-        legR.rotation.x = -swing;
-        armL.rotation.x = -swing * 0.8;
-        armR.rotation.x = swing * 0.8;
 
         root.position.copy(state.pos);
         root.rotation.y = state.yaw;
+
+        if (mixer) {
+            const targetClip = moveMag < 0.05 ? "Idle" : sprint ? "Run" : "Walk";
+            switchAnim(targetClip);
+            mixer.update(dt);
+        } else if (fallbackRig) {
+            if (moveMag > 0.05 && state.grounded) {
+                state.walkPhase += dt * (sprint ? 12.5 : 8.2);
+                const swing = Math.sin(state.walkPhase) * (sprint ? 0.65 : 0.4);
+                fallbackRig.leftLeg.rotation.x = swing;
+                fallbackRig.rightLeg.rotation.x = -swing;
+                fallbackRig.leftArm.rotation.x = -swing * 0.8;
+                fallbackRig.rightArm.rotation.x = swing * 0.8;
+            } else {
+                fallbackRig.leftLeg.rotation.x *= 0.84;
+                fallbackRig.rightLeg.rotation.x *= 0.84;
+                fallbackRig.leftArm.rotation.x *= 0.84;
+                fallbackRig.rightArm.rotation.x *= 0.84;
+            }
+        }
     };
 
     const dispose = () => {
-        root.traverse((obj) => {
-            if (obj.geometry) obj.geometry.dispose();
-            if (obj.material) obj.material.dispose();
-        });
+        if (mixer) mixer.stopAllAction();
         scene.remove(root);
     };
 
-    place(spawn.x, spawn.y, spawn.z, 0);
     return { root, state, setVisible, place, update, dispose };
 }

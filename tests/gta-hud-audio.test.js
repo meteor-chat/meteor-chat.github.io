@@ -72,7 +72,6 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             onWeather: (v) => events.push(["weather", v]),
             onGps: (v) => events.push(["gps", v]),
             onSpawnCar: (v) => events.push(["spawn", v]),
-            onWantedSet: (v) => events.push(["wanted", v]),
             onCamCycle: () => events.push(["cam"]),
             onRadioToggle: () => events.push(["radio"]),
             onAudioToggle: () => events.push(["audio"]),
@@ -86,7 +85,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             fps: 60,
             isDriving: true,
             vehicleName: "Elegy GT-R",
-            drawCalls: 42,
+            drawCalls: 142,
             scale: 1,
             cash: 205000,
             hp: 90,
@@ -94,11 +93,9 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             nitro: 64,
             mph: 94,
             gear: "D4",
-            district: "Downtown Los Santos",
+            district: "Downtown",
             street: "Integrity Way",
             promptText: "",
-            wantedStars: 5,
-            evading: false,
             radioOn: true,
             muted: false,
             timeSec: 1.0,
@@ -108,8 +105,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             gpsPoints: [{ x: 0, z: -90 }, { x: 0, z: 0 }],
             gpsMiles: 0.42,
             parkedCars: [{ x: 4, z: -285 }],
-            civCars: [{ pos: { x: 10, z: -80 } }],
-            policeUnits: [{ pos: { x: -12, z: -70 } }]
+            civCars: [{ pos: { x: 10, z: -80 } }]
         });
 
         expect(root.querySelector("[data-gta-fps]").textContent).toBe("60 FPS");
@@ -120,7 +116,6 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
         expect(root.querySelector("[data-gta-speedo]").hidden).toBe(false);
         expect(root.querySelector("[data-gta-street]").textContent).toBe("Integrity Way");
         expect(root.querySelector("[data-gta-gps-dist]").textContent).toBe("0.42 mi");
-        expect(root.querySelectorAll("[data-gta-star].active").length).toBe(5);
 
         const settingsToggle = root.querySelector("[data-gta-settings-toggle]");
         const drawer = root.querySelector("[data-gta-settings]");
@@ -132,7 +127,6 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
         root.querySelector('[data-gta-weather="rain"]').click();
         root.querySelector('[data-gta-gps="beach"]').click();
         root.querySelector('[data-gta-spawn="gauntlet"]').click();
-        root.querySelector('[data-gta-wanted-set="5"]').click();
         root.querySelector("[data-gta-cam-cycle]").click();
         root.querySelector("[data-gta-radio]").click();
         root.querySelector("[data-gta-audio]").click();
@@ -143,7 +137,6 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             ["weather", "rain"],
             ["gps", "beach"],
             ["spawn", "gauntlet"],
-            ["wanted", 5],
             ["cam"],
             ["radio"],
             ["audio"],
@@ -185,8 +178,7 @@ describe("Los Santos HUD, Radar, Camera Math & Web Audio", () => {
             audio.playHorn();
             audio.playDoor();
             audio.playCrash(0.8);
-            audio.playWantedChime();
-            audio.update(0.033, { isDriving: true, rpm: 4200, throttle: 1, drifting: true, lateralSpeed: 6, sirenIntensity: 0.7, timeSec: 2 });
+            audio.update(0.033, { isDriving: true, rpm: 4200, throttle: 1, drifting: true, lateralSpeed: 6, timeSec: 2 });
             audio.setMuted(true);
         }).not.toThrow();
         expect(audio.isMuted()).toBe(true);

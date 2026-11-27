@@ -21,8 +21,8 @@ export const VEHICLE_PRESETS = Object.freeze({
         comDrop: 0.36,
         wheelRadius: 0.36,
         wheelWidth: 0.28,
-        halfTrack: 0.88,
-        halfWheelbase: 1.42,
+        halfTrack: 0.84,
+        halfWheelbase: 1.33,
         mountY: 0.08,
         restHeight: 0.68,
         suspRest: 0.42,
@@ -32,8 +32,7 @@ export const VEHICLE_PRESETS = Object.freeze({
         differentials: [[0, 1, 0.4], [2, 3, 0.6]],
         handbrakeLat: 0.28,
         spoiler: true,
-        suv: false,
-        police: false
+        suv: false
     },
     gauntlet: {
         key: "gauntlet",
@@ -46,12 +45,12 @@ export const VEHICLE_PRESETS = Object.freeze({
         halfExtents: [1.02, 0.52, 2.38],
         bodyLift: 0.16,
         comDrop: 0.36,
-        wheelRadius: 0.38,
-        wheelWidth: 0.3,
-        halfTrack: 0.9,
-        halfWheelbase: 1.46,
+        wheelRadius: 0.36,
+        wheelWidth: 0.28,
+        halfTrack: 0.85,
+        halfWheelbase: 1.34,
         mountY: 0.08,
-        restHeight: 0.7,
+        restHeight: 0.69,
         suspRest: 0.44,
         suspFrequency: 1.35,
         suspDamping: 0.9,
@@ -59,8 +58,7 @@ export const VEHICLE_PRESETS = Object.freeze({
         differentials: [[2, 3, 1.0]],
         handbrakeLat: 0.24,
         spoiler: true,
-        suv: false,
-        police: false
+        suv: false
     },
     cavalcade: {
         key: "cavalcade",
@@ -86,35 +84,7 @@ export const VEHICLE_PRESETS = Object.freeze({
         differentials: [[0, 1, 0.5], [2, 3, 0.5]],
         handbrakeLat: 0.34,
         spoiler: false,
-        suv: true,
-        police: false
-    },
-    cruiser: {
-        key: "cruiser",
-        name: "LSPD Cruiser",
-        paint: 0x11141a,
-        secondary: 0xf1f5f9,
-        mass: 1850,
-        engineTorque: 1180,
-        topSpeed: 49,
-        halfExtents: [0.98, 0.56, 2.36],
-        bodyLift: 0.18,
-        comDrop: 0.38,
-        wheelRadius: 0.37,
-        wheelWidth: 0.27,
-        halfTrack: 0.88,
-        halfWheelbase: 1.44,
-        mountY: 0.08,
-        restHeight: 0.72,
-        suspRest: 0.45,
-        suspFrequency: 1.35,
-        suspDamping: 0.92,
-        antiRoll: 700,
-        differentials: [[0, 1, 0.45], [2, 3, 0.55]],
-        handbrakeLat: 0.3,
-        spoiler: false,
-        suv: false,
-        police: true
+        suv: true
     }
 });
 

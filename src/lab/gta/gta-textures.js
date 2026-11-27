@@ -18,205 +18,113 @@ function finalizeTex(canvas, repeatX = 1, repeatY = 1, srgb = true) {
     return tex;
 }
 
-function drawRoadAlbedo() {
+function drawFallbackAsphalt() {
     const c = makeCanvas(512, 512);
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#1d2128";
+    ctx.fillStyle = "#2b2f36";
     ctx.fillRect(0, 0, 512, 512);
-
-    for (let i = 0; i < 4200; i += 1) {
-        const x = (i * 97) % 512;
-        const y = (i * 211) % 512;
-        const v = 24 + ((i * 31) % 24);
-        ctx.fillStyle = `rgb(${v},${v + 2},${v + 6})`;
+    for (let i = 0; i < 16000; i += 1) {
+        const x = (i * 97 + ((i >> 4) * 37)) % 512;
+        const y = (i * 211 + ((i >> 3) * 19)) % 512;
+        const v = 34 + ((i * 29) % 28);
+        ctx.fillStyle = `rgb(${v},${v + 1},${v + 3})`;
         ctx.fillRect(x, y, 2, 2);
     }
-
-    ctx.fillStyle = "rgba(12, 15, 20, 0.34)";
-    ctx.fillRect(92, 0, 56, 512);
-    ctx.fillRect(364, 0, 56, 512);
-
-    ctx.fillStyle = "#c9463c";
-    ctx.fillRect(0, 0, 12, 512);
-    ctx.fillRect(500, 0, 12, 512);
-
-    ctx.fillStyle = "#e2b23b";
-    ctx.fillRect(247, 0, 6, 512);
-    ctx.fillRect(259, 0, 6, 512);
-
-    ctx.fillStyle = "rgba(235, 240, 246, 0.82)";
-    for (let y = 16; y < 512; y += 64) {
-        ctx.fillRect(132, y, 5, 32);
-        ctx.fillRect(375, y, 5, 32);
-    }
-    return finalizeTex(c, 1, 1, true);
+    return finalizeTex(c, 2, 2, true);
 }
 
-function drawRoadRoughness() {
-    const c = makeCanvas(512, 512);
-    const ctx = c.getContext("2d");
-    ctx.fillStyle = "#c8c8c8";
-    ctx.fillRect(0, 0, 512, 512);
+function drawGlassInteriorMaps() {
+    const ac = makeCanvas(512, 512);
+    const ec = makeCanvas(512, 512);
+    const actx = ac.getContext("2d");
+    const ectx = ec.getContext("2d");
 
-    for (let i = 0; i < 24; i += 1) {
-        const x = ((i * 173 + 67) % 440) + 36;
-        const y = ((i * 293 + 41) % 460) + 26;
-        const rx = 26 + ((i * 47) % 56);
-        const ry = 44 + ((i * 71) % 92);
-        const grad = ctx.createRadialGradient(x, y, rx * 0.15, x, y, Math.max(rx, ry));
-        grad.addColorStop(0, "rgba(12, 12, 12, 0.96)");
-        grad.addColorStop(0.65, "rgba(38, 38, 38, 0.85)");
-        grad.addColorStop(1, "rgba(200, 200, 200, 0)");
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.ellipse(x, y, rx, ry, ((i * 19) % 10) * 0.1, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    return finalizeTex(c, 1, 1, false);
-}
-
-function drawIntersectionAlbedo() {
-    const c = makeCanvas(512, 512);
-    const ctx = c.getContext("2d");
-    ctx.fillStyle = "#1e222a";
-    ctx.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 2600; i += 1) {
-        const x = (i * 131) % 512;
-        const y = (i * 197) % 512;
-        const v = 26 + (i % 18);
-        ctx.fillStyle = `rgb(${v},${v + 2},${v + 5})`;
-        ctx.fillRect(x, y, 2, 2);
-    }
-    ctx.fillStyle = "rgba(232, 238, 245, 0.82)";
-    for (let i = 48; i < 464; i += 32) {
-        ctx.fillRect(i, 14, 16, 46);
-        ctx.fillRect(i, 452, 16, 46);
-        ctx.fillRect(14, i, 46, 16);
-        ctx.fillRect(452, i, 46, 16);
-    }
-    return finalizeTex(c, 1, 1, true);
-}
-
-function drawFacade(kind) {
-    const albedoC = makeCanvas(512, 512);
-    const emC = makeCanvas(512, 512);
-    const actx = albedoC.getContext("2d");
-    const ectx = emC.getContext("2d");
+    actx.fillStyle = "#162638";
+    actx.fillRect(0, 0, 512, 512);
     ectx.fillStyle = "#000000";
     ectx.fillRect(0, 0, 512, 512);
 
-    if (kind === "glassTower") {
-        actx.fillStyle = "#223447";
-        actx.fillRect(0, 0, 512, 512);
-        for (let row = 0; row < 16; row += 1) {
-            const y = row * 32;
-            actx.fillStyle = "#364b60";
-            actx.fillRect(0, y, 512, 5);
-            for (let col = 0; col < 12; col += 1) {
-                const x = col * 42 + 4;
-                const lit = ((row * 31 + col * 17) % 11) < 4;
-                actx.fillStyle = lit ? "#7cb4d8" : "#2f5774";
-                actx.fillRect(x, y + 6, 36, 22);
-                if (lit) {
-                    ectx.fillStyle = ((row + col) % 3 === 0) ? "#ffd89c" : "#c6e8ff";
-                    ectx.fillRect(x + 2, y + 8, 32, 18);
-                }
+    const rows = 8;
+    const cols = 8;
+    const cellW = 512 / cols;
+    const cellH = 512 / rows;
+    for (let r = 0; r < rows; r += 1) {
+        for (let c = 0; c < cols; c += 1) {
+            const x = c * cellW;
+            const y = r * cellH;
+            const hash = (r * 37 + c * 71 + r * c * 13) % 19;
+            const grad = actx.createLinearGradient(x, y, x, y + cellH);
+            if (hash < 6) {
+                grad.addColorStop(0, "#243b52");
+                grad.addColorStop(1, "#13202e");
+            } else if (hash < 12) {
+                grad.addColorStop(0, "#35536d");
+                grad.addColorStop(1, "#1d3142");
+            } else {
+                grad.addColorStop(0, "#1c2d3e");
+                grad.addColorStop(1, "#0f1822");
             }
-        }
-    } else if (kind === "officeLight") {
-        actx.fillStyle = "#d9d4c8";
-        actx.fillRect(0, 0, 512, 512);
-        for (let row = 0; row < 12; row += 1) {
-            const y = row * 42;
-            actx.fillStyle = "#bdb7aa";
-            actx.fillRect(0, y, 512, 10);
-            for (let col = 0; col < 10; col += 1) {
-                const x = col * 50 + 6;
-                const lit = ((row * 19 + col * 29) % 9) < 3;
-                actx.fillStyle = "#2c4154";
-                actx.fillRect(x, y + 13, 38, 22);
-                if (lit) {
-                    ectx.fillStyle = "#ffe2b0";
-                    ectx.fillRect(x + 3, y + 15, 32, 18);
-                }
-            }
-        }
-    } else if (kind === "diner") {
-        actx.fillStyle = "#f2ebe1";
-        actx.fillRect(0, 0, 512, 512);
-        for (let i = 0; i < 16; i += 1) {
-            actx.fillStyle = i % 2 === 0 ? "#c82828" : "#f7f5f0";
-            actx.fillRect(i * 32, 0, 32, 118);
-        }
-        actx.fillStyle = "#1f2b38";
-        actx.fillRect(26, 170, 460, 220);
-        ectx.fillStyle = "#ffca78";
-        ectx.fillRect(36, 182, 440, 196);
-        ectx.fillStyle = "#ff5a36";
-        ectx.fillRect(0, 118, 512, 14);
-    } else if (kind === "apartment") {
-        actx.fillStyle = "#cdb69c";
-        actx.fillRect(0, 0, 512, 512);
-        for (let row = 0; row < 10; row += 1) {
-            const y = row * 51;
-            actx.fillStyle = "#a38d74";
-            actx.fillRect(0, y + 40, 512, 6);
-            for (let col = 0; col < 8; col += 1) {
-                const x = col * 64 + 10;
-                const lit = ((row * 13 + col * 23) % 7) < 3;
-                actx.fillStyle = "#31424e";
-                actx.fillRect(x, y + 10, 42, 28);
-                if (lit) {
-                    ectx.fillStyle = "#ffd08a";
-                    ectx.fillRect(x + 4, y + 12, 34, 24);
-                }
-            }
-        }
-    } else {
-        actx.fillStyle = "#dfd4c3";
-        actx.fillRect(0, 0, 512, 512);
-        actx.fillStyle = "#a33c32";
-        actx.fillRect(0, 300, 512, 26);
-        for (let col = 0; col < 6; col += 1) {
-            const x = col * 84 + 10;
-            actx.fillStyle = "#293c4d";
-            actx.fillRect(x, 340, 66, 130);
-            ectx.fillStyle = "#ffdba1";
-            ectx.fillRect(x + 6, 348, 54, 114);
-            actx.fillStyle = "#364b5c";
-            actx.fillRect(x + 6, 80, 52, 110);
-            if (col % 2 === 0) {
-                ectx.fillStyle = "#ffe5ba";
-                ectx.fillRect(x + 10, 88, 44, 94);
+            actx.fillStyle = grad;
+            actx.fillRect(x + 2, y + 3, cellW - 4, cellH - 6);
+
+            actx.fillStyle = "rgba(18, 24, 34, 0.72)";
+            actx.fillRect(x, y, cellW, 3);
+            actx.fillRect(x, y, 2, cellH);
+
+            if (hash % 3 === 0) {
+                const warm = hash % 2 === 0;
+                ectx.fillStyle = warm ? "#ffcf8c" : "#a8d8ff";
+                ectx.fillRect(x + 4, y + 7, cellW - 8, cellH - 14);
+                ectx.fillStyle = "rgba(0, 0, 0, 0.25)";
+                ectx.fillRect(x + 4, y + cellH * 0.55, cellW - 8, 4);
             }
         }
     }
-
-    const rep = kind === "diner" ? [1, 1] : [2, 2];
     return {
-        map: finalizeTex(albedoC, rep[0], rep[1], true),
-        emissiveMap: finalizeTex(emC, rep[0], rep[1], true)
+        map: finalizeTex(ac, 2, 2, true),
+        emissiveMap: finalizeTex(ec, 2, 2, true)
     };
 }
 
-function drawSidewalkAlbedo() {
-    const c = makeCanvas(256, 256);
+function drawPalmFrondTexture() {
+    const c = makeCanvas(512, 512);
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#9aa0a6";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.strokeStyle = "#767c84";
-    ctx.lineWidth = 3;
-    for (let i = 0; i <= 256; i += 64) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, 256);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(256, i);
-        ctx.stroke();
+    ctx.clearRect(0, 0, 512, 512);
+
+    ctx.strokeStyle = "#4d6b2b";
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(256, 504);
+    ctx.quadraticCurveTo(256, 250, 256, 14);
+    ctx.stroke();
+
+    const pairs = 38;
+    for (let i = 0; i < pairs; i += 1) {
+        const t = i / (pairs - 1);
+        const y = 486 - t * 462;
+        const env = Math.sin(Math.pow(t, 0.65) * Math.PI);
+        const len = 36 + env * 195;
+        const droop = 18 + (1 - t) * 44;
+        const green = Math.round(76 + (i % 5) * 9 + t * 24);
+        const red = Math.round(44 + (i % 4) * 7 + t * 18);
+        const blue = Math.round(24 + (i % 3) * 5);
+
+        for (const side of [-1, 1]) {
+            ctx.fillStyle = `rgb(${red},${green},${blue})`;
+            ctx.beginPath();
+            ctx.moveTo(256, y);
+            ctx.quadraticCurveTo(256 + side * len * 0.55, y - 10, 256 + side * len, y + droop);
+            ctx.quadraticCurveTo(256 + side * len * 0.5, y + droop * 0.45 + 5, 256, y + 8);
+            ctx.closePath();
+            ctx.fill();
+        }
     }
-    return finalizeTex(c, 2, 2, true);
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
+    tex.needsUpdate = true;
+    return tex;
 }
 
 function drawBillboard(variant) {
@@ -224,118 +132,264 @@ function drawBillboard(variant) {
     const ctx = c.getContext("2d");
     const grad = ctx.createLinearGradient(0, 0, 512, 256);
     if (variant === 0) {
-        grad.addColorStop(0, "#10233f");
-        grad.addColorStop(1, "#2f6b94");
+        grad.addColorStop(0, "#101b2d");
+        grad.addColorStop(0.55, "#1f3a5c");
+        grad.addColorStop(1, "#334d6c");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.94)";
+        ctx.font = "600 54px sans-serif";
+        ctx.fillText("VINEWOOD", 44, 118);
+        ctx.fillStyle = "#93c5fd";
+        ctx.font = "500 24px sans-serif";
+        ctx.fillText("LOS SANTOS MOTORSPORT", 46, 168);
+        ctx.fillStyle = "#f97316";
+        ctx.fillRect(46, 194, 150, 5);
     } else {
-        grad.addColorStop(0, "#4a1525");
-        grad.addColorStop(1, "#d95b26");
+        grad.addColorStop(0, "#1a1820");
+        grad.addColorStop(1, "#4b2220");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillStyle = "#fde68a";
+        ctx.font = "600 50px sans-serif";
+        ctx.fillText("MAZE BANK", 42, 118);
+        ctx.fillStyle = "#f8fafc";
+        ctx.font = "500 22px sans-serif";
+        ctx.fillText("WEST COAST INVESTMENT GROUP", 44, 168);
     }
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 512, 256);
-    ctx.fillStyle = "rgba(255,255,255,0.14)";
-    ctx.beginPath();
-    ctx.arc(390, 128, 92, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "600 46px sans-serif";
-    ctx.fillText(variant === 0 ? "VINEWOOD" : "LOS SANTOS", 34, 112);
-    ctx.fillStyle = "#fde047";
-    ctx.font = "600 24px sans-serif";
-    ctx.fillText(variant === 0 ? "NEW SEASON LIVE" : "WEST COAST CUSTOMS", 36, 162);
     return finalizeTex(c, 1, 1, true);
 }
 
 function drawSafehouseArt() {
-    const c = makeCanvas(256, 256);
+    const c = makeCanvas(512, 320);
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#7f1414";
-    ctx.fillRect(0, 0, 256, 256);
-    ctx.fillStyle = "#d92b2b";
-    ctx.beginPath();
-    ctx.moveTo(20, 230);
-    ctx.lineTo(130, 24);
-    ctx.lineTo(238, 190);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#18181b";
-    ctx.fillRect(72, 118, 112, 86);
-    ctx.fillStyle = "#ef4444";
-    ctx.fillRect(104, 146, 56, 58);
+    ctx.fillStyle = "#e8e3d9";
+    ctx.fillRect(0, 0, 512, 320);
+    ctx.fillStyle = "#a91d22";
+    ctx.fillRect(28, 28, 224, 168);
+    ctx.fillStyle = "#181a1f";
+    ctx.fillRect(272, 28, 212, 110);
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(28, 214, 156, 78);
+    ctx.fillStyle = "#8c1d18";
+    ctx.fillRect(204, 158, 280, 134);
+    ctx.strokeStyle = "#14161a";
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, 502, 310);
     return finalizeTex(c, 1, 1, true);
 }
 
 function drawDeckPlanks() {
-    const c = makeCanvas(256, 256);
+    const c = makeCanvas(512, 512);
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#b59672";
-    ctx.fillRect(0, 0, 256, 256);
-    for (let y = 0; y < 256; y += 32) {
-        ctx.fillStyle = y % 64 === 0 ? "#c4a580" : "#aa8a66";
-        ctx.fillRect(0, y, 256, 30);
-        ctx.fillStyle = "#6e553b";
-        ctx.fillRect(0, y + 30, 256, 2);
+    ctx.fillStyle = "#987c5d";
+    ctx.fillRect(0, 0, 512, 512);
+    for (let y = 0; y < 512; y += 32) {
+        const shade = ((y / 32) % 3) * 7 - 7;
+        ctx.fillStyle = `rgb(${152 + shade},${124 + shade},${93 + shade})`;
+        ctx.fillRect(0, y, 512, 30);
+        ctx.fillStyle = "rgba(42, 28, 16, 0.55)";
+        ctx.fillRect(0, y + 30, 512, 2);
     }
-    return finalizeTex(c, 4, 4, true);
+    return finalizeTex(c, 5, 4, true);
 }
 
-function drawPlateTexture() {
+function drawLicensePlate() {
     const c = makeCanvas(256, 128);
     const ctx = c.getContext("2d");
-    ctx.fillStyle = "#eef2f6";
+    ctx.fillStyle = "#f4f6f9";
     ctx.fillRect(0, 0, 256, 128);
     ctx.fillStyle = "#1e3a8a";
-    ctx.fillRect(0, 0, 256, 34);
-    ctx.fillStyle = "#fde047";
-    ctx.font = "600 18px sans-serif";
-    ctx.fillText("SAN ANDREAS", 58, 24);
-    ctx.fillStyle = "#172554";
+    ctx.fillRect(0, 0, 256, 28);
+    ctx.fillStyle = "#facc15";
+    ctx.font = "600 15px sans-serif";
+    ctx.fillText("SAN ANDREAS", 74, 20);
+    ctx.fillStyle = "#0f172a";
     ctx.font = "600 44px monospace";
-    ctx.fillText("28RLU683", 18, 96);
+    ctx.fillText("28RLU683", 20, 92);
     return finalizeTex(c, 1, 1, true);
 }
 
+function drawBroadleafTexture() {
+    const c = makeCanvas(512, 512);
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, 512, 512);
+    for (let i = 0; i < 420; i += 1) {
+        const a = (i * 2.39996) % (Math.PI * 2);
+        const r = Math.sqrt(i / 420) * 215;
+        const x = 256 + Math.cos(a) * r;
+        const y = 256 + Math.sin(a) * r;
+        const rx = 14 + (i % 12);
+        const ry = 24 + ((i * 7) % 16);
+        const g = 72 + (i % 46);
+        const red = 36 + (i % 24);
+        const b = 22 + (i % 14);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(a + (i % 5) * 0.3);
+        ctx.fillStyle = `rgb(${red},${g},${b})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
+    tex.needsUpdate = true;
+    return tex;
+}
+
+export function createWetRoadMaterial(pbrAsphalt, fallbackAsphalt, isIntersection = false) {
+    const wetnessUniform = { value: 0.78 };
+    const mat = new THREE.MeshPhysicalMaterial({
+        color: 0x4b515b,
+        map: (pbrAsphalt && pbrAsphalt.map) || fallbackAsphalt,
+        normalMap: pbrAsphalt ? pbrAsphalt.normalMap : null,
+        normalScale: new THREE.Vector2(1.05, 1.05),
+        roughnessMap: pbrAsphalt ? pbrAsphalt.roughnessMap : null,
+        roughness: 0.84,
+        metalness: 0.06,
+        clearcoat: 0.9,
+        clearcoatRoughness: 0.05,
+        envMapIntensity: 1.5
+    });
+
+    mat.onBeforeCompile = (shader) => {
+        shader.uniforms.uWetness = wetnessUniform;
+        shader.vertexShader = shader.vertexShader
+            .replace(
+                "#include <common>",
+                `#include <common>
+varying vec3 vRoadWorldPos;
+varying vec2 vRoadUv;`
+            )
+            .replace(
+                "#include <worldpos_vertex>",
+                `#include <worldpos_vertex>
+vRoadWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;
+vRoadUv = uv;`
+            );
+
+        shader.fragmentShader = shader.fragmentShader
+            .replace(
+                "#include <common>",
+                `#include <common>
+uniform float uWetness;
+varying vec3 vRoadWorldPos;
+varying vec2 vRoadUv;
+
+float gtaHash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+float gtaNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(gtaHash(i), gtaHash(i + vec2(1.0, 0.0)), u.x),
+        mix(gtaHash(i + vec2(0.0, 1.0)), gtaHash(i + vec2(1.0, 1.0)), u.x),
+        u.y
+    );
+}
+float gtaFbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 4; i++) {
+        v += a * gtaNoise(p);
+        p *= 2.03;
+        a *= 0.5;
+    }
+    return v;
+}`
+            )
+            .replace(
+                "#include <color_fragment>",
+                `#include <color_fragment>
+float puddleFbm = gtaFbm(vRoadWorldPos.xz * 0.068 + vec2(1.7, 3.1));
+float microNoise = gtaNoise(vRoadWorldPos.xz * 0.65);
+float roadTrack = ${isIntersection ? "0.1" : "exp(-pow((abs(vRoadUv.x - 0.5) - 0.24) * 7.5, 2.0)) * 0.14"};
+float puddleThresh = mix(0.88, 0.44, uWetness);
+float puddleMask = smoothstep(puddleThresh, puddleThresh + 0.15, puddleFbm + roadTrack + microNoise * 0.06) * uWetness;
+float dampFactor = mix(1.0, 0.56, uWetness * 0.65);
+diffuseColor.rgb *= mix(dampFactor, 0.34, puddleMask);
+${
+    isIntersection
+        ? `
+float cxA = step(0.04, vRoadUv.x) * step(vRoadUv.x, 0.96);
+float cyA = step(0.04, vRoadUv.y) * step(vRoadUv.y, 0.96);
+float barX = step(0.42, fract(vRoadUv.x * 11.0));
+float barY = step(0.42, fract(vRoadUv.y * 11.0));
+float zTop = step(0.87, vRoadUv.y) * step(vRoadUv.y, 0.965) * cxA * barX;
+float zBot = step(0.035, vRoadUv.y) * step(vRoadUv.y, 0.13) * cxA * barX;
+float zLft = step(0.035, vRoadUv.x) * step(vRoadUv.x, 0.13) * cyA * barY;
+float zRgt = step(0.87, vRoadUv.x) * step(vRoadUv.x, 0.965) * cyA * barY;
+float zebra = clamp(zTop + zBot + zLft + zRgt, 0.0, 1.0);
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.76, 0.78, 0.8), zebra * 0.82);`
+        : `
+float uX = vRoadUv.x;
+float wear = 0.78 + 0.22 * microNoise;
+float dblY = (smoothstep(0.012, 0.004, abs(uX - 0.487)) + smoothstep(0.012, 0.004, abs(uX - 0.513)));
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.86, 0.64, 0.18), clamp(dblY, 0.0, 1.0) * wear * 0.92);
+float dashPhase = step(0.42, fract(vRoadUv.y * 1.45));
+float laneW = (smoothstep(0.01, 0.003, abs(uX - 0.255)) + smoothstep(0.01, 0.003, abs(uX - 0.745))) * dashPhase;
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.82, 0.84, 0.86), clamp(laneW, 0.0, 1.0) * wear * 0.78);
+float redCurb = smoothstep(0.036, 0.018, uX) + smoothstep(0.964, 0.982, uX);
+diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.62, 0.18, 0.15), clamp(redCurb, 0.0, 1.0) * 0.88);`
+}`
+            )
+            .replace(
+                "#include <roughnessmap_fragment>",
+                `#include <roughnessmap_fragment>
+roughnessFactor = mix(roughnessFactor * mix(0.95, 0.62, uWetness), 0.035, puddleMask);`
+            )
+            .replace(
+                "#include <clearcoat_roughness_fragment>",
+                `#include <clearcoat_roughness_fragment>
+clearcoatRoughness = mix(0.48 - uWetness * 0.22, 0.02, puddleMask);
+clearcoat = mix(0.08 + uWetness * 0.35, 1.0, puddleMask);`
+            );
+    };
+
+    return { material: mat, wetnessUniform };
+}
+
 export function createGtaTextures() {
-    const textures = {
-        roadMap: drawRoadAlbedo(),
-        roadRough: drawRoadRoughness(),
-        intersectionMap: drawIntersectionAlbedo(),
-        sidewalkMap: drawSidewalkAlbedo(),
-        glassTower: drawFacade("glassTower"),
-        officeLight: drawFacade("officeLight"),
-        commercial: drawFacade("commercial"),
-        diner: drawFacade("diner"),
-        apartment: drawFacade("apartment"),
-        billboardA: drawBillboard(0),
-        billboardB: drawBillboard(1),
-        safehouseArt: drawSafehouseArt(),
-        deckPlanks: drawDeckPlanks(),
-        plate: drawPlateTexture()
-    };
+    const fallbackAsphalt = drawFallbackAsphalt();
+    const glassInterior = drawGlassInteriorMaps();
+    const palmFrond = drawPalmFrondTexture();
+    const broadleaf = drawBroadleafTexture();
+    const billboardA = drawBillboard(0);
+    const billboardB = drawBillboard(1);
+    const safehouseArt = drawSafehouseArt();
+    const deckPlanks = drawDeckPlanks();
+    const plate = drawLicensePlate();
 
-    const dispose = () => {
-        const list = [
-            textures.roadMap,
-            textures.roadRough,
-            textures.intersectionMap,
-            textures.sidewalkMap,
-            textures.glassTower.map,
-            textures.glassTower.emissiveMap,
-            textures.officeLight.map,
-            textures.officeLight.emissiveMap,
-            textures.commercial.map,
-            textures.commercial.emissiveMap,
-            textures.diner.map,
-            textures.diner.emissiveMap,
-            textures.apartment.map,
-            textures.apartment.emissiveMap,
-            textures.billboardA,
-            textures.billboardB,
-            textures.safehouseArt,
-            textures.deckPlanks,
-            textures.plate
-        ];
-        for (const t of list) t.dispose();
-    };
+    const all = [
+        fallbackAsphalt,
+        glassInterior.map,
+        glassInterior.emissiveMap,
+        palmFrond,
+        broadleaf,
+        billboardA,
+        billboardB,
+        safehouseArt,
+        deckPlanks,
+        plate
+    ];
 
-    return { ...textures, dispose };
+    return {
+        fallbackAsphalt,
+        glassInterior,
+        palmFrond,
+        broadleaf,
+        billboardA,
+        billboardB,
+        safehouseArt,
+        deckPlanks,
+        plate,
+        dispose() {
+            for (const t of all) t.dispose();
+        }
+    };
 }

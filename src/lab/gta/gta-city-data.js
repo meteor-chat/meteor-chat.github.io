@@ -1,4 +1,4 @@
-import { mulberry32 } from "../voxel/voxel-noise.js";
+import { mulberry32 } from "./gta-noise.js";
 import {
     SAFEHOUSE_ORIGIN,
     SIDEWALK_HALF_WIDTH,
@@ -244,8 +244,7 @@ export function buildCityData(seed = 2026) {
         parkedCars: [
             { preset: "elegy", x: 1.6, z: -290, yaw: 0 },
             { preset: "gauntlet", x: -4.8, z: -288, yaw: -0.08 },
-            { preset: "cavalcade", x: 18, z: -264, yaw: Math.PI * 0.5 },
-            { preset: "cruiser", x: -34, z: -90, yaw: Math.PI * 0.5 }
+            { preset: "cavalcade", x: 18, z: -264, yaw: Math.PI * 0.5 }
         ]
     };
 

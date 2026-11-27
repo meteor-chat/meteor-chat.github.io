@@ -87,9 +87,10 @@ describe("Los Santos Road Graph, Terrain & City Generation", () => {
         expect(a.mazeTower.height).toBe(138);
         expect(a.constructionSite.craneHeight).toBe(68);
         expect(a.safehouse.y).toBe(SAFEHOUSE_ORIGIN.y);
-        expect(a.safehouse.parkedCars.length).toBe(4);
+        expect(a.safehouse.parkedCars.length).toBe(3);
         expect(a.safehouse.parkedCars[0].preset).toBe("elegy");
         expect(a.safehouse.parkedCars[1].preset).toBe("gauntlet");
+        expect(a.safehouse.parkedCars[2].preset).toBe("cavalcade");
 
         const styles = new Set(a.buildings.map((bl) => bl.style));
         expect(styles.has("glassTower")).toBe(true);

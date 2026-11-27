@@ -1,216 +1,273 @@
 import * as THREE from "three";
+import {
+    buildGlassCanopyGeometry,
+    buildLoftedHullGeometry,
+    buildSculptedWheelMesh,
+    createContactShadowTexture
+} from "./gta-car-sculpt.js";
 import { VEHICLE_PRESETS } from "./gta-vehicle-specs.js";
 
-function buildWheelMesh(radius, width) {
-    const group = new THREE.Group();
-    const tireMat = new THREE.MeshStandardMaterial({ color: 0x16181d, roughness: 0.86, metalness: 0.08 });
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.24, metalness: 0.88 });
-    const hubMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.7 });
+const WHEEL_NAMES = ["wheel_fl", "wheel_fr", "wheel_rl", "wheel_rr"];
+let sharedShadowTex = null;
+let sharedSuvHull = null;
+let sharedSuvGlass = null;
+let sharedSedanHull = null;
+let sharedSedanGlass = null;
 
-    const tireGeo = new THREE.CylinderGeometry(radius, radius, width, 18);
-    tireGeo.rotateZ(Math.PI * 0.5);
-    const tire = new THREE.Mesh(tireGeo, tireMat);
-    tire.castShadow = true;
-    group.add(tire);
-
-    const rimGeo = new THREE.CylinderGeometry(radius * 0.64, radius * 0.64, width + 0.02, 12);
-    rimGeo.rotateZ(Math.PI * 0.5);
-    group.add(new THREE.Mesh(rimGeo, rimMat));
-
-    const spokeGeo = new THREE.BoxGeometry(width + 0.03, radius * 1.12, 0.06);
-    for (let s = 0; s < 3; s += 1) {
-        const spoke = new THREE.Mesh(spokeGeo, hubMat);
-        spoke.rotation.x = (s * Math.PI) / 3;
-        group.add(spoke);
-    }
-    return group;
+function getShadowTex() {
+    if (!sharedShadowTex) sharedShadowTex = createContactShadowTexture();
+    return sharedShadowTex;
 }
 
-export function createVehicleVisual(presetKey, textures, colorOverride = null, attachWheels = false) {
-    const spec = VEHICLE_PRESETS[presetKey] || VEHICLE_PRESETS.elegy;
-    const chassis = new THREE.Group();
-    const bodyRoot = new THREE.Group();
-    bodyRoot.position.y = -spec.restHeight + 0.32;
-    chassis.add(bodyRoot);
+function getLoftedGeos(kind) {
+    if (kind === "suv") {
+        if (!sharedSuvHull) sharedSuvHull = buildLoftedHullGeometry("suv");
+        if (!sharedSuvGlass) sharedSuvGlass = buildGlassCanopyGeometry("suv");
+        return { hull: sharedSuvHull, glass: sharedSuvGlass };
+    }
+    if (!sharedSedanHull) sharedSedanHull = buildLoftedHullGeometry("sedan");
+    if (!sharedSedanGlass) sharedSedanGlass = buildGlassCanopyGeometry("sedan");
+    return { hull: sharedSedanHull, glass: sharedSedanGlass };
+}
 
-    const hw = spec.halfExtents[0];
-    const hl = spec.halfExtents[2];
-    const paintHex = colorOverride ?? spec.paint;
+function extractFerrariWheelTemplate(ferrariGltf, wheelName) {
+    if (!ferrariGltf || !ferrariGltf.scene) return null;
+    const node = ferrariGltf.scene.getObjectByName(wheelName);
+    if (!node) return null;
+    const clone = node.clone(true);
+    clone.position.set(0, 0, 0);
+    clone.traverse((child) => {
+        if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+    const pivot = new THREE.Group();
+    pivot.add(clone);
+    return pivot;
+}
+
+function buildWheelsForSpec(spec, assets, lightweight = false) {
+    const ferrari = !lightweight && assets && assets.models ? assets.models.ferrari : null;
+    const scaleR = spec.wheelRadius / 0.358;
+    const scaleW = spec.wheelWidth / 0.28;
+    const out = [];
+    for (let i = 0; i < 4; i += 1) {
+        const tmpl = extractFerrariWheelTemplate(ferrari, WHEEL_NAMES[i]);
+        if (tmpl) {
+            tmpl.scale.set(scaleW, scaleR, scaleR);
+            out.push(tmpl);
+        } else {
+            out.push(buildSculptedWheelMesh(spec.wheelRadius, spec.wheelWidth, lightweight));
+        }
+    }
+    return out;
+}
+
+function addContactShadow(parent, spec) {
+    const mat = new THREE.MeshBasicMaterial({
+        map: getShadowTex(),
+        transparent: true,
+        depthWrite: false,
+        opacity: 0.72
+    });
+    const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(spec.halfExtents[0] * 2.55, spec.halfExtents[2] * 2.38),
+        mat
+    );
+    plane.rotation.x = -Math.PI * 0.5;
+    plane.position.y = -spec.restHeight + 0.04;
+    parent.add(plane);
+}
+
+function buildFerrariBody(spec, ferrariGltf, paintHex, textures) {
+    const bodyRoot = new THREE.Group();
+    const clone = ferrariGltf.scene.clone(true);
+    for (const wn of WHEEL_NAMES) {
+        const w = clone.getObjectByName(wn);
+        if (w && w.parent) w.parent.remove(w);
+    }
 
     const paintMat = new THREE.MeshPhysicalMaterial({
         color: paintHex,
-        metalness: 0.88,
+        metalness: 0.86,
+        roughness: 0.14,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.025,
+        envMapIntensity: 1.85
+    });
+    const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x0b1524,
+        metalness: 0.15,
+        roughness: 0.04,
+        transmission: 0.35,
+        transparent: true,
+        opacity: 0.78,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.02,
+        envMapIntensity: 2.0
+    });
+    const tailMat = new THREE.MeshStandardMaterial({
+        color: 0xdc2626,
+        emissive: 0xff1a1a,
+        emissiveIntensity: 1.65,
+        roughness: 0.16,
+        metalness: 0.2
+    });
+    const headMat = new THREE.MeshStandardMaterial({
+        color: 0xf8fafc,
+        emissive: 0xfff5db,
+        emissiveIntensity: 2.1,
+        roughness: 0.12
+    });
+
+    clone.traverse((child) => {
+        if (!child.isMesh) return;
+        const mName = child.material ? child.material.name : "";
+        child.castShadow = mName === "Body_Color" || child.name === "body" || mName === "Tires";
+        child.receiveShadow = true;
+        if (mName === "Body_Color" || child.name === "body") {
+            child.material = paintMat;
+        } else if (mName === "Glass_Gray" || child.name === "glass") {
+            child.material = glassMat;
+        } else if (mName === "Taillight_Glass" || child.name === "lights_red") {
+            child.material = tailMat;
+        } else if (mName === "Projector_Glass" || child.name === "lights") {
+            child.material = headMat;
+        }
+    });
+
+    clone.rotation.y = Math.PI;
+    clone.position.set(0, -spec.restHeight + 0.04, 0.17);
+    bodyRoot.add(clone);
+
+    if (textures && textures.plate) {
+        const plateMat = new THREE.MeshStandardMaterial({ map: textures.plate, roughness: 0.38, metalness: 0.15 });
+        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.2), plateMat);
+        plate.position.set(0, -spec.restHeight + 0.56, -2.14);
+        plate.rotation.y = Math.PI;
+        bodyRoot.add(plate);
+    }
+
+    return { bodyRoot, tailMat };
+}
+
+function buildSculptedBody(spec, paintHex, textures) {
+    const bodyRoot = new THREE.Group();
+    bodyRoot.position.y = -spec.restHeight + 0.02;
+
+    const kind = spec.suv ? "suv" : "sedan";
+    const { hull, glass } = getLoftedGeos(kind);
+
+    const paintMat = new THREE.MeshPhysicalMaterial({
+        color: paintHex,
+        metalness: 0.84,
         roughness: 0.16,
         clearcoat: 1.0,
         clearcoatRoughness: 0.03,
-        envMapIntensity: 1.7
-    });
-    const trimMat = new THREE.MeshStandardMaterial({
-        color: spec.secondary,
-        metalness: 0.45,
-        roughness: 0.32
+        envMapIntensity: 1.8
     });
     const glassMat = new THREE.MeshPhysicalMaterial({
-        color: 0x0b1526,
-        metalness: 0.24,
-        roughness: 0.05,
+        color: 0x0a1320,
+        metalness: 0.22,
+        roughness: 0.04,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.03,
-        envMapIntensity: 1.85
+        clearcoatRoughness: 0.02,
+        envMapIntensity: 2.0
     });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.96, roughness: 0.12 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe8eef5, metalness: 0.96, roughness: 0.1 });
     const headMat = new THREE.MeshStandardMaterial({
         color: 0xf8fafc,
         emissive: 0xfff4d6,
         emissiveIntensity: 2.2
     });
     const tailMat = new THREE.MeshStandardMaterial({
-        color: 0xef4444,
-        emissive: 0xff1e24,
-        emissiveIntensity: 1.8
+        color: 0xb91c1c,
+        emissive: 0xdc2626,
+        emissiveIntensity: 1.35,
+        roughness: 0.18
     });
 
-    const lowerH = spec.suv ? 0.62 : 0.44;
-    const lower = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.94, lowerH, hl * 1.92), paintMat);
-    lower.position.set(0, lowerH * 0.5 + 0.1, 0);
-    lower.castShadow = true;
-    lower.receiveShadow = true;
-    bodyRoot.add(lower);
+    const hullMesh = new THREE.Mesh(hull, paintMat);
+    hullMesh.castShadow = true;
+    hullMesh.receiveShadow = true;
+    bodyRoot.add(hullMesh);
 
-    const shoulder = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.84, 0.14, hl * 1.78), paintMat);
-    shoulder.position.set(0, lowerH + 0.11, -0.02);
-    shoulder.castShadow = true;
-    bodyRoot.add(shoulder);
+    const glassMesh = new THREE.Mesh(glass, glassMat);
+    bodyRoot.add(glassMesh);
 
-    const bumperMat = new THREE.MeshStandardMaterial({ color: 0x101319, roughness: 0.55, metalness: 0.28 });
-    const skirt = new THREE.Mesh(new THREE.BoxGeometry(hw * 2.0, 0.13, hl * 2.0), bumperMat);
-    skirt.position.set(0, 0.13, 0);
-    bodyRoot.add(skirt);
+    const tailZ = spec.suv ? -2.41 : -2.26;
+    const headZ = spec.suv ? 2.48 : 2.3;
+    const hw = spec.suv ? 0.8 : 0.68;
 
-    const splitter = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.96, 0.07, 0.34), bumperMat);
-    splitter.position.set(0, 0.08, hl * 0.94);
-    bodyRoot.add(splitter);
+    for (const sx of [-hw, hw]) {
+        const hl = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.08), headMat);
+        hl.position.set(sx * 0.88, spec.suv ? 0.74 : 0.58, headZ);
+        bodyRoot.add(hl);
 
-    const diffuser = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.78, 0.16, 0.24), bumperMat);
-    diffuser.position.set(0, 0.14, -hl * 0.94);
-    bodyRoot.add(diffuser);
+        const tl = new THREE.Mesh(
+            spec.suv ? new THREE.BoxGeometry(0.09, 0.54, 0.12) : new THREE.BoxGeometry(0.42, 0.12, 0.08),
+            tailMat
+        );
+        tl.position.set(sx * (spec.suv ? 1.02 : 0.98), spec.suv ? 0.86 : 0.68, tailZ);
+        bodyRoot.add(tl);
 
-    const grille = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.24, lowerH * 0.48, 0.08), bumperMat);
-    grille.position.set(0, lowerH * 0.42 + 0.1, hl * 0.96);
-    bodyRoot.add(grille);
+        const sign = Math.sign(sx);
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.044, 0.044, 0.2, 10), chromeMat);
+        pipe.rotation.x = Math.PI * 0.5;
+        pipe.position.set(sx * 0.78, 0.25, tailZ - 0.04);
+        bodyRoot.add(pipe);
 
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.74, 0.14, hl * 0.72), paintMat);
-    hood.position.set(0, lowerH + 0.14, hl * 0.54);
-    hood.rotation.x = 0.11;
-    hood.castShadow = true;
-    bodyRoot.add(hood);
-
-    const cabinH = spec.suv ? 0.62 : 0.42;
-    const cabinL = spec.suv ? hl * 1.32 : hl * 0.88;
-    const cabinZ = spec.suv ? -0.18 : -0.16;
-    const cabinW = hw * (spec.suv ? 1.66 : 1.46);
-    const cabinMat = spec.police ? trimMat : paintMat;
-    const cabin = new THREE.Mesh(new THREE.BoxGeometry(cabinW, cabinH, cabinL), cabinMat);
-    cabin.position.set(0, lowerH + cabinH * 0.5 + 0.12, cabinZ);
-    cabin.castShadow = true;
-    bodyRoot.add(cabin);
-
-    const roofCap = new THREE.Mesh(new THREE.BoxGeometry(cabinW * 0.88, 0.07, cabinL * 0.82), cabinMat);
-    roofCap.position.set(0, lowerH + cabinH + 0.14, cabinZ - 0.02);
-    bodyRoot.add(roofCap);
-
-    if (spec.police) {
-        const doorStripe = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.98, lowerH * 0.94, hl * 0.86), trimMat);
-        doorStripe.position.set(0, lowerH * 0.5 + 0.1, -0.05);
-        bodyRoot.add(doorStripe);
-    }
-
-    const glassInset = new THREE.Mesh(new THREE.BoxGeometry(cabinW + 0.03, cabinH * 0.74, cabinL * 0.86), glassMat);
-    glassInset.position.set(0, lowerH + cabinH * 0.5 + 0.12, cabinZ);
-    bodyRoot.add(glassInset);
-
-    const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(cabinW * 0.94, cabinH * 0.88, 0.1), glassMat);
-    frontGlass.position.set(0, lowerH + cabinH * 0.48 + 0.1, cabinZ + cabinL * 0.56);
-    frontGlass.rotation.x = -0.62;
-    bodyRoot.add(frontGlass);
-
-    const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(cabinW * 0.92, cabinH * 0.92, 0.1), glassMat);
-    rearGlass.position.set(0, lowerH + cabinH * 0.48 + 0.1, cabinZ - cabinL * 0.56);
-    rearGlass.rotation.x = spec.suv ? 0.14 : 0.62;
-    bodyRoot.add(rearGlass);
-
-    for (const sx of [-hw * 0.98, hw * 0.98]) {
-        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.14), paintMat);
-        mirror.position.set(sx, lowerH + 0.22, cabinZ + cabinL * 0.36);
+        const mirror = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), paintMat);
+        mirror.scale.set(1.4, 0.65, 0.9);
+        mirror.position.set(sign * (spec.suv ? 1.04 : 0.96), spec.suv ? 1.08 : 0.94, spec.suv ? 0.72 : 0.42);
         bodyRoot.add(mirror);
     }
 
-    if (spec.spoiler) {
-        const wing = new THREE.Mesh(new THREE.BoxGeometry(hw * 1.82, 0.06, 0.28), paintMat);
-        wing.position.set(0, lowerH + 0.32, -hl * 0.88);
-        wing.castShadow = true;
-        bodyRoot.add(wing);
-        for (const sx of [-hw * 0.56, hw * 0.56]) {
-            const strut = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.22, 0.16), bumperMat);
-            strut.position.set(sx, lowerH + 0.2, -hl * 0.86);
-            bodyRoot.add(strut);
-        }
-    }
+    const chromeTrim = new THREE.Mesh(new THREE.BoxGeometry(spec.suv ? 1.48 : 1.18, 0.045, 0.05), chromeMat);
+    chromeTrim.position.set(0, spec.suv ? 0.72 : 0.62, tailZ - 0.04);
+    bodyRoot.add(chromeTrim);
 
-    for (const sx of [-hw * 0.62, hw * 0.62]) {
-        const hlMesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.13, 0.08), headMat);
-        hlMesh.position.set(sx, lowerH * 0.66 + 0.12, hl * 0.97);
-        bodyRoot.add(hlMesh);
+    if (spec.suv) {
+        const rearWindow = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.52), glassMat);
+        rearWindow.position.set(0, 1.24, tailZ + 0.04);
+        rearWindow.rotation.set(-0.22, Math.PI, 0);
+        bodyRoot.add(rearWindow);
 
-        if (spec.key === "elegy") {
-            const sign = Math.sign(sx);
-            for (const off of [0, -0.22 * sign]) {
-                const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.08, 12), tailMat);
-                ring.rotation.x = Math.PI * 0.5;
-                ring.position.set(sx + off, lowerH * 0.72 + 0.12, -hl * 0.96);
-                bodyRoot.add(ring);
-            }
-        } else {
-            const tlMesh = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.12, 0.08), tailMat);
-            tlMesh.position.set(sx, lowerH * 0.72 + 0.12, -hl * 0.97);
-            bodyRoot.add(tlMesh);
-        }
-
-        const sign = Math.sign(sx);
-        for (const pOff of [0, -0.14 * sign]) {
-            const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.22, 8), chromeMat);
-            pipe.rotation.x = Math.PI * 0.5;
-            pipe.position.set(sx * 0.9 + pOff, 0.14, -hl * 0.98);
-            bodyRoot.add(pipe);
+        const railGeo = new THREE.CylinderGeometry(0.022, 0.022, 2.0, 6);
+        railGeo.rotateX(Math.PI * 0.5);
+        for (const rx of [-0.72, 0.72]) {
+            const rail = new THREE.Mesh(railGeo, chromeMat);
+            rail.position.set(rx, 1.7, -0.4);
+            bodyRoot.add(rail);
         }
     }
 
     if (textures && textures.plate) {
-        const plateMat = new THREE.MeshStandardMaterial({ map: textures.plate, roughness: 0.45 });
-        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.22), plateMat);
-        plate.position.set(0, lowerH * 0.46 + 0.1, -hl * 0.99);
+        const plateMat = new THREE.MeshStandardMaterial({ map: textures.plate, roughness: 0.4, metalness: 0.12 });
+        const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.2), plateMat);
+        plate.position.set(0, spec.suv ? 0.56 : 0.5, tailZ - 0.06);
         plate.rotation.y = Math.PI;
         bodyRoot.add(plate);
     }
 
-    let sirenRedMat = null;
-    let sirenBlueMat = null;
-    let sirenLight = null;
-    if (spec.police) {
-        const barY = lowerH + cabinH + 0.12;
-        sirenRedMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xff1122, emissiveIntensity: 0.2 });
-        sirenBlueMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1d6bff, emissiveIntensity: 0.2 });
-        const redBar = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.14, 0.24), sirenRedMat);
-        redBar.position.set(-0.3, barY, cabinZ + 0.05);
-        const blueBar = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.14, 0.24), sirenBlueMat);
-        blueBar.position.set(0.3, barY, cabinZ + 0.05);
-        bodyRoot.add(redBar, blueBar);
-        sirenLight = new THREE.PointLight(0xef4444, 0, 22, 1.8);
-        sirenLight.position.set(0, barY + 0.5, cabinZ);
-        bodyRoot.add(sirenLight);
-    }
+    return { bodyRoot, tailMat };
+}
 
-    const wheels = [0, 1, 2, 3].map(() => buildWheelMesh(spec.wheelRadius, spec.wheelWidth));
+export function createVehicleVisual(presetKey, textures, colorOverride = null, attachWheels = false, assets = null) {
+    const spec = VEHICLE_PRESETS[presetKey] || VEHICLE_PRESETS.elegy;
+    const chassis = new THREE.Group();
+    const paintHex = colorOverride ?? spec.paint;
+    const ferrariGltf = !attachWheels && assets && assets.models ? assets.models.ferrari : null;
+    const useFerrari = Boolean(ferrariGltf && !spec.suv);
+
+    const built = useFerrari
+        ? buildFerrariBody(spec, ferrariGltf, paintHex, textures)
+        : buildSculptedBody(spec, paintHex, textures);
+    chassis.add(built.bodyRoot);
+    addContactShadow(chassis, spec);
+
+    const wheels = buildWheelsForSpec(spec, assets, attachWheels);
     if (attachWheels) {
         const wy = -spec.restHeight + spec.wheelRadius;
         const offsets = [
@@ -233,38 +290,17 @@ export function createVehicleVisual(presetKey, textures, colorOverride = null, a
     };
 
     const setBrakeGlow = (braking) => {
-        tailMat.emissiveIntensity = braking ? 4.4 : 1.35;
-    };
-
-    const setSiren = (active, timeSec) => {
-        if (!sirenRedMat || !sirenBlueMat || !sirenLight) return;
-        if (!active) {
-            sirenRedMat.emissiveIntensity = 0.2;
-            sirenBlueMat.emissiveIntensity = 0.2;
-            sirenLight.intensity = 0;
-            return;
-        }
-        const flashRed = Math.floor(timeSec * 8) % 2 === 0;
-        sirenRedMat.emissiveIntensity = flashRed ? 6.5 : 0.3;
-        sirenBlueMat.emissiveIntensity = flashRed ? 0.3 : 6.5;
-        sirenLight.color.setHex(flashRed ? 0xff2233 : 0x2277ff);
-        sirenLight.intensity = 16;
+        if (built.tailMat) built.tailMat.emissiveIntensity = braking ? 4.4 : 1.55;
     };
 
     const dispose = (scene) => {
-        const clearObj = (obj) => {
-            obj.traverse((child) => {
-                if (child.geometry) child.geometry.dispose();
-                if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
-                else if (child.material) child.material.dispose();
-            });
-            if (scene) scene.remove(obj);
-        };
-        clearObj(chassis);
-        if (!attachWheels) {
-            for (const w of wheels) clearObj(w);
+        if (scene) {
+            scene.remove(chassis);
+            if (!attachWheels) {
+                for (const w of wheels) scene.remove(w);
+            }
         }
     };
 
-    return { chassis, wheels, restHeight: spec.restHeight, spinWheels, setBrakeGlow, setSiren, dispose };
+    return { chassis, wheels, restHeight: spec.restHeight, spinWheels, setBrakeGlow, dispose };
 }

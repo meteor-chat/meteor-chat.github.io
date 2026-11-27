@@ -28,13 +28,13 @@ describe("Los Santos 3D Routing, Importmap & Compliance", () => {
         expect(html).toContain('<script type="importmap">');
         expect(html).toContain("three@0.187.0/build/three.module.js");
         expect(html).toContain("jolt-physics@1.1.2/dist/jolt-physics.wasm-compat.js");
-        expect(html).toContain("/styles/voxel-guard.css");
         expect(html).toContain("/styles/gta.css");
-        expect(html).toContain("./src/lab/voxel/voxel-device-guard.js");
+        expect(html).toContain("./src/lab/gta/gta-device-guard.js");
         expect(html).toContain("./src/lab/gta/gta-controller.js");
+        expect(html).not.toMatch(/voxel/i);
+        expect(html).not.toMatch(/wanted|police|lspd|data-gta-star/i);
         expect(html).toContain("data-gta-gl");
         expect(html).toContain("data-gta-radar");
-        expect(html).toContain("data-gta-wanted");
         expect(html).toContain("data-gta-cash");
         expect(html).toContain("data-gta-speedo");
         expect(html).toContain("data-gta-settings");
@@ -64,6 +64,9 @@ describe("Los Santos 3D Routing, Importmap & Compliance", () => {
             expect(raw, `${file} must contain zero block comments`).not.toMatch(blockComRe);
             expect(raw, `${file} must contain zero HTML comments`).not.toMatch(htmlComRe);
             expect(raw, `${file} must contain zero em-dashes`).not.toContain("\u2014");
+            if (!file.startsWith("tests/")) {
+                expect(raw, `${file} must not reference voxel modules or styles`).not.toMatch(/voxel/i);
+            }
         }
         for (const file of ["gta.html", "styles/gta.css"]) {
             const raw = readFileSync(file, "utf8");

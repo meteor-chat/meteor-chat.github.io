@@ -5,73 +5,87 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 const SKY_VS = `
-varying vec3 vDir;
+varying vec3 vWorldDir;
 void main() {
     vec4 wp = modelMatrix * vec4(position, 1.0);
-    vDir = normalize(position);
+    vWorldDir = normalize(position);
     gl_Position = projectionMatrix * viewMatrix * wp;
-}`;
+}
+`;
 
 const SKY_FS = `
 uniform vec3 uTopColor;
 uniform vec3 uHorizonColor;
-uniform vec3 uGroundColor;
 uniform vec3 uSunDir;
 uniform vec3 uSunColor;
 uniform float uNight;
-varying vec3 vDir;
+varying vec3 vWorldDir;
 void main() {
-    vec3 d = normalize(vDir);
-    float up = clamp(d.y, 0.0, 1.0);
-    vec3 sky = mix(uHorizonColor, uTopColor, pow(up, 0.52));
-    if (d.y < 0.0) {
-        sky = mix(uHorizonColor, uGroundColor, clamp(-d.y * 4.5, 0.0, 1.0));
+    vec3 d = normalize(vWorldDir);
+    float h = clamp(d.y, 0.0, 1.0);
+    vec3 col = mix(uHorizonColor, uTopColor, pow(h, 0.52));
+    float sunAmt = max(dot(d, normalize(uSunDir)), 0.0);
+    col += uSunColor * (pow(sunAmt, 240.0) * 1.4 + pow(sunAmt, 16.0) * 0.24);
+    if (uNight > 0.2) {
+        vec2 g = floor(d.xz / max(0.15, d.y + 0.15) * 42.0);
+        float st = fract(sin(dot(g, vec2(12.9898, 78.233))) * 43758.5453);
+        float star = step(0.994, st) * smoothstep(0.12, 0.45, d.y) * uNight;
+        col += vec3(0.85, 0.92, 1.0) * star * 0.7;
     }
-    float sunDot = max(dot(d, normalize(uSunDir)), 0.0);
-    float glow = pow(sunDot, 12.0) * 0.35 + pow(sunDot, 220.0) * 1.9;
-    sky += uSunColor * glow * (1.0 - uNight * 0.85);
-    if (uNight > 0.25 && d.y > 0.06) {
-        vec2 st = floor(d.xz / (d.y + 0.15) * 95.0);
-        float h = fract(sin(dot(st, vec2(127.1, 311.7))) * 43758.5453);
-        float star = step(0.9965, h) * smoothstep(0.06, 0.35, d.y) * uNight;
-        sky += vec3(0.85, 0.92, 1.0) * star * 1.4;
-    }
-    gl_FragColor = vec4(sky, 1.0);
-}`;
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
 
-function computeMoodPalette(timeOfDay, rain) {
-    const angle = (timeOfDay - 0.15) * Math.PI * 2;
+export function computeMoodPalette(timeOfDay, rainIntensity = 0) {
+    const angle = (timeOfDay - 0.18) * Math.PI * 2;
     const elev = Math.sin(angle);
-    const sunDir = new THREE.Vector3(Math.cos(angle) * 0.65, Math.max(-0.25, elev), -0.52).normalize();
-    const day = THREE.MathUtils.clamp((elev + 0.06) / 0.42, 0, 1);
-    const sunset = THREE.MathUtils.clamp(1 - Math.abs(elev - 0.08) / 0.24, 0, 1);
-    const night = 1 - day;
+    const day = THREE.MathUtils.clamp((elev + 0.12) / 0.55, 0, 1);
+    const sunset = THREE.MathUtils.clamp(1 - Math.abs(elev - 0.06) / 0.3, 0, 1);
+    const night = THREE.MathUtils.clamp((-elev + 0.04) / 0.34, 0, 1);
 
-    const top = new THREE.Color(0x134da8)
-        .lerp(new THREE.Color(0x28275c), sunset * 0.7)
-        .lerp(new THREE.Color(0x060b18), night)
-        .lerp(new THREE.Color(0x2e3b4e), rain * 0.55);
+    const sunDir = new THREE.Vector3(
+        Math.cos(angle) * 0.78,
+        Math.max(0.16, elev * 0.85 + 0.22),
+        Math.sin(angle) * 0.48 - 0.38
+    ).normalize();
 
-    const horizon = new THREE.Color(0x9ed2f4)
-        .lerp(new THREE.Color(0xf28749), sunset * 0.85)
-        .lerp(new THREE.Color(0x111a2e), night)
-        .lerp(new THREE.Color(0x526173), rain * 0.55);
+    const top = new THREE.Color(0x1f62a8)
+        .lerp(new THREE.Color(0x2d4172), sunset * 0.75)
+        .lerp(new THREE.Color(0x060b16), night)
+        .lerp(new THREE.Color(0x4a5b6e), rainIntensity * 0.5);
 
-    const sunColor = new THREE.Color(0xfff5e0)
-        .lerp(new THREE.Color(0xff9248), sunset * 0.85)
-        .lerp(new THREE.Color(0x7aa2d8), night);
+    const horizon = new THREE.Color(0xa6cde8)
+        .lerp(new THREE.Color(0xf09356), sunset * 0.85)
+        .lerp(new THREE.Color(0x131e33), night)
+        .lerp(new THREE.Color(0x6d7d8c), rainIntensity * 0.55);
 
-    const fogColor = horizon.clone();
-    return { sunDir, top, horizon, sunColor, fogColor, day, sunset, night };
+    const sunColor = new THREE.Color(0xfff4df)
+        .lerp(new THREE.Color(0xff9b54), sunset * 0.82)
+        .lerp(new THREE.Color(0x7898c8), night);
+
+    const fogColor = horizon.clone().lerp(new THREE.Color(0x9cb9d2), day * 0.32);
+
+    return {
+        day,
+        sunset,
+        night,
+        sunDir,
+        top,
+        horizon,
+        sunColor,
+        fogColor,
+        hdriKey: night > 0.55 ? "night" : sunset > 0.45 ? "sunset" : "day"
+    };
 }
 
 export function createGtaRenderer(canvas, hooks = {}) {
-    let renderer;
+    let renderer = null;
     try {
         renderer = new THREE.WebGLRenderer({
             canvas,
             antialias: true,
-            powerPreference: "high-performance"
+            powerPreference: "high-performance",
+            stencil: false
         });
     } catch {
         return null;
@@ -81,23 +95,23 @@ export function createGtaRenderer(canvas, hooks = {}) {
         return null;
     }
 
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.info.autoReset = false;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x9ed2f4, 0.00175);
+    scene.fog = new THREE.FogExp2(0x9fbcd4, 0.00115);
 
-    const camera = new THREE.PerspectiveCamera(62, 16 / 9, 0.25, 1100);
+    const camera = new THREE.PerspectiveCamera(60, 16 / 9, 0.25, 1100);
 
     const skyUniforms = {
-        uTopColor: { value: new THREE.Color(0x134da8) },
-        uHorizonColor: { value: new THREE.Color(0x9ed2f4) },
-        uGroundColor: { value: new THREE.Color(0x1c2432) },
-        uSunDir: { value: new THREE.Vector3(0.5, 0.7, -0.5).normalize() },
-        uSunColor: { value: new THREE.Color(0xfff5e0) },
+        uTopColor: { value: new THREE.Color(0x1f62a8) },
+        uHorizonColor: { value: new THREE.Color(0xa6cde8) },
+        uSunDir: { value: new THREE.Vector3(0.45, 0.72, -0.5).normalize() },
+        uSunColor: { value: new THREE.Color(0xfff4df) },
         uNight: { value: 0 }
     };
     const skyMat = new THREE.ShaderMaterial({
@@ -107,7 +121,7 @@ export function createGtaRenderer(canvas, hooks = {}) {
         side: THREE.BackSide,
         depthWrite: false
     });
-    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(850, 28, 18), skyMat);
+    const skyDome = new THREE.Mesh(new THREE.SphereGeometry(880, 28, 18), skyMat);
     scene.add(skyDome);
 
     const envScene = new THREE.Scene();
@@ -115,35 +129,51 @@ export function createGtaRenderer(canvas, hooks = {}) {
     envScene.add(envDome);
     const pmrem = new THREE.PMREMGenerator(renderer);
     pmrem.compileEquirectangularShader();
-    let envTarget = null;
+
+    const hdriRaw = { day: null, sunset: null, night: null };
+    const hdriPmrem = { day: null, sunset: null, night: null };
+    let fallbackEnvTarget = null;
+    let activeHdriKey = "";
     let lastMoodKey = "";
 
-    const hemiLight = new THREE.HemisphereLight(0xbbe0ff, 0x262e3d, 0.85);
+    const setHdris = (hdris) => {
+        if (!hdris) return;
+        for (const key of ["day", "sunset", "night"]) {
+            if (hdris[key]) {
+                hdriRaw[key] = hdris[key];
+                if (hdriPmrem[key]) hdriPmrem[key].dispose();
+                hdriPmrem[key] = pmrem.fromEquirectangular(hdris[key]);
+            }
+        }
+        activeHdriKey = "";
+        lastMoodKey = "";
+    };
+
+    const hemiLight = new THREE.HemisphereLight(0xc2e2ff, 0x323842, 0.78);
     scene.add(hemiLight);
 
-    const sunLight = new THREE.DirectionalLight(0xfff4de, 2.7);
+    const sunLight = new THREE.DirectionalLight(0xfff3d8, 3.1);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.set(2048, 2048);
     sunLight.shadow.camera.near = 10;
     sunLight.shadow.camera.far = 360;
-    const sc = 105;
+    const sc = 96;
     sunLight.shadow.camera.left = -sc;
     sunLight.shadow.camera.right = sc;
     sunLight.shadow.camera.top = sc;
     sunLight.shadow.camera.bottom = -sc;
-    sunLight.shadow.bias = -0.0005;
-    sunLight.shadow.normalBias = 0.04;
+    sunLight.shadow.bias = -0.0004;
+    sunLight.shadow.normalBias = 0.035;
     scene.add(sunLight);
     scene.add(sunLight.target);
 
     const composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(640, 360), 0.28, 0.42, 0.96);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(640, 360), 0.24, 0.38, 1.02);
     const outputPass = new OutputPass();
     composer.addPass(renderPass);
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
-    renderer.info.autoReset = false;
 
     let renderScale = 1.0;
     let lost = false;
@@ -155,6 +185,7 @@ export function createGtaRenderer(canvas, hooks = {}) {
     };
     const onContextRestored = () => {
         lost = false;
+        activeHdriKey = "";
         lastMoodKey = "";
         if (hooks.onContextRestored) hooks.onContextRestored();
     };
@@ -183,14 +214,14 @@ export function createGtaRenderer(canvas, hooks = {}) {
         skyUniforms.uNight.value = m.night;
 
         scene.fog.color.copy(m.fogColor);
-        scene.fog.density = 0.00145 + rainIntensity * 0.0012 + m.night * 0.0005;
+        scene.fog.density = 0.0011 + rainIntensity * 0.0013 + m.night * 0.00055;
 
         hemiLight.color.copy(m.horizon);
-        hemiLight.intensity = 0.34 + m.day * 0.62 - rainIntensity * 0.14;
+        hemiLight.intensity = 0.28 + m.day * 0.56 - rainIntensity * 0.14;
         sunLight.color.copy(m.sunColor);
-        sunLight.intensity = (0.28 + m.day * 2.5) * (1 - rainIntensity * 0.45);
-        renderer.toneMappingExposure = 0.94 + m.day * 0.16 + m.sunset * 0.08;
-        bloomPass.strength = 0.22 + m.night * 0.22 + m.sunset * 0.1;
+        sunLight.intensity = (0.24 + m.day * 2.95) * (1 - rainIntensity * 0.48);
+        renderer.toneMappingExposure = 0.96 + m.day * 0.14 + m.sunset * 0.08 - m.night * 0.08;
+        bloomPass.strength = 0.18 + m.night * 0.24 + m.sunset * 0.08;
 
         if (focusPos) {
             skyDome.position.set(focusPos.x, 0, focusPos.z);
@@ -199,19 +230,33 @@ export function createGtaRenderer(canvas, hooks = {}) {
             sunLight.target.position.set(sx, focusPos.y || 0, sz);
             sunLight.position.set(
                 sx + m.sunDir.x * 165,
-                (focusPos.y || 0) + Math.max(25, m.sunDir.y * 165),
+                (focusPos.y || 0) + Math.max(28, m.sunDir.y * 165),
                 sz + m.sunDir.z * 165
             );
             sunLight.target.updateMatrixWorld();
         }
 
-        const moodKey = `${Math.round(timeOfDay * 36)}:${Math.round(rainIntensity * 4)}`;
-        if (moodKey !== lastMoodKey && !lost) {
-            lastMoodKey = moodKey;
-            const nextEnv = pmrem.fromScene(envScene, 0.04);
-            scene.environment = nextEnv.texture;
-            if (envTarget) envTarget.dispose();
-            envTarget = nextEnv;
+        const wantKey = m.hdriKey;
+        if (!lost && hdriPmrem[wantKey] && hdriRaw[wantKey]) {
+            if (activeHdriKey !== wantKey) {
+                activeHdriKey = wantKey;
+                scene.environment = hdriPmrem[wantKey].texture;
+                scene.background = hdriRaw[wantKey];
+                skyDome.visible = false;
+            }
+            scene.backgroundIntensity = wantKey === "night" ? 0.55 : 1.0 - rainIntensity * 0.32;
+            scene.environmentIntensity = wantKey === "night" ? 0.42 : 1.05 - rainIntensity * 0.25;
+        } else {
+            skyDome.visible = true;
+            scene.background = null;
+            const moodKey = `${Math.round(timeOfDay * 36)}:${Math.round(rainIntensity * 4)}`;
+            if (moodKey !== lastMoodKey && !lost) {
+                lastMoodKey = moodKey;
+                const nextEnv = pmrem.fromScene(envScene, 0.04);
+                scene.environment = nextEnv.texture;
+                if (fallbackEnvTarget) fallbackEnvTarget.dispose();
+                fallbackEnvTarget = nextEnv;
+            }
         }
         return m;
     };
@@ -229,7 +274,10 @@ export function createGtaRenderer(canvas, hooks = {}) {
     const dispose = () => {
         canvas.removeEventListener("webglcontextlost", onContextLost);
         canvas.removeEventListener("webglcontextrestored", onContextRestored);
-        if (envTarget) envTarget.dispose();
+        for (const k of ["day", "sunset", "night"]) {
+            if (hdriPmrem[k]) hdriPmrem[k].dispose();
+        }
+        if (fallbackEnvTarget) fallbackEnvTarget.dispose();
         pmrem.dispose();
         skyDome.geometry.dispose();
         envDome.geometry.dispose();
@@ -243,6 +291,7 @@ export function createGtaRenderer(canvas, hooks = {}) {
         renderer,
         scene,
         camera,
+        setHdris,
         resize,
         updateAtmosphere,
         render,

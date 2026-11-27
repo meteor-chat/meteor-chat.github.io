@@ -15,8 +15,6 @@ export function createGtaAudio() {
     let tireSource = null;
     let tireFilter = null;
     let tireGain = null;
-    let sirenOsc = null;
-    let sirenGain = null;
     let noiseBuffer = null;
     let muted = false;
     let radioOn = false;
@@ -70,20 +68,6 @@ export function createGtaAudio() {
                 tireFilter.connect(tireGain);
                 tireGain.connect(master);
                 tireSource.start();
-
-                sirenOsc = ctx.createOscillator();
-                sirenOsc.type = "sawtooth";
-                sirenOsc.frequency.value = 720;
-                const sirenFilt = ctx.createBiquadFilter();
-                sirenFilt.type = "bandpass";
-                sirenFilt.frequency.value = 1100;
-                sirenFilt.Q.value = 2.0;
-                sirenGain = ctx.createGain();
-                sirenGain.gain.value = 0;
-                sirenOsc.connect(sirenFilt);
-                sirenFilt.connect(sirenGain);
-                sirenGain.connect(master);
-                sirenOsc.start();
             } catch {
                 ctx = null;
                 return null;
@@ -144,10 +128,6 @@ export function createGtaAudio() {
         playTone(130, 58, 0.11, 0.14, "sine");
     };
 
-    const playWantedChime = () => {
-        playTone(520, 780, 0.16, 0.08, "triangle");
-    };
-
     const update = (dt, state) => {
         if (!ctx || muted || !engineGain) return;
         const now = ctx.currentTime;
@@ -162,11 +142,6 @@ export function createGtaAudio() {
 
         const driftVol = driving && state.drifting ? Math.min(0.11, (state.lateralSpeed || 0) * 0.015) : 0;
         tireGain.gain.setTargetAtTime(driftVol, now, 0.06);
-
-        const sirenVol = state.sirenIntensity > 0.02 ? Math.min(0.085, state.sirenIntensity * 0.085) : 0;
-        const wail = 700 + (Math.sin((state.timeSec || 0) * 4.8) * 0.5 + 0.5) * 680;
-        sirenOsc.frequency.setTargetAtTime(wail, now, 0.03);
-        sirenGain.gain.setTargetAtTime(sirenVol, now, 0.08);
 
         if (radioOn) {
             radioAcc += dt;
@@ -201,7 +176,6 @@ export function createGtaAudio() {
         master = null;
         engineGain = null;
         tireGain = null;
-        sirenGain = null;
     };
 
     return {
@@ -210,7 +184,6 @@ export function createGtaAudio() {
         playCrash,
         playHorn,
         playDoor,
-        playWantedChime,
         setMuted,
         isMuted: () => muted,
         setRadio,

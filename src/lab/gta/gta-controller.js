@@ -1,6 +1,8 @@
 import initJolt from "jolt-physics";
 import * as THREE from "three";
+import { loadGtaAssets } from "./gta-assets.js";
 import { createGtaAudio } from "./gta-audio.js";
+import { buildHydrantGeometry } from "./gta-building-meshes.js";
 import { createGtaCamera } from "./gta-camera.js";
 import { createGtaCharacter } from "./gta-character.js";
 import { buildCityData } from "./gta-city-data.js";
@@ -8,7 +10,6 @@ import { createCityScene } from "./gta-city-gen.js";
 import { createGtaHud } from "./gta-hud.js";
 import { createGtaParticles } from "./gta-particles.js";
 import { createJoltWorld } from "./gta-physics-world.js";
-import { createPoliceSystem } from "./gta-police-ai.js";
 import { createGtaRenderer } from "./gta-renderer.js";
 import {
     GPS_DESTINATIONS,
@@ -25,7 +26,7 @@ import { JoltCar } from "./gta-vehicle-physics.js";
 import { findNearestEnterableVehicle } from "./gta-vehicle-specs.js";
 
 const GPS_KEYS = ["downtown", "strawberry", "construction", "beach", "safehouse", "none"];
-const TIME_MAP = { day: 0.28, sunset: 0.62, night: 0.88 };
+const TIME_MAP = { day: 0.28, sunset: 0.67, night: 0.9 };
 
 export async function createGtaApp(root) {
     const canvas = root.querySelector("[data-gta-gl]");
@@ -45,7 +46,6 @@ export async function createGtaApp(root) {
         hp: 100,
         armor: 100,
         nitro: 100,
-        sirenManual: false,
         fps: 60,
         drawCalls: 0,
         activeCarIndex: -1
@@ -56,17 +56,16 @@ export async function createGtaApp(root) {
     let rendererCtx = null;
     let world = null;
     let textures = null;
+    let assets = null;
     let cityScene = null;
     let particles = null;
     let character = null;
     let cameraCtl = null;
     let traffic = null;
-    let police = null;
     const cars = [];
     const civVisuals = [];
-    const policeVisuals = [];
     const pedMeshes = [];
-    let propInst = null;
+    const propMeshes = [];
     let propBodies = [];
     let rafId = 0;
 
@@ -79,7 +78,7 @@ export async function createGtaApp(root) {
 
     const spawnCarAt = (presetKey, x, z, yaw, colorOverride = null) => {
         const physics = new JoltCar(world, { preset: presetKey, spawn: { x, z }, yaw, heightAt });
-        const visual = createVehicleVisual(presetKey, textures, colorOverride, false);
+        const visual = createVehicleVisual(presetKey, textures, colorOverride, false, assets);
         rendererCtx.scene.add(visual.chassis);
         for (const w of visual.wheels) rendererCtx.scene.add(w);
         physics.applyPoseTo(visual.chassis, visual.wheels, 1);
@@ -94,11 +93,6 @@ export async function createGtaApp(root) {
             for (let i = 0; i < traffic.cars.length; i += 1) {
                 const tc = traffic.cars[i];
                 list.push({ kind: "civ", idx: i, name: tc.preset === "cavalcade" ? "Cavalcade SUV" : tc.preset === "gauntlet" ? "Gauntlet ZL1" : "Elegy GT-R", pos: tc.pos });
-            }
-        }
-        if (police) {
-            for (let i = 0; i < police.units.length; i += 1) {
-                list.push({ kind: "police", idx: i, name: "LSPD Cruiser", pos: police.units[i].pos });
             }
         }
         return list;
@@ -123,7 +117,6 @@ export async function createGtaApp(root) {
             state.activeCarIndex = near.idx;
             character.setVisible(false);
             audio.playDoor();
-            if (cars[near.idx].preset === "cruiser") police.addHeat(28);
             hud.showToast(`Driving ${near.name}`, 2.0);
         } else if (near.kind === "civ") {
             const tc = traffic.cars[near.idx];
@@ -133,19 +126,7 @@ export async function createGtaApp(root) {
             state.activeCarIndex = cars.length - 1;
             character.setVisible(false);
             audio.playDoor();
-            const next = police.addHeat(24);
-            if (next > 0) audio.playWantedChime();
-            hud.showToast(`Hijacked ${entry.name}`, 2.0);
-        } else if (near.kind === "police") {
-            const pu = police.units[near.idx];
-            const entry = spawnCarAt("cruiser", pu.pos.x, pu.pos.z, pu.yaw);
-            police.units.splice(near.idx, 1);
-            state.activeCarIndex = cars.length - 1;
-            character.setVisible(false);
-            audio.playDoor();
-            police.addHeat(34);
-            audio.playWantedChime();
-            hud.showToast(`Hijacked ${entry.name}`, 2.0);
+            hud.showToast(`Driving ${entry.name}`, 2.0);
         }
     };
 
@@ -177,7 +158,6 @@ export async function createGtaApp(root) {
             const pc = sh.parkedCars[i];
             cars[i].physics.reset({ x: pc.x, z: pc.z }, pc.yaw);
         }
-        police.setWanted(0);
         state.hp = 100;
         state.armor = 100;
         state.nitro = 100;
@@ -198,15 +178,6 @@ export async function createGtaApp(root) {
             hud.showToast(dest ? `GPS: ${dest.label}` : "GPS Cleared", 1.8);
         },
         onSpawnCar: swapActiveVehicle,
-        onWantedSet: (lvl) => {
-            police.setWanted(lvl);
-            if (lvl > 0) {
-                audio.playWantedChime();
-                hud.showToast(`${lvl}-Star LSPD Pursuit Active`, 2.2);
-            } else {
-                hud.showToast("Wanted Level Cleared", 1.8);
-            }
-        },
         onCamCycle: () => {
             const m = cameraCtl.cycleMode();
             hud.showToast(`Camera: ${m}`, 1.4);
@@ -231,57 +202,87 @@ export async function createGtaApp(root) {
         return { state, destroy: () => hud.destroy() };
     }
 
-    hud.setLoader("Initializing JoltPhysics.js WASM...", 32);
-    const Jolt = await initJolt();
-    if (state.destroyed) return { state, destroy: () => {} };
+    hud.setLoader("Initializing JoltPhysics.js WASM & Photorealistic Assets...", 26);
+    const [Jolt, loadedAssets] = await Promise.all([
+        initJolt(),
+        loadGtaAssets((msg, pct) => hud.setLoader(msg, pct))
+    ]);
+    if (state.destroyed) {
+        if (loadedAssets) loadedAssets.dispose();
+        return { state, destroy: () => {} };
+    }
+    assets = loadedAssets;
+    rendererCtx.setHdris(assets.hdris);
 
-    hud.setLoader("Generating Los Santos 5-District City...", 65);
+    hud.setLoader("Building Los Santos 5-District Architecture & Wet Streets...", 76);
     const cityData = buildCityData(2026);
     textures = createGtaTextures();
-    cityScene = createCityScene(rendererCtx.scene, cityData, textures);
+    cityScene = createCityScene(rendererCtx.scene, cityData, textures, assets);
     world = createJoltWorld(Jolt);
     propBodies = world.populateCityColliders(cityData, heightAt);
 
-    const propGeo = new THREE.CylinderGeometry(0.22, 0.28, 1.0, 8);
-    const propMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.55, metalness: 0.15 });
-    propInst = new THREE.InstancedMesh(propGeo, propMat, Math.max(1, propBodies.length));
-    propInst.castShadow = true;
-    rendererCtx.scene.add(propInst);
+    const hydrantGeo = buildHydrantGeometry();
+    const hydrantMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.36, metalness: 0.55 });
+    const binGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.86, 12);
+    const binMat = new THREE.MeshStandardMaterial({ color: 0x525a66, roughness: 0.42, metalness: 0.72 });
+    const coneGeo = new THREE.ConeGeometry(0.22, 0.68, 12);
+    const coneMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.45, metalness: 0.1 });
+    for (let i = 0; i < propBodies.length; i += 1) {
+        const pb = propBodies[i];
+        let obj = null;
+        if (pb.kind === "hydrant") {
+            obj = new THREE.Mesh(hydrantGeo, hydrantMat);
+        } else if (pb.kind === "bollard") {
+            obj = new THREE.Mesh(binGeo, binMat);
+        } else {
+            obj = new THREE.Mesh(coneGeo, coneMat);
+        }
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+        rendererCtx.scene.add(obj);
+        propMeshes.push(obj);
+    }
 
-    hud.setLoader("Spawning Vehicles, Traffic & LSPD...", 88);
+    hud.setLoader("Spawning Supercar Fleet, Rigged Character & Traffic...", 90);
     for (const pc of cityData.safehouse.parkedCars) {
         spawnCarAt(pc.preset, pc.x, pc.z, pc.yaw);
     }
 
-    character = createGtaCharacter(rendererCtx.scene, cityData.safehouse.spawnPlayer);
+    character = createGtaCharacter(rendererCtx.scene, cityData.safehouse.spawnPlayer, assets);
     cameraCtl = createGtaCamera(rendererCtx.camera);
     cameraCtl.snap(character.state.pos, 0);
     particles = createGtaParticles(rendererCtx.scene);
     traffic = createTrafficSystem(cityData.graph, 2026);
-    police = createPoliceSystem(cityData.graph, 2026);
 
     for (const c of traffic.cars) {
-        const vis = createVehicleVisual(c.preset, textures, c.color, true);
+        const vis = createVehicleVisual(c.preset, textures, c.color, true, assets);
         vis.chassis.position.set(c.pos.x, c.pos.y + vis.restHeight, c.pos.z);
         rendererCtx.scene.add(vis.chassis);
         civVisuals.push(vis);
     }
 
-    const pedGeo = new THREE.BoxGeometry(0.48, 1.65, 0.34);
+    const pedTorsoGeo = new THREE.CapsuleGeometry(0.18, 0.46, 5, 10);
+    const pedHeadGeo = new THREE.SphereGeometry(0.13, 10, 8);
+    const pedLegGeo = new THREE.CapsuleGeometry(0.08, 0.56, 4, 8);
+    const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xd9a884, roughness: 0.72 });
+    const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
     for (const p of traffic.peds) {
-        const mat = new THREE.MeshStandardMaterial({ color: p.shirtColor, roughness: 0.78 });
-        const mesh = new THREE.Mesh(pedGeo, mat);
-        mesh.castShadow = true;
-        mesh.position.set(p.x, p.y + 0.82, p.z);
-        rendererCtx.scene.add(mesh);
-        pedMeshes.push(mesh);
-    }
-
-    for (let i = 0; i < 8; i += 1) {
-        const vis = createVehicleVisual("cruiser", textures, null, true);
-        vis.chassis.visible = false;
-        rendererCtx.scene.add(vis.chassis);
-        policeVisuals.push(vis);
+        const g = new THREE.Group();
+        const shirtMat = new THREE.MeshStandardMaterial({ color: p.shirtColor, roughness: 0.78 });
+        const torso = new THREE.Mesh(pedTorsoGeo, shirtMat);
+        torso.position.y = 1.12;
+        torso.castShadow = true;
+        const head = new THREE.Mesh(pedHeadGeo, pedSkinMat);
+        head.position.y = 1.62;
+        head.castShadow = true;
+        const legL = new THREE.Mesh(pedLegGeo, pedPantsMat);
+        legL.position.set(-0.09, 0.42, 0);
+        const legR = new THREE.Mesh(pedLegGeo, pedPantsMat);
+        legR.position.set(0.09, 0.42, 0);
+        g.add(torso, head, legL, legR);
+        g.position.set(p.x, p.y, p.z);
+        rendererCtx.scene.add(g);
+        pedMeshes.push(g);
     }
 
     const keys = new Set();
@@ -299,22 +300,7 @@ export async function createGtaApp(root) {
             const m = cameraCtl.cycleMode();
             hud.showToast(`Camera: ${m}`, 1.4);
         } else if (e.code === "KeyH") {
-            if (state.activeCarIndex >= 0 && cars[state.activeCarIndex].preset === "cruiser") {
-                state.sirenManual = !state.sirenManual;
-                hud.showToast(state.sirenManual ? "LSPD Siren: ON" : "LSPD Siren: OFF", 1.4);
-            } else {
-                audio.playHorn();
-            }
-        } else if (e.code === "KeyP") {
-            const cur = police.getStars();
-            const next = cur < 3 ? 3 : cur < 5 ? 5 : 0;
-            police.setWanted(next);
-            if (next > 0) {
-                audio.playWantedChime();
-                hud.showToast(`${next}-Star Police Chase Engaged`, 2.0);
-            } else {
-                hud.showToast("Wanted Level Cleared", 1.6);
-            }
+            audio.playHorn();
         } else if (e.code === "KeyM") {
             const idx = (GPS_KEYS.indexOf(state.gpsKey) + 1) % GPS_KEYS.length;
             state.gpsKey = GPS_KEYS[idx];
@@ -371,7 +357,6 @@ export async function createGtaApp(root) {
     hud.setLoader("Ready", 100, true);
     hud.showToast("Vinewood Safehouse - Walk to driveway & press F to drive", 3.4);
 
-    const dummy = new THREE.Object3D();
     const env = { heightAt, surfaceAt, waterLevelAt, wetness: state.wetness };
     let lastTime = performance.now();
     let fpsFrames = 0;
@@ -427,21 +412,17 @@ export async function createGtaApp(root) {
             const c = cars[i];
             c.physics.applyPoseTo(c.visual.chassis, c.visual.wheels, alpha);
             c.visual.setBrakeGlow(c.physics.braking);
-            const sirenOn = c.preset === "cruiser" && (i === state.activeCarIndex ? state.sirenManual : false);
-            c.visual.setSiren(sirenOn, state.timeSec);
         }
 
         for (let i = 0; i < propBodies.length; i += 1) {
             const pb = propBodies[i].body;
             const p = pb.GetPosition();
             const q = pb.GetRotation();
-            dummy.position.set(p.GetX(), p.GetY(), p.GetZ());
-            dummy.quaternion.set(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
-            dummy.scale.set(1, 1, 1);
-            dummy.updateMatrix();
-            propInst.setMatrixAt(i, dummy.matrix);
+            const m = propMeshes[i];
+            if (!m) continue;
+            m.position.set(p.GetX(), p.GetY() - 0.5, p.GetZ());
+            m.quaternion.set(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
         }
-        propInst.instanceMatrix.needsUpdate = true;
 
         const viewYaw = cameraCtl.getViewYaw();
         if (!isDriving) {
@@ -481,14 +462,6 @@ export async function createGtaApp(root) {
             particles.spawnSparks(hitCar.pos.x, hitCar.pos.y, hitCar.pos.z, 18);
             cameraCtl.addShake(Math.min(0.45, impactSpd * 0.015));
             audio.playCrash(impactSpd / 18);
-            if (impactSpd > 10) {
-                const prev = police.getStars();
-                const next = police.addHeat(14);
-                if (next > prev) {
-                    audio.playWantedChime();
-                    hud.showToast(`Wanted Level: ${next} Star${next > 1 ? "s" : ""}`, 2.0);
-                }
-            }
         });
 
         for (let i = 0; i < traffic.cars.length; i += 1) {
@@ -502,41 +475,8 @@ export async function createGtaApp(root) {
         for (let i = 0; i < traffic.peds.length; i += 1) {
             const p = traffic.peds[i];
             const mesh = pedMeshes[i];
-            mesh.position.set(p.x, p.y + 0.84 + Math.abs(Math.sin(p.phase)) * 0.08, p.z);
+            mesh.position.set(p.x, p.y + Math.abs(Math.sin(p.phase)) * 0.06, p.z);
             mesh.rotation.y = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : (p.dir > 0 ? 0 : Math.PI);
-        }
-
-        const polRes = police.update(
-            dt,
-            playerSummary,
-            (unit, impactSpd) => {
-                particles.spawnSparks(unit.pos.x, unit.pos.y, unit.pos.z, 22);
-                cameraCtl.addShake(0.42);
-                audio.playCrash(Math.max(0.7, impactSpd / 16));
-                state.armor = Math.max(0, state.armor - 8);
-                if (state.armor <= 0) state.hp = Math.max(15, state.hp - 6);
-                police.addHeat(16);
-            },
-            (cleared) => {
-                const bonus = cleared * 2500;
-                state.cash += bonus;
-                hud.showToast(`Pursuit Evaded! +$${bonus.toLocaleString("en-US")}`, 2.8);
-            }
-        );
-
-        for (let i = 0; i < policeVisuals.length; i += 1) {
-            const vis = policeVisuals[i];
-            const u = police.units[i];
-            if (u) {
-                vis.chassis.visible = true;
-                vis.chassis.position.set(u.pos.x, u.pos.y + vis.restHeight, u.pos.z);
-                vis.chassis.rotation.set(0, u.yaw, 0);
-                vis.spinWheels(u.speed * dt);
-                vis.setSiren(true, state.timeSec + i * 0.13);
-            } else {
-                vis.chassis.visible = false;
-                vis.setSiren(false, 0);
-            }
         }
 
         if (activeCar && activeCar.physics.drifting) {
@@ -563,19 +503,12 @@ export async function createGtaApp(root) {
         const rStats = rendererCtx.render();
         state.drawCalls = rStats.drawCalls;
 
-        const sirenVol =
-            state.sirenManual
-                ? 0.9
-                : polRes.stars > 0
-                    ? Math.max(0.08, Math.min(1, 1 - polRes.nearestDist / 110))
-                    : 0;
         audio.update(dt, {
             isDriving,
             rpm: activeCar ? activeCar.physics.telemetry.rpm : 860,
             throttle: wantThrottle,
             drifting: activeCar ? activeCar.physics.drifting : false,
             lateralSpeed: activeCar ? Math.abs(activeCar.physics.lateralSpeed) : 0,
-            sirenIntensity: sirenVol,
             timeSec: state.timeSec
         });
 
@@ -617,8 +550,6 @@ export async function createGtaApp(root) {
             district: loc.district,
             street: loc.street,
             promptText,
-            wantedStars: polRes.stars,
-            evading: polRes.evading,
             radioOn: audio.isRadioOn(),
             muted: audio.isMuted(),
             timeSec: state.timeSec,
@@ -631,8 +562,7 @@ export async function createGtaApp(root) {
                 const pp = c.physics.pose.position;
                 return { x: pp.x, z: pp.z };
             }),
-            civCars: traffic.cars,
-            policeUnits: police.units
+            civCars: traffic.cars
         });
 
         rafId = requestAnimationFrame(tick);
@@ -657,11 +587,11 @@ export async function createGtaApp(root) {
                 c.visual.dispose(rendererCtx.scene);
             }
             for (const v of civVisuals) v.dispose(rendererCtx.scene);
-            for (const v of policeVisuals) v.dispose(rendererCtx.scene);
             if (character) character.dispose();
             if (particles) particles.dispose();
             if (cityScene) cityScene.dispose();
             if (textures) textures.dispose();
+            if (assets) assets.dispose();
             if (world) world.dispose();
             if (rendererCtx) rendererCtx.dispose();
             audio.destroy();

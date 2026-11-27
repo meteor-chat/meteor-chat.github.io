@@ -1,4 +1,4 @@
-import { mulberry32 } from "../voxel/voxel-noise.js";
+import { mulberry32 } from "./gta-noise.js";
 import {
     LANE_OFFSET,
     SIDEWALK_HALF_WIDTH,

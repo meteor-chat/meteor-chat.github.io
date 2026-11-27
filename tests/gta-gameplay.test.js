@@ -1,5 +1,4 @@
 import { describe, it, expect } from "vitest";
-import { createPoliceSystem } from "../src/lab/gta/gta-police-ai.js";
 import { buildRoadGraph } from "../src/lab/gta/gta-road-graph.js";
 import { createTrafficSystem } from "../src/lab/gta/gta-traffic-ai.js";
 import {
@@ -9,9 +8,10 @@ import {
     findNearestEnterableVehicle
 } from "../src/lab/gta/gta-vehicle-specs.js";
 
-describe("Los Santos Vehicle Specs, Traffic AI & Police Pursuit AI", () => {
-    it("exposes 4 tuned vehicle presets with valid physics and wheel dimensions", () => {
-        for (const key of ["elegy", "gauntlet", "cavalcade", "cruiser"]) {
+describe("Los Santos Vehicle Specs & Traffic AI", () => {
+    it("exposes 3 tuned hero vehicle presets with valid physics and wheel dimensions", () => {
+        expect(Object.keys(VEHICLE_PRESETS)).toEqual(["elegy", "gauntlet", "cavalcade"]);
+        for (const key of ["elegy", "gauntlet", "cavalcade"]) {
             const p = VEHICLE_PRESETS[key];
             expect(p).toBeDefined();
             expect(p.mass).toBeGreaterThan(1400);
@@ -21,7 +21,6 @@ describe("Los Santos Vehicle Specs, Traffic AI & Police Pursuit AI", () => {
             expect(p.halfWheelbase).toBeGreaterThan(1.3);
             expect(p.differentials.length).toBeGreaterThan(0);
         }
-        expect(VEHICLE_PRESETS.cruiser.police).toBe(true);
         expect(VEHICLE_PRESETS.cavalcade.suv).toBe(true);
     });
 
@@ -83,61 +82,5 @@ describe("Los Santos Vehicle Specs, Traffic AI & Police Pursuit AI", () => {
         );
         expect(crashCount).toBe(1);
         expect(target.knockTimer).toBeGreaterThan(0);
-    });
-
-    it("escalates 0 to 5 wanted stars, spawns LSPD interceptors & roadblocks, and rewards escape", () => {
-        const graph = buildRoadGraph();
-        const police = createPoliceSystem(graph, 2026);
-
-        expect(police.getStars()).toBe(0);
-        const idle = police.update(0.033, { pos: { x: 0, z: 0 }, yaw: 0, speed: 0, isDriving: false });
-        expect(idle.stars).toBe(0);
-        expect(police.units.length).toBe(0);
-
-        police.addHeat(30);
-        expect(police.getStars()).toBeGreaterThanOrEqual(2);
-
-        police.setWanted(5);
-        expect(police.getStars()).toBe(5);
-        police.update(0.033, { pos: { x: 0, z: 0 }, yaw: 0, speed: 12, isDriving: true });
-        expect(police.units.length).toBe(8);
-        expect(police.units.some((u) => u.roadblock)).toBe(true);
-
-        let rammed = 0;
-        const u0 = police.units[0];
-        u0.pos.x = 1.2;
-        u0.pos.z = 0;
-        police.update(
-            0.033,
-            { pos: { x: 0, z: 0 }, yaw: 0, speed: 18, isDriving: true },
-            () => {
-                rammed += 1;
-            }
-        );
-        expect(rammed).toBeGreaterThanOrEqual(1);
-
-        for (const u of police.units) {
-            u.pos.x = -260;
-            u.pos.z = -260;
-        }
-        let escapedStars = 0;
-        for (let step = 0; step < 260; step += 1) {
-            for (const u of police.units) {
-                u.pos.x = -260;
-                u.pos.z = -260;
-            }
-            const res = police.update(
-                0.05,
-                { pos: { x: -120, z: -120 }, yaw: 0, speed: 20, isDriving: true },
-                null,
-                (cleared) => {
-                    escapedStars = cleared;
-                }
-            );
-            if (res.stars === 0) break;
-        }
-        expect(escapedStars).toBe(5);
-        expect(police.getStars()).toBe(0);
-        expect(police.units.length).toBe(0);
     });
 });
