@@ -109,6 +109,21 @@ export function initMath40() {
             const input = document.getElementById(id);
             if (input) input.addEventListener("input", calculateMath40);
         });
+        const toggleBtn = document.getElementById("math40-btn-explain-toggle");
+        if (toggleBtn) {
+            toggleBtn.setAttribute("aria-expanded", "false");
+            toggleBtn.addEventListener("click", () => {
+                const open = root.classList.toggle("lr-explain-open");
+                toggleBtn.setAttribute("aria-expanded", String(open));
+                toggleBtn.classList.toggle("is-active", open);
+                toggleBtn.textContent = open ? "Sembunyikan Penjelasan" : "Tampilkan Penjelasan";
+                if (typeof requestAnimationFrame !== "undefined") {
+                    requestAnimationFrame(drawLogRegArrows);
+                } else {
+                    drawLogRegArrows();
+                }
+            });
+        }
         if (!resizeAttached && typeof window !== "undefined") {
             resizeAttached = true;
             window.addEventListener("resize", drawLogRegArrows);
@@ -136,5 +151,5 @@ export function calculateMath40() {
     const lr = readNumInput("math40-in-lr", 1);
     const th = readNumInput("math40-in-th", 0.5);
     const res = computeLogisticRegression(rawPoints, w0, w1, lr, th, 5);
-    renderLogRegSteps(res);
+    renderLogRegSteps(res, { w0, w1, lr, th });
 }

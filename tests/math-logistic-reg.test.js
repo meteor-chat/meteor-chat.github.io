@@ -18,6 +18,33 @@ import { hasForm } from "../src/math/math-modules.js";
 import { initMath40 } from "../src/math/calculators/math-calc-40.js";
 import { wrapNeg } from "../src/math/calculators/math-calc-39-cards.js";
 
+function visibleText(el) {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".katex-mathml").forEach((n) => n.remove());
+    return clone.textContent.replace(/\s+/g, " ").trim();
+}
+
+function proseOnlyText(el) {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".katex, .lr-explain-tag").forEach((n) => n.remove());
+    return clone.textContent.replace(/\s+/g, " ").trim();
+}
+
+function assertAllLogisticExplanationsUseKatex(form) {
+    const boxes = form.querySelectorAll(".lr-explain-box");
+    expect(boxes.length).toBeGreaterThan(0);
+    const hasDigit = /\d/;
+    const hasOp = new RegExp("[=+*\\/<>^]|\\B-|\\s-\\s");
+    const hasMathVar = /\b(x|y|z|w0|w1|gw0|gw1|lr|eta|theta|ln|alpha)\b/;
+    boxes.forEach((box) => {
+        expect(box.querySelectorAll(".katex").length).toBeGreaterThan(0);
+        const prose = proseOnlyText(box.querySelector(".lr-explain-text"));
+        expect(hasDigit.test(prose)).toBe(false);
+        expect(hasOp.test(prose)).toBe(false);
+        expect(hasMathVar.test(prose)).toBe(false);
+    });
+}
+
 describe("Formula 40: Logistic Regression", () => {
     it("matches CSV manual spreadsheet and Slide 35 iterations accurately", () => {
         const res = computeLogisticRegression(DEFAULT_LOGREG_POINTS, 0, 0, 1, 0.5, 5);
@@ -62,15 +89,34 @@ describe("Formula 40: Logistic Regression", () => {
         expect(fs.existsSync(path.resolve(process.cwd(), "math/ai/12/index.html"))).toBe(true);
     });
 
-    describe("Auto-row tabulate, live parameter recalculation, and color tokens", () => {
+    describe("Auto-row tabulate, KaTeX explanations, live parameter recalculation, and color tokens", () => {
         const katexLib = loadKatex(pathToFileURL(path.resolve(process.cwd(), "vendor/katex/katex.min.js")));
+        const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
+        const start40 = rawHtml.indexOf("<div id=\"math-calc-form-40\"");
+        const end40 = rawHtml.indexOf("</main>", start40);
+        const form40Html = rawHtml.slice(start40, end40);
+        const texCache = new Map();
 
         beforeEach(() => {
-            const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
-            document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
+            document.body.innerHTML = form40Html;
+            const fragCache = new Map();
             globalThis.katex = {
                 render: (expr, el, opts) => {
-                    el.innerHTML = katexLib.renderToString(expr, opts);
+                    const key = `${opts && opts.displayMode ? 1 : 0}:${expr}`;
+                    let frag = fragCache.get(key);
+                    if (frag === undefined) {
+                        let html = texCache.get(key);
+                        if (html === undefined) {
+                            html = katexLib.renderToString(expr, opts);
+                            texCache.set(key, html);
+                        }
+                        const tpl = document.createElement("template");
+                        tpl.innerHTML = html;
+                        frag = tpl.content;
+                        fragCache.set(key, frag);
+                    }
+                    el.textContent = "";
+                    el.appendChild(frag.cloneNode(true));
                 }
             };
         });
@@ -79,18 +125,20 @@ describe("Formula 40: Logistic Regression", () => {
             delete globalThis.katex;
         });
 
-        it("renders 5 active rows + 1 blank row and updates live on edits", () => {
+        it("renders 5 active rows + 1 blank row, default-hidden KaTeX explanations, and updates live on edits", () => {
             initMath40();
+            const form = document.getElementById("math-calc-form-40");
             const tbody = document.getElementById("math40-tabulate-body");
             const steps = document.getElementById("math40-steps-container");
-
-            const visibleText = (el) => {
-                const clone = el.cloneNode(true);
-                clone.querySelectorAll(".katex-mathml").forEach((n) => n.remove());
-                return clone.textContent.replace(/\s+/g, " ").trim();
-            };
+            const toggleBtn = document.getElementById("math40-btn-explain-toggle");
 
             const nHtml = () => document.getElementById("math40-n-val").querySelector(".katex-html").textContent;
+            expect(form.querySelectorAll("button").length).toBe(2);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+            expect(form.classList.contains("lr-explain-open")).toBe(false);
+            expect(form.querySelectorAll(".lr-explain-box").length).toBe(9);
+            assertAllLogisticExplanationsUseKatex(form);
+
             expect(tbody.children.length).toBe(6);
             expect(nHtml()).toBe("5");
             expect(document.getElementById("lr40-title-tab").querySelector(".katex-html").textContent).toBe("1.");
@@ -98,6 +146,9 @@ describe("Formula 40: Logistic Regression", () => {
             expect(tbody.querySelectorAll(".lr-tab-label .katex").length).toBe(6);
             expect(visibleText(steps)).toContain("linear score (z) and sigmoid probability");
             expect(visibleText(steps)).toContain("gradient descent iterations");
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[2])).toContain("melempar koin");
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[7])).toContain("turun dari");
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[8])).toContain("terus menyusut");
             expect(steps.querySelectorAll(".lr40-upd-grid").length).toBe(1);
             expect(steps.querySelectorAll(".lr-diagram-unit").length).toBe(5);
             expect(steps.querySelectorAll("tfoot .lr-tok-err").length).toBe(2);
@@ -105,6 +156,15 @@ describe("Formula 40: Logistic Regression", () => {
             expect(iterTable.querySelectorAll(".lr-tok-w0").length).toBe(10);
             expect(iterTable.querySelectorAll(".lr-tok-w1").length).toBe(10);
             expect(iterTable.querySelectorAll(".lr-tok-err").length).toBe(5);
+
+            toggleBtn.click();
+            expect(form.classList.contains("lr-explain-open")).toBe(true);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("true");
+            expect(toggleBtn.textContent).toBe("Sembunyikan Penjelasan");
+            toggleBtn.click();
+            expect(form.classList.contains("lr-explain-open")).toBe(false);
+            expect(toggleBtn.getAttribute("aria-expanded")).toBe("false");
+            expect(toggleBtn.textContent).toBe("Tampilkan Penjelasan");
 
             const lastInputs = tbody.lastElementChild.querySelectorAll("input");
             lastInputs[0].value = "3";
@@ -126,18 +186,34 @@ describe("Formula 40: Logistic Regression", () => {
             w0In.value = "-0.2";
             w0In.dispatchEvent(new window.Event("input"));
             expect(steps.textContent).toContain("-0.2");
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[2])).not.toContain("melempar koin");
+            assertAllLogisticExplanationsUseKatex(form);
+
+            const lrIn = document.getElementById("math40-in-lr");
+            lrIn.value = "0";
+            lrIn.dispatchEvent(new window.Event("input"));
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[1])).toContain("tidak akan berubah");
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[6])).toContain("bertahan di");
+            assertAllLogisticExplanationsUseKatex(form);
+
+            lrIn.value = "50";
+            lrIn.dispatchEvent(new window.Event("input"));
+            expect(visibleText(form.querySelectorAll(".lr-explain-box")[7])).toContain("kebablasan");
+            assertAllLogisticExplanationsUseKatex(form);
 
             const rowInputs = tbody.firstElementChild.querySelectorAll("input");
             rowInputs[1].value = "2";
             rowInputs[1].dispatchEvent(new window.Event("input"));
             expect(steps.querySelector(".lr-subnote-warn")).not.toBeNull();
             expect(nHtml()).toBe("5");
-        });
+            assertAllLogisticExplanationsUseKatex(form);
+        }, 20000);
     });
 
     it("complies with zero-comment, zero-em-dash, line-limit, and TeX font rules", () => {
         const files = [
             "src/math/calculators/math-calc-40-engine.js",
+            "src/math/calculators/math-calc-40-explain.js",
             "src/math/calculators/math-calc-40-cards.js",
             "src/math/calculators/math-calc-40.js",
             "tests/math-logistic-reg.test.js"

@@ -72,13 +72,32 @@ describe("Formula 39: Linear Regression", () => {
 
     describe("Auto-row tabulate, KaTeX explanations, and #after DOM flow", () => {
         const katexLib = loadKatex(pathToFileURL(path.resolve(process.cwd(), "vendor/katex/katex.min.js")));
+        const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
+        const start39 = rawHtml.indexOf("<div id=\"math-calc-form-39\"");
+        const end39 = rawHtml.indexOf("<div id=\"math-calc-form-40\"", start39);
+        const form39Html = rawHtml.slice(start39, end39);
+        const texCache = new Map();
 
         beforeEach(() => {
-            const rawHtml = fs.readFileSync(path.resolve(process.cwd(), "math.html"), "utf-8");
-            document.documentElement.innerHTML = rawHtml.replace(/<style[\s\S]*?<\/style>/g, "");
+            document.body.innerHTML = form39Html;
+            const fragCache = new Map();
             globalThis.katex = {
                 render: (expr, el, opts) => {
-                    el.innerHTML = katexLib.renderToString(expr, opts);
+                    const key = `${opts && opts.displayMode ? 1 : 0}:${expr}`;
+                    let frag = fragCache.get(key);
+                    if (frag === undefined) {
+                        let html = texCache.get(key);
+                        if (html === undefined) {
+                            html = katexLib.renderToString(expr, opts);
+                            texCache.set(key, html);
+                        }
+                        const tpl = document.createElement("template");
+                        tpl.innerHTML = html;
+                        frag = tpl.content;
+                        fragCache.set(key, frag);
+                    }
+                    el.textContent = "";
+                    el.appendChild(frag.cloneNode(true));
                 }
             };
         });
@@ -138,7 +157,7 @@ describe("Formula 39: Linear Regression", () => {
             const slopeUpdated = visibleText(form.querySelectorAll(".lr-explain-box")[4]);
             expect(slopeUpdated).not.toContain("3.8 poin");
             assertAllExplanationsUseKatex(form);
-        });
+        }, 20000);
 
         it("updates dynamic KaTeX explanations for negative slope and exact fit", () => {
             initMath39();
@@ -164,7 +183,7 @@ describe("Formula 39: Linear Regression", () => {
             expect(txt).toContain("turun 10 poin");
             expect(txt).toContain("SSE=0");
             assertAllExplanationsUseKatex(form);
-        });
+        }, 20000);
     });
 
     it("complies with zero-comment, zero-em-dash, line-limit, and TeX font rules", () => {

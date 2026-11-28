@@ -1,5 +1,6 @@
 import { fmtNum } from "./math-calc-40-engine.js";
 import { m, appendMathParts, buildLogisticWarnParts } from "./math-calc-39-explain.js";
+import { buildLogTabulateExplain, buildLogInitExplain, buildLogisticExplainCard } from "./math-calc-40-explain.js";
 import {
     wrapNeg,
     makeEl,
@@ -106,12 +107,30 @@ function makeWeightUpdateCard({ labelNewTex, symTex, symVal, lr, gradSymTex, gra
     return mountDiagramUnit(card, stage, `${labelNewTex} = \\htmlClass{${tokCls}}{${fmtNum(newVal, 4)}}`);
 }
 
-export function renderLogRegSteps(res) {
+function attachLogExplain(sec, stepKey, res) {
+    const box = buildLogisticExplainCard(stepKey, res);
+    if (box) sec.appendChild(box);
+}
+
+export function renderLogRegSteps(res, rawParams = {}) {
     const braceSide = document.getElementById("math40-brace-side");
     const nTag = document.getElementById("math40-n-tag");
+    const tabExplain = document.getElementById("math40-tabulate-explain");
+    const initExplain = document.getElementById("math40-init-explain");
     const container = document.getElementById("math40-steps-container");
     if (!container) return;
     container.textContent = "";
+
+    if (tabExplain) {
+        tabExplain.textContent = "";
+        const tbBox = buildLogTabulateExplain(res);
+        if (tbBox) tabExplain.appendChild(tbBox);
+    }
+    if (initExplain) {
+        initExplain.textContent = "";
+        const initBox = buildLogInitExplain(res, rawParams);
+        if (initBox) initExplain.appendChild(initBox);
+    }
 
     const validCount = res ? res.n : 0;
     if (braceSide && nTag) {
@@ -177,6 +196,7 @@ export function renderLogRegSteps(res) {
             ]
         )
     );
+    attachLogExplain(sigSec, "sigmoid", res);
     frag.appendChild(sigSec);
 
     frag.appendChild(makeArrow());
@@ -224,6 +244,7 @@ export function renderLogRegSteps(res) {
             resCls: "lr-tok-err"
         })
     );
+    attachLogExplain(lossSec, "loss", res);
     frag.appendChild(lossSec);
 
     frag.appendChild(makeArrow());
@@ -262,6 +283,7 @@ export function renderLogRegSteps(res) {
             ]
         )
     );
+    attachLogExplain(gradSec, "gradients", res);
     frag.appendChild(gradSec);
 
     frag.appendChild(makeArrow());
@@ -290,6 +312,7 @@ export function renderLogRegSteps(res) {
             resCls: "lr-tok-w1"
         })
     );
+    attachLogExplain(avgGradSec, "avgGradients", res);
     frag.appendChild(avgGradSec);
 
     frag.appendChild(makeArrow());
@@ -323,6 +346,7 @@ export function renderLogRegSteps(res) {
         true
     );
     updSec.append(updGrid, newModelCard);
+    attachLogExplain(updSec, "update", res);
     frag.appendChild(updSec);
 
     frag.appendChild(makeArrow());
@@ -361,6 +385,7 @@ export function renderLogRegSteps(res) {
             ]
         )
     );
+    attachLogExplain(evalSec, "eval", res);
     frag.appendChild(evalSec);
 
     frag.appendChild(makeArrow());
@@ -385,6 +410,7 @@ export function renderLogRegSteps(res) {
             ])
         )
     );
+    attachLogExplain(iterSec, "iterations", res);
     frag.appendChild(iterSec);
 
     container.appendChild(frag);

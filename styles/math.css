@@ -472,6 +472,8 @@ main { position: relative; z-index: 1; width: 100%; max-width: 100%; overflow-x:
 .lr-explain-math { color: #f8fafc; }
 .lr-math-inline .katex, .lr-n-label .katex { font-size: 1.04em; }
 .lr-tab-label .katex { font-size: 1em; }
-#math-calc-form-39:not(.lr-explain-open) .lr-explain-box, #math-calc-form-39:not(.lr-explain-open) .lr-explain-slot { display: none; }
+#math-calc-form-40.lr-explain-open .lr40-top-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+.lr-page:not(.lr-explain-open) .lr-explain-box, .lr-page:not(.lr-explain-open) .lr-explain-slot { display: none; }
+@media (max-width: 740px) { #math-calc-form-40.lr-explain-open .lr40-top-grid { grid-template-columns: 1fr; } }
 @media (max-width: 639px) { .lr-explain-box { padding: 8px 10px; } .lr-explain-text { font-size: 12.5px; } }
 @media (prefers-reduced-motion: reduce) { .lr-page * { transition: none !important; } }
