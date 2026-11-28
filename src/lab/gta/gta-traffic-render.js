@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { buildHydrantGeometry } from "./gta-building-meshes.js";
 import {
     buildLoftedHullGeometry,
@@ -279,39 +280,91 @@ export function createTrafficRenderer(scene, traffic, propBodies, assets = null,
     shadowGeo.rotateX(-Math.PI * 0.5);
     const allShadows = makePool(shadowGeo, shadowMat, totalCars, false);
 
-    const pedGeos = buildCivilianPedGeometries();
-    const pedShirtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78, metalness: 0.04 });
-    const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.72, metalness: 0.02 });
-    const pedHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0.1 });
-    const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.04 });
-    const pedShoeMat = new THREE.MeshStandardMaterial({ color: 0x262b33, roughness: 0.72, metalness: 0.06 });
-    ownedMats.push(pedShirtMat, pedSkinMat, pedHairMat, pedPantsMat, pedShoeMat);
-
     const pedCount = traffic.peds.length;
-    const pedTorsos = makePool(pedGeos.torso, pedShirtMat, pedCount, true);
-    const pedHeads = makePool(pedGeos.head, pedSkinMat, pedCount, false);
-    const pedHairs = makePool(pedGeos.hair, pedHairMat, pedCount, false);
-    const pedArms = makePool(pedGeos.arm, pedShirtMat, pedCount * 2, false);
-    const pedLegs = makePool(pedGeos.leg, pedPantsMat, pedCount * 2, false);
-    const pedShoes = makePool(pedGeos.shoe, pedShoeMat, pedCount * 2, false);
-    const pedShadows = makePool(pedGeos.shadow, shadowMat, pedCount, false);
+    const pedShadowGeo = new THREE.PlaneGeometry(0.75, 0.75);
+    pedShadowGeo.rotateX(-Math.PI * 0.5);
+    const pedShadows = makePool(pedShadowGeo, shadowMat, pedCount, false);
 
-    for (let i = 0; i < pedCount; i += 1) {
-        const p = traffic.peds[i];
-        col.setHex(p.shirtColor || 0x2a4d7a);
-        pedTorsos.setColorAt(i, col);
-        pedArms.setColorAt(i * 2, col);
-        pedArms.setColorAt(i * 2 + 1, col);
-        col.setHex(p.skinColor || 0xd9a884);
-        pedHeads.setColorAt(i, col);
-        col.setHex(p.hairColor || 0x241d18);
-        pedHairs.setColorAt(i, col);
-        col.setHex(p.pantsColor || 0x1e293b);
-        pedLegs.setColorAt(i * 2, col);
-        pedLegs.setColorAt(i * 2 + 1, col);
-    }
-    for (const inst of [pedTorsos, pedHeads, pedHairs, pedArms, pedLegs]) {
-        if (inst && inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    const civAsset = assets && assets.models && assets.models.civilian && assets.models.civilian.scene ? assets.models.civilian : null;
+    const riggedSlots = [];
+    const RIGGED_PED_POOL = 10;
+    const RIGGED_TINTS = [0xffffff, 0xe8dfd5, 0xd8e2ec, 0xf2e4d8, 0xdde5dc, 0xe5dce8, 0xf0e8d4, 0xd6e6e4, 0xead8d8, 0xe4e8d8];
+
+    let pedTorsos = null;
+    let pedHeads = null;
+    let pedHairs = null;
+    let pedArms = null;
+    let pedLegs = null;
+    let pedShoes = null;
+
+    if (civAsset && pedCount > 0) {
+        const poolCount = Math.min(RIGGED_PED_POOL, pedCount);
+        for (let i = 0; i < poolCount; i += 1) {
+            const clone = SkeletonUtils.clone(civAsset.scene);
+            clone.scale.setScalar(1.22);
+            const tint = RIGGED_TINTS[i % RIGGED_TINTS.length];
+            clone.traverse((child) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                    child.frustumCulled = false;
+                    if (child.material && !Array.isArray(child.material)) {
+                        const mat = child.material.clone();
+                        if (mat.color) mat.color.multiply(new THREE.Color(tint));
+                        if (typeof mat.roughness === "number") mat.roughness = 0.76;
+                        if (typeof mat.metalness === "number") mat.metalness = 0.04;
+                        child.material = mat;
+                        ownedMats.push(mat);
+                    }
+                }
+            });
+            clone.visible = false;
+            scene.add(clone);
+            ownedMeshes.push(clone);
+
+            const mixer = new THREE.AnimationMixer(clone);
+            let action = null;
+            if (civAsset.animations && civAsset.animations.length > 0) {
+                action = mixer.clipAction(civAsset.animations[0]);
+                action.play();
+                action.time = (i * 0.37) % Math.max(0.1, civAsset.animations[0].duration || 1);
+            }
+            riggedSlots.push({ root: clone, mixer, action, pedIdx: -1 });
+        }
+    } else if (pedCount > 0) {
+        const pedGeos = buildCivilianPedGeometries();
+        const pedShirtMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.78, metalness: 0.04 });
+        const pedSkinMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.72, metalness: 0.02 });
+        const pedHairMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0.1 });
+        const pedPantsMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.04 });
+        const pedShoeMat = new THREE.MeshStandardMaterial({ color: 0x262b33, roughness: 0.72, metalness: 0.06 });
+        ownedMats.push(pedShirtMat, pedSkinMat, pedHairMat, pedPantsMat, pedShoeMat);
+
+        pedTorsos = makePool(pedGeos.torso, pedShirtMat, pedCount, true);
+        pedHeads = makePool(pedGeos.head, pedSkinMat, pedCount, false);
+        pedHairs = makePool(pedGeos.hair, pedHairMat, pedCount, false);
+        pedArms = makePool(pedGeos.arm, pedShirtMat, pedCount * 2, false);
+        pedLegs = makePool(pedGeos.leg, pedPantsMat, pedCount * 2, false);
+        pedShoes = makePool(pedGeos.shoe, pedShoeMat, pedCount * 2, false);
+        pedGeos.shadow.dispose();
+
+        for (let i = 0; i < pedCount; i += 1) {
+            const p = traffic.peds[i];
+            col.setHex(p.shirtColor || 0x2a4d7a);
+            pedTorsos.setColorAt(i, col);
+            pedArms.setColorAt(i * 2, col);
+            pedArms.setColorAt(i * 2 + 1, col);
+            col.setHex(p.skinColor || 0xd9a884);
+            pedHeads.setColorAt(i, col);
+            col.setHex(p.hairColor || 0x241d18);
+            pedHairs.setColorAt(i, col);
+            col.setHex(p.pantsColor || 0x1e293b);
+            pedLegs.setColorAt(i * 2, col);
+            pedLegs.setColorAt(i * 2 + 1, col);
+        }
+        for (const inst of [pedTorsos, pedHeads, pedHairs, pedArms, pedLegs]) {
+            if (inst && inst.instanceColor) inst.instanceColor.needsUpdate = true;
+        }
     }
 
     const hydrants = [];
@@ -409,7 +462,9 @@ export function createTrafficRenderer(scene, traffic, propBodies, assets = null,
         return { wheelIdx: wi, shadowIdx: si };
     };
 
-    const update = (dt) => {
+    const pedOrder = Array.from({ length: pedCount }, (_, i) => ({ idx: i, d2: 0 }));
+
+    const update = (dt, focusPos = null) => {
         const r1 = writeCarGroup(sedanCars, sedanPools, dt, 0, 0);
         writeCarGroup(suvCars, suvPools, dt, r1.wheelIdx, r1.shadowIdx);
         if (totalCars > 0) {
@@ -418,55 +473,116 @@ export function createTrafficRenderer(scene, traffic, propBodies, assets = null,
             allShadows.instanceMatrix.needsUpdate = true;
         }
 
-        for (let i = 0; i < pedCount; i += 1) {
-            const p = traffic.peds[i];
-            const yaw = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : p.dir > 0 ? 0 : Math.PI;
-            const bob = Math.abs(Math.sin(p.phase)) * 0.045;
-            const swing = Math.sin(p.phase) * 0.42;
-            const cosY = Math.cos(yaw);
-            const sinY = Math.sin(yaw);
+        if (riggedSlots.length > 0) {
+            const fx = focusPos ? focusPos.x : 0;
+            const fz = focusPos ? focusPos.z : 0;
+            for (let i = 0; i < pedCount; i += 1) {
+                const p = traffic.peds[i];
+                const dx = p.x - fx;
+                const dz = p.z - fz;
+                pedOrder[i].idx = i;
+                pedOrder[i].d2 = dx * dx + dz * dz;
+            }
+            pedOrder.sort((a, b) => a.d2 - b.d2);
 
-            dummy.position.set(p.x, p.y + 1.08 + bob, p.z);
-            dummy.rotation.set(0, yaw, 0);
-            dummy.scale.set(1, 1, 1);
-            dummy.updateMatrix();
-            pedTorsos.setMatrixAt(i, dummy.matrix);
+            const maxDist2 = 125 * 125;
+            const activePeds = new Set();
+            for (let s = 0; s < riggedSlots.length && s < pedCount; s += 1) {
+                if (pedOrder[s].d2 <= maxDist2) activePeds.add(pedOrder[s].idx);
+            }
+            const assigned = new Set();
+            for (let s = 0; s < riggedSlots.length; s += 1) {
+                const slot = riggedSlots[s];
+                if (slot.pedIdx >= 0 && activePeds.has(slot.pedIdx)) {
+                    assigned.add(slot.pedIdx);
+                } else {
+                    slot.pedIdx = -1;
+                }
+            }
+            let freeCursor = 0;
+            for (const pedIdx of activePeds) {
+                if (assigned.has(pedIdx)) continue;
+                while (freeCursor < riggedSlots.length && riggedSlots[freeCursor].pedIdx >= 0) {
+                    freeCursor += 1;
+                }
+                if (freeCursor < riggedSlots.length) {
+                    riggedSlots[freeCursor].pedIdx = pedIdx;
+                    assigned.add(pedIdx);
+                }
+            }
+            for (let s = 0; s < riggedSlots.length; s += 1) {
+                const slot = riggedSlots[s];
+                if (slot.pedIdx >= 0) {
+                    const p = traffic.peds[slot.pedIdx];
+                    const yaw = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : p.dir > 0 ? 0 : Math.PI;
+                    slot.root.visible = true;
+                    slot.root.position.set(p.x, p.y + 0.04, p.z);
+                    slot.root.rotation.set(0, yaw, 0);
+                    if (slot.action) slot.action.timeScale = Math.max(0.65, p.speed / 1.45);
+                    slot.mixer.update(dt);
+                } else {
+                    slot.root.visible = false;
+                }
+            }
 
-            dummy.position.set(p.x, p.y + 1.48 + bob, p.z);
-            dummy.updateMatrix();
-            pedHeads.setMatrixAt(i, dummy.matrix);
-            pedHairs.setMatrixAt(i, dummy.matrix);
+            for (let i = 0; i < pedCount; i += 1) {
+                const p = traffic.peds[i];
+                dummy.position.set(p.x, p.y + 0.08, p.z);
+                dummy.rotation.set(0, 0, 0);
+                dummy.scale.set(1, 1, 1);
+                dummy.updateMatrix();
+                pedShadows.setMatrixAt(i, dummy.matrix);
+            }
+            if (pedShadows) pedShadows.instanceMatrix.needsUpdate = true;
+        } else if (pedCount > 0 && pedTorsos) {
+            for (let i = 0; i < pedCount; i += 1) {
+                const p = traffic.peds[i];
+                const yaw = p.alongX ? (p.dir > 0 ? Math.PI * 0.5 : -Math.PI * 0.5) : p.dir > 0 ? 0 : Math.PI;
+                const bob = Math.abs(Math.sin(p.phase)) * 0.045;
+                const swing = Math.sin(p.phase) * 0.42;
+                const cosY = Math.cos(yaw);
+                const sinY = Math.sin(yaw);
 
-            dummy.position.set(p.x, p.y + 0.08, p.z);
-            dummy.rotation.set(0, 0, 0);
-            dummy.updateMatrix();
-            pedShadows.setMatrixAt(i, dummy.matrix);
+                dummy.position.set(p.x, p.y + 1.08 + bob, p.z);
+                dummy.rotation.set(0, yaw, 0);
+                dummy.scale.set(1, 1, 1);
+                dummy.updateMatrix();
+                pedTorsos.setMatrixAt(i, dummy.matrix);
 
-            const armOff = 0.255;
-            dummy.position.set(p.x - armOff * cosY, p.y + 1.32 + bob, p.z + armOff * sinY);
-            dummy.rotation.set(-swing * 0.85, yaw, 0, "YXZ");
-            dummy.updateMatrix();
-            pedArms.setMatrixAt(i * 2, dummy.matrix);
+                dummy.position.set(p.x, p.y + 1.48 + bob, p.z);
+                dummy.updateMatrix();
+                pedHeads.setMatrixAt(i, dummy.matrix);
+                pedHairs.setMatrixAt(i, dummy.matrix);
 
-            dummy.position.set(p.x + armOff * cosY, p.y + 1.32 + bob, p.z - armOff * sinY);
-            dummy.rotation.set(swing * 0.85, yaw, 0, "YXZ");
-            dummy.updateMatrix();
-            pedArms.setMatrixAt(i * 2 + 1, dummy.matrix);
+                dummy.position.set(p.x, p.y + 0.08, p.z);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
+                pedShadows.setMatrixAt(i, dummy.matrix);
 
-            const legOff = 0.105;
-            dummy.position.set(p.x - legOff * cosY, p.y + 0.78 + bob * 0.4, p.z + legOff * sinY);
-            dummy.rotation.set(swing, yaw, 0, "YXZ");
-            dummy.updateMatrix();
-            pedLegs.setMatrixAt(i * 2, dummy.matrix);
-            pedShoes.setMatrixAt(i * 2, dummy.matrix);
+                const armOff = 0.255;
+                dummy.position.set(p.x - armOff * cosY, p.y + 1.32 + bob, p.z + armOff * sinY);
+                dummy.rotation.set(-swing * 0.85, yaw, 0, "YXZ");
+                dummy.updateMatrix();
+                pedArms.setMatrixAt(i * 2, dummy.matrix);
 
-            dummy.position.set(p.x + legOff * cosY, p.y + 0.78 + bob * 0.4, p.z - legOff * sinY);
-            dummy.rotation.set(-swing, yaw, 0, "YXZ");
-            dummy.updateMatrix();
-            pedLegs.setMatrixAt(i * 2 + 1, dummy.matrix);
-            pedShoes.setMatrixAt(i * 2 + 1, dummy.matrix);
-        }
-        if (pedCount > 0) {
+                dummy.position.set(p.x + armOff * cosY, p.y + 1.32 + bob, p.z - armOff * sinY);
+                dummy.rotation.set(swing * 0.85, yaw, 0, "YXZ");
+                dummy.updateMatrix();
+                pedArms.setMatrixAt(i * 2 + 1, dummy.matrix);
+
+                const legOff = 0.105;
+                dummy.position.set(p.x - legOff * cosY, p.y + 0.78 + bob * 0.4, p.z + legOff * sinY);
+                dummy.rotation.set(swing, yaw, 0, "YXZ");
+                dummy.updateMatrix();
+                pedLegs.setMatrixAt(i * 2, dummy.matrix);
+                pedShoes.setMatrixAt(i * 2, dummy.matrix);
+
+                dummy.position.set(p.x + legOff * cosY, p.y + 0.78 + bob * 0.4, p.z - legOff * sinY);
+                dummy.rotation.set(-swing, yaw, 0, "YXZ");
+                dummy.updateMatrix();
+                pedLegs.setMatrixAt(i * 2 + 1, dummy.matrix);
+                pedShoes.setMatrixAt(i * 2 + 1, dummy.matrix);
+            }
             pedTorsos.instanceMatrix.needsUpdate = true;
             pedHeads.instanceMatrix.needsUpdate = true;
             pedHairs.instanceMatrix.needsUpdate = true;
@@ -482,6 +598,7 @@ export function createTrafficRenderer(scene, traffic, propBodies, assets = null,
     };
 
     const dispose = () => {
+        for (const s of riggedSlots) s.mixer.stopAllAction();
         for (const m of ownedMeshes) scene.remove(m);
         for (const g of ownedGeos) g.dispose();
         for (const mat of ownedMats) mat.dispose();

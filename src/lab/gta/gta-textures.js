@@ -213,29 +213,69 @@ function drawLicensePlate() {
 function drawBroadleafTexture() {
     const c = makeCanvas(512, 512);
     const ctx = c.getContext("2d");
-    ctx.clearRect(0, 0, 512, 512);
-    for (let i = 0; i < 420; i += 1) {
+    ctx.fillStyle = "#2b4d22";
+    ctx.fillRect(0, 0, 512, 512);
+    for (let i = 0; i < 950; i += 1) {
+        const x = (i * 197 + (i >> 3) * 41) % 512;
+        const y = (i * 313 + (i >> 4) * 53) % 512;
         const a = (i * 2.39996) % (Math.PI * 2);
-        const r = Math.sqrt(i / 420) * 215;
-        const x = 256 + Math.cos(a) * r;
-        const y = 256 + Math.sin(a) * r;
-        const rx = 14 + (i % 12);
-        const ry = 24 + ((i * 7) % 16);
-        const g = 72 + (i % 46);
-        const red = 36 + (i % 24);
-        const b = 22 + (i % 14);
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(a + (i % 5) * 0.3);
-        ctx.fillStyle = `rgb(${red},${g},${b})`;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        const rx = 10 + (i % 10);
+        const ry = 18 + ((i * 7) % 14);
+        const shade = (i * 17) % 42;
+        const r = 40 + (shade >> 1) + (i % 16);
+        const g = 88 + shade + (i % 24);
+        const b = 26 + (i % 14);
+        for (const ox of [-512, 0, 512]) {
+            for (const oy of [-512, 0, 512]) {
+                if (x + ox < -36 || x + ox > 548 || y + oy < -36 || y + oy > 548) continue;
+                ctx.save();
+                ctx.translate(x + ox, y + oy);
+                ctx.rotate(a);
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = "rgba(18, 38, 14, 0.35)";
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(0, -ry * 0.85);
+                ctx.lineTo(0, ry * 0.85);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
     }
+    return finalizeTex(c, 3, 3, true);
+}
+
+function drawLightPoolTexture() {
+    const c = makeCanvas(256, 256);
+    const ctx = c.getContext("2d");
+    const grad = ctx.createRadialGradient(128, 128, 4, 128, 128, 124);
+    grad.addColorStop(0, "rgba(255, 224, 155, 0.95)");
+    grad.addColorStop(0.28, "rgba(255, 196, 112, 0.56)");
+    grad.addColorStop(0.62, "rgba(255, 168, 78, 0.18)");
+    grad.addColorStop(1, "rgba(255, 150, 60, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 256, 256);
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 8;
+    tex.needsUpdate = true;
+    return tex;
+}
+
+function drawLightConeTexture() {
+    const c = makeCanvas(128, 256);
+    const ctx = c.getContext("2d");
+    const grad = ctx.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, "rgba(255, 232, 178, 0.72)");
+    grad.addColorStop(0.25, "rgba(255, 200, 118, 0.28)");
+    grad.addColorStop(0.75, "rgba(255, 172, 82, 0.06)");
+    grad.addColorStop(1, "rgba(255, 160, 70, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 256);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
     tex.needsUpdate = true;
     return tex;
 }
@@ -370,6 +410,8 @@ export function createGtaTextures() {
     const glassInterior = drawGlassInteriorMaps();
     const palmFrond = drawPalmFrondTexture();
     const broadleaf = drawBroadleafTexture();
+    const lightPool = drawLightPoolTexture();
+    const lightCone = drawLightConeTexture();
     const billboardA = drawBillboard(0);
     const billboardB = drawBillboard(1);
     const safehouseArt = drawSafehouseArt();
@@ -382,6 +424,8 @@ export function createGtaTextures() {
         glassInterior.emissiveMap,
         palmFrond,
         broadleaf,
+        lightPool,
+        lightCone,
         billboardA,
         billboardB,
         safehouseArt,
@@ -394,6 +438,8 @@ export function createGtaTextures() {
         glassInterior,
         palmFrond,
         broadleaf,
+        lightPool,
+        lightCone,
         billboardA,
         billboardB,
         safehouseArt,

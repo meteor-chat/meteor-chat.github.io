@@ -5,13 +5,15 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { softClampRadianceValue } from "./gta-perf-governor.js";
 
 const THREE_GH = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r187/examples";
+const KHRONOS_GH = "https://cdn.jsdelivr.net/gh/KhronosGroup/glTF-Sample-Assets@main/Models";
 const PH_BASE = "https://dl.polyhaven.org/file/ph-assets";
 
 export const GTA_ASSET_URLS = Object.freeze({
     draco: "https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/libs/draco/gltf/",
     models: {
         ferrari: `${THREE_GH}/models/gltf/ferrari.glb`,
-        soldier: `${THREE_GH}/models/gltf/Soldier.glb`
+        soldier: `${THREE_GH}/models/gltf/Soldier.glb`,
+        civilian: `${KHRONOS_GH}/CesiumMan/glTF-Binary/CesiumMan.glb`
     },
     hdris: {
         day: `${PH_BASE}/HDRIs/hdr/1k/kloofendal_48d_partly_cloudy_puresky_1k.hdr`,
@@ -183,9 +185,10 @@ export async function loadGtaAssets(onProgress = null) {
 
     if (onProgress) onProgress("Streaming Ferrari 458, Character & California HDRI...", 42);
 
-    const [ferrari, soldier, dayHdri, asphalt, sidewalk] = await Promise.all([
+    const [ferrari, soldier, civilian, dayHdri, asphalt, sidewalk] = await Promise.all([
         loadGltf(GTA_ASSET_URLS.models.ferrari),
         loadGltf(GTA_ASSET_URLS.models.soldier),
+        loadGltf(GTA_ASSET_URLS.models.civilian),
         loadHdri(GTA_ASSET_URLS.hdris.day),
         loadPbrSet(GTA_ASSET_URLS.pbr.asphalt, 2, 2),
         loadPbrSet(GTA_ASSET_URLS.pbr.sidewalk, 1, 1)
@@ -229,7 +232,7 @@ export async function loadGtaAssets(onProgress = null) {
     };
 
     return {
-        models: { ferrari, soldier },
+        models: { ferrari, soldier, civilian },
         hdris: { day: dayHdri, sunset: sunsetHdri, night: nightHdri },
         pbr: { asphalt, sidewalk, concreteTile, stucco, brick, concreteWall, palmBark, sand },
         dispose

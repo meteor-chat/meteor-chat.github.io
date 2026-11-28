@@ -6,7 +6,9 @@ import {
     buildCurvedPalmTrunkGeometry,
     buildFeatheryPalmCrownGeometry,
     buildJerseyBarrierGeometry,
-    buildLatticeTrussSection
+    buildLatticeTrussSection,
+    buildStreetlampGeometries,
+    buildTrafficSignalGeometries
 } from "./gta-building-meshes.js";
 import { computeSectorIndex } from "./gta-perf-governor.js";
 import {
@@ -547,9 +549,9 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     ocean.position.set(0, OCEAN_LEVEL, 510);
     root.add(ocean);
 
-    const trunkGeo = buildCurvedPalmTrunkGeometry();
+    const { geometry: trunkGeo, tip: palmTip } = buildCurvedPalmTrunkGeometry();
     const trunkMat = makePbrMat(pbr.palmBark, 0x8a7058, 0.9, 0.02, 1.1);
-    const frondGeo = buildFeatheryPalmCrownGeometry();
+    const { crown: frondGeo, collar: palmCollarGeo } = buildFeatheryPalmCrownGeometry();
     const frondMat = new THREE.MeshStandardMaterial({
         map: textures.palmFrond,
         alphaTest: 0.36,
@@ -558,6 +560,7 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         side: THREE.DoubleSide
     });
 
+    const tipWorld = new THREE.Vector3();
     const palmSectors = Array.from({ length: SECTOR_COUNT }, () => []);
     for (const p of cityData.palms) {
         palmSectors[computeSectorIndex(p.x, p.z, SECTOR_GRID, WORLD_HALF)].push(p);
@@ -566,46 +569,53 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         const list = palmSectors[s];
         if (list.length === 0) continue;
         const pTrunks = new THREE.InstancedMesh(trunkGeo, trunkMat, list.length);
+        const pCollars = new THREE.InstancedMesh(palmCollarGeo, trunkMat, list.length);
         const pCrowns = new THREE.InstancedMesh(frondGeo, frondMat, list.length);
         pTrunks.castShadow = true;
+        pCollars.castShadow = false;
         pCrowns.castShadow = false;
         for (let i = 0; i < list.length; i += 1) {
             const p = list[i];
             dummy.position.set(p.x, p.y, p.z);
-            dummy.rotation.set(p.lean * 0.6, p.yaw, 0);
+            dummy.rotation.set(p.lean * 0.6, p.yaw, 0, "YXZ");
             dummy.scale.set(1, p.height, 1);
             dummy.updateMatrix();
             pTrunks.setMatrixAt(i, dummy.matrix);
 
-            const tipOffX = Math.cos(p.yaw) * 0.18 + Math.sin(p.yaw) * (0.07 + p.lean * 0.6 * p.height);
-            const tipOffZ = -Math.sin(p.yaw) * 0.18 + Math.cos(p.yaw) * (0.07 + p.lean * 0.6 * p.height);
-            dummy.position.set(p.x + tipOffX, p.y + p.height - 0.2, p.z + tipOffZ);
-            dummy.rotation.set(0, p.yaw, 0);
-            dummy.scale.setScalar(1.08);
+            tipWorld.copy(palmTip).applyMatrix4(dummy.matrix);
+            dummy.position.copy(tipWorld);
+            dummy.rotation.set(p.lean * 0.35, p.yaw, 0, "YXZ");
+            dummy.scale.setScalar(1.0);
+            dummy.updateMatrix();
+            pCollars.setMatrixAt(i, dummy.matrix);
+
+            dummy.scale.setScalar(1.06);
             dummy.updateMatrix();
             pCrowns.setMatrixAt(i, dummy.matrix);
         }
         pTrunks.instanceMatrix.needsUpdate = true;
+        pCollars.instanceMatrix.needsUpdate = true;
         pCrowns.instanceMatrix.needsUpdate = true;
         pTrunks.computeBoundingSphere();
+        pCollars.computeBoundingSphere();
         pCrowns.computeBoundingSphere();
-        root.add(pTrunks, pCrowns);
+        root.add(pTrunks, pCollars, pCrowns);
     }
 
     const blList = cityData.broadleafTrees || [];
     const blTree = buildBroadleafTreeGeometries();
     const blCanopyMat = new THREE.MeshStandardMaterial({
         map: textures.broadleaf,
-        alphaTest: 0.35,
+        vertexColors: true,
         roughness: 0.78,
-        metalness: 0.02,
-        side: THREE.DoubleSide
+        metalness: 0.02
     });
     if (blList.length > 0) {
         const blTrunks = new THREE.InstancedMesh(blTree.trunk, trunkMat, blList.length);
         const blCanopies = new THREE.InstancedMesh(blTree.canopy, blCanopyMat, blList.length);
         blTrunks.castShadow = true;
         blCanopies.castShadow = true;
+        blCanopies.receiveShadow = true;
         for (let i = 0; i < blList.length; i += 1) {
             const t = blList[i];
             dummy.position.set(t.x, t.y, t.z);
@@ -622,61 +632,152 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         root.add(blTrunks, blCanopies);
     }
 
-    const poleGeo = new THREE.CylinderGeometry(0.1, 0.15, 7.8, 6);
-    const armGeo = new THREE.CylinderGeometry(0.06, 0.08, 2.2, 5);
-    armGeo.rotateX(Math.PI * 0.5);
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x4b535e, metalness: 0.72, roughness: 0.36 });
-    const bulbGeo = new THREE.CapsuleGeometry(0.16, 0.56, 4, 6);
-    bulbGeo.rotateX(Math.PI * 0.5);
+    const lampGeos = buildStreetlampGeometries();
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x3b424d, metalness: 0.72, roughness: 0.36 });
     const bulbMat = new THREE.MeshStandardMaterial({
-        color: 0xfff4d6,
-        emissive: 0xffc66e,
-        emissiveIntensity: 0.45
+        color: 0xfff6dc,
+        emissive: 0xffb84d,
+        emissiveIntensity: 0.25,
+        roughness: 0.2,
+        toneMapped: false
+    });
+    const coneUniforms = {
+        uColor: { value: new THREE.Color(0xffc66e) },
+        uOpacity: { value: 0 }
+    };
+    const coneMat = new THREE.ShaderMaterial({
+        uniforms: coneUniforms,
+        vertexShader: `
+varying vec2 vUv;
+varying vec3 vViewNorm;
+varying vec3 vViewPos;
+void main() {
+    vUv = uv;
+    vec4 lp = vec4(position, 1.0);
+    vec3 ln = normal;
+    #ifdef USE_INSTANCING
+        lp = instanceMatrix * lp;
+        ln = mat3(instanceMatrix) * ln;
+    #endif
+    vec4 mvPos = modelViewMatrix * lp;
+    vViewPos = -mvPos.xyz;
+    vViewNorm = normalize(normalMatrix * ln);
+    gl_Position = projectionMatrix * mvPos;
+}`,
+        fragmentShader: `
+uniform vec3 uColor;
+uniform float uOpacity;
+varying vec2 vUv;
+varying vec3 vViewNorm;
+varying vec3 vViewPos;
+void main() {
+    float ndotv = abs(dot(normalize(vViewNorm), normalize(vViewPos)));
+    float edgeFade = pow(clamp(ndotv, 0.0, 1.0), 2.35);
+    float topSoft = smoothstep(1.0, 0.9, vUv.y);
+    float vFalloff = pow(clamp(vUv.y, 0.0, 1.0), 2.05) * topSoft;
+    float a = edgeFade * vFalloff * uOpacity;
+    if (a < 0.003) discard;
+    gl_FragColor = vec4(uColor * a, a);
+}`,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.FrontSide
+    });
+    const poolMat = new THREE.MeshBasicMaterial({
+        map: textures.lightPool,
+        color: 0xffc066,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
     });
 
+    const lampConesList = [];
+    const lampPoolsList = [];
+    const lampLightsData = [];
     const lampSectors = Array.from({ length: SECTOR_COUNT }, () => []);
     for (const l of cityData.lamps) {
         lampSectors[computeSectorIndex(l.x, l.z, SECTOR_GRID, WORLD_HALF)].push(l);
+        lampLightsData.push({
+            x: l.x + Math.sin(l.yaw) * 2.26,
+            y: l.y + 7.45,
+            z: l.z + Math.cos(l.yaw) * 2.26
+        });
     }
     for (let s = 0; s < SECTOR_COUNT; s += 1) {
         const list = lampSectors[s];
         if (list.length === 0) continue;
-        const lampPoles = new THREE.InstancedMesh(poleGeo, poleMat, list.length);
-        const lampArms = new THREE.InstancedMesh(armGeo, poleMat, list.length);
-        const lampBulbs = new THREE.InstancedMesh(bulbGeo, bulbMat, list.length);
+        const lampPoles = new THREE.InstancedMesh(lampGeos.pole, poleMat, list.length);
+        const lampBulbs = new THREE.InstancedMesh(lampGeos.lens, bulbMat, list.length);
+        const lampCones = new THREE.InstancedMesh(lampGeos.cone, coneMat, list.length);
+        const lampPools = new THREE.InstancedMesh(lampGeos.pool, poolMat, list.length);
+        lampCones.visible = false;
+        lampPools.visible = false;
         for (let i = 0; i < list.length; i += 1) {
             const l = list[i];
-            dummy.position.set(l.x, l.y + 3.9, l.z);
+            dummy.position.set(l.x, l.y, l.z);
             dummy.rotation.set(0, l.yaw, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
             lampPoles.setMatrixAt(i, dummy.matrix);
-
-            dummy.position.set(l.x + Math.sin(l.yaw) * 1.0, l.y + 7.75, l.z + Math.cos(l.yaw) * 1.0);
-            dummy.updateMatrix();
-            lampArms.setMatrixAt(i, dummy.matrix);
-
-            dummy.position.set(l.x + Math.sin(l.yaw) * 1.9, l.y + 7.62, l.z + Math.cos(l.yaw) * 1.9);
-            dummy.updateMatrix();
             lampBulbs.setMatrixAt(i, dummy.matrix);
+            lampCones.setMatrixAt(i, dummy.matrix);
+            lampPools.setMatrixAt(i, dummy.matrix);
         }
         lampPoles.instanceMatrix.needsUpdate = true;
-        lampArms.instanceMatrix.needsUpdate = true;
         lampBulbs.instanceMatrix.needsUpdate = true;
+        lampCones.instanceMatrix.needsUpdate = true;
+        lampPools.instanceMatrix.needsUpdate = true;
         lampPoles.computeBoundingSphere();
-        lampArms.computeBoundingSphere();
         lampBulbs.computeBoundingSphere();
-        root.add(lampPoles, lampArms, lampBulbs);
+        lampCones.computeBoundingSphere();
+        lampPools.computeBoundingSphere();
+        lampConesList.push(lampCones);
+        lampPoolsList.push(lampPools);
+        root.add(lampPoles, lampBulbs, lampCones, lampPools);
     }
 
-    const gantryArmGeo = new THREE.CylinderGeometry(0.09, 0.13, 9.6, 6);
+    const streetPointLights = [];
+    for (let i = 0; i < 3; i += 1) {
+        const pl = new THREE.PointLight(0xffbc62, 0, 28, 1.45);
+        pl.visible = false;
+        root.add(pl);
+        streetPointLights.push(pl);
+    }
+
+    const gantryPoleGeo = new THREE.CylinderGeometry(0.11, 0.16, 7.8, 8);
+    const gantryArmGeo = new THREE.CylinderGeometry(0.085, 0.125, 9.6, 8);
     gantryArmGeo.rotateZ(Math.PI * 0.5);
-    const signalHeadGeo = new THREE.BoxGeometry(0.42, 1.15, 0.38);
-    const signalMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, emissive: 0x22c55e, emissiveIntensity: 1.7 });
-    const signalPoles = new THREE.InstancedMesh(poleGeo, poleMat, cityData.trafficLights.length);
-    const signalArms = new THREE.InstancedMesh(gantryArmGeo, poleMat, cityData.trafficLights.length);
-    const signalHeads = new THREE.InstancedMesh(signalHeadGeo, signalMat, cityData.trafficLights.length);
-    for (let i = 0; i < cityData.trafficLights.length; i += 1) {
+    const sigGeos = buildTrafficSignalGeometries();
+    const sigHousingMat = new THREE.MeshStandardMaterial({
+        color: 0x1b2028,
+        roughness: 0.52,
+        metalness: 0.42,
+        side: THREE.DoubleSide
+    });
+    const sigBackplateMat = new THREE.MeshStandardMaterial({
+        color: 0x101419,
+        roughness: 0.7,
+        metalness: 0.18
+    });
+    const sigLensMat = new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false });
+
+    const tlCount = cityData.trafficLights.length;
+    const headCount = tlCount * 2;
+    const signalPoles = new THREE.InstancedMesh(gantryPoleGeo, poleMat, tlCount);
+    const signalArms = new THREE.InstancedMesh(gantryArmGeo, poleMat, tlCount);
+    const sigHousings = new THREE.InstancedMesh(sigGeos.housing, sigHousingMat, headCount);
+    const sigBackplates = new THREE.InstancedMesh(sigGeos.backplate, sigBackplateMat, headCount);
+    const sigReds = new THREE.InstancedMesh(sigGeos.redLens, sigLensMat, headCount);
+    const sigYellows = new THREE.InstancedMesh(sigGeos.yellowLens, sigLensMat, headCount);
+    const sigGreens = new THREE.InstancedMesh(sigGeos.greenLens, sigLensMat, headCount);
+
+    const headOffsets = [-3.6, -7.8];
+    for (let i = 0; i < tlCount; i += 1) {
         const t = cityData.trafficLights[i];
         dummy.position.set(t.x, t.y + 3.9, t.z);
         dummy.rotation.set(0, 0, 0);
@@ -684,21 +785,26 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         dummy.updateMatrix();
         signalPoles.setMatrixAt(i, dummy.matrix);
 
-        dummy.position.set(t.x - 4.6, t.y + 7.1, t.z);
+        dummy.position.set(t.x - 4.75, t.y + 7.28, t.z);
         dummy.updateMatrix();
         signalArms.setMatrixAt(i, dummy.matrix);
 
-        dummy.position.set(t.x - 6.2, t.y + 6.45, t.z);
-        dummy.updateMatrix();
-        signalHeads.setMatrixAt(i, dummy.matrix);
+        for (let h = 0; h < 2; h += 1) {
+            const hi = i * 2 + h;
+            dummy.position.set(t.x + headOffsets[h], t.y + 6.32, t.z);
+            dummy.updateMatrix();
+            sigHousings.setMatrixAt(hi, dummy.matrix);
+            sigBackplates.setMatrixAt(hi, dummy.matrix);
+            sigReds.setMatrixAt(hi, dummy.matrix);
+            sigYellows.setMatrixAt(hi, dummy.matrix);
+            sigGreens.setMatrixAt(hi, dummy.matrix);
+        }
     }
-    signalPoles.instanceMatrix.needsUpdate = true;
-    signalArms.instanceMatrix.needsUpdate = true;
-    signalHeads.instanceMatrix.needsUpdate = true;
-    signalPoles.computeBoundingSphere();
-    signalArms.computeBoundingSphere();
-    signalHeads.computeBoundingSphere();
-    root.add(signalPoles, signalArms, signalHeads);
+    for (const inst of [signalPoles, signalArms, sigHousings, sigBackplates, sigReds, sigYellows, sigGreens]) {
+        inst.instanceMatrix.needsUpdate = true;
+        inst.computeBoundingSphere();
+    }
+    root.add(signalPoles, signalArms, sigHousings, sigBackplates, sigReds, sigYellows, sigGreens);
 
     const bbMats = [
         new THREE.MeshStandardMaterial({ map: textures.billboardA, emissiveMap: textures.billboardA, emissive: 0xffffff, emissiveIntensity: 0.25 }),
@@ -732,7 +838,7 @@ export function createCityScene(scene, cityData, textures, assets = null) {
     const rampMesh = mergeStaticParts(rampParts, rampMat, true, true, true);
     if (rampMesh) root.add(rampMesh);
 
-    const animatedRoots = new Set([craneJib, blimp]);
+    const animatedRoots = new Set([craneJib, blimp, ...streetPointLights]);
     root.traverse((obj) => {
         if (obj === root || animatedRoots.has(obj)) return;
         let cur = obj.parent;
@@ -744,12 +850,83 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         obj.updateMatrix();
     });
 
+    const redOn = new THREE.Color().setRGB(1.85, 0.16, 0.12);
+    const redOff = new THREE.Color(0x240909);
+    const yellowOn = new THREE.Color().setRGB(1.85, 1.15, 0.1);
+    const yellowOff = new THREE.Color(0x261c07);
+    const greenOn = new THREE.Color().setRGB(0.14, 1.75, 0.45);
+    const greenOff = new THREE.Color(0x072012);
+    const nearestIdx = [-1, -1, -1];
+    const nearestD2 = [Infinity, Infinity, Infinity];
     let lastSignalBucket = -1;
-    const updateEnvironment = (timeSec, nightFactor, wetness) => {
+    let lastLightBucket = -1;
+
+    const updateEnvironment = (timeSec, nightFactor, wetness, sunsetFactor = 0, focusPos = null) => {
         roadBuilt.wetnessUniform.value = wetness;
         interBuilt.wetnessUniform.value = wetness;
-        facadeGlassMat.emissiveIntensity = 0.04 + nightFactor * 0.65;
-        bulbMat.emissiveIntensity = 0.25 + nightFactor * 2.8;
+        const lampPower = Math.max(sunsetFactor * 0.92, nightFactor);
+        facadeGlassMat.emissiveIntensity = 0.04 + lampPower * 0.65;
+        bulbMat.emissiveIntensity = 0.18 + lampPower * 3.8;
+        bulbMat.color.setHex(lampPower > 0.1 ? 0xfff8e2 : 0xcbd2da);
+
+        const showGlow = lampPower > 0.05;
+        coneUniforms.uOpacity.value = lampPower * 0.28;
+        poolMat.opacity = lampPower * 0.48;
+        for (let i = 0; i < lampConesList.length; i += 1) {
+            lampConesList[i].visible = showGlow;
+            lampPoolsList[i].visible = showGlow;
+        }
+
+        const lightBucket = Math.floor(timeSec * 4);
+        if (!showGlow || !focusPos) {
+            for (let i = 0; i < streetPointLights.length; i += 1) {
+                streetPointLights[i].visible = false;
+                streetPointLights[i].intensity = 0;
+            }
+        } else if (lightBucket !== lastLightBucket) {
+            lastLightBucket = lightBucket;
+            nearestIdx[0] = -1;
+            nearestIdx[1] = -1;
+            nearestIdx[2] = -1;
+            nearestD2[0] = Infinity;
+            nearestD2[1] = Infinity;
+            nearestD2[2] = Infinity;
+            for (let i = 0; i < lampLightsData.length; i += 1) {
+                const ld = lampLightsData[i];
+                const dx = ld.x - focusPos.x;
+                const dz = ld.z - focusPos.z;
+                const d2 = dx * dx + dz * dz;
+                if (d2 < nearestD2[0]) {
+                    nearestD2[2] = nearestD2[1];
+                    nearestIdx[2] = nearestIdx[1];
+                    nearestD2[1] = nearestD2[0];
+                    nearestIdx[1] = nearestIdx[0];
+                    nearestD2[0] = d2;
+                    nearestIdx[0] = i;
+                } else if (d2 < nearestD2[1]) {
+                    nearestD2[2] = nearestD2[1];
+                    nearestIdx[2] = nearestIdx[1];
+                    nearestD2[1] = d2;
+                    nearestIdx[1] = i;
+                } else if (d2 < nearestD2[2]) {
+                    nearestD2[2] = d2;
+                    nearestIdx[2] = i;
+                }
+            }
+            for (let k = 0; k < streetPointLights.length; k += 1) {
+                const idxL = nearestIdx[k];
+                const pl = streetPointLights[k];
+                if (idxL >= 0 && nearestD2[k] < 65 * 65) {
+                    const ld = lampLightsData[idxL];
+                    pl.position.set(ld.x, ld.y, ld.z);
+                    pl.intensity = lampPower * 24;
+                    pl.visible = true;
+                } else {
+                    pl.visible = false;
+                    pl.intensity = 0;
+                }
+            }
+        }
 
         craneJib.rotation.y = Math.sin(timeSec * 0.08) * 0.55;
         blimp.position.x = Math.cos(timeSec * 0.025) * 190;
@@ -759,15 +936,22 @@ export function createCityScene(scene, cityData, textures, assets = null) {
         const sigBucket = Math.floor(timeSec * 2);
         if (sigBucket !== lastSignalBucket) {
             lastSignalBucket = sigBucket;
-            for (let i = 0; i < cityData.trafficLights.length; i += 1) {
+            for (let i = 0; i < tlCount; i += 1) {
                 const tl = cityData.trafficLights[i];
                 const st = getSignalState(tl.ix, tl.iz, timeSec);
-                if (st === "ns_green") col.setHex(0x22c55e);
-                else if (st === "ns_yellow" || st === "ew_yellow") col.setHex(0xf59e0b);
-                else col.setHex(0xef4444);
-                signalHeads.setColorAt(i, col);
+                const isGreen = st === "ns_green";
+                const isYellow = st === "ns_yellow" || st === "ew_yellow";
+                const isRed = !isGreen && !isYellow;
+                for (let h = 0; h < 2; h += 1) {
+                    const hi = i * 2 + h;
+                    sigReds.setColorAt(hi, isRed ? redOn : redOff);
+                    sigYellows.setColorAt(hi, isYellow ? yellowOn : yellowOff);
+                    sigGreens.setColorAt(hi, isGreen ? greenOn : greenOff);
+                }
             }
-            if (signalHeads.instanceColor) signalHeads.instanceColor.needsUpdate = true;
+            if (sigReds.instanceColor) sigReds.instanceColor.needsUpdate = true;
+            if (sigYellows.instanceColor) sigYellows.instanceColor.needsUpdate = true;
+            if (sigGreens.instanceColor) sigGreens.instanceColor.needsUpdate = true;
         }
     };
 

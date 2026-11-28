@@ -7,9 +7,23 @@ function boxAt(w, h, d, x, y, z) {
     return g;
 }
 
-function safeMerge(list) {
-    const merged = mergeGeometries(list, false);
+function normGeo(geo, keepUv = true, keepColor = false) {
+    const raw = geo.index ? geo.toNonIndexed() : geo.clone();
+    if (!raw.attributes.normal) raw.computeVertexNormals();
+    const out = new THREE.BufferGeometry();
+    out.setAttribute("position", raw.attributes.position);
+    out.setAttribute("normal", raw.attributes.normal);
+    if (keepUv && raw.attributes.uv) out.setAttribute("uv", raw.attributes.uv);
+    if (keepColor && raw.attributes.color) out.setAttribute("color", raw.attributes.color);
+    raw.dispose();
+    return out;
+}
+
+function safeMerge(list, keepUv = true, keepColor = false) {
+    const norm = list.map((g) => normGeo(g, keepUv, keepColor));
     for (const g of list) g.dispose();
+    const merged = mergeGeometries(norm, false);
+    for (const g of norm) g.dispose();
     return merged;
 }
 
@@ -96,22 +110,25 @@ export function buildArchitecturalArchetypes() {
 export function buildCurvedPalmTrunkGeometry() {
     const pts = [
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0.06, 0.28, 0.02),
-        new THREE.Vector3(0.14, 0.62, 0.05),
-        new THREE.Vector3(0.18, 1.0, 0.07)
+        new THREE.Vector3(0.05, 0.3, 0.02),
+        new THREE.Vector3(0.11, 0.65, 0.04),
+        new THREE.Vector3(0.14, 1.0, 0.05)
     ];
     const curve = new THREE.CatmullRomCurve3(pts);
-    const geo = new THREE.TubeGeometry(curve, 12, 0.22, 8, false);
+    const geo = new THREE.TubeGeometry(curve, 14, 0.22, 8, false);
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i += 1) {
         const y = pos.getY(i);
-        const taper = 1.38 - y * 0.64;
-        const center = curve.getPoint(Math.max(0, Math.min(1, y)));
+        const t = Math.max(0, Math.min(1, y));
+        const ring = 1 + Math.sin(t * Math.PI * 26) * 0.06;
+        const taper = (1.36 - t * 0.62) * ring;
+        const center = curve.getPoint(t);
         pos.setX(i, center.x + (pos.getX(i) - center.x) * taper);
         pos.setZ(i, center.z + (pos.getZ(i) - center.z) * taper);
     }
     geo.computeVertexNormals();
-    return geo;
+    const tip = curve.getPoint(1).clone();
+    return { geometry: geo, tip };
 }
 
 export function buildFeatheryPalmCrownGeometry() {
@@ -121,22 +138,22 @@ export function buildFeatheryPalmCrownGeometry() {
     let vOff = 0;
 
     const addFrond = (angle, length, width, rise, droop) => {
-        const segs = 7;
+        const segs = 8;
         const ca = Math.cos(angle);
         const sa = Math.sin(angle);
         const px = -sa;
         const pz = ca;
         for (let s = 0; s <= segs; s += 1) {
             const t = s / segs;
-            const r = t * length;
+            const r = 0.14 + t * length;
             const y = Math.sin(t * Math.PI * 0.66) * rise - t * t * droop;
             const cx = ca * r;
             const cz = sa * r;
-            const w = width * (0.45 + 0.55 * Math.sin(t * Math.PI));
-            const fold = w * 0.28;
+            const w = width * (0.28 + 0.72 * Math.sin(t * Math.PI));
+            const fold = w * 0.3;
             positions.push(
                 cx - px * w, y - fold, cz - pz * w,
-                cx, y + 0.05, cz,
+                cx, y + 0.06, cz,
                 cx + px * w, y - fold, cz + pz * w
             );
             uvs.push(0, t, 0.5, t, 1, t);
@@ -150,19 +167,23 @@ export function buildFeatheryPalmCrownGeometry() {
         vOff += (segs + 1) * 3;
     };
 
-    for (let i = 0; i < 8; i += 1) {
-        addFrond((i / 8) * Math.PI * 2, 4.4, 1.05, 1.1, 2.35);
+    for (let i = 0; i < 9; i += 1) {
+        addFrond((i / 9) * Math.PI * 2, 4.3, 1.02, 1.05, 2.3);
     }
-    for (let i = 0; i < 6; i += 1) {
-        addFrond((i / 6) * Math.PI * 2 + 0.28, 3.4, 0.92, 1.85, 1.35);
+    for (let i = 0; i < 7; i += 1) {
+        addFrond((i / 7) * Math.PI * 2 + 0.35, 3.3, 0.88, 1.85, 1.3);
     }
 
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setIndex(indices);
-    geo.computeVertexNormals();
-    return geo;
+    const frondGeo = new THREE.BufferGeometry();
+    frondGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    frondGeo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    frondGeo.setIndex(indices);
+    frondGeo.computeVertexNormals();
+
+    const collar = new THREE.SphereGeometry(0.32, 8, 6);
+    collar.scale(1.0, 1.25, 1.0);
+    collar.translate(0, -0.14, 0);
+    return { crown: frondGeo, collar };
 }
 
 export function buildLatticeTrussSection(width, height, bays, barRadius = 0.09) {
@@ -207,40 +228,203 @@ export function buildLatticeTrussSection(width, height, bays, barRadius = 0.09) 
     return safeMerge(parts);
 }
 
+function makeTubeBranch(points, rStart, rEnd, radialSegs = 7) {
+    const curve = new THREE.CatmullRomCurve3(points);
+    const geo = new THREE.TubeGeometry(curve, 7, 1, radialSegs, false);
+    const pos = geo.attributes.position;
+    const uv = geo.attributes.uv;
+    for (let i = 0; i < pos.count; i += 1) {
+        const t = Math.max(0, Math.min(1, uv.getX(i)));
+        const r = rStart + (rEnd - rStart) * t;
+        const c = curve.getPoint(t);
+        pos.setXYZ(
+            i,
+            c.x + (pos.getX(i) - c.x) * r,
+            c.y + (pos.getY(i) - c.y) * r,
+            c.z + (pos.getZ(i) - c.z) * r
+        );
+    }
+    geo.computeVertexNormals();
+    return geo;
+}
+
 export function buildBroadleafTreeGeometries() {
     const trunkParts = [];
-    const main = new THREE.CylinderGeometry(0.16, 0.28, 3.6, 8);
-    main.translate(0, 1.8, 0);
-    trunkParts.push(main);
-    for (let i = 0; i < 4; i += 1) {
-        const a = (i / 4) * Math.PI * 2 + 0.4;
-        const b = new THREE.CylinderGeometry(0.06, 0.12, 2.2, 6);
-        b.rotateZ(0.55);
-        b.rotateY(a);
-        b.translate(Math.cos(a) * 0.65, 3.8, Math.sin(a) * 0.65);
-        trunkParts.push(b);
+    trunkParts.push(
+        makeTubeBranch(
+            [
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(0.04, 1.2, 0.02),
+                new THREE.Vector3(-0.02, 2.4, -0.02),
+                new THREE.Vector3(0, 3.65, 0)
+            ],
+            0.31,
+            0.15,
+            8
+        )
+    );
+    for (let i = 0; i < 5; i += 1) {
+        const a = (i / 5) * Math.PI * 2 + 0.35;
+        const yBase = 2.55 + (i % 2) * 0.38;
+        const reach = 1.45 + (i % 3) * 0.25;
+        const yTip = 4.35 + (i % 3) * 0.3;
+        trunkParts.push(
+            makeTubeBranch(
+                [
+                    new THREE.Vector3(0, yBase, 0),
+                    new THREE.Vector3(Math.cos(a) * reach * 0.48, (yBase + yTip) * 0.52, Math.sin(a) * reach * 0.48),
+                    new THREE.Vector3(Math.cos(a) * reach, yTip, Math.sin(a) * reach)
+                ],
+                0.125,
+                0.045,
+                6
+            )
+        );
     }
 
-    const leafCards = [];
-    const offsets = [
-        [0, 5.4, 0, 3.8],
-        [-1.3, 4.7, 0.7, 3.0],
-        [1.3, 4.8, -0.6, 3.1],
-        [0.4, 4.6, 1.3, 2.9],
-        [-0.5, 4.9, -1.3, 2.8]
+    const clusters = [
+        [0, 5.45, 0, 1.52, 1.18, 1.48],
+        [0.15, 6.25, -0.1, 1.22, 0.95, 1.18],
+        [-1.35, 4.95, 0.72, 1.24, 0.96, 1.2],
+        [1.38, 5.05, -0.62, 1.26, 0.98, 1.22],
+        [0.45, 4.88, 1.38, 1.2, 0.94, 1.18],
+        [-0.55, 5.02, -1.35, 1.22, 0.95, 1.18],
+        [-1.1, 5.75, -0.82, 1.1, 0.88, 1.08],
+        [1.08, 5.78, 0.88, 1.12, 0.88, 1.1],
+        [0.0, 4.55, -0.95, 1.05, 0.82, 1.05],
+        [-0.95, 4.52, -0.15, 1.04, 0.82, 1.02],
+        [0.98, 4.58, 0.22, 1.06, 0.82, 1.04],
+        [-0.18, 4.48, 0.96, 1.02, 0.8, 1.04],
+        [-1.65, 4.55, -0.35, 0.88, 0.72, 0.86],
+        [1.62, 4.62, 0.42, 0.9, 0.74, 0.88],
+        [0.72, 5.65, -1.18, 0.96, 0.78, 0.94],
+        [-0.78, 5.68, 1.12, 0.96, 0.78, 0.94],
+        [0.05, 6.68, 0.12, 0.86, 0.68, 0.86],
+        [0.0, 4.28, 0.0, 1.18, 0.72, 1.18]
     ];
-    for (const [ox, oy, oz, sz] of offsets) {
-        for (let p = 0; p < 3; p += 1) {
-            const card = new THREE.PlaneGeometry(sz, sz);
-            card.rotateY((p * Math.PI) / 3);
-            card.rotateX((p - 1) * 0.32);
-            card.translate(ox, oy, oz);
-            leafCards.push(card);
+
+    const canopyParts = [];
+    const tmpCol = new THREE.Color();
+    const darkLeaf = new THREE.Color(0x6e8564);
+    const midLeaf = new THREE.Color(0xb4ccaa);
+    const sunLeaf = new THREE.Color(0xf2ffe6);
+
+    for (let ci = 0; ci < clusters.length; ci += 1) {
+        const [ox, oy, oz, rx, ry, rz] = clusters[ci];
+        const g = new THREE.IcosahedronGeometry(1, 2);
+        const pos = g.attributes.position;
+        const colors = new Float32Array(pos.count * 3);
+        for (let i = 0; i < pos.count; i += 1) {
+            const vx = pos.getX(i);
+            const vy = pos.getY(i);
+            const vz = pos.getZ(i);
+            const bump =
+                1 +
+                0.15 * Math.sin(vx * 5.2 + ci * 1.7) * Math.cos(vz * 5.4 - ci) +
+                0.1 * Math.sin(vy * 6.8 + vx * 3.5);
+            const wx = ox + vx * rx * bump;
+            const wy = oy + vy * ry * bump;
+            const wz = oz + vz * rz * bump;
+            pos.setXYZ(i, wx, wy, wz);
+
+            const radial = Math.hypot(wx, (wy - 5.1) * 1.15, wz);
+            const topShade = Math.max(0, Math.min(1, (wy - 3.95) / 2.85));
+            const outerShade = Math.max(0, Math.min(1, (radial - 0.5) / 1.9));
+            const shade = topShade * 0.68 + outerShade * 0.32;
+            tmpCol.copy(darkLeaf).lerp(midLeaf, Math.min(1, shade * 1.5)).lerp(sunLeaf, Math.max(0, shade - 0.45) * 1.3);
+            colors[i * 3] = tmpCol.r;
+            colors[i * 3 + 1] = tmpCol.g;
+            colors[i * 3 + 2] = tmpCol.b;
+        }
+        g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+        g.computeVertexNormals();
+        canopyParts.push(g);
+    }
+
+    return {
+        trunk: safeMerge(trunkParts, true, false),
+        canopy: safeMerge(canopyParts, true, true)
+    };
+}
+
+export function buildTrafficSignalGeometries() {
+    const housingParts = [];
+    const body = boxAt(0.42, 1.24, 0.36, 0, 0, 0);
+    housingParts.push(body);
+    housingParts.push(boxAt(0.14, 0.48, 0.14, 0, 0.78, 0));
+    housingParts.push(boxAt(0.32, 0.14, 0.24, 0, 0.96, 0));
+
+    const lensY = [0.36, 0.0, -0.36];
+    for (const faceSign of [1, -1]) {
+        for (const ly of lensY) {
+            const visor = new THREE.CylinderGeometry(0.145, 0.145, 0.22, 10, 1, true, -Math.PI * 0.55, Math.PI * 1.1);
+            visor.rotateX(-Math.PI * 0.5);
+            visor.translate(0, ly + 0.02, faceSign * 0.26);
+            housingParts.push(visor);
         }
     }
+
+    const backplateParts = [];
+    backplateParts.push(boxAt(0.58, 1.4, 0.04, 0, 0, 0));
+
+    const makeLensPair = (ly) => {
+        const pair = [];
+        for (const faceSign of [1, -1]) {
+            const c = new THREE.CylinderGeometry(0.115, 0.115, 0.05, 14);
+            c.rotateX(Math.PI * 0.5);
+            c.translate(0, ly, faceSign * 0.175);
+            pair.push(c);
+        }
+        return safeMerge(pair, false, false);
+    };
+
     return {
-        trunk: safeMerge(trunkParts),
-        canopy: safeMerge(leafCards)
+        housing: safeMerge(housingParts, false, false),
+        backplate: safeMerge(backplateParts, false, false),
+        redLens: makeLensPair(0.36),
+        yellowLens: makeLensPair(0.0),
+        greenLens: makeLensPair(-0.36)
+    };
+}
+
+export function buildStreetlampGeometries() {
+    const poleParts = [];
+    const base = new THREE.CylinderGeometry(0.18, 0.24, 0.45, 8);
+    base.translate(0, 0.225, 0);
+    poleParts.push(base);
+
+    const shaft = new THREE.CylinderGeometry(0.095, 0.155, 7.45, 8);
+    shaft.translate(0, 3.95, 0);
+    poleParts.push(shaft);
+
+    const armCurve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 7.42, 0),
+        new THREE.Vector3(0, 7.82, 0.55),
+        new THREE.Vector3(0, 7.9, 1.55),
+        new THREE.Vector3(0, 7.84, 2.08)
+    ]);
+    const arm = new THREE.TubeGeometry(armCurve, 8, 0.055, 6, false);
+    poleParts.push(arm);
+
+    const hood = new THREE.BoxGeometry(0.42, 0.14, 0.78);
+    hood.translate(0, 7.84, 2.26);
+    poleParts.push(hood);
+
+    const lens = new THREE.BoxGeometry(0.32, 0.08, 0.58);
+    lens.translate(0, 7.75, 2.26);
+
+    const cone = new THREE.CylinderGeometry(0.24, 2.75, 7.35, 16, 1, true);
+    cone.translate(0, 4.02, 2.26);
+
+    const pool = new THREE.PlaneGeometry(11.5, 11.5);
+    pool.rotateX(-Math.PI * 0.5);
+    pool.translate(0, 0.13, 2.26);
+
+    return {
+        pole: safeMerge(poleParts, false, false),
+        lens,
+        cone,
+        pool
     };
 }
 

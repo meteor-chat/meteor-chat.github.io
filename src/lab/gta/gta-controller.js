@@ -427,7 +427,7 @@ export async function createGtaApp(root) {
             cameraCtl.addShake(Math.min(0.45, impactSpd * 0.015));
             audio.playCrash(impactSpd / 18);
         });
-        trafficRender.update(dt);
+        trafficRender.update(dt, heroPos);
 
         if (activeCar && activeCar.physics.drifting) {
             smokeAcc += dt;
@@ -449,7 +449,7 @@ export async function createGtaApp(root) {
 
         particles.update(dt, heroPos, state.rainIntensity);
         const mood = rendererCtx.updateAtmosphere(state.timeOfDay, state.rainIntensity, heroPos);
-        cityScene.updateEnvironment(state.timeSec, mood.night, state.wetness);
+        cityScene.updateEnvironment(state.timeSec, mood.night, state.wetness, mood.sunset, heroPos);
         const rStats = rendererCtx.render();
         state.drawCalls = rStats.drawCalls;
 
