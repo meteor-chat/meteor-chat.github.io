@@ -198,55 +198,59 @@ export function appendBridgeParticles(out, ax, ay, bx, by, count, time, colA, co
     if (len < 10) return;
     const nx = -dy / len;
     const ny = dx / len;
+    const streamCount = 24;
     for (let i = 0; i < count; i += 1) {
-        const isForward = i % 2 === 0;
-        const speed = isForward ? 0.16 : -0.16;
-        const uRaw = (i / count + time * speed) % 1.0;
+        const s = i % streamCount;
+        const dir = s % 2 === 0 ? 1 : -1;
+        const speed = dir * 0.095;
+        const lanePos = Math.floor(i / streamCount) / Math.max(1, Math.ceil(count / streamCount));
+        const uRaw = (lanePos + s * 0.041 + time * speed) % 1.0;
         const u = uRaw < 0 ? uRaw + 1.0 : uRaw;
         const pxBase = ax + dx * u;
         const pyBase = ay + dy * u;
-        const dCenter = Math.abs(u - 0.5) * 2.0;
-        const neckFactor = 0.35 + 0.65 * (dCenter * dCenter);
-        const fracR = Math.sqrt(((i * 1.618033) % 1));
-        const r = radius * neckFactor * fracR * (1.0 + 0.08 * Math.sin(u * Math.PI * 4.0 - time * 2.0));
-        const angle = u * Math.PI * 4.0 + (i * 2.399963) + time * (isForward ? 1.5 : -1.5);
+        const dCenter = (u - 0.5) * 2.0;
+        const neck = 0.24 + 0.76 * (dCenter * dCenter);
+        const phase = (s * Math.PI * 2) / streamCount;
+        const radialTier = 0.24 + 0.76 * Math.sqrt(((s * 0.6180339887) % 1));
+        const twistTurns = 0.24 + (s % 3) * 0.14;
+        const breathe = 1.0 + 0.035 * Math.sin(u * Math.PI * 2.0 - time * 1.1 * dir + phase);
+        const r = radius * 0.94 * neck * radialTier * breathe;
+        const angle = phase + u * Math.PI * 2.0 * twistTurns * dir + time * 0.34 * dir;
         const rx = Math.cos(angle) * nx * r;
         const ry = Math.cos(angle) * ny * r;
         const rz = Math.sin(angle) * r;
-        const baseCol = isForward ? colA : colB;
-        const blendCol = isForward ? colB : colA;
-        const blendRatio = isForward ? u : (1.0 - u);
-        const cr = baseCol[0] * (1.0 - blendRatio) + blendCol[0] * blendRatio;
-        const cg = baseCol[1] * (1.0 - blendRatio) + blendCol[1] * blendRatio;
-        const cb = baseCol[2] * (1.0 - blendRatio) + blendCol[2] * blendRatio;
-        const sz = (fracR < 0.35 ? 6.5 : 4.5) + 2.5 * Math.sin(u * Math.PI);
+        const blendRatio = u;
+        const cr = colA[0] * (1.0 - blendRatio) + colB[0] * blendRatio;
+        const cg = colA[1] * (1.0 - blendRatio) + colB[1] * blendRatio;
+        const cb = colA[2] * (1.0 - blendRatio) + colB[2] * blendRatio;
+        const sz = (3.2 + (1.0 - radialTier) * 2.0) + 1.6 * Math.sin(u * Math.PI);
         out.push(pxBase + rx, pyBase + ry, rz, cr, cg, cb, sz);
     }
 }
 
-export function generateWormholeSceneData(windows, sceneOffset, time, theme = "staal") {
+export function generateWormholeSceneData(windows, sceneOffset, time, theme = "staal", includeBridge = true) {
     const out = [];
     if (!Array.isArray(windows) || windows.length === 0) return new Float32Array(0);
     const sorted = [...windows].sort((a, b) => a.id - b.id);
     for (let i = 0; i < sorted.length; i += 1) {
         const win = sorted[i];
-        const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
-        const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
+        const cx = (typeof win.shape.cx === "number" ? win.shape.cx : win.shape.x + win.shape.w * 0.5) + sceneOffset.x;
+        const cy = (typeof win.shape.cy === "number" ? win.shape.cy : win.shape.y + win.shape.h * 0.5) + sceneOffset.y;
         const cols = getWindowColors(i, theme);
         appendOrbParticles(out, cx, cy, 140, 1400, time + i * 2, cols.outer, cols.core);
     }
-    if (sorted.length > 1) {
+    if (includeBridge && sorted.length > 1) {
         for (let i = 0; i < sorted.length; i += 1) {
             for (let j = i + 1; j < sorted.length; j += 1) {
                 const wa = sorted[i].shape;
                 const wb = sorted[j].shape;
-                const ax = wa.x + wa.w * 0.5 + sceneOffset.x;
-                const ay = wa.y + wa.h * 0.5 + sceneOffset.y;
-                const bx = wb.x + wb.w * 0.5 + sceneOffset.x;
-                const by = wb.y + wb.h * 0.5 + sceneOffset.y;
+                const ax = (typeof wa.cx === "number" ? wa.cx : wa.x + wa.w * 0.5) + sceneOffset.x;
+                const ay = (typeof wa.cy === "number" ? wa.cy : wa.y + wa.h * 0.5) + sceneOffset.y;
+                const bx = (typeof wb.cx === "number" ? wb.cx : wb.x + wb.w * 0.5) + sceneOffset.x;
+                const by = (typeof wb.cy === "number" ? wb.cy : wb.y + wb.h * 0.5) + sceneOffset.y;
                 const colA = getWindowColors(i, theme).outer;
                 const colB = getWindowColors(j, theme).outer;
-                appendBridgeParticles(out, ax, ay, bx, by, 4000, time, colA, colB, 140);
+                appendBridgeParticles(out, ax, ay, bx, by, 2200, time, colA, colB, 140);
             }
         }
     }

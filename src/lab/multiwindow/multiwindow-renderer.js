@@ -1,11 +1,11 @@
 import {
     createOrthoMatrix,
     createTransformMatrix,
-    multiplyMatrix,
     getGeometryVertices,
     getWindowColors,
     generateWormholeSceneData
 } from "./multiwindow-math.js";
+import { buildWireframeRibbons, generateBridgeRibbons, getWindowCenter } from "./multiwindow-ribbons.js";
 
 const VS_SRC = `
 attribute vec3 aPos;
@@ -14,16 +14,19 @@ attribute float aSize;
 uniform mat4 uMvp;
 uniform float uDpr;
 varying vec3 vColor;
+varying float vEdge;
 void main() {
     gl_Position = uMvp * vec4(aPos, 1.0);
     gl_PointSize = clamp(aSize * uDpr, 2.0, 48.0);
     vColor = aColor;
+    vEdge = aSize;
 }
 `;
 
 const FS_SRC = `
 precision highp float;
 varying vec3 vColor;
+varying float vEdge;
 uniform float uAlpha;
 uniform float uMode;
 void main() {
@@ -31,12 +34,22 @@ void main() {
         vec2 coord = gl_PointCoord - vec2(0.5);
         float dist = length(coord) * 2.0;
         if (dist > 1.0) discard;
-        float glow = exp(-2.2 * dist * dist) * (1.0 - dist);
-        float core = smoothstep(0.35, 0.0, dist);
-        vec3 finalCol = mix(vColor, vec3(1.0), core * 0.75);
+        float glow = exp(-2.8 * dist * dist) * smoothstep(1.0, 0.0, dist);
+        float core = smoothstep(0.32, 0.0, dist);
+        vec3 finalCol = mix(vColor, vec3(1.0), core * 0.72);
         gl_FragColor = vec4(finalCol, glow * uAlpha);
-    } else {
+    } else if (uMode < 1.5) {
         gl_FragColor = vec4(vColor, uAlpha);
+    } else {
+        float d = abs(vEdge);
+        if (d > 1.0) discard;
+        float intensity = clamp(max(vColor.r, max(vColor.g, vColor.b)), 0.0, 1.0);
+        if (intensity < 0.002) discard;
+        vec3 baseCol = vColor / intensity;
+        float glow = exp(-3.1 * d * d) * smoothstep(1.0, 0.02, d);
+        float core = exp(-16.0 * d * d);
+        vec3 finalCol = mix(baseCol, vec3(1.0), core * 0.58);
+        gl_FragColor = vec4(finalCol, (glow * 0.56 + core * 0.44) * intensity * uAlpha);
     }
 }
 `;
@@ -89,9 +102,7 @@ export function createMultiwindowRenderer(canvas) {
     let aSizeLoc = -1;
 
     let wormholeVbo = null;
-    let lineVbo = null;
-    let lineColorVbo = null;
-    let lineSizeVbo = null;
+    let ribbonVbo = null;
     const geoBuffers = new Map();
 
     if (gl) {
@@ -106,9 +117,7 @@ export function createMultiwindowRenderer(canvas) {
             aSizeLoc = gl.getAttribLocation(program, "aSize");
 
             wormholeVbo = gl.createBuffer();
-            lineVbo = gl.createBuffer();
-            lineColorVbo = gl.createBuffer();
-            lineSizeVbo = gl.createBuffer();
+            ribbonVbo = gl.createBuffer();
         }
     }
 
@@ -131,49 +140,59 @@ export function createMultiwindowRenderer(canvas) {
         return record;
     };
 
-    const render2DFallback = (ctx, windows, sceneOffset, state, _time) => {
+    const drawInterleaved = (vbo, data, mode, primitive, alpha) => {
+        if (!data || data.length === 0) return;
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+        gl.enableVertexAttribArray(aPosLoc);
+        gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 28, 0);
+        gl.enableVertexAttribArray(aColorLoc);
+        gl.vertexAttribPointer(aColorLoc, 3, gl.FLOAT, false, 28, 12);
+        gl.enableVertexAttribArray(aSizeLoc);
+        gl.vertexAttribPointer(aSizeLoc, 1, gl.FLOAT, false, 28, 24);
+        gl.uniform1f(uModeLoc, mode);
+        gl.uniform1f(uAlphaLoc, alpha);
+        gl.drawArrays(primitive, 0, data.length / 7);
+        gl.disableVertexAttribArray(aColorLoc);
+        gl.disableVertexAttribArray(aSizeLoc);
+    };
+
+    const render2DFallback = (ctx, windows, sceneOffset, state) => {
         ctx.fillStyle = "#030408";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.save();
         if (typeof ctx.scale === "function") ctx.scale(currentDpr, currentDpr);
-        ctx.translate(sceneOffset.x, sceneOffset.y);
 
-        if (windows.length > 1) {
+        if (state.showBeams !== false && windows.length > 1) {
             for (let i = 0; i < windows.length; i += 1) {
                 for (let j = i + 1; j < windows.length; j += 1) {
-                    const wa = windows[i].shape;
-                    const wb = windows[j].shape;
-                    const ax = wa.x + wa.w * 0.5;
-                    const ay = wa.y + wa.h * 0.5;
-                    const bx = wb.x + wb.w * 0.5;
-                    const by = wb.y + wb.h * 0.5;
-                    const grad = ctx.createLinearGradient(ax, ay, bx, by);
-                    const ca = getWindowColors(i, state.theme).outer;
-                    const cb = getWindowColors(j, state.theme).outer;
-                    grad.addColorStop(0, `rgba(${Math.floor(ca[0]*255)}, ${Math.floor(ca[1]*255)}, ${Math.floor(ca[2]*255)}, 0.6)`);
-                    grad.addColorStop(1, `rgba(${Math.floor(cb[0]*255)}, ${Math.floor(cb[1]*255)}, ${Math.floor(cb[2]*255)}, 0.6)`);
+                    const ca = getWindowCenter(windows[i], sceneOffset);
+                    const cb = getWindowCenter(windows[j], sceneOffset);
+                    const grad = ctx.createLinearGradient(ca.x, ca.y, cb.x, cb.y);
+                    const colA = getWindowColors(i, state.theme).outer;
+                    const colB = getWindowColors(j, state.theme).outer;
+                    grad.addColorStop(0, `rgba(${Math.floor(colA[0] * 255)}, ${Math.floor(colA[1] * 255)}, ${Math.floor(colA[2] * 255)}, 0.7)`);
+                    grad.addColorStop(1, `rgba(${Math.floor(colB[0] * 255)}, ${Math.floor(colB[1] * 255)}, ${Math.floor(colB[2] * 255)}, 0.7)`);
                     ctx.strokeStyle = grad;
-                    ctx.lineWidth = 14;
+                    ctx.lineWidth = 10;
                     ctx.beginPath();
-                    ctx.moveTo(ax, ay);
-                    ctx.lineTo(bx, by);
+                    ctx.moveTo(ca.x, ca.y);
+                    ctx.lineTo(cb.x, cb.y);
                     ctx.stroke();
                 }
             }
         }
 
         for (let i = 0; i < windows.length; i += 1) {
-            const win = windows[i];
-            const cx = win.shape.x + win.shape.w * 0.5;
-            const cy = win.shape.y + win.shape.h * 0.5;
+            const c = getWindowCenter(windows[i], sceneOffset);
             const cols = getWindowColors(i, state.theme);
-            const radGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 120);
-            radGrad.addColorStop(0, `rgba(${Math.floor(cols.core[0]*255)}, ${Math.floor(cols.core[1]*255)}, ${Math.floor(cols.core[2]*255)}, 0.95)`);
-            radGrad.addColorStop(0.5, `rgba(${Math.floor(cols.outer[0]*255)}, ${Math.floor(cols.outer[1]*255)}, ${Math.floor(cols.outer[2]*255)}, 0.75)`);
+            const radGrad = ctx.createRadialGradient(c.x, c.y, 10, c.x, c.y, 120);
+            radGrad.addColorStop(0, `rgba(${Math.floor(cols.core[0] * 255)}, ${Math.floor(cols.core[1] * 255)}, ${Math.floor(cols.core[2] * 255)}, 0.95)`);
+            radGrad.addColorStop(0.5, `rgba(${Math.floor(cols.outer[0] * 255)}, ${Math.floor(cols.outer[1] * 255)}, ${Math.floor(cols.outer[2] * 255)}, 0.75)`);
             radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
             ctx.fillStyle = radGrad;
             ctx.beginPath();
-            ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+            ctx.arc(c.x, c.y, 120, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.restore();
@@ -182,14 +201,12 @@ export function createMultiwindowRenderer(canvas) {
     const render = (windows, sceneOffset, state, time) => {
         if (!gl || !program) {
             const ctx = canvas.getContext ? canvas.getContext("2d") : null;
-            if (ctx) render2DFallback(ctx, windows, sceneOffset, state, time);
+            if (ctx) render2DFallback(ctx, windows, sceneOffset, state);
             return;
         }
 
-        const w = canvas.width;
-        const h = canvas.height;
-        gl.viewport(0, 0, w, h);
-        gl.clearColor(0.015, 0.02, 0.035, 1.0);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clearColor(0.012, 0.016, 0.03, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -201,57 +218,30 @@ export function createMultiwindowRenderer(canvas) {
         if (uDprLoc) gl.uniform1f(uDprLoc, currentDpr);
 
         const geoType = state.geometryType || "wormhole";
+        const showBeams = state.showBeams !== false;
+        const showParticles = state.showParticles !== false;
+
+        if (showBeams && windows.length > 1) {
+            const ribbons = generateBridgeRibbons(windows, sceneOffset, time, state.theme, geoType === "wormhole");
+            drawInterleaved(ribbonVbo, ribbons, 2.0, gl.TRIANGLES, 0.92);
+        }
+
         if (geoType === "wormhole") {
-            const wormholeData = generateWormholeSceneData(windows, sceneOffset, time, state.theme);
-            if (wormholeData.length > 0) {
-                gl.bindBuffer(gl.ARRAY_BUFFER, wormholeVbo);
-                gl.bufferData(gl.ARRAY_BUFFER, wormholeData, gl.DYNAMIC_DRAW);
-
-                gl.enableVertexAttribArray(aPosLoc);
-                gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 28, 0);
-
-                gl.enableVertexAttribArray(aColorLoc);
-                gl.vertexAttribPointer(aColorLoc, 3, gl.FLOAT, false, 28, 12);
-
-                gl.enableVertexAttribArray(aSizeLoc);
-                gl.vertexAttribPointer(aSizeLoc, 1, gl.FLOAT, false, 28, 24);
-
-                gl.uniform1f(uModeLoc, 0.0);
-                gl.uniform1f(uAlphaLoc, 0.96);
-                gl.drawArrays(gl.POINTS, 0, wormholeData.length / 7);
-
-                gl.disableVertexAttribArray(aColorLoc);
-                gl.disableVertexAttribArray(aSizeLoc);
+            if (showParticles) {
+                const wormholeData = generateWormholeSceneData(windows, sceneOffset, time, state.theme, true);
+                drawInterleaved(wormholeVbo, wormholeData, 0.0, gl.POINTS, 0.88);
             }
         } else {
-            gl.uniform1f(uModeLoc, 1.0);
-            gl.uniform1f(uAlphaLoc, 0.95);
-            gl.disableVertexAttribArray(aColorLoc);
-            gl.disableVertexAttribArray(aSizeLoc);
-
             for (let i = 0; i < windows.length; i += 1) {
-                const win = windows[i];
                 const geo = getOrCreateGeo(geoType, 120);
-                if (!geo.buffer) continue;
-
-                const cx = win.shape.x + win.shape.w * 0.5 + sceneOffset.x;
-                const cy = win.shape.y + win.shape.h * 0.5 + sceneOffset.y;
+                const center = getWindowCenter(windows[i], sceneOffset);
                 const rx = time * 0.65 + i * 0.4;
                 const ry = time * 0.85 + i * 0.25;
                 const rz = time * 0.35;
-
-                const model = createTransformMatrix(cx, cy, 0, rx, ry, rz);
-                const mvp = multiplyMatrix(ortho, model);
-                gl.uniformMatrix4fv(uMvpLoc, false, mvp);
-
+                const model = createTransformMatrix(center.x, center.y, 0, rx, ry, rz);
                 const col = getWindowColors(i, state.theme).outer;
-                gl.vertexAttrib3f(aColorLoc, col[0], col[1], col[2]);
-                gl.vertexAttrib1f(aSizeLoc, 1.0);
-
-                gl.bindBuffer(gl.ARRAY_BUFFER, geo.buffer);
-                gl.enableVertexAttribArray(aPosLoc);
-                gl.vertexAttribPointer(aPosLoc, 3, gl.FLOAT, false, 0, 0);
-                gl.drawArrays(gl.LINES, 0, geo.count);
+                const wireRibbons = buildWireframeRibbons(geo.data, model, col, 2.8, 0.9);
+                drawInterleaved(ribbonVbo, wireRibbons, 2.0, gl.TRIANGLES, 0.95);
             }
         }
     };
@@ -271,9 +261,7 @@ export function createMultiwindowRenderer(canvas) {
         }
         geoBuffers.clear();
         if (wormholeVbo) gl.deleteBuffer(wormholeVbo);
-        if (lineVbo) gl.deleteBuffer(lineVbo);
-        if (lineColorVbo) gl.deleteBuffer(lineColorVbo);
-        if (lineSizeVbo) gl.deleteBuffer(lineSizeVbo);
+        if (ribbonVbo) gl.deleteBuffer(ribbonVbo);
         if (program) gl.deleteProgram(program);
     };
 

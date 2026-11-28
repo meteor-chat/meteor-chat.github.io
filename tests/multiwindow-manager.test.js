@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
     createWindowManager,
     getWindowShape,
+    calibrateChromeFromEvent,
     pruneStaleWindows,
     areWindowListsDifferent
 } from "../src/lab/multiwindow/window-manager.js";
@@ -167,5 +168,46 @@ describe("Multiple Window Manager - Dual Sync & Screen Tracking", () => {
 
         expect(mgr1.getWindows().length).toBe(1);
         mgr1.destroy();
+    });
+
+    it("subtracts Windows DWM bottom border and levels popup vs normal window centers", () => {
+        window.screenX = -7;
+        window.screenY = 0;
+        window.outerWidth = 974;
+        window.innerWidth = 958;
+        window.outerHeight = 1040;
+        window.innerHeight = 966;
+        const popupShape = getWindowShape();
+
+        window.screenX = 953;
+        window.screenY = 0;
+        window.outerWidth = 974;
+        window.innerWidth = 958;
+        window.outerHeight = 1040;
+        window.innerHeight = 945;
+        const normalShape = getWindowShape();
+
+        expect(popupShape.x).toBe(1);
+        expect(popupShape.y).toBe(66);
+        expect(normalShape.x).toBe(961);
+        expect(normalShape.y).toBe(87);
+        expect(popupShape.cy).toBe(normalShape.cy);
+    });
+
+    it("calibrates exact viewport screen origin from pointer events", () => {
+        window.screenX = 100;
+        window.screenY = 50;
+        window.outerWidth = 816;
+        window.innerWidth = 800;
+        window.outerHeight = 710;
+        window.innerHeight = 600;
+        const cal = calibrateChromeFromEvent({ screenX: 308, screenY: 242, clientX: 200, clientY: 100 });
+        expect(cal).not.toBeNull();
+        expect(cal.dx).toBe(8);
+        expect(cal.dy).toBe(92);
+
+        const shape = getWindowShape(cal);
+        expect(shape.x).toBe(108);
+        expect(shape.y).toBe(142);
     });
 });

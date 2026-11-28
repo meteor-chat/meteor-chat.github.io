@@ -38,13 +38,32 @@ export function createMultiwindowApp(root = document.body) {
         });
     };
 
+    let lastMetaAt = 0;
     const manager = createWindowManager({
-        metaData: { geometryType: state.geometryType, theme: state.theme },
+        metaData: {
+            geometryType: state.geometryType,
+            theme: state.theme,
+            showBeams: state.showBeams,
+            showParticles: state.showParticles,
+            metaUpdatedAt: 0
+        },
         onWindowsChange: (windows) => {
-            const curWin = manager.getThisWindowData();
-            if (curWin && curWin.metaData) {
-                if (curWin.metaData.geometryType) state.geometryType = curWin.metaData.geometryType;
-                if (curWin.metaData.theme) state.theme = curWin.metaData.theme;
+            let bestMeta = null;
+            for (const w of windows) {
+                const m = w && w.metaData;
+                if (m && (m.metaUpdatedAt || 0) > lastMetaAt) {
+                    if (!bestMeta || m.metaUpdatedAt > bestMeta.metaUpdatedAt) {
+                        bestMeta = m;
+                    }
+                }
+            }
+            if (bestMeta) {
+                lastMetaAt = bestMeta.metaUpdatedAt;
+                if (bestMeta.geometryType) state.geometryType = bestMeta.geometryType;
+                if (bestMeta.theme) state.theme = bestMeta.theme;
+                if (typeof bestMeta.showBeams === "boolean") state.showBeams = bestMeta.showBeams;
+                if (typeof bestMeta.showParticles === "boolean") state.showParticles = bestMeta.showParticles;
+                manager.setMetaData(bestMeta, true);
             }
             syncHud(windows, manager.getShape());
         },
@@ -53,13 +72,25 @@ export function createMultiwindowApp(root = document.body) {
         }
     });
 
-    manager.init({ geometryType: state.geometryType, theme: state.theme });
+    manager.init({
+        geometryType: state.geometryType,
+        theme: state.theme,
+        showBeams: state.showBeams,
+        showParticles: state.showParticles
+    });
 
+    let lastW = 0;
+    let lastH = 0;
+    let lastDpr = 0;
     const handleResize = () => {
-        if (!canvas) return;
+        if (!canvas || typeof window === "undefined") return;
         const w = window.innerWidth || 800;
         const h = window.innerHeight || 600;
         const dpr = window.devicePixelRatio || 1;
+        if (w === lastW && h === lastH && dpr === lastDpr) return;
+        lastW = w;
+        lastH = h;
+        lastDpr = dpr;
         renderer.resize(w, h, dpr);
     };
 
@@ -102,6 +133,7 @@ export function createMultiwindowApp(root = document.body) {
     if (beamBtn) {
         beamBtn.addEventListener("click", () => {
             state.showBeams = !state.showBeams;
+            manager.setMetaData({ showBeams: state.showBeams });
             syncHud(manager.getWindows(), manager.getShape());
         });
     }
@@ -109,6 +141,7 @@ export function createMultiwindowApp(root = document.body) {
     if (partBtn) {
         partBtn.addEventListener("click", () => {
             state.showParticles = !state.showParticles;
+            manager.setMetaData({ showParticles: state.showParticles });
             syncHud(manager.getWindows(), manager.getShape());
         });
     }
@@ -126,6 +159,7 @@ export function createMultiwindowApp(root = document.body) {
     let rafId = 0;
     const tick = () => {
         if (!state.running) return;
+        handleResize();
         const time = getProceduralTime();
         const { sceneOffset } = manager.update(false);
         const windows = manager.getWindows();

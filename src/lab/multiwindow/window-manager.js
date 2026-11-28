@@ -1,43 +1,17 @@
+import {
+    getWindowShape,
+    calibrateChromeFromEvent,
+    pruneStaleWindows,
+    areWindowListsDifferent,
+    mergeWindowsByNewest
+} from "./window-coords.js";
+
+export { getWindowShape, calibrateChromeFromEvent, pruneStaleWindows, areWindowListsDifferent };
+
 const STORAGE_KEY = "meteor_multiwindow_state";
 const COUNT_KEY = "meteor_multiwindow_count";
 const CHANNEL_NAME = "meteor_multiwindow_bus";
 const HEARTBEAT_INTERVAL_MS = 800;
-const STALE_TIMEOUT_MS = 2800;
-
-export function getWindowShape() {
-    if (typeof window === "undefined") {
-        return { x: 0, y: 0, w: 800, h: 600 };
-    }
-    const rawX = typeof window.screenX === "number" ? window.screenX : (window.screenLeft || 0);
-    const rawY = typeof window.screenY === "number" ? window.screenY : (window.screenTop || 0);
-    const innerW = window.innerWidth || 800;
-    const innerH = window.innerHeight || 600;
-    const outerW = typeof window.outerWidth === "number" ? window.outerWidth : innerW;
-    const outerH = typeof window.outerHeight === "number" ? window.outerHeight : innerH;
-    const chromeX = Math.max(0, (outerW - innerW) / 2);
-    const chromeY = Math.max(0, outerH - innerH);
-    const x = Math.round(rawX + chromeX);
-    const y = Math.round(rawY + chromeY);
-    return { x, y, w: innerW, h: innerH };
-}
-
-export function pruneStaleWindows(windows, maxAgeMs = STALE_TIMEOUT_MS, now = Date.now()) {
-    if (!Array.isArray(windows)) return [];
-    return windows.filter((w) => w && (now - (w.timestamp || 0)) < maxAgeMs);
-}
-
-export function areWindowListsDifferent(a, b) {
-    if (!Array.isArray(a) || !Array.isArray(b)) return true;
-    if (a.length !== b.length) return true;
-    for (let i = 0; i < a.length; i += 1) {
-        if (!a[i] || !b[i] || a[i].id !== b[i].id) return true;
-        const sa = a[i].shape;
-        const sb = b[i].shape;
-        if (!sa || !sb) return true;
-        if (sa.x !== sb.x || sa.y !== sb.y || sa.w !== sb.w || sa.h !== sb.h) return true;
-    }
-    return false;
-}
 
 export function createWindowManager(options = {}) {
     const hasStorage = typeof localStorage !== "undefined";
@@ -46,7 +20,8 @@ export function createWindowManager(options = {}) {
     let windows = [];
     let id = 0;
     let metaData = options.metaData || {};
-    let shape = getWindowShape();
+    let chromeCal = null;
+    let shape = getWindowShape(chromeCal);
     let sceneOffset = { x: -shape.x, y: -shape.y };
     let sceneOffsetTarget = { x: -shape.x, y: -shape.y };
     let falloff = options.falloff ?? 0.08;
@@ -91,10 +66,22 @@ export function createWindowManager(options = {}) {
         }
     };
 
+    const handlePointerCalibrate = (event) => {
+        const nextCal = calibrateChromeFromEvent(event);
+        if (!nextCal) return;
+        const changed = !chromeCal
+            || Math.abs(chromeCal.dx - nextCal.dx) > 0.5
+            || Math.abs(chromeCal.dy - nextCal.dy) > 0.5
+            || Math.abs(chromeCal.dw - nextCal.dw) > 1
+            || Math.abs(chromeCal.dh - nextCal.dh) > 1;
+        chromeCal = nextCal;
+        if (changed) update(false);
+    };
+
     const init = (initialMeta = {}) => {
         metaData = { ...metaData, ...initialMeta };
         id = assignNextId();
-        shape = getWindowShape();
+        shape = getWindowShape(chromeCal);
         sceneOffset = { x: -shape.x, y: -shape.y };
         sceneOffsetTarget = { x: -shape.x, y: -shape.y };
 
@@ -109,6 +96,9 @@ export function createWindowManager(options = {}) {
             window.addEventListener("storage", handleStorageEvent);
             window.addEventListener("beforeunload", handleUnload);
             window.addEventListener("pagehide", handleUnload);
+            window.addEventListener("pointermove", handlePointerCalibrate, { passive: true });
+            window.addEventListener("pointerdown", handlePointerCalibrate, { passive: true });
+            window.addEventListener("mousemove", handlePointerCalibrate, { passive: true });
             heartbeatTimer = window.setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS);
         }
         if (channel) {
@@ -120,8 +110,9 @@ export function createWindowManager(options = {}) {
         if (event.key !== STORAGE_KEY || !event.newValue) return;
         try {
             const fresh = pruneStaleWindows(JSON.parse(event.newValue));
-            if (areWindowListsDifferent(windows, fresh)) {
-                windows = fresh;
+            const merged = mergeWindowsByNewest(windows, fresh, id);
+            if (areWindowListsDifferent(windows, merged)) {
+                windows = merged;
                 if (onWindowsChange) onWindowsChange(windows);
             }
         } catch {}
@@ -135,15 +126,16 @@ export function createWindowManager(options = {}) {
             if (!incoming) return;
             const idx = windows.findIndex((w) => w.id === incoming.id);
             if (idx >= 0) {
-                windows[idx] = incoming;
+                if ((incoming.timestamp || 0) >= (windows[idx].timestamp || 0)) {
+                    windows[idx] = incoming;
+                }
             } else {
                 windows.push(incoming);
             }
             windows = pruneStaleWindows(windows);
             if (onWindowsChange) onWindowsChange(windows);
         } else if (type === "left") {
-            const leftId = payload.id;
-            windows = windows.filter((w) => w.id !== leftId);
+            windows = windows.filter((w) => w.id !== payload.id);
             if (onWindowsChange) onWindowsChange(windows);
         } else if (type === "clear") {
             windows = windows.filter((w) => w.id === id);
@@ -176,9 +168,10 @@ export function createWindowManager(options = {}) {
     };
 
     const update = (easing = true) => {
-        const curShape = getWindowShape();
+        const curShape = getWindowShape(chromeCal);
         const moved = curShape.x !== shape.x || curShape.y !== shape.y
-            || curShape.w !== shape.w || curShape.h !== shape.h;
+            || curShape.w !== shape.w || curShape.h !== shape.h
+            || curShape.cx !== shape.cx || curShape.cy !== shape.cy;
 
         shape = curShape;
         sceneOffsetTarget = { x: -shape.x, y: -shape.y };
@@ -204,13 +197,20 @@ export function createWindowManager(options = {}) {
         return { shape, sceneOffset };
     };
 
-    const setMetaData = (nextMeta) => {
-        metaData = { ...metaData, ...nextMeta };
+    const setMetaData = (nextMeta, silent = false) => {
+        metaData = {
+            ...metaData,
+            ...nextMeta,
+            metaUpdatedAt: silent ? (nextMeta.metaUpdatedAt || metaData.metaUpdatedAt || 0) : Date.now()
+        };
         const idx = windows.findIndex((w) => w.id === id);
         if (idx >= 0) {
             windows[idx].metaData = metaData;
-            persistWindows();
-            broadcast("heartbeat", { window: windows[idx] });
+            if (!silent) {
+                windows[idx].timestamp = Date.now();
+                persistWindows();
+                broadcast("heartbeat", { window: windows[idx] });
+            }
         }
     };
 
@@ -234,6 +234,9 @@ export function createWindowManager(options = {}) {
             window.removeEventListener("storage", handleStorageEvent);
             window.removeEventListener("beforeunload", handleUnload);
             window.removeEventListener("pagehide", handleUnload);
+            window.removeEventListener("pointermove", handlePointerCalibrate);
+            window.removeEventListener("pointerdown", handlePointerCalibrate);
+            window.removeEventListener("mousemove", handlePointerCalibrate);
         }
         if (channel) {
             channel.close();

@@ -13,6 +13,11 @@ import {
     buildTorusKnotVertices,
     buildCoreVertices
 } from "../src/lab/multiwindow/multiwindow-math.js";
+import {
+    appendSmoothRibbon,
+    generateBridgeRibbons,
+    getWindowCenter
+} from "../src/lab/multiwindow/multiwindow-ribbons.js";
 
 describe("Multiple Window Math & Wormhole Particle Engine", () => {
     it("creates orthographic projection matrix with valid diagonal terms", () => {
@@ -96,5 +101,26 @@ describe("Multiple Window Math & Wormhole Particle Engine", () => {
 
         const core = buildCoreVertices(50, 100);
         expect(core.length).toBeGreaterThan(0);
+    });
+
+    it("generates smooth anti-aliased catenoid bridge ribbons using level window centers", () => {
+        const out = [];
+        appendSmoothRibbon(out, [[0, 100, 0], [100, 100, 0], [200, 100, 0]], 6, [0, 1, 0], [1, 0, 0], 0.8);
+        expect(out.length).toBe(2 * 6 * 7);
+        for (let i = 0; i < out.length; i += 7) {
+            expect(Math.abs(out[i + 6])).toBe(1);
+        }
+
+        const wins = [
+            { id: 1, shape: { x: 1, y: 66, w: 958, h: 966, cx: 480, cy: 516 } },
+            { id: 2, shape: { x: 961, y: 87, w: 958, h: 945, cx: 1440, cy: 516 } }
+        ];
+        const c1 = getWindowCenter(wins[0], { x: -1, y: -66 });
+        const c2 = getWindowCenter(wins[1], { x: -1, y: -66 });
+        expect(c1.y).toBe(c2.y);
+
+        const ribbons = generateBridgeRibbons(wins, { x: -1, y: -66 }, 1.25, "staal", true);
+        expect(ribbons.length).toBeGreaterThan(0);
+        expect(ribbons.length % 42).toBe(0);
     });
 });
